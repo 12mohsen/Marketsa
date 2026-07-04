@@ -1236,6 +1236,8 @@ canvas#mdChart{display:block;width:100% !important}
                background:rgba(255,255,255,.1);color:#fff;font-size:12.5px;font-weight:700;
                cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s">
         👤 <span id="btnAuthLbl">تسجيل الدخول</span>
+        <span id="btnAuthDot" style="display:none;width:8px;height:8px;border-radius:50%;
+              background:#ef4444;box-shadow:0 0 6px #ef4444"></span>
       </button>
     </div>
   </header>
@@ -1555,6 +1557,9 @@ canvas#mdChart{display:block;width:100% !important}
   <div id="authMenuAdmin" onclick="authOpenAdmin()" style="display:none;padding:11px 14px;cursor:pointer;
        color:#fbbf24;font-weight:700;border-bottom:1px solid var(--bdr)"
        onmouseover="this.style.background='rgba(251,191,36,.08)'" onmouseout="this.style.background=''">⚙️ لوحة الأدمن</div>
+  <div onclick="userOpenMessages()" style="padding:11px 14px;cursor:pointer"
+       onmouseover="this.style.background='var(--surf-alt)'" onmouseout="this.style.background=''">
+       📨 رسائلي <span id="authMenuMsgsBadge"></span></div>
   <div onclick="authOpenRename()" style="padding:11px 14px;cursor:pointer"
        onmouseover="this.style.background='var(--surf-alt)'" onmouseout="this.style.background=''">✏️ تغيير الاسم</div>
   <div onclick="authOpenChangePass()" style="padding:11px 14px;cursor:pointer"
@@ -1634,6 +1639,11 @@ canvas#mdChart{display:block;width:100% !important}
       <div style="font-size:10.5px;color:var(--txt-m);text-align:center;margin-top:12px;line-height:1.7">
         🔒 تبقى متصلاً تلقائياً على هذا الجهاز حتى تسجّل الخروج
       </div>
+      <div style="text-align:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)">
+        <a href="#" onclick="showSupportForm();return false"
+           style="font-size:12px;color:var(--txt-m);text-decoration:none">
+           واجهت مشكلة؟ <strong style="color:#60a5fa">📨 اتصل بالدعم</strong></a>
+      </div>
     </div>
   </div>
 </div>
@@ -1644,6 +1654,9 @@ canvas#mdChart{display:block;width:100% !important}
   مصدر البيانات: موثوق
   <br>
   المالك mohsen © <span id="footerYear"></span>
+  <br>
+  <a href="#" onclick="showSupportForm();return false"
+     style="color:#fff;text-decoration:none;font-weight:700;display:inline-block;margin-top:6px">📨 اتصل بالدعم</a>
 </footer>
 <script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
 
@@ -1792,7 +1805,7 @@ canvas#mdChart{display:block;width:100% !important}
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-04-v39 — نظام طلبات الدعم: نموذج للمستخدم + صندوق وارد في لوحة الأدمن', 'color:#7c3aed;font-weight:bold;font-size:12px');
+console.log('%c[تداول بلس] البناء: 2026-07-04-v46 — تحقق فعلي من وصول طلب الزائر عبر FormSubmit (مع عرض سبب الفشل)', 'color:#7c3aed;font-weight:bold;font-size:12px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2243,13 +2256,163 @@ async function cloudLoadUserData() {
   } catch (e) { console.warn('[cloud] فشل جلب البيانات:', e.message); }
 }
 
+/* ═══ نافذة تنبيه الرسائل (للمستخدم والأدمن) مع خيار عدم التكرار ═══ */
+function _showMsgNotice(opts) {
+  try { if (localStorage.getItem(opts.offKey) === '1') return; } catch (e) {}
+  if (document.getElementById('msgNotice')) return;
+  const d = document.createElement('div');
+  d.id = 'msgNotice';
+  d.style.cssText = 'position:fixed;inset:0;z-index:987;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px';
+  d.innerHTML = `
+    <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:20px;
+                max-width:350px;width:100%;padding:28px;text-align:center">
+      <div style="font-size:48px;margin-bottom:10px">📨</div>
+      <div style="font-size:17px;font-weight:800;margin-bottom:6px">${opts.title}</div>
+      <div style="font-size:13px;color:var(--txt-m);line-height:1.9;margin-bottom:16px">${opts.sub}</div>
+      <label style="display:flex;align-items:center;justify-content:center;gap:7px;
+                    font-size:11.5px;color:var(--txt-m);margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="msgNoticeOff" style="width:15px;height:15px;cursor:pointer">
+        عدم إظهار هذا التنبيه مجدداً
+      </label>
+      <div style="display:flex;gap:8px">
+        <button id="msgNoticeOpen" style="flex:1.3;padding:12px;border-radius:12px;border:none;cursor:pointer;
+          font-weight:800;font-size:13.5px;color:#fff;
+          background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%)">${opts.btnLabel}</button>
+        <button id="msgNoticeLater" style="flex:1;padding:12px;border-radius:12px;cursor:pointer;
+          border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
+          font-weight:700;font-size:13px">لاحقاً</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
+  const applyOff = () => {
+    try {
+      if (document.getElementById('msgNoticeOff').checked)
+        localStorage.setItem(opts.offKey, '1');
+    } catch (e) {}
+  };
+  document.getElementById('msgNoticeOpen').onclick = () => { applyOff(); d.remove(); opts.onOpen(); };
+  document.getElementById('msgNoticeLater').onclick = () => { applyOff(); d.remove(); };
+}
+
+/* تنبيه الأدمن بطلبات الدعم الجديدة عند فتح التطبيق */
+async function checkAdminSupport() {
+  if (!sb || !isAdmin()) return;
+  try {
+    const { data } = await sb.from('support_requests')
+      .select('created_at').eq('status', 'new')
+      .order('created_at', { ascending: false }).limit(50);
+    const list = data || [];
+    if (list.length === 0) return;
+    let seen = null;
+    try { seen = localStorage.getItem('tp_admin_sup_seen'); } catch (e) {}
+    if (seen && new Date(list[0].created_at) <= new Date(seen)) return;
+    _showMsgNotice({
+      title: 'طلبات دعم جديدة',
+      sub: `لديك <strong style="color:#f87171">${list.length}</strong> ${list.length === 1 ? 'طلب دعم جديد بانتظارك' : 'طلبات دعم جديدة بانتظارك'}`,
+      btnLabel: '⚙️ فتح لوحة الأدمن',
+      onOpen: authOpenAdmin,
+      offKey: 'tp_admin_popup_off',
+    });
+  } catch (e) {}
+}
+
+/* ═══ رسائل المستخدم: طلبات دعمه وردود الأدمن عليها ═══ */
+async function checkUserReplies() {
+  if (!sb || !sbUser) return;
+  try {
+    const { data } = await sb.from('support_requests')
+      .select('replied_at').eq('email', sbUser.email)
+      .not('reply', 'is', null)
+      .order('replied_at', { ascending: false }).limit(1);
+    const latest = data && data[0] ? data[0].replied_at : null;
+    if (!latest) return;
+    let seen = null;
+    try { seen = localStorage.getItem('tp_replies_seen'); } catch (e) {}
+    if (!seen || new Date(latest) > new Date(seen)) {
+      const dot = document.getElementById('btnAuthDot');
+      if (dot) dot.style.display = 'inline-block';
+      const badge = document.getElementById('authMenuMsgsBadge');
+      if (badge) badge.innerHTML = '<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:9.5px">جديد</span>';
+      _showMsgNotice({
+        title: 'وصلك رد من الدعم',
+        sub: 'ردّ فريق الدعم على طلبك — افتح «رسائلي» لقراءته',
+        btnLabel: '📨 فتح رسائلي',
+        onOpen: userOpenMessages,
+        offKey: 'tp_msgs_popup_off',
+      });
+    }
+  } catch (e) {}
+}
+
+async function userOpenMessages() {
+  authMenuHide();
+  if (!sb || !sbUser) { authOpenModal(); return; }
+  const old = document.getElementById('userMsgs');
+  if (old) old.remove();
+  const d = document.createElement('div');
+  d.id = 'userMsgs';
+  d.style.cssText = 'position:fixed;inset:0;z-index:989;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px';
+  d.onclick = (e) => { if (e.target === d) d.remove(); };
+  d.innerHTML = `
+    <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;
+                max-width:420px;width:100%;max-height:80vh;overflow-y:auto;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:16px;font-weight:800">📨 رسائلي</div>
+        <button onclick="document.getElementById('userMsgs').remove()"
+          style="width:28px;height:28px;border-radius:50%;border:none;background:var(--surf-alt);color:var(--txt);cursor:pointer">✕</button>
+      </div>
+      <div id="userMsgsBody" style="font-size:12.5px;color:var(--txt-m)">⏳ جارٍ التحميل...</div>
+    </div>`;
+  document.body.appendChild(d);
+
+  try {
+    const { data, error } = await sb.from('support_requests')
+      .select('*').eq('email', sbUser.email)
+      .order('created_at', { ascending: false }).limit(30);
+    if (error) throw error;
+    const body = document.getElementById('userMsgsBody');
+    const list = data || [];
+    if (list.length === 0) {
+      body.innerHTML = '<div style="text-align:center;padding:20px">لا رسائل بعد — أرسل طلب دعم وستجد الرد هنا</div>';
+    } else {
+      body.innerHTML = list.map(r => `
+        <div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:10px">
+          <div style="font-size:10.5px;color:#a78bfa;margin-bottom:6px">
+            ${r.req_type} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}
+          </div>
+          <div style="color:var(--txt);line-height:1.8;margin-bottom:8px;
+                      word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(r.subject || '').replace(/</g,'&lt;')}</div>
+          ${r.reply ? `
+          <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);
+                      border-radius:10px;padding:10px;line-height:1.8">
+            <div style="font-size:10.5px;color:#4ade80;font-weight:700;margin-bottom:4px">↩️ رد الدعم:</div>
+            <div style="color:var(--txt-2);word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(r.reply).replace(/</g,'&lt;')}</div>
+          </div>` : `
+          <div style="font-size:11px;color:#fcd34d">⏳ بانتظار رد الدعم...</div>`}
+        </div>`).join('');
+      /* علّم الردود كمقروءة */
+      const latest = list.filter(r => r.replied_at).map(r => r.replied_at).sort().pop();
+      if (latest) { try { localStorage.setItem('tp_replies_seen', latest); } catch (e) {} }
+      const dot = document.getElementById('btnAuthDot');
+      if (dot) dot.style.display = 'none';
+      const badge = document.getElementById('authMenuMsgsBadge');
+      if (badge) badge.innerHTML = '';
+    }
+  } catch (e) {
+    const body = document.getElementById('userMsgsBody');
+    if (body) body.innerHTML = '⚠️ تعذر جلب الرسائل: ' + (e.message || e);
+  }
+}
+
 /* قيود المستخدم الحالي (فردية — يضبطها الأدمن لكل مستخدم) */
 let userRestrictions = {};
 
 async function syncProfileAndRestrictions() {
   if (!sb || !sbUser) { userRestrictions = {}; _cloudReady = false; applyAppSettings(); return; }
-  /* اجلب محفظته ومراقبته من حسابه */
+  /* اجلب محفظته ومراقبته من حسابه + تحقق من ردود الدعم الجديدة */
   cloudLoadUserData();
+  checkUserReplies();
+  checkAdminSupport();
   /* سجّل ملف المستخدم (ليظهر في قائمة الأدمن) */
   try {
     await sb.from('profiles').upsert({
@@ -2403,8 +2566,9 @@ function authOpenAdmin() {
            font-size:11px;color:var(--txt-m);text-align:center">⏳ جارٍ الحساب...</div>
 
       <div style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:6px">📨 طلبات الدعم <span id="admSupNew"></span></div>
-      <div id="admSupportBox" style="max-height:200px;overflow-y:auto;border:1px solid var(--bdr);
-           border-radius:10px;padding:4px 10px;font-size:12px;color:var(--txt-m);margin-bottom:16px">⏳ جارٍ التحميل...</div>
+      <div id="admSupportBox" style="max-height:200px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--bdr);
+           border-radius:10px;padding:4px 10px;font-size:12px;color:var(--txt-m);margin-bottom:16px;
+           word-break:break-word;overflow-wrap:anywhere">⏳ جارٍ التحميل...</div>
 
       <div style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:4px">الأقسام الظاهرة للمستخدمين</div>
       ${tabs.map(t => `
@@ -2481,6 +2645,10 @@ async function adminLoadSupport() {
       .select('*').order('created_at', { ascending: false }).limit(30);
     if (error) throw error;
     const list = data || [];
+    /* فتحُ الصندوق يعتبر الطلبات «مُطَّلعاً عليها» — فلا يتكرر التنبيه المنبثق لنفسها */
+    if (list.length > 0) {
+      try { localStorage.setItem('tp_admin_sup_seen', list[0].created_at); } catch (e) {}
+    }
     const newCount = list.filter(r => r.status === 'new').length;
     const badge = document.getElementById('admSupNew');
     if (badge) badge.innerHTML = newCount
@@ -2491,18 +2659,39 @@ async function adminLoadSupport() {
     }
     box.innerHTML = list.map(r => `
       <div style="padding:9px 2px;border-bottom:1px solid var(--bdr);
-                  ${r.status === 'new' ? '' : 'opacity:.45'}">
+                  ${r.status === 'new' ? '' : 'opacity:.6'}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div style="min-width:0">
             <div style="font-size:11px;direction:ltr;text-align:left;color:var(--txt);
                         overflow:hidden;text-overflow:ellipsis">${r.email}</div>
             <div style="font-size:10px;color:#a78bfa">${r.req_type} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</div>
           </div>
-          ${r.status === 'new' ? `<button onclick="adminSupportDone(${r.id})"
-            style="padding:5px 10px;border-radius:8px;border:1px solid rgba(74,222,128,.4);flex-shrink:0;
-                   background:rgba(74,222,128,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✓ تمت المعالجة</button>` : '<span style="font-size:10px">✓ معالج</span>'}
+          <div style="display:flex;gap:5px;flex-shrink:0">
+            <button onclick="adminToggleReply(${r.id})"
+              style="padding:5px 10px;border-radius:8px;border:1px solid rgba(96,165,250,.4);
+                     background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;cursor:pointer">↩️ رد</button>
+            <button onclick="adminSupportDelete(${r.id}, '${r.email}')"
+              style="padding:5px 10px;border-radius:8px;border:1px solid rgba(248,113,113,.4);
+                     background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">🗑️</button>
+            ${r.status === 'new' ? `<button onclick="adminSupportDone(${r.id})"
+              style="padding:5px 10px;border-radius:8px;border:1px solid rgba(74,222,128,.4);
+                     background:rgba(74,222,128,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✓</button>` : '<span style="font-size:10px;align-self:center">✓</span>'}
+          </div>
         </div>
-        <div style="font-size:11.5px;color:var(--txt-2);margin-top:4px;line-height:1.7">${String(r.subject || '').replace(/</g,'&lt;')}</div>
+        <div style="font-size:11.5px;color:var(--txt-2);margin-top:4px;line-height:1.7;
+                    word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(r.subject || '').replace(/</g,'&lt;')}</div>
+        ${r.reply ? `<div style="font-size:11px;color:#86efac;margin-top:4px;line-height:1.7;
+                    word-break:break-word;overflow-wrap:anywhere">↩️ ردك: ${String(r.reply).replace(/</g,'&lt;')}</div>` : ''}
+        <div id="admRep-${r.id}" style="display:none;margin-top:6px">
+          <textarea id="admRepTxt-${r.id}" rows="3" maxlength="500" placeholder="اكتب ردك للمستخدم..."
+            style="width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;resize:none;
+                   border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
+                   font-size:12px;outline:none;font-family:inherit">${String(r.reply || '').replace(/</g,'&lt;')}</textarea>
+          <button onclick="adminSendReply(${r.id})"
+            style="width:100%;margin-top:5px;padding:9px;border-radius:9px;border:none;cursor:pointer;
+                   font-weight:800;font-size:12px;color:#fff;
+                   background:linear-gradient(135deg,#166534,#22c55e)">📤 إرسال الرد للمستخدم</button>
+        </div>
       </div>`).join('');
   } catch (e) {
     box.innerHTML = '<div style="padding:10px;line-height:1.8">⚠️ نفّذ SQL جدول support_requests أولاً</div>';
@@ -2512,6 +2701,82 @@ async function adminLoadSupport() {
 async function adminSupportDone(id) {
   const { error } = await sb.from('support_requests').update({ status: 'done' }).eq('id', id);
   if (error) { _admErr(error, 'فشل التحديث'); return; }
+  adminLoadSupport();
+}
+
+function adminToggleReply(id) {
+  const d = document.getElementById('admRep-' + id);
+  if (d) d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+
+async function adminSendReply(id) {
+  const txt = document.getElementById('admRepTxt-' + id).value.trim();
+  if (!txt) { showToast('⚠️ اكتب الرد أولاً'); return; }
+  const { error } = await sb.from('support_requests').update({
+    reply: txt,
+    replied_at: new Date().toISOString(),
+    status: 'done',
+  }).eq('id', id);
+  if (error) { _admErr(error, 'فشل إرسال الرد'); return; }
+  showToast('✅ أُرسل الرد — سيظهر للمستخدم في «📨 رسائلي» فور فتحه التطبيق');
+  adminLoadSupport();
+}
+
+/* نافذة تأكيد الحذف الأنيقة (بنمط بطاقة داكنة وزر أحمر متدرج) */
+function adminSupportDelete(id, email) {
+  const old = document.getElementById('admDelConfirm');
+  if (old) old.remove();
+  const d = document.createElement('div');
+  d.id = 'admDelConfirm';
+  d.style.cssText = 'position:fixed;inset:0;z-index:994;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px';
+  d.onclick = (e) => { if (e.target === d) d.remove(); };
+  d.innerHTML = `
+    <div style="background:#0d1220;border:1px solid rgba(248,113,113,.25);border-radius:20px;
+                max-width:340px;width:100%;padding:24px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:14px;flex-shrink:0;
+                    background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);
+                    display:flex;align-items:center;justify-content:center;font-size:19px">🗑️</div>
+        <div>
+          <div style="font-size:16.5px;font-weight:800;color:#fff">تأكيد الحذف</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.45);margin-top:2px">سيتم حذف الرسالة نهائياً</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+                  border-radius:12px;padding:12px 14px;margin-bottom:14px;
+                  display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span style="font-size:11.5px;color:rgba(255,255,255,.5)">رسالة من</span>
+        <span style="font-size:12px;font-weight:700;color:#f87171;direction:ltr;
+                     overflow:hidden;text-overflow:ellipsis">${email || ''}</span>
+      </div>
+
+      <div style="font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.9;margin-bottom:18px">
+        سيتم حذف الرسالة نهائياً من السجل ومن «رسائلي» عند المستخدم،
+        ولا يمكن التراجع عن هذا الإجراء.
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="adminSupportDeleteConfirmed(${id})"
+          style="flex:1.3;padding:13px;border-radius:13px;border:none;cursor:pointer;
+                 font-weight:800;font-size:13.5px;color:#fff;
+                 background:linear-gradient(135deg,#b91c1c 0%,#ef4444 100%);
+                 box-shadow:0 4px 16px rgba(239,68,68,.35)">🗑️ تأكيد الحذف</button>
+        <button onclick="document.getElementById('admDelConfirm').remove()"
+          style="flex:1;padding:13px;border-radius:13px;cursor:pointer;
+                 border:1.5px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);
+                 color:rgba(255,255,255,.8);font-weight:700;font-size:13px">إلغاء</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
+}
+
+async function adminSupportDeleteConfirmed(id) {
+  const c = document.getElementById('admDelConfirm');
+  if (c) c.remove();
+  const { error } = await sb.from('support_requests').delete().eq('id', id);
+  if (error) { _admErr(error, 'فشل الحذف'); return; }
+  showToast('🗑️ حُذفت الرسالة');
   adminLoadSupport();
 }
 
@@ -7769,17 +8034,21 @@ function showSupportForm() {
   if (document.getElementById('supportForm')) return;
   const d = document.createElement('div');
   d.id = 'supportForm';
-  d.style.cssText = 'position:fixed;inset:0;z-index:989;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px';
+  d.style.cssText = 'position:fixed;inset:0;z-index:994;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px';
   d.onclick = (e) => { if (e.target === d) d.remove(); };
   const inp = 'width:100%;box-sizing:border-box;padding:11px 13px;border-radius:10px;margin-bottom:10px;' +
     'border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:13px;outline:none;font-family:inherit';
+  /* للزائر بلا حساب: الحقل قابل للكتابة (نقترح ما كتبه في نافذة الدخول إن وُجد) */
+  const authEmailEl = document.getElementById('authEmail');
+  const guessEmail = sbUser ? (sbUser.email || '') : (authEmailEl ? authEmailEl.value.trim() : '');
   d.innerHTML = `
     <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;
                 max-width:380px;width:100%;padding:26px">
       <div style="font-size:16px;font-weight:800;margin-bottom:14px">📨 طلب دعم</div>
       <div style="font-size:11px;color:var(--txt-m);margin-bottom:4px">بريدك الإلكتروني</div>
-      <input id="supEmail" type="email" readonly value="${sbUser ? (sbUser.email || '') : ''}"
-        style="${inp};direction:ltr;text-align:left;opacity:.7">
+      <input id="supEmail" type="email" ${sbUser ? 'readonly' : ''} value="${guessEmail}"
+        placeholder="example@email.com"
+        style="${inp};direction:ltr;text-align:left;${sbUser ? 'opacity:.7' : ''}">
       <div style="font-size:11px;color:var(--txt-m);margin-bottom:4px">نوع الطلب</div>
       <select id="supType" style="${inp};cursor:pointer">
         <option value="تفعيل ميزة">🔓 طلب تفعيل ميزة</option>
@@ -7806,33 +8075,59 @@ function showSupportForm() {
 }
 
 async function supportSend() {
-  if (!sb || !sbUser) { showToast('⚠️ سجّل دخولك أولاً'); return; }
+  const email = document.getElementById('supEmail').value.trim();
   const subject = document.getElementById('supSubject').value.trim();
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showToast('⚠️ اكتب بريدك الإلكتروني صحيحاً'); return; }
   if (!subject) { showToast('⚠️ اكتب موضوع الطلب'); return; }
   const reqType = document.getElementById('supType').value;
-  const { error } = await sb.from('support_requests').insert({
-    email: sbUser.email,
-    req_type: reqType,
-    subject,
-  });
-  if (error) { showToast('❌ تعذر الإرسال: ' + error.message); return; }
 
-  /* نسخة فورية لبريد الأدمن عبر FormSubmit — مضبوطة بحيث
+  /* المسجّل: يُحفظ الطلب في حسابه ليرى الرد في «رسائلي».
+     الزائر: يصل الطلب لبريد الأدمن فقط (عبر FormSubmit) ويُرَد عليه بالإيميل */
+  if (sb && sbUser) {
+    const { error } = await sb.from('support_requests').insert({
+      email: sbUser.email,
+      req_type: reqType,
+      subject,
+    });
+    if (error) { showToast('❌ تعذر الإرسال: ' + error.message); return; }
+  }
+
+  /* نسخة لبريد الأدمن عبر FormSubmit — مضبوطة بحيث
      زر Reply في بريد الأدمن يرد مباشرة على إيميل المستخدم */
-  try {
-    fetch('https://formsubmit.co/ajax/' + ADMIN_EMAILS[0], {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        _subject: `📨 طلب دعم — تداول بلس (${reqType})`,
-        _replyto: sbUser.email,
-        _template: 'table',
-        'بريد المستخدم': sbUser.email,
-        'نوع الطلب': reqType,
-        'الموضوع': subject,
-      }),
-    }).catch(() => {});
-  } catch (e) {}
+  const fsPayload = {
+    _subject: `📨 طلب دعم — تداول بلس (${reqType})`,
+    _replyto: email,
+    _template: 'table',
+    'بريد المستخدم': email,
+    'الحالة': (sb && sbUser) ? 'مستخدم مسجّل' : 'زائر (الرد عبر الإيميل فقط)',
+    'نوع الطلب': reqType,
+    'الموضوع': subject,
+  };
+  const sendFS = () => fetch('https://formsubmit.co/ajax/' + ADMIN_EMAILS[0], {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(fsPayload),
+  });
+
+  if (sb && sbUser) {
+    /* المسجّل: الطلب محفوظ في اللوحة أصلاً — نسخة البريد إضافية (لا نوقفه لو فشلت) */
+    try { sendFS().catch(e => console.warn('[support] FormSubmit:', e.message)); } catch (e) {}
+  } else {
+    /* الزائر: FormSubmit قناته الوحيدة — يجب التحقق من نجاح الإرسال فعلاً */
+    try {
+      const resp = await sendFS();
+      const j = await resp.json().catch(() => ({}));
+      console.info('[support] FormSubmit response:', resp.status, j);
+      if (!resp.ok || String(j.success) !== 'true') {
+        showToast('❌ تعذر إرسال الطلب: ' + (j.message || ('خطأ ' + resp.status)) + ' — حاول مجدداً');
+        return;
+      }
+    } catch (e) {
+      console.warn('[support] FormSubmit failed:', e);
+      showToast('❌ تعذر الاتصال بخدمة الدعم — تحقق من اتصالك وحاول مجدداً');
+      return;
+    }
+  }
 
   const f = document.getElementById('supportForm');
   if (f) f.remove();

@@ -1805,7 +1805,7 @@ canvas#mdChart{display:block;width:100% !important}
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-04-v46 — تحقق فعلي من وصول طلب الزائر عبر FormSubmit (مع عرض سبب الفشل)', 'color:#7c3aed;font-weight:bold;font-size:12px');
+console.log('%c[تداول بلس] البناء: 2026-07-04-v48 — تمييز الزائر عن المسجّل في طلبات الدعم: المسجّل ردّ داخلي، الزائر «رد بالإيميل»', 'color:#7c3aed;font-weight:bold;font-size:12px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2157,7 +2157,10 @@ async function authSignOut() {
    الإعدادات تُحفظ في جدول app_settings في Supabase
    وتسري على كل المستخدمين عند فتح التطبيق
 ═════════════════════════════════════ */
-const ADMIN_EMAILS = ['abd1234ify@gmail.com'];   // ← إيميلات الأدمن (أضف ما تشاء)
+/* إيميلات الأدمن (بأحرف صغيرة) — الأول رئيسي والثاني احتياطي */
+const ADMIN_EMAILS = ['abd1234ify@gmail.com', 'market13s@hotmail.com'];
+/* بريد استقبال طلبات الدعم (FormSubmit — يجب أن يكون مفعّلاً لديهم) */
+const SUPPORT_EMAIL = 'market13S@hotmail.com';
 let appSettings = {};
 
 function isAdmin() {
@@ -2641,9 +2644,13 @@ async function adminLoadSupport() {
   const box = document.getElementById('admSupportBox');
   if (!box) return;
   try {
-    const { data, error } = await sb.from('support_requests')
-      .select('*').order('created_at', { ascending: false }).limit(30);
+    const [{ data, error }, { data: profs }] = await Promise.all([
+      sb.from('support_requests').select('*').order('created_at', { ascending: false }).limit(30),
+      sb.from('profiles').select('email'),
+    ]);
     if (error) throw error;
+    /* المسجلون: ردّ داخل التطبيق · الزوار: ردّ عبر الإيميل */
+    const registered = new Set((profs || []).map(p => (p.email || '').toLowerCase()));
     const list = data || [];
     /* فتحُ الصندوق يعتبر الطلبات «مُطَّلعاً عليها» — فلا يتكرر التنبيه المنبثق لنفسها */
     if (list.length > 0) {
@@ -2657,19 +2664,28 @@ async function adminLoadSupport() {
       box.innerHTML = '<div style="padding:10px;text-align:center">لا طلبات دعم بعد</div>';
       return;
     }
-    box.innerHTML = list.map(r => `
+    box.innerHTML = list.map(r => {
+      const isReg = registered.has((r.email || '').toLowerCase());
+      const replyBtn = isReg
+        ? `<button onclick="adminToggleReply(${r.id})"
+             style="padding:5px 10px;border-radius:8px;border:1px solid rgba(96,165,250,.4);
+                    background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;cursor:pointer">↩️ رد</button>`
+        : `<a href="mailto:${r.email}?subject=${encodeURIComponent('رد على طلبك — تداول بلس (' + r.req_type + ')')}&body=${encodeURIComponent('مرحباً،\n\nرداً على طلبك:\n«' + String(r.subject || '').slice(0, 120) + '»\n\n')}"
+             onclick="adminSupportDone(${r.id})"
+             style="padding:5px 10px;border-radius:8px;border:1px solid rgba(96,165,250,.4);
+                    background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;
+                    cursor:pointer;text-decoration:none">✉️ رد بالإيميل</a>`;
+      return `
       <div style="padding:9px 2px;border-bottom:1px solid var(--bdr);
                   ${r.status === 'new' ? '' : 'opacity:.6'}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div style="min-width:0">
             <div style="font-size:11px;direction:ltr;text-align:left;color:var(--txt);
                         overflow:hidden;text-overflow:ellipsis">${r.email}</div>
-            <div style="font-size:10px;color:#a78bfa">${r.req_type} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</div>
+            <div style="font-size:10px;color:#a78bfa">${isReg ? '👤 مسجّل' : '👁️ زائر'} · ${r.req_type} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</div>
           </div>
           <div style="display:flex;gap:5px;flex-shrink:0">
-            <button onclick="adminToggleReply(${r.id})"
-              style="padding:5px 10px;border-radius:8px;border:1px solid rgba(96,165,250,.4);
-                     background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;cursor:pointer">↩️ رد</button>
+            ${replyBtn}
             <button onclick="adminSupportDelete(${r.id}, '${r.email}')"
               style="padding:5px 10px;border-radius:8px;border:1px solid rgba(248,113,113,.4);
                      background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">🗑️</button>
@@ -2692,7 +2708,8 @@ async function adminLoadSupport() {
                    font-weight:800;font-size:12px;color:#fff;
                    background:linear-gradient(135deg,#166534,#22c55e)">📤 إرسال الرد للمستخدم</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch (e) {
     box.innerHTML = '<div style="padding:10px;line-height:1.8">⚠️ نفّذ SQL جدول support_requests أولاً</div>';
   }
@@ -8081,57 +8098,63 @@ async function supportSend() {
   if (!subject) { showToast('⚠️ اكتب موضوع الطلب'); return; }
   const reqType = document.getElementById('supType').value;
 
-  /* المسجّل: يُحفظ الطلب في حسابه ليرى الرد في «رسائلي».
-     الزائر: يصل الطلب لبريد الأدمن فقط (عبر FormSubmit) ويُرَد عليه بالإيميل */
-  if (sb && sbUser) {
+  /* الطلب يُحفظ في قاعدة البيانات (للمسجّل والزائر) — يظهر في لوحة الأدمن مضموناً.
+     المسجّل يرى الرد في «رسائلي»، والزائر يُرَد عليه عبر الإيميل */
+  if (sb) {
+    const finalEmail = (sbUser && sbUser.email) ? sbUser.email : email;
     const { error } = await sb.from('support_requests').insert({
-      email: sbUser.email,
+      email: finalEmail,
       req_type: reqType,
-      subject,
+      subject: subject + (sbUser ? '' : '\n(زائر بلا حساب — الرد عبر الإيميل)'),
     });
-    if (error) { showToast('❌ تعذر الإرسال: ' + error.message); return; }
-  }
-
-  /* نسخة لبريد الأدمن عبر FormSubmit — مضبوطة بحيث
-     زر Reply في بريد الأدمن يرد مباشرة على إيميل المستخدم */
-  const fsPayload = {
-    _subject: `📨 طلب دعم — تداول بلس (${reqType})`,
-    _replyto: email,
-    _template: 'table',
-    'بريد المستخدم': email,
-    'الحالة': (sb && sbUser) ? 'مستخدم مسجّل' : 'زائر (الرد عبر الإيميل فقط)',
-    'نوع الطلب': reqType,
-    'الموضوع': subject,
-  };
-  const sendFS = () => fetch('https://formsubmit.co/ajax/' + ADMIN_EMAILS[0], {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(fsPayload),
-  });
-
-  if (sb && sbUser) {
-    /* المسجّل: الطلب محفوظ في اللوحة أصلاً — نسخة البريد إضافية (لا نوقفه لو فشلت) */
-    try { sendFS().catch(e => console.warn('[support] FormSubmit:', e.message)); } catch (e) {}
-  } else {
-    /* الزائر: FormSubmit قناته الوحيدة — يجب التحقق من نجاح الإرسال فعلاً */
-    try {
-      const resp = await sendFS();
-      const j = await resp.json().catch(() => ({}));
-      console.info('[support] FormSubmit response:', resp.status, j);
-      if (!resp.ok || String(j.success) !== 'true') {
-        showToast('❌ تعذر إرسال الطلب: ' + (j.message || ('خطأ ' + resp.status)) + ' — حاول مجدداً');
-        return;
-      }
-    } catch (e) {
-      console.warn('[support] FormSubmit failed:', e);
-      showToast('❌ تعذر الاتصال بخدمة الدعم — تحقق من اتصالك وحاول مجدداً');
+    if (error) {
+      console.warn('[support] insert failed:', error.message);
+      showToast('❌ تعذر الإرسال: ' + error.message);
       return;
     }
   }
 
+  /* نسخة لبريد الأدمن عبر FormSubmit بنموذج مخفي —
+     النماذج لا تخضع لحظر CORS الذي أوقف طريقة AJAX */
+  try { _fsSendViaForm(email, reqType, subject); } catch (e) { console.warn('[support] FS:', e.message); }
+
   const f = document.getElementById('supportForm');
   if (f) f.remove();
   showToast('✅ وصل طلبك للدعم — سيتم الرد عبر بريدك');
+}
+
+/* إرسال FormSubmit عبر نموذج مخفي داخل iframe (يتجاوز CORS) */
+function _fsSendViaForm(email, reqType, subject) {
+  let ifr = document.getElementById('fsFrame');
+  if (!ifr) {
+    ifr = document.createElement('iframe');
+    ifr.name = 'fsFrame'; ifr.id = 'fsFrame';
+    ifr.style.display = 'none';
+    document.body.appendChild(ifr);
+  }
+  const form = document.createElement('form');
+  form.action = 'https://formsubmit.co/' + ADMIN_EMAILS[0];
+  form.method = 'POST';
+  form.target = 'fsFrame';
+  form.style.display = 'none';
+  const fields = {
+    _subject: `📨 طلب دعم — تداول بلس (${reqType})`,
+    _replyto: email,
+    _captcha: 'false',
+    _template: 'table',
+    'بريد المستخدم': email,
+    'الحالة': (sb && sbUser) ? 'مستخدم مسجّل (رُدّ من لوحة الأدمن أو بالإيميل)' : 'زائر (الرد عبر الإيميل فقط)',
+    'نوع الطلب': reqType,
+    'الموضوع': subject,
+  };
+  Object.keys(fields).forEach(k => {
+    const i = document.createElement('input');
+    i.type = 'hidden'; i.name = k; i.value = fields[k];
+    form.appendChild(i);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => form.remove(), 4000);
 }
 
 /* اعتراض التنقل بعد استنفاد الزيارات المجانية */

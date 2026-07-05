@@ -1808,7 +1808,7 @@ canvas#mdChart{display:block;width:100% !important}
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-04-v57 — رابط التأكيد يعود للمنصة (emailRedirectTo) + شاشة «انتقل إلى المنصة»', 'color:#7c3aed;font-weight:bold;font-size:12px');
+console.log('%c[تداول بلس] البناء: 2026-07-04-v62 — فحص فعلي عند فشل الدخول: غير مسجّل → اقتراح إنشاء حساب، مسجّل → الرسالة المعتادة', 'color:#7c3aed;font-weight:bold;font-size:12px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2147,7 +2147,29 @@ async function authSubmit() {
       }
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if (error) { authShowMsg(authTranslateError(error.message), 'error'); return; }
+      if (error) {
+        if (/Invalid login credentials/i.test(error.message)) {
+          /* نفحص فعلياً: هل هذا البريد مسجّل أصلاً؟ (عبر دالة email_exists) */
+          let registered = null;
+          try {
+            const { data: ex, error: e2 } = await sb.rpc('email_exists', { p_email: email });
+            if (!e2) registered = ex === true;
+          } catch (e) {}
+          if (registered === false) {
+            /* غير مسجّل → وجّهه لإنشاء حساب */
+            authShowMsg(
+              'هذا البريد <strong>غير مسجّل</strong> في تداول بلس.<br>' +
+              '<a href="#" onclick="authSwitchTab(\'signup\');document.getElementById(\'authPass\').value=\'\';return false" ' +
+              'style="color:#4ade80;font-weight:800;text-decoration:underline">✨ أنشئ حسابك مجاناً الآن</a>',
+              'error');
+          } else {
+            /* مسجّل (أو تعذر الفحص) → الرسالة المعتادة */
+            authShowMsg('البريد أو كلمة المرور غير صحيحة', 'error');
+          }
+          return;
+        }
+        authShowMsg(authTranslateError(error.message), 'error'); return;
+      }
       authShowMsg('✅ تم تسجيل الدخول!', 'ok');
       setTimeout(authCloseModal, 900);
     }
@@ -2662,8 +2684,13 @@ function authOpenAdmin() {
         style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;
                border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:12.5px;outline:none">
 
-      <div style="font-size:12px;font-weight:700;color:#fbbf24;margin:16px 0 6px">
-        👥 المستخدمون <span id="admUsersCount" style="color:var(--txt-m);font-weight:600"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 6px">
+        <div style="font-size:12px;font-weight:700;color:#fbbf24">
+          👥 المستخدمون <span id="admUsersCount" style="color:var(--txt-m);font-weight:600"></span>
+        </div>
+        <button onclick="adminCreateUserModal()" style="padding:6px 12px;border-radius:8px;border:none;
+          background:linear-gradient(135deg,#166534,#22c55e);color:#fff;
+          font-size:11px;font-weight:800;cursor:pointer">➕ إضافة مستخدم</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
         <label style="font-size:11px;color:var(--txt-m);display:flex;align-items:center;gap:4px;cursor:pointer">
@@ -2851,6 +2878,142 @@ function adminSupportDelete(id, email) {
       </div>
     </div>`;
   document.body.appendChild(d);
+}
+
+/* ═══ عمليات حسابات المستخدمين (عبر دالة Supabase السحابية admin-users) ═══ */
+async function _adminAuthApi(payload) {
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/admin-users`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + _sbToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  const j = await resp.json().catch(() => ({}));
+  console.info('[admin-users] الرد:', resp.status, j);
+  if (!resp.ok || j.error) {
+    let msg = j.error || ('خطأ ' + resp.status);
+    if (/already.*registered|already exists/i.test(msg))
+      msg = 'هذا البريد مسجّل مسبقاً — المستخدم موجود، استخدم «🔑 تعيين كلمة مرور» بدل الإنشاء';
+    if (resp.status === 404)
+      msg = 'الدالة السحابية admin-users غير منشورة بعد — انشرها من Supabase ← Edge Functions';
+    if (resp.status === 401)
+      msg = 'جلستك انتهت — سجّل الخروج ثم الدخول وأعد المحاولة';
+    throw new Error(msg);
+  }
+  return j;
+}
+
+function adminCreateUserModal() {
+  const old = document.getElementById('adminCreatePanel');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'adminCreatePanel';
+  el.style.cssText = 'position:fixed;inset:0;z-index:993;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px';
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+  const inp = 'width:100%;box-sizing:border-box;padding:11px 13px;border-radius:10px;margin-bottom:10px;' +
+    'border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:13px;outline:none;' +
+    'font-family:inherit;direction:ltr;text-align:left';
+  el.innerHTML = `
+    <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;
+                width:100%;max-width:360px;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:800">➕ إضافة مستخدم جديد</div>
+        <button onclick="document.getElementById('adminCreatePanel').remove()"
+          style="width:28px;height:28px;border-radius:50%;border:none;background:var(--surf-alt);color:var(--txt);cursor:pointer">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt-m);margin-bottom:4px">البريد الإلكتروني</div>
+      <input id="admNewEmail" type="email" placeholder="user@email.com" style="${inp}">
+      <div style="font-size:11px;color:var(--txt-m);margin-bottom:4px">كلمة المرور (6 أحرف على الأقل)</div>
+      <input id="admNewPass" type="text" placeholder="••••••" style="${inp}">
+      <div style="font-size:10.5px;color:var(--txt-m);line-height:1.7;margin-bottom:12px">
+        ✅ الحساب يُنشأ مؤكَّداً مباشرة (بلا رسالة بريد) — أعطِ المستخدم بريده وكلمة المرور ليدخل فوراً</div>
+      <button onclick="adminCreateUser()" style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;
+        font-weight:800;font-size:13.5px;color:#fff;
+        background:linear-gradient(135deg,#166534 0%,#22c55e 100%)">➕ إنشاء الحساب</button>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+async function adminCreateUser() {
+  const email = document.getElementById('admNewEmail').value.trim();
+  const pass  = document.getElementById('admNewPass').value;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showToast('⚠️ اكتب بريداً صحيحاً'); return; }
+  if (!pass || pass.length < 6) { showToast('⚠️ كلمة المرور 6 أحرف على الأقل'); return; }
+  try {
+    await _adminAuthApi({ action: 'create', email, password: pass });
+    showToast('✅ أُنشئ الحساب: ' + email + ' — يستطيع الدخول الآن');
+    const p = document.getElementById('adminCreatePanel');
+    if (p) p.remove();
+    adminLoadUsers();
+  } catch (e) { showToast('❌ ' + e.message); }
+}
+
+function adminSetPassword(email) {
+  const old = document.getElementById('admPassPanel');
+  if (old) old.remove();
+  const d = document.createElement('div');
+  d.id = 'admPassPanel';
+  d.style.cssText = 'position:fixed;inset:0;z-index:994;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px';
+  d.onclick = (e) => { if (e.target === d) d.remove(); };
+  d.innerHTML = `
+    <div style="background:#0d1220;border:1px solid rgba(96,165,250,.3);border-radius:20px;
+                max-width:340px;width:100%;padding:24px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:14px;flex-shrink:0;
+                    background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.4);
+                    display:flex;align-items:center;justify-content:center;font-size:19px">🔑</div>
+        <div>
+          <div style="font-size:16.5px;font-weight:800;color:#fff">تعيين كلمة مرور جديدة</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.45);margin-top:2px">للمستخدم المحدد أدناه</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+                  border-radius:12px;padding:12px 14px;margin-bottom:14px;
+                  display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span style="font-size:11.5px;color:rgba(255,255,255,.5)">المستخدم</span>
+        <span style="font-size:12px;font-weight:700;color:#60a5fa;direction:ltr;
+                     overflow:hidden;text-overflow:ellipsis">${email}</span>
+      </div>
+
+      <input id="admPassNew" type="text" placeholder="كلمة المرور الجديدة (6 أحرف على الأقل)"
+        onkeypress="if(event.key==='Enter')adminSetPasswordConfirmed('${email}')"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:11px;margin-bottom:14px;
+               border:1.5px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;
+               font-size:13.5px;outline:none;direction:ltr;text-align:left">
+
+      <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.8;margin-bottom:16px">
+        ستحل محل كلمة مروره الحالية فوراً — أبلغه بها ليدخل بها من الآن.
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="adminSetPasswordConfirmed('${email}')"
+          style="flex:1.3;padding:13px;border-radius:13px;border:none;cursor:pointer;
+                 font-weight:800;font-size:13.5px;color:#fff;
+                 background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);
+                 box-shadow:0 4px 16px rgba(59,130,246,.35)">🔑 تأكيد التغيير</button>
+        <button onclick="document.getElementById('admPassPanel').remove()"
+          style="flex:1;padding:13px;border-radius:13px;cursor:pointer;
+                 border:1.5px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);
+                 color:rgba(255,255,255,.8);font-weight:700;font-size:13px">إلغاء</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
+  document.getElementById('admPassNew').focus();
+}
+
+async function adminSetPasswordConfirmed(email) {
+  const pass = document.getElementById('admPassNew').value;
+  if (!pass || pass.length < 6) { showToast('⚠️ كلمة المرور 6 أحرف على الأقل'); return; }
+  try {
+    await _adminAuthApi({ action: 'setPassword', email, password: pass });
+    const p = document.getElementById('admPassPanel');
+    if (p) p.remove();
+    showToast('✅ غُيّرت كلمة مرور ' + email);
+  } catch (e) { showToast('❌ ' + e.message); }
 }
 
 /* ── رسالة مباشرة من الأدمن لأي مستخدم — تصله في «رسائلي» مع التنبيه ── */
@@ -3171,6 +3334,10 @@ function adminEditUser(email) {
       <button onclick="adminSaveUser()" style="width:100%;margin-top:16px;padding:12px;border-radius:11px;
         border:none;cursor:pointer;font-weight:800;font-size:13.5px;color:#1a1a1a;
         background:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%)">💾 حفظ ${bulk ? `القيود لـ${_admBulkTargets.length} مستخدم` : 'قيود هذا المستخدم'}</button>
+      ${bulk ? '' : `
+      <button onclick="adminSetPassword('${email}')" style="width:100%;margin-top:8px;padding:11px;border-radius:11px;
+        cursor:pointer;border:1.5px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);
+        color:#93c5fd;font-weight:700;font-size:12.5px">🔑 تعيين كلمة مرور جديدة لهذا المستخدم</button>`}
     </div>`;
   document.body.appendChild(el);
 }

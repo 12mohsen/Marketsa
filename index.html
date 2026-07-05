@@ -1808,7 +1808,7 @@ canvas#mdChart{display:block;width:100% !important}
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-04-v62 — فحص فعلي عند فشل الدخول: غير مسجّل → اقتراح إنشاء حساب، مسجّل → الرسالة المعتادة', 'color:#7c3aed;font-weight:bold;font-size:12px');
+console.log('%c[تداول بلس] البناء: 2026-07-05-v63 — تلوين السعر اللحظي بالجدول الرئيسي: أخضر صاعد / أحمر هابط', 'color:#7c3aed;font-weight:bold;font-size:12px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -3589,7 +3589,7 @@ function rowHTML(s, isTasi) {
       ${s.sym ? `<div class="co-sym">${s.sym}</div>` : ''}
     </td>
     <td class="td-sec">${badge}</td>
-    <td class="price-val">${fmtPrice(s.price)}</td>
+    <td class="price-val"${chgN !== null && chgN !== 0 ? ` style="color:${chgClr(chgN)}"` : ''}>${fmtPrice(s.price)}</td>
     <td>${chgCell}</td>
     <td>${isTasi ? dashSpan() : fmtPE(s.pe)}</td>
     <td>${isTasi ? dashSpan() : fmtEPS(s.eps)}</td>

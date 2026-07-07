@@ -1562,6 +1562,8 @@ canvas#mdChart{display:block;width:100% !important}
      box-shadow:0 12px 32px rgba(0,0,0,.45);overflow:hidden;font-size:13px">
   <div id="authMenuEmail" style="padding:11px 14px;font-size:11px;color:var(--txt-m);
        border-bottom:1px solid var(--bdr);direction:ltr;text-align:left"></div>
+  <div id="authMenuSub" style="display:none;padding:10px 14px;font-size:11.5px;font-weight:700;
+       border-bottom:1px solid var(--bdr);line-height:1.8"></div>
   <div id="authMenuAdmin" onclick="authOpenAdmin()" style="display:none;padding:11px 14px;cursor:pointer;
        color:#fbbf24;font-weight:700;border-bottom:1px solid var(--bdr)"
        onmouseover="this.style.background='rgba(251,191,36,.08)'" onmouseout="this.style.background=''">⚙️ لوحة الأدمن</div>
@@ -1816,7 +1818,7 @@ canvas#mdChart{display:block;width:100% !important}
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-05-v63 — تلوين السعر اللحظي بالجدول الرئيسي: أخضر صاعد / أحمر هابط', 'color:#7c3aed;font-weight:bold;font-size:12px');
+console.log('%c[تداول بلس] البناء: 2026-07-07-v68 — 🛡️ مزامنة ذكية (إصلاح سقوط الجلسة 429) + 💳 اشتراك مستقل لكل قسم + تمرير داخلي لنافذة الإدارة', 'color:#7c3aed;font-weight:bold;font-size:12px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -1875,6 +1877,7 @@ if (_authFromConfirm) {
     : _authShowWelcome();
 }
 
+let _lastSyncUid = null, _lastSyncAt = 0;
 if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   /* الجلسة محفوظة تلقائياً في المتصفح وتتجدد ذاتياً — يبقى المستخدم متصلاً */
@@ -1882,6 +1885,8 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
     sbUser = (data && data.session) ? data.session.user : null;
     _sbToken = (data && data.session) ? data.session.access_token : null;
     authUpdateUI();
+    _lastSyncUid = sbUser ? sbUser.id : null;
+    _lastSyncAt = Date.now();
     syncProfileAndRestrictions();
     /* تسجيل الزيارة (مرة لكل جلسة متصفح) — للإحصاءات في لوحة الأدمن */
     try {
@@ -1896,9 +1901,18 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
     _sbToken = session ? session.access_token : null;
     /* عند تسجيل الخروج: امسح المحفظة والمراقبة من المتصفح
        حتى لا يرثها الحساب التالي أو يراها زائر على نفس الجهاز */
-    if (event === 'SIGNED_OUT') clearLocalUserData();
+    if (event === 'SIGNED_OUT') { clearLocalUserData(); _lastSyncUid = null; }
     authUpdateUI();
-    syncProfileAndRestrictions();
+    /* 🛡️ مزامنة ذكية: TOKEN_REFRESHED وSIGNED_IN المتكررة لنفس المستخدم
+       كانت تعيد المزامنة الكاملة كل مرة (عاصفة طلبات تستهلك حدود Supabase
+       فيرد 429 وتسقط الجلسة ويُطرد المستخدم) — الآن نزامن فقط عند تغيّر
+       المستخدم فعلياً أو مرور 10 دقائق على آخر مزامنة */
+    const _uid = sbUser ? sbUser.id : null;
+    if (_uid !== _lastSyncUid || (Date.now() - _lastSyncAt) > 10 * 60 * 1000) {
+      _lastSyncUid = _uid;
+      _lastSyncAt = Date.now();
+      syncProfileAndRestrictions();
+    }
     /* المستخدم فتح رابط استعادة كلمة المرور من بريده */
     if (event === 'PASSWORD_RECOVERY') authStartRecovery();
   });
@@ -1986,6 +2000,23 @@ function authBtnClick(e) {
   const left = Math.max(8, Math.min(r.left, window.innerWidth - 210));
   menu.style.left = left + 'px';
   document.getElementById('authMenuEmail').textContent = sbUser.email || '';
+  /* 💳 حالة الاشتراك في قائمة الحساب */
+  const subEl = document.getElementById('authMenuSub');
+  if (subEl) {
+    if (isAdmin()) subEl.style.display = 'none';
+    else {
+      subEl.style.display = 'block';
+      const lines = [];
+      SUB_SECTION_DEFS.forEach(d => {
+        const x = _subInfo(userRestrictions, d.k);
+        if (x.plan !== 'paid') return;
+        if (x.expired) lines.push(`⏳ <span style="color:#f87171">${d.t}: منتهٍ</span>`);
+        else if (x.expiry) lines.push(`💳 <span style="color:${x.daysLeft <= 3 ? '#fbbf24' : '#4ade80'}">${d.t}: باقي ${x.daysLeft} يوم</span>`);
+        else lines.push(`💳 <span style="color:#4ade80">${d.t}: مفعّل</span>`);
+      });
+      subEl.innerHTML = lines.length ? lines.join('<br>') : '🆓 اشتراكك الحالي: مجاني';
+    }
+  }
   e.stopPropagation();
 }
 function authMenuHide() { document.getElementById('authMenu').style.display = 'none'; }
@@ -2513,6 +2544,41 @@ window.addEventListener('pagehide', () => {
 /* قيود المستخدم الحالي (فردية — يضبطها الأدمن لكل مستخدم) */
 let userRestrictions = {};
 
+/* ── 💳 نظام الاشتراك ──
+   حقول user_restrictions الجديدة:
+   sub_plan ('free'|'paid') · sub_price · sub_days · sub_start · sub_show_pay · sub_exempt */
+/* اشتراك قسمٍ معيّن من subs (JSONB) — مع توافق خلفي لحقول account القديمة */
+function _secSubRaw(r, k) {
+  const subs = (r && r.subs) || {};
+  if (subs[k] && subs[k].plan) return subs[k];
+  if (k === 'account' && r && r.sub_plan)
+    return { plan: r.sub_plan, price: r.sub_price, days: r.sub_days, start: r.sub_start, show_pay: r.sub_show_pay };
+  return null;
+}
+function _subInfo(r, k) {
+  const o = _secSubRaw(r, k || 'account');
+  if (!o || o.plan !== 'paid') return { plan: 'free', expired: false, daysLeft: null, expiry: null, price: 0, days: 0, showPay: true };
+  const days = Number(o.days) || 0;
+  const price = Number(o.price) || 0;
+  const showPay = o.show_pay !== false;
+  const start = o.start ? new Date(o.start) : null;
+  if (!start || days <= 0) return { plan: 'paid', expired: false, daysLeft: null, expiry: null, price, days, showPay };
+  const expiry = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
+  const msLeft = expiry.getTime() - Date.now();
+  return {
+    plan: 'paid',
+    expired: msLeft <= 0,
+    daysLeft: Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000))),
+    expiry, price, days, showPay,
+  };
+}
+/* الإغلاق التلقائي: إعادة فحص انتهاء الاشتراك كل دقيقة */
+let _subWatchTimer = null;
+function _startSubWatch() {
+  if (_subWatchTimer) return;
+  _subWatchTimer = setInterval(() => { try { applyAppSettings(); } catch (e) {} }, 60 * 1000);
+}
+
 async function syncProfileAndRestrictions() {
   if (!sb || !sbUser) { userRestrictions = {}; _cloudReady = false; applyAppSettings(); return; }
   /* اجلب محفظته ومراقبته من حسابه + تحقق من ردود الدعم الجديدة */
@@ -2520,6 +2586,7 @@ async function syncProfileAndRestrictions() {
   checkUserReplies();
   checkAdminSupport();
   _startPresenceHeartbeat();
+  _startSubWatch();
   /* سجّل ملف المستخدم (ليظهر في قائمة الأدمن) */
   try {
     await sb.from('profiles').upsert({
@@ -2543,10 +2610,20 @@ function applyAppSettings() {
     ...(s.hiddenTabs || []),
     ...((userRestrictions && userRestrictions.hidden_tabs) || []),
   ]);
+  /* 💳 القسم الذي انتهى اشتراكه يُغلق تلقائياً */
+  if (sbUser && !isAdmin()) ['watchlist', 'monitor', 'returns', 'all', 'analysis'].forEach(k => {
+    if (_subInfo(userRestrictions, k).expired) hidden.add(k);
+  });
   document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
     if (btn.dataset.tab === 'admin') { btn.style.display = isAdmin() ? '' : 'none'; return; }
     btn.style.display = hidden.has(btn.dataset.tab) ? 'none' : '';
   });
+  /* إن كان يتصفح قسماً أُغلق للتو — أعده للرئيسية */
+  const _actBtn = document.querySelector('.nav-btn.active[data-tab]');
+  if (_actBtn && hidden.has(_actBtn.dataset.tab)) {
+    const homeBtn = document.querySelector('.nav-btn[data-tab="home"]');
+    if (homeBtn) try { switchTab('home', homeBtn); } catch (e) {}
+  }
   /* العرض الضبابي لقسمي المراقبة وتحليل السوق (قيد فردي من الأدمن) */
   const doBlur = !!(sbUser && userRestrictions && userRestrictions.blur_view) && !isAdmin();
   ['panel-monitor', 'panel-analysis'].forEach(id => {
@@ -2593,8 +2670,17 @@ function _updateGate() {
   const s = appSettings || {};
   let gate = document.getElementById('adminGate');
   const needBlocked = !!(userRestrictions && userRestrictions.blocked) && !isAdmin();
-  const needMaint = s.maintenance && !isAdmin() && !needBlocked;
-  const needLogin = s.requireLogin && !sbUser && !needMaint && !needBlocked;
+  const needExpired = !!sbUser && !isAdmin() && !needBlocked && _subInfo(userRestrictions, 'account').expired;
+  /* 🐞 تشخيص: لماذا ظهرت البوابة؟ (يُقرأ من Console بـ F12) */
+  if (needBlocked || needExpired) {
+    try {
+      console.warn('[بوابة القفل]', needBlocked ? 'السبب: إيقاف كلي (blocked=true)' : 'السبب: اشتراك الحساب منتهٍ',
+        '| القيود:', JSON.stringify({ blocked: userRestrictions.blocked, subs: userRestrictions.subs }),
+        '| معلومات اشتراك الحساب:', JSON.stringify(_subInfo(userRestrictions, 'account')));
+    } catch (e) {}
+  }
+  const needMaint = s.maintenance && !isAdmin() && !needBlocked && !needExpired;
+  const needLogin = s.requireLogin && !sbUser && !needMaint && !needBlocked && !needExpired;
   if (needBlocked) {
     if (!gate) {
       gate = document.createElement('div');
@@ -2609,6 +2695,36 @@ function _updateGate() {
         <div style="font-size:52px;margin-bottom:12px">🚫</div>
         <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">تم إيقاف حسابك</div>
         <div style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:20px;line-height:1.8">أُوقف وصولك للتطبيق من قبل الإدارة</div>
+        <button onclick="authSignOut()" style="width:100%;padding:12px;border-radius:11px;cursor:pointer;
+          border:1.5px solid rgba(248,113,113,.5);background:rgba(248,113,113,.1);
+          color:#fca5a5;font-weight:700;font-size:13px">🚪 تسجيل الخروج</button>
+      </div>`;
+    return;
+  }
+  if (needExpired) {
+    if (!gate) {
+      gate = document.createElement('div');
+      gate.id = 'adminGate';
+      gate.style.cssText = 'position:fixed;inset:0;z-index:985;background:rgba(5,8,14,.97);' +
+        'display:flex;align-items:center;justify-content:center;padding:20px;text-align:center';
+      document.body.appendChild(gate);
+    }
+    const _accSi = _subInfo(userRestrictions, 'account');
+    const showPay = _accSi.showPay;
+    const price = _accSi.price;
+    gate.style.display = 'flex';
+    gate.innerHTML = `
+      <div style="max-width:340px">
+        <div style="font-size:52px;margin-bottom:12px">⏳</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">انتهى اشتراكك</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:20px;line-height:1.9">
+          انقضت مدة اشتراكك (${_accSi.days || 0} يوم)${price ? ` — قيمة التجديد ${price} ر.س` : ''}<br>جدّد اشتراكك للعودة إلى المنصة</div>
+        ${showPay ? `<button onclick="showToast('💳 الدفع بالبطاقة (فيزا وغيرها) سيتوفر قريباً — تواصل مع الدعم للتجديد');showSupportForm()"
+          style="width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:14.5px;color:#fff;
+          background:linear-gradient(135deg,#166534 0%,#22c55e 100%);margin-bottom:10px">💳 دفع / تجديد الاشتراك</button>` : ''}
+        <button onclick="showSupportForm()" style="width:100%;padding:12px;border-radius:11px;cursor:pointer;
+          border:1.5px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);
+          color:#93c5fd;font-weight:700;font-size:13px;margin-bottom:10px">📨 تواصل مع الدعم</button>
         <button onclick="authSignOut()" style="width:100%;padding:12px;border-radius:11px;cursor:pointer;
           border:1.5px solid rgba(248,113,113,.5);background:rgba(248,113,113,.1);
           color:#fca5a5;font-weight:700;font-size:13px">🚪 تسجيل الخروج</button>
@@ -2746,15 +2862,20 @@ function renderAdminSection() {
             <option value="full">✅ وصول كامل</option>
             <option value="homeOnly">🏠 الرئيسية فقط (حجب كل الأقسام)</option>
             <option value="noPortfolio">🔒 بلا محفظة/مراقبة/عوائد</option>
-            <option value="custom">⚙️ تخصيص الأقسام...</option>
+            <option value="custom">⚙️ تخصيص (أقسام + اشتراك)...</option>
             <option value="popupsOff">🪟 منع النوافذ المنبثقة</option>
             <option value="popupsOn">🪟 السماح بالنوافذ المنبثقة</option>
             <option value="block">⛔ إيقاف الحساب</option>
             <option value="unblock">▶️ إلغاء الإيقاف</option>
+            <option value="subFree">🆓 إلغاء كل الاشتراكات (مجاني)</option>
           </select>
           <button onclick="adminBulkApply()" style="padding:8px 14px;border-radius:8px;border:none;
             background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#1a1a1a;
             font-size:11.5px;font-weight:800;cursor:pointer">تطبيق على المحدد</button>
+          <button onclick="adminBulkApply(true)" title="يطبق الاختيار على كل المستخدمين عدا المستثنين 🛡️"
+            style="padding:8px 14px;border-radius:8px;border:none;
+            background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:#fff;
+            font-size:11.5px;font-weight:800;cursor:pointer">🌐 على الكل</button>
           <input id="admUserSearch" type="text" placeholder="🔍 ابحث بالإيميل أو الاسم..."
             oninput="adminRenderUsers(this.value)"
             style="flex:2;min-width:180px;box-sizing:border-box;padding:9px 12px;border-radius:9px;
@@ -3069,7 +3190,8 @@ function adminComposeMessage(email) {
   el.onclick = (e) => { if (e.target === el) el.remove(); };
   el.innerHTML = `
     <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;
-                width:100%;max-width:380px;padding:24px">
+                width:100%;max-width:380px;padding:24px;max-height:88vh;overflow-y:auto;
+                overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="font-size:15px;font-weight:800">✉️ رسالة من الإدارة</div>
         <button onclick="document.getElementById('adminMsgPanel').remove()"
@@ -3154,6 +3276,11 @@ const ADMIN_TAB_DEFS = [
   { k: 'all',       t: '📊 جميع الأسهم' },
   { k: 'analysis',  t: '⚡ تحليل السوق' },
 ];
+/* 💳 أقسام الاشتراك: الأقسام الخمسة + المنبثقات + الحساب كله */
+const SUB_SECTION_DEFS = ADMIN_TAB_DEFS.concat([
+  { k: 'popups',  t: '🪟 النوافذ المنبثقة' },
+  { k: 'account', t: '⛔ التطبيق كله' },
+]);
 
 async function adminLoadUsers() {
   const box = document.getElementById('admUsersBox');
@@ -3312,6 +3439,14 @@ function adminRenderUsers(query) {
         return d ? d.t.replace(/^\S+\s/, '') : k;   // الاسم بلا الإيموجي
       };
       const parts = [];
+      const subBits = [];
+      SUB_SECTION_DEFS.forEach(d => {
+        const x = _subInfo(r, d.k);
+        if (x.plan !== 'paid') return;
+        subBits.push(`${d.t.replace(/^\S+\s/, '')}: ${x.expired ? '⏳منتهٍ' : (x.daysLeft !== null ? 'باقي ' + x.daysLeft + 'ي' : 'مفعّل')}`);
+      });
+      if (subBits.length) parts.push('💳 ' + subBits.join(' · '));
+      if (r.sub_exempt) parts.push('🛡️ مستثنى من «على الكل»');
       if (r.blocked) parts.push('⛔ موقوف كلياً');
       else {
         if ((r.hidden_tabs || []).length)
@@ -3345,6 +3480,10 @@ function adminRenderUsers(query) {
           ${isMe ? '' : `<button onclick="adminComposeMessage('${u.email}')" title="إرسال رسالة"
             style="padding:6px 9px;border-radius:8px;border:1px solid rgba(96,165,250,.4);
                    background:rgba(96,165,250,.1);color:#93c5fd;font-size:11px;font-weight:700;cursor:pointer">✉️</button>
+          <button onclick="adminToggleExempt('${u.email}')" title="🛡️ استثناء من «التطبيق على الكل»"
+            style="padding:6px 9px;border-radius:8px;border:1px solid ${r.sub_exempt ? 'rgba(245,158,11,.6)' : 'var(--bdr)'};
+                   background:${r.sub_exempt ? 'rgba(245,158,11,.15)' : 'var(--surf-alt)'};
+                   color:${r.sub_exempt ? '#fcd34d' : 'var(--txt-m)'};font-size:11px;font-weight:700;cursor:pointer">🛡️</button>
           <button onclick="adminEditUser('${u.email}')"
             style="padding:6px 12px;border-radius:8px;border:1px solid var(--bdr);
                    background:var(--surf-alt);color:var(--txt);font-size:11px;font-weight:700;cursor:pointer">إدارة</button>
@@ -3375,11 +3514,14 @@ function _admSelectedEmails() {
   return [...document.querySelectorAll('.admUserSel:checked')].map(c => c.dataset.email);
 }
 
-async function adminBulkApply() {
-  const emails = _admSelectedEmails();
-  if (emails.length === 0) { showToast('⚠️ حدد مستخدماً واحداً على الأقل (المربعات يسار الإيميلات)'); return; }
+async function adminBulkApply(allMode) {
+  const emails = allMode ? _admAllTargets() : _admSelectedEmails();
+  if (emails.length === 0) {
+    showToast(allMode ? '⚠️ لا مستخدمين غير مستثنين للتطبيق عليهم' : '⚠️ حدد مستخدماً واحداً على الأقل (المربعات يسار الإيميلات)');
+    return;
+  }
   const preset = document.getElementById('admBulkPreset').value;
-  if (preset === 'custom') { adminEditUser('__bulk__'); return; }
+  if (preset === 'custom') { adminEditUser(allMode ? '__all__' : '__bulk__'); return; }
 
   const allTabs = ADMIN_TAB_DEFS.map(t => t.k);
   const now = new Date().toISOString();
@@ -3399,22 +3541,31 @@ async function adminBulkApply() {
       unblock:     { hidden_tabs: keep.hidden_tabs,                  blocked: false,        no_popups: keep.no_popups, blur_view: keep.blur_view },
       popupsOff:   { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: true,           blur_view: keep.blur_view },
       popupsOn:    { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: false,          blur_view: false },
+      subFree:     { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: keep.no_popups, blur_view: keep.blur_view },
     }[preset];
-    return { email, hidden_tabs: P.hidden_tabs, blocked: P.blocked,
+    const row = { email, hidden_tabs: P.hidden_tabs, blocked: P.blocked,
              no_popups: P.no_popups, blur_view: P.blur_view, updated_at: now };
+    if (preset === 'subFree') { row.subs = {}; row.sub_plan = 'free'; row.sub_start = null; }
+    return row;
   });
 
   const { error } = await sb.from('user_restrictions').upsert(rows);
   if (error) { _admErr(error, 'فشل التطبيق الجماعي'); return; }
   rows.forEach(r => { _admRestr[r.email] = r; });
-  showToast(`✅ طُبّق «${document.getElementById('admBulkPreset').selectedOptions[0].text}» على ${emails.length} مستخدم`);
+  showToast(`✅ طُبّق «${document.getElementById('admBulkPreset').selectedOptions[0].text}» على ${emails.length} مستخدم${allMode ? ' (الكل عدا المستثنين 🛡️)' : ''}`);
   adminLoadUsers();
 }
 
 function adminEditUser(email) {
-  const bulk = email === '__bulk__';
-  _admBulkTargets = bulk ? _admSelectedEmails() : [email];
-  if (bulk && _admBulkTargets.length === 0) { showToast('⚠️ حدد مستخدمين أولاً'); return; }
+  const bulk = email === '__bulk__' || email === '__all__';
+  _admBulkTargets = email === '__bulk__' ? _admSelectedEmails()
+                  : email === '__all__' ? _admAllTargets()
+                  : [email];
+  _admPanelBulk = bulk;
+  if (bulk && _admBulkTargets.length === 0) {
+    showToast(email === '__all__' ? '⚠️ لا مستخدمين غير مستثنين للتطبيق عليهم' : '⚠️ حدد مستخدمين أولاً');
+    return;
+  }
   const r = bulk ? { hidden_tabs: [], blocked: false }
                  : (_admRestr[email] || { hidden_tabs: [], blocked: false });
   const old = document.getElementById('adminUserPanel');
@@ -3426,21 +3577,23 @@ function adminEditUser(email) {
   const row = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);font-size:13px';
   el.innerHTML = `
     <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;
-                width:100%;max-width:380px;padding:24px">
+                width:100%;max-width:380px;padding:24px;max-height:88vh;overflow-y:auto;
+                overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div style="font-size:15px;font-weight:800">${bulk ? `👥 تخصيص ${_admBulkTargets.length} مستخدم` : '👤 إدارة مستخدم'}</div>
         <button onclick="document.getElementById('adminUserPanel').remove()"
           style="width:28px;height:28px;border-radius:50%;border:none;background:var(--surf-alt);color:var(--txt);cursor:pointer">✕</button>
       </div>
-      <div style="font-size:11.5px;color:var(--txt-m);direction:ltr;text-align:left;margin-bottom:12px">${bulk ? _admBulkTargets.join('<br>') : email}</div>
+      <div style="font-size:11.5px;color:var(--txt-m);direction:ltr;text-align:left;margin-bottom:12px">${bulk ? (_admBulkTargets.slice(0, 6).join('<br>') + (_admBulkTargets.length > 6 ? `<br>… و${_admBulkTargets.length - 6} آخرين` : '')) : email}</div>
 
       <div style="font-size:11.5px;font-weight:700;color:#fbbf24;margin-bottom:4px">الأقسام المتاحة له</div>
       ${ADMIN_TAB_DEFS.map(t => `
-        <label style="${row};cursor:pointer">
+        <label style="${row};cursor:pointer;border-bottom:none">
           <span>${t.t}</span>
           <input type="checkbox" id="admU-${t.k}" ${(r.hidden_tabs || []).includes(t.k) ? '' : 'checked'}
                  style="width:18px;height:18px;cursor:pointer">
-        </label>`).join('')}
+        </label>
+        ${_admSubBlock(t.k, r)}`).join('')}
 
       <label style="${row};cursor:pointer">
         <span>🪟 منع النوافذ المنبثقة (تفاصيل وتحليل الأسهم)</span>
@@ -3460,10 +3613,19 @@ function adminEditUser(email) {
                  color:${!r.blur_view ? '#86efac' : 'var(--txt-m)'}">👁️ يشاهدها بوضوح</button>
         <input type="hidden" id="admUBlur" value="${r.blur_view ? '1' : ''}">
       </div>
-      <label style="${row};cursor:pointer;color:#fca5a5;font-weight:700">
+
+      ${_admSubBlock('popups', r)}
+      ${bulk ? '' : `
+      <label style="${row};cursor:pointer">
+        <span>🛡️ استثناء من «التطبيق على الكل»</span>
+        <input type="checkbox" id="admUExempt" ${r.sub_exempt ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+      </label>`}
+
+      <label style="${row};cursor:pointer;color:#fca5a5;font-weight:700;border-bottom:none">
         <span>⛔ إيقاف الحساب كلياً (يمنع من التطبيق كله)</span>
         <input type="checkbox" id="admUBlocked" ${r.blocked ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
       </label>
+      ${_admSubBlock('account', r)}
 
       <button onclick="adminSaveUser()" style="width:100%;margin-top:16px;padding:12px;border-radius:11px;
         border:none;cursor:pointer;font-weight:800;font-size:13.5px;color:#1a1a1a;
@@ -3489,14 +3651,123 @@ function _admSetBlur(on) {
   bOff.style.color       = !on ? '#86efac' : 'var(--txt-m)';
 }
 
+/* 💳 كتلة اشتراك قسمٍ واحد داخل نافذة إدارة المستخدم */
+function _admSubBlock(k, r) {
+  const o = _secSubRaw(r, k) || {};
+  const paid = o.plan === 'paid';
+  const si = _subInfo(r, k);
+  const inp = 'flex:1;min-width:0;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf);color:var(--txt);font-size:11px;outline:none;font-family:inherit';
+  const btn = (on, clrB, clrBg, clrT) => `flex:1;padding:7px;border-radius:8px;cursor:pointer;font-size:10.5px;font-weight:700;border:1.5px solid ${on ? clrB : 'var(--bdr)'};background:${on ? clrBg : 'var(--surf)'};color:${on ? clrT : 'var(--txt-m)'}`;
+  return `
+  <div style="background:var(--surf-alt);border:1px dashed var(--bdr);border-radius:10px;padding:7px 9px;margin:2px 0 10px">
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:10px;color:var(--txt-m);font-weight:700;flex-shrink:0">💳 الاشتراك:</span>
+      <button type="button" id="admSub-${k}-bf" onclick="_admSetSubPlan('${k}','free')"
+        style="${btn(!paid, '#4ade80', 'rgba(74,222,128,.12)', '#86efac')}">🆓 مجاني</button>
+      <button type="button" id="admSub-${k}-bp" onclick="_admSetSubPlan('${k}','paid')"
+        style="${btn(paid, '#f59e0b', 'rgba(245,158,11,.15)', '#fcd34d')}">💳 مفعّل</button>
+      <input type="hidden" id="admSub-${k}-plan" value="${paid ? 'paid' : 'free'}">
+    </div>
+    <div id="admSub-${k}-fields" style="display:${paid ? 'block' : 'none'}">
+      <div style="display:flex;gap:6px;padding:6px 0 2px">
+        <input id="admSub-${k}-price" type="number" min="0" step="any" placeholder="💰 القيمة (ر.س)" value="${o.price || ''}" style="${inp}">
+        <input id="admSub-${k}-days" type="number" min="1" placeholder="📅 الأيام" value="${o.days || ''}" style="${inp}">
+      </div>
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:4px 0;cursor:pointer;color:var(--txt-m)">
+        <span>إظهار زر الدفع (فيزا وغيرها — يُربط مستقبلاً)</span>
+        <input type="checkbox" id="admSub-${k}-pay" ${o.show_pay === false ? '' : 'checked'} style="width:15px;height:15px;cursor:pointer">
+      </label>
+      <div style="font-size:9.5px;color:var(--txt-m);line-height:1.6">
+        ${si.plan === 'paid' && si.expiry ? (si.expired
+            ? '⏳ <span style="color:#f87171">منتهٍ</span> — الحفظ يجدّده من الآن'
+            : `✅ باقي <b style="color:#4ade80">${si.daysLeft}</b> يوم — ينتهي ${si.expiry.toLocaleDateString('ar-EG')}`)
+          : 'يبدأ العدّ عند الحفظ — وعند الانتهاء يُغلق هذا القسم تلقائياً'}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* زرّا خطة اشتراك قسمٍ (مجاني/مفعّل) */
+function _admSetSubPlan(k, p) {
+  const paid = p === 'paid';
+  document.getElementById(`admSub-${k}-plan`).value = p;
+  document.getElementById(`admSub-${k}-fields`).style.display = paid ? 'block' : 'none';
+  const bF = document.getElementById(`admSub-${k}-bf`);
+  const bP = document.getElementById(`admSub-${k}-bp`);
+  bF.style.borderColor = !paid ? '#4ade80' : 'var(--bdr)';
+  bF.style.background  = !paid ? 'rgba(74,222,128,.12)' : 'var(--surf)';
+  bF.style.color       = !paid ? '#86efac' : 'var(--txt-m)';
+  bP.style.borderColor = paid ? '#f59e0b' : 'var(--bdr)';
+  bP.style.background  = paid ? 'rgba(245,158,11,.15)' : 'var(--surf)';
+  bP.style.color       = paid ? '#fcd34d' : 'var(--txt-m)';
+}
+
+/* كل المستخدمين المؤهلين لـ«التطبيق على الكل»: عدا الأدمن والمستثنين 🛡️ */
+let _admPanelBulk = false;
+function _admAllTargets() {
+  return _admUsers
+    .filter(u => u.email
+      && !(sbUser && u.email === sbUser.email)
+      && !ADMIN_EMAILS.includes((u.email || '').toLowerCase())
+      && !(_admRestr[u.email] && _admRestr[u.email].sub_exempt))
+    .map(u => u.email);
+}
+
+/* 🛡️ تبديل استثناء مستخدم من «التطبيق على الكل» بضغطة من القائمة */
+async function adminToggleExempt(email) {
+  const cur = _admRestr[email] || {};
+  const next = !cur.sub_exempt;
+  const { error } = await sb.from('user_restrictions')
+    .upsert({ email, hidden_tabs: cur.hidden_tabs || [], blocked: !!cur.blocked,
+              no_popups: !!cur.no_popups, blur_view: !!cur.blur_view,
+              sub_exempt: next, updated_at: new Date().toISOString() });
+  if (error) { _admErr(error, 'فشل تغيير الاستثناء'); return; }
+  _admRestr[email] = Object.assign({}, cur, { email, sub_exempt: next });
+  showToast(next ? '🛡️ استُثني من «التطبيق على الكل»: ' + email : '▶️ أُلغي الاستثناء: ' + email);
+  const sEl = document.getElementById('admUserSearch');
+  adminRenderUsers(sEl ? sEl.value : '');
+}
+
 async function adminSaveUser() {
   const hidden_tabs = ADMIN_TAB_DEFS.map(t => t.k)
     .filter(k => !document.getElementById('admU-' + k).checked);
   const blocked = document.getElementById('admUBlocked').checked;
   const no_popups = document.getElementById('admUPopups').checked;
   const blur_view = no_popups && !!document.getElementById('admUBlur').value;
+  const exemptEl = document.getElementById('admUExempt');
+  /* 💳 اجمع اشتراك كل قسم */
+  const secIn = {};
+  for (const d of SUB_SECTION_DEFS) {
+    const k = d.k;
+    const plan = document.getElementById('admSub-' + k + '-plan').value === 'paid' ? 'paid' : 'free';
+    const price = parseFloat(document.getElementById('admSub-' + k + '-price').value) || 0;
+    const days = parseInt(document.getElementById('admSub-' + k + '-days').value, 10) || 0;
+    const show_pay = document.getElementById('admSub-' + k + '-pay').checked;
+    if (plan === 'paid' && days <= 0) { showToast('⚠️ حدد عدد أيام اشتراك «' + d.t + '»'); return; }
+    secIn[k] = { plan, price, days, show_pay };
+  }
   const now = new Date().toISOString();
-  const rows = _admBulkTargets.map(email => ({ email, hidden_tabs, blocked, no_popups, blur_view, updated_at: now }));
+  const rows = _admBulkTargets.map(email => {
+    const prev = _admRestr[email] || {};
+    const subs = {};
+    for (const k of Object.keys(secIn)) {
+      const cur = Object.assign({}, secIn[k]);
+      const po = _secSubRaw(prev, k) || {};
+      /* يبدأ العدّ من الآن عند: تفعيل جديد، تغيير الأيام، أو تجديد منتهٍ */
+      let start = po.start || null;
+      if (cur.plan === 'paid' && (po.plan !== 'paid' || Number(po.days) !== cur.days || !start || _subInfo(prev, k).expired)) start = now;
+      if (cur.plan !== 'paid') start = null;
+      cur.start = start;
+      subs[k] = cur;
+    }
+    const acc = subs.account;
+    return { email, hidden_tabs, blocked, no_popups, blur_view, subs,
+             /* مرآة توافق خلفي لحقول الحساب القديمة */
+             sub_plan: acc.plan, sub_price: acc.price, sub_days: acc.days,
+             sub_start: acc.start, sub_show_pay: acc.show_pay,
+             sub_exempt: exemptEl ? exemptEl.checked : !!prev.sub_exempt,
+             updated_at: now };
+  });
   const { error } = await sb.from('user_restrictions').upsert(rows);
   if (error) { _admErr(error, 'فشل الحفظ'); return; }
   rows.forEach(r => { _admRestr[r.email] = r; });
@@ -8470,7 +8741,10 @@ function showSignupNudge() {
 
 /* ── قيد النوافذ المنبثقة (يضبطه الأدمن لكل مستخدم) ── */
 function popupsBlockedForUser() {
-  return !!(sbUser && userRestrictions && userRestrictions.no_popups) && !isAdmin();
+  if (!sbUser || isAdmin()) return false;
+  if (userRestrictions && userRestrictions.no_popups) return true;
+  /* 💳 اشتراك المنبثقات المنتهي يمنعها تلقائياً */
+  return _subInfo(userRestrictions, 'popups').expired;
 }
 
 function showSupportNotice() {

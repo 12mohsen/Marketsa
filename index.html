@@ -804,6 +804,21 @@ td.td-sec{text-align:right;font-size:13px;color:var(--txt-2)}
   font-size:12px;color:var(--txt-m);
   border-top:1px solid var(--bdr);background:var(--surf);
 }
+.app-disclaimer{
+  max-width:940px;margin:6px auto 0;padding:12px 18px 2px;
+  font-size:11px;line-height:1.95;color:var(--txt-m);text-align:justify;
+  border-top:1px dashed var(--bdr);
+}
+.app-disclaimer strong{color:var(--txt-2)}
+.app-disclaimer p{margin:0 0 8px}
+.dc-toggle{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;background:none;border:none;cursor:pointer;font-family:inherit;
+  font-size:12px;font-weight:800;color:var(--txt-2);padding:4px;margin-bottom:8px;
+}
+.dc-toggle:hover{color:var(--g-mid)}
+.dc-arrow{font-size:10px;transition:transform .2s}
+.dc-body.dc-hidden{display:none}
 
 /* ═══════════════════════════════════════
    Responsive — Tablet
@@ -1661,14 +1676,50 @@ canvas#mdChart{display:block;width:100% !important}
 <footer class="app-footer">
   تداول بلس — بيانات السوق السعودي (تداول) ·
   <br>
-  مصدر البيانات: موثوق
+  مصدر البيانات: مزوّدون خارجيون — الحقوق لأصحابها
   <br>
   المالك mohsen © <span id="footerYear"></span>
   <br>
   <a href="#" onclick="showSupportForm();return false"
      style="color:#fff;text-decoration:none;font-weight:700;display:inline-block;margin-top:6px">📨 اتصل بالدعم</a>
+
+  <div class="app-disclaimer">
+    <button type="button" class="dc-toggle" onclick="toggleDisclaimer()" aria-expanded="false">
+      <span>⚠️ إخلاء المسؤولية</span>
+      <span class="dc-arrow" id="dcArrow">▼</span>
+    </button>
+    <div class="dc-body dc-hidden" id="dcBody">
+    <p>
+      يُقدَّم هذا التطبيق لأغراض <strong>معلوماتية وتعليمية فقط</strong>، ولا يُعدّ
+      توصية أو استشارة استثمارية أو دعوة لشراء أو بيع أي ورقة مالية. البيانات
+      المعروضة قد تكون مؤخّرة أو غير دقيقة أو غير مكتملة، ولا نضمن دقّتها أو
+      اكتمالها أو استمرارية توفّرها.
+    </p>
+    <p>
+      جميع القرارات الاستثمارية تقع على <strong>مسؤولية المستخدم وحده</strong>،
+      ولا يتحمّل التطبيق أو مالكه أو مزوّدو البيانات أي مسؤولية عن أي خسائر أو
+      أضرار مباشرة أو غير مباشرة تنتج عن استخدام هذه المعلومات. يُنصح باستشارة
+      مستشار مالي مرخّص من <strong>هيئة السوق المالية</strong> قبل اتخاذ أي قرار.
+    </p>
+    <p>
+      هذا التطبيق ليس جهة مرخّصة من هيئة السوق المالية (CMA) ولا من شركة السوق
+      المالية السعودية (تداول). أسماء المؤشرات والشركات والعلامات التجارية تعود
+      لأصحابها وتُستخدم لأغراض التعريف فقط، وجميع الحقوق محفوظة لأصحابها.
+    </p>
+    </div>
+  </div>
 </footer>
-<script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
+<script>
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+function toggleDisclaimer(){
+  var body=document.getElementById('dcBody'),
+      arrow=document.getElementById('dcArrow'),
+      btn=document.querySelector('.dc-toggle');
+  var hidden=body.classList.toggle('dc-hidden');
+  if(arrow) arrow.textContent = hidden ? '▼' : '▲';
+  if(btn)   btn.setAttribute('aria-expanded', String(!hidden));
+}
+</script>
 
 <!-- ══════════════════════════════════
      JAVASCRIPT
@@ -1827,6 +1878,40 @@ const CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/' +
   '2PACX-1vQ5uiE3ga1ZaZ194DL_zgJEcSYXriiwNjjV-9kMJEfZv31ryMszIl6QE1dNgRJNzYwA0cglMtd2_WgF' +
   '/pub?output=csv';
+
+/* ════════════════════════════════════════════════════════════════
+   إعدادات مصدر البيانات — نظام التبديل الذكي (Feature Flag)
+   ----------------------------------------------------------------
+   • المصدر الحالي (LEGACY) = Google Sheets + Yahoo Finance. مستقر ويعمل.
+   • المصدر المستقبلي (SAHMK) = بيانات مجمّعة عبر sahmk API من خلال الوسيط
+     الآمن (Cloudflare Worker) الذي يحمل المفتاح كـ Secret.
+
+   ★★ للتفعيل مستقبلاً (بعد الاشتراك في باقة Starter): غيّر السطر التالي
+      فقط من false إلى true. لا شيء آخر في الكود يحتاج تعديلاً.  ★★
+
+   طالما القيمة false، يبقى التطبيق يعمل حرفياً كما هو الآن على المصدر
+   الحالي، وكل الدوال والواجهات لا تتأثر إطلاقاً.
+   ════════════════════════════════ */
+const USE_SAHMK_API = false;   // ← المفتاح المركزي الوحيد للتبديل
+
+/* عنوان جذر وسيط sahmk (نفس الـWorker الخاص بك، ينتهي بـ /sahmk/).
+   المفتاح لا يوجد هنا — فقط داخل الـWorker كـ Secret باسم SAHMK_API_KEY. */
+const SAHMK_WORKER_BASE = 'https://tadawul-proxy.abdmohsen94.workers.dev/sahmk/';
+
+/* المؤشر: TASI (السوق الرئيسي) أو NOMU (نمو). */
+const SAHMK_INDEX = 'TASI';
+
+/* قائمة رموز الأسهم التي تُجلب أسعارها المجمّعة عبر /quotes مستقبلاً.
+   اتركها فارغة الآن. عند التفعيل: إمّا تعبّئها يدوياً (['2222','1120',...])
+   أو تتركها فارغة فيشتقّها الكود تلقائياً من آخر بيانات مُحمّلة (rows).
+   تُقسّم داخلياً إلى دفعات (batches) احتراماً لحدود الطلب. */
+const SAHMK_SYMBOLS = [];
+
+/* إثراء الأساسيات (P/E, EPS، القيمة السوقية، القطاع) عبر /company لكل سهم.
+   مطفأ افتراضياً لأنه يستهلك طلباً لكل سهم. فعّله فقط على باقة تتحمّل ذلك.
+   عند الإطفاء تبقى هذه الحقول فارغة (—) في مسار sahmk، بينما السعر
+   والتغير والحجم والأعلى/الأدنى تظهر طبيعية. */
+const SAHMK_ENRICH_FUNDAMENTALS = false;
 
 /* ─────────────────────────────────────
    SUPABASE — الحسابات وتسجيل الدخول
@@ -2010,9 +2095,10 @@ function authBtnClick(e) {
       SUB_SECTION_DEFS.forEach(d => {
         const x = _subInfo(userRestrictions, d.k);
         if (x.plan !== 'paid') return;
-        if (x.expired) lines.push(`⏳ <span style="color:#f87171">${d.t}: منتهٍ</span>`);
-        else if (x.expiry) lines.push(`💳 <span style="color:${x.daysLeft <= 3 ? '#fbbf24' : '#4ade80'}">${d.t}: باقي ${x.daysLeft} يوم</span>`);
-        else lines.push(`💳 <span style="color:#4ade80">${d.t}: مفعّل</span>`);
+        const amt = x.price ? ` <b style="color:#fbbf24">${x.price} ر.س</b>` : '';
+        if (x.expired) lines.push(`⏳ <span style="color:#f87171">${d.t}: منتهٍ</span>${amt}`);
+        else if (x.expiry) lines.push(`💳 <span style="color:${x.daysLeft <= 3 ? '#fbbf24' : '#4ade80'}">${d.t}: باقي ${x.daysLeft} يوم</span>${amt}`);
+        else lines.push(`💳 <span style="color:#4ade80">${d.t}: مفعّل</span>${amt}`);
       });
       subEl.innerHTML = lines.length ? lines.join('<br>') : '🆓 اشتراكك الحالي: مجاني';
     }
@@ -2572,6 +2658,48 @@ function _subInfo(r, k) {
     expiry, price, days, showPay,
   };
 }
+/* 🪟🌫️ قيود المنبثقات/الضبابية لكل قسم — تُخزَّن داخل subs[k] مع توافق خلفي للحقلين العامّين القديمين */
+function _secFlags(r, k) {
+  const so = (r && r.subs && r.subs[k]) || null;
+  const lockT = (so && (so.lock_targets === 'open' || so.lock_targets === 'lock')) ? so.lock_targets : null;
+  if (so && (so.no_popups !== undefined || so.blur !== undefined))
+    return { noPop: !!so.no_popups, blur: !!so.blur, lockT };
+  return {
+    noPop: !!(r && r.no_popups),
+    blur:  !!(r && r.blur_view) && (k === 'monitor' || k === 'analysis'),
+    lockT,
+  };
+}
+/* 💳 هل لدى المستخدم اشتراك مدفوع فعّال في هذا القسم؟ (الأدمن دائماً نعم) */
+function _isPaidFor(k) {
+  if (typeof isAdmin === 'function' && isAdmin()) return true;
+  const si = _subInfo(userRestrictions, k);
+  return si.plan === 'paid' && !si.expired;
+}
+/* 🔒 هل الأهداف/وقف الخسارة مقفلة لهذا القسم؟ يتحكم بها الأدمن: تلقائي/مفتوحة/مقفلة */
+function _targetsLocked(secKey) {
+  if (!secKey) return false;
+  if (typeof isAdmin === 'function' && isAdmin()) return false;
+  const lt = _secFlags(userRestrictions, secKey).lockT;
+  if (lt === 'open') return false;   // فتحها الأدمن
+  if (lt === 'lock') return true;    // أقفلها الأدمن
+  return !_isPaidFor(secKey);        // تلقائي: تُقفل لغير المشترك
+}
+/* غلاف تظليل موحّد فوق كتلة الأهداف مع دعوة للاشتراك */
+function _lockOverlayWrap(innerHTML) {
+  return `<div style="position:relative">
+    <div style="filter:blur(6px);-webkit-filter:blur(6px);user-select:none;pointer-events:none">${innerHTML}</div>
+    <div onclick="event.stopPropagation();showSupportNotice()" title="اشترك لعرض الأهداف ووقف الخسارة"
+      style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:12px;background:rgba(0,0,0,.12)">
+      <span style="background:rgba(17,24,39,.92);color:#fcd34d;border:1px solid rgba(245,158,11,.45);border-radius:20px;padding:6px 15px;font-size:11px;font-weight:700;white-space:nowrap">🔒 اشترك لعرض الأهداف ووقف الخسارة</span>
+    </div>
+  </div>`;
+}
+/* يظلّل كتلة HTML إن كانت مقفلة لهذا القسم، وإلا يعيدها كما هي */
+function _wrapIfLocked(secKey, html) {
+  if (!html) return html;
+  return _targetsLocked(secKey) ? _lockOverlayWrap(html) : html;
+}
 /* الإغلاق التلقائي: إعادة فحص انتهاء الاشتراك كل دقيقة */
 let _subWatchTimer = null;
 function _startSubWatch() {
@@ -2624,11 +2752,12 @@ function applyAppSettings() {
     const homeBtn = document.querySelector('.nav-btn[data-tab="home"]');
     if (homeBtn) try { switchTab('home', homeBtn); } catch (e) {}
   }
-  /* العرض الضبابي لقسمي المراقبة وتحليل السوق (قيد فردي من الأدمن) */
-  const doBlur = !!(sbUser && userRestrictions && userRestrictions.blur_view) && !isAdmin();
-  ['panel-monitor', 'panel-analysis'].forEach(id => {
+  /* العرض الضبابي — لكل قسم على حدة (قيد فردي من الأدمن) */
+  ADMIN_TAB_DEFS.forEach(t => {
+    const id = 'panel-' + t.k;
     const p = document.getElementById(id);
     if (!p) return;
+    const doBlur = !!sbUser && !isAdmin() && _secFlags(userRestrictions, t.k).blur;
     p.style.filter = doBlur ? 'blur(6px)' : '';
     p.style.userSelect = doBlur ? 'none' : '';
     p.style.pointerEvents = doBlur ? 'none' : '';
@@ -3443,7 +3572,7 @@ function adminRenderUsers(query) {
       SUB_SECTION_DEFS.forEach(d => {
         const x = _subInfo(r, d.k);
         if (x.plan !== 'paid') return;
-        subBits.push(`${d.t.replace(/^\S+\s/, '')}: ${x.expired ? '⏳منتهٍ' : (x.daysLeft !== null ? 'باقي ' + x.daysLeft + 'ي' : 'مفعّل')}`);
+        subBits.push(`${d.t.replace(/^\S+\s/, '')}: ${x.expired ? '⏳منتهٍ' : (x.daysLeft !== null ? 'باقي ' + x.daysLeft + 'ي' : 'مفعّل')}${x.price ? ' (' + x.price + ' ر.س)' : ''}`);
       });
       if (subBits.length) parts.push('💳 ' + subBits.join(' · '));
       if (r.sub_exempt) parts.push('🛡️ مستثنى من «على الكل»');
@@ -3587,33 +3716,35 @@ function adminEditUser(email) {
       <div style="font-size:11.5px;color:var(--txt-m);direction:ltr;text-align:left;margin-bottom:12px">${bulk ? (_admBulkTargets.slice(0, 6).join('<br>') + (_admBulkTargets.length > 6 ? `<br>… و${_admBulkTargets.length - 6} آخرين` : '')) : email}</div>
 
       <div style="font-size:11.5px;font-weight:700;color:#fbbf24;margin-bottom:4px">الأقسام المتاحة له</div>
-      ${ADMIN_TAB_DEFS.map(t => `
+      ${ADMIN_TAB_DEFS.map(t => { const fl = _secFlags(r, t.k); return `
         <label style="${row};cursor:pointer;border-bottom:none">
           <span>${t.t}</span>
           <input type="checkbox" id="admU-${t.k}" ${(r.hidden_tabs || []).includes(t.k) ? '' : 'checked'}
                  style="width:18px;height:18px;cursor:pointer">
         </label>
-        ${_admSubBlock(t.k, r)}`).join('')}
+        <div style="display:flex;gap:6px;align-items:center;padding:2px 0 6px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--txt-m);cursor:pointer;flex:1">
+            <input type="checkbox" id="admUPop-${t.k}" ${fl.noPop ? 'checked' : ''} style="width:15px;height:15px;cursor:pointer">
+            🪟 منع المنبثقات
+          </label>
+          <button type="button" id="admUBlurBtn-${t.k}" onclick="_admTogSecBlur('${t.k}')"
+            style="padding:6px 10px;border-radius:8px;cursor:pointer;font-size:10.5px;font-weight:700;
+                   border:1.5px solid ${fl.blur ? '#f59e0b' : 'var(--bdr)'};
+                   background:${fl.blur ? 'rgba(245,158,11,.15)' : 'var(--surf-alt)'};
+                   color:${fl.blur ? '#fcd34d' : 'var(--txt-m)'}">${fl.blur ? '🌫️ ضبابي' : '👁️ واضح'}</button>
+          <input type="hidden" id="admUBlurV-${t.k}" value="${fl.blur ? '1' : ''}">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;padding:0 0 8px">
+          <span style="font-size:10.5px;color:var(--txt-m);flex:1">🎯 الأهداف ووقف الخسارة</span>
+          <select id="admUTgt-${t.k}" style="font-size:10.5px;padding:5px 8px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);cursor:pointer;font-family:inherit">
+            <option value="" ${!fl.lockT ? 'selected' : ''}>⚙️ تلقائي (حسب الاشتراك)</option>
+            <option value="open" ${fl.lockT === 'open' ? 'selected' : ''}>🔓 مفتوحة للمستخدم</option>
+            <option value="lock" ${fl.lockT === 'lock' ? 'selected' : ''}>🔒 مقفلة (مظللة)</option>
+          </select>
+        </div>
+        ${_admSubBlock(t.k, r)}`; }).join('')}
 
-      <label style="${row};cursor:pointer">
-        <span>🪟 منع النوافذ المنبثقة (تفاصيل وتحليل الأسهم)</span>
-        <input type="checkbox" id="admUPopups" ${r.no_popups ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer"
-          onchange="document.getElementById('admBlurRow').style.display = this.checked ? 'flex' : 'none'">
-      </label>
-      <div id="admBlurRow" style="display:${r.no_popups ? 'flex' : 'none'};gap:6px;padding:10px 0;border-bottom:1px solid var(--bdr)">
-        <button type="button" id="admBlurOn" onclick="_admSetBlur(true)"
-          style="flex:1;padding:9px;border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:700;
-                 border:1.5px solid ${r.blur_view ? '#f59e0b' : 'var(--bdr)'};
-                 background:${r.blur_view ? 'rgba(245,158,11,.15)' : 'var(--surf-alt)'};
-                 color:${r.blur_view ? '#fcd34d' : 'var(--txt-m)'}">🌫️ المراقبة وتحليل السوق ضبابية</button>
-        <button type="button" id="admBlurOff" onclick="_admSetBlur(false)"
-          style="flex:1;padding:9px;border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:700;
-                 border:1.5px solid ${!r.blur_view ? '#4ade80' : 'var(--bdr)'};
-                 background:${!r.blur_view ? 'rgba(74,222,128,.12)' : 'var(--surf-alt)'};
-                 color:${!r.blur_view ? '#86efac' : 'var(--txt-m)'}">👁️ يشاهدها بوضوح</button>
-        <input type="hidden" id="admUBlur" value="${r.blur_view ? '1' : ''}">
-      </div>
-
+      <div style="font-size:10px;color:var(--txt-m);margin:6px 0 2px;line-height:1.5">🪟 منع المنبثقات و🌫️ الضبابية تُضبط لكل قسم أعلاه</div>
       ${_admSubBlock('popups', r)}
       ${bulk ? '' : `
       <label style="${row};cursor:pointer">
@@ -3638,17 +3769,16 @@ function adminEditUser(email) {
   document.body.appendChild(el);
 }
 
-/* زرّا الضبابية في نافذة إدارة المستخدم */
-function _admSetBlur(on) {
-  document.getElementById('admUBlur').value = on ? '1' : '';
-  const bOn = document.getElementById('admBlurOn');
-  const bOff = document.getElementById('admBlurOff');
-  bOn.style.borderColor  = on ? '#f59e0b' : 'var(--bdr)';
-  bOn.style.background   = on ? 'rgba(245,158,11,.15)' : 'var(--surf-alt)';
-  bOn.style.color        = on ? '#fcd34d' : 'var(--txt-m)';
-  bOff.style.borderColor = !on ? '#4ade80' : 'var(--bdr)';
-  bOff.style.background  = !on ? 'rgba(74,222,128,.12)' : 'var(--surf-alt)';
-  bOff.style.color       = !on ? '#86efac' : 'var(--txt-m)';
+/* 🌫️ تبديل ضبابية قسمٍ داخل نافذة إدارة المستخدم */
+function _admTogSecBlur(k) {
+  const v = document.getElementById('admUBlurV-' + k);
+  const on = !v.value;
+  v.value = on ? '1' : '';
+  const b = document.getElementById('admUBlurBtn-' + k);
+  b.textContent    = on ? '🌫️ ضبابي' : '👁️ واضح';
+  b.style.borderColor = on ? '#f59e0b' : 'var(--bdr)';
+  b.style.background  = on ? 'rgba(245,158,11,.15)' : 'var(--surf-alt)';
+  b.style.color       = on ? '#fcd34d' : 'var(--txt-m)';
 }
 
 /* 💳 كتلة اشتراك قسمٍ واحد داخل نافذة إدارة المستخدم */
@@ -3680,7 +3810,7 @@ function _admSubBlock(k, r) {
       <div style="font-size:9.5px;color:var(--txt-m);line-height:1.6">
         ${si.plan === 'paid' && si.expiry ? (si.expired
             ? '⏳ <span style="color:#f87171">منتهٍ</span> — الحفظ يجدّده من الآن'
-            : `✅ باقي <b style="color:#4ade80">${si.daysLeft}</b> يوم — ينتهي ${si.expiry.toLocaleDateString('ar-EG')}`)
+            : `✅ باقي <b style="color:#4ade80">${si.daysLeft}</b> يوم — ينتهي ${si.expiry.toLocaleDateString('ar-EG')}${si.price ? ` — <b style="color:#fbbf24">${si.price} ر.س</b>` : ''}`)
           : 'يبدأ العدّ عند الحفظ — وعند الانتهاء يُغلق هذا القسم تلقائياً'}
       </div>
     </div>
@@ -3732,8 +3862,16 @@ async function adminSaveUser() {
   const hidden_tabs = ADMIN_TAB_DEFS.map(t => t.k)
     .filter(k => !document.getElementById('admU-' + k).checked);
   const blocked = document.getElementById('admUBlocked').checked;
-  const no_popups = document.getElementById('admUPopups').checked;
-  const blur_view = no_popups && !!document.getElementById('admUBlur').value;
+  /* 🪟🌫️ قيود المنبثقات والضبابية لكل قسم */
+  const popFlag = {}, blurFlag = {};
+  const tgtFlag = {};
+  ADMIN_TAB_DEFS.forEach(t => {
+    popFlag[t.k]  = document.getElementById('admUPop-' + t.k).checked;
+    blurFlag[t.k] = !!document.getElementById('admUBlurV-' + t.k).value;
+    tgtFlag[t.k]  = document.getElementById('admUTgt-' + t.k).value;
+  });
+  const no_popups = ADMIN_TAB_DEFS.some(t => popFlag[t.k]);
+  const blur_view = ADMIN_TAB_DEFS.some(t => blurFlag[t.k]);
   const exemptEl = document.getElementById('admUExempt');
   /* 💳 اجمع اشتراك كل قسم */
   const secIn = {};
@@ -3758,6 +3896,10 @@ async function adminSaveUser() {
       if (cur.plan === 'paid' && (po.plan !== 'paid' || Number(po.days) !== cur.days || !start || _subInfo(prev, k).expired)) start = now;
       if (cur.plan !== 'paid') start = null;
       cur.start = start;
+      if (popFlag.hasOwnProperty(k)) {
+        cur.no_popups = !!popFlag[k]; cur.blur = !!blurFlag[k];
+        cur.lock_targets = (tgtFlag[k] === 'open' || tgtFlag[k] === 'lock') ? tgtFlag[k] : null;
+      }
       subs[k] = cur;
     }
     const acc = subs.account;
@@ -4354,15 +4496,161 @@ async function tryAllSources() {
   return null;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   طبقة بيانات sahmk المستقبلية (تعمل فقط عندما USE_SAHMK_API === true)
+   ───────────────────────────────────────────────────────────────────
+   الفكرة: هذه الطبقة تُنتج نفس بنية البيانات التي يفهمها processData
+   حرفياً (مصفوفة صفوف، الصف 0 = رؤوس أعمدة عربية يتعرّف عليها الكاشف
+   التلقائي). لذا عند التبديل لا تحتاج أي واجهة (UI) إلى تعديل — الجدول،
+   المحفظة، المراقبة، تحليل السوق... كلها تستهلك rows/tasiObj كالمعتاد.
+
+   لا يوجد أي مفتاح هنا. الطلبات تمرّ عبر الوسيط (Cloudflare Worker) الذي
+   يحقن X-API-Key من الـ Secret.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const SAHMK_BATCH = 50;              // عدد الرموز لكل طلب /quotes
+const _sahmkMem = new Map();         // كاش خفيف داخل المتصفح (5 دقائق)
+
+// نداء عام لأي نقطة عبر الوسيط، مع معالجة الأخطاء وكاش الذاكرة
+async function sahmkApi(path, params = {}) {
+  const qs  = new URLSearchParams(params).toString();
+  const url = SAHMK_WORKER_BASE + path + (qs ? '?' + qs : '');
+  const c = _sahmkMem.get(url);
+  if (c && Date.now() - c.t < 5 * 60 * 1000) return c.d;
+
+  const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+  let d;
+  try { d = await res.json(); }
+  catch { throw new Error('sahmk: استجابة غير صالحة (' + res.status + ')'); }
+
+  if (!res.ok || (d && d.error)) {
+    const code = (d && d.error && d.error.code) || res.status;
+    const msg  = (d && d.error && d.error.message) || 'خطأ غير معروف';
+    throw new Error('sahmk ' + code + ': ' + msg);
+  }
+  _sahmkMem.set(url, { t: Date.now(), d });
+  return d;
+}
+
+// تحويل كائن سهم (quote أو ملخص) إلى صف بترتيب الرؤوس أدناه
+function sahmkRow(q, f) {
+  f = f || {};
+  const v = x => (x === null || x === undefined) ? '' : x;
+  return [
+    v(q.name || q.name_en),   // اسم الشركة
+    v(q.symbol),              // رمز
+    v(q.price),               // السعر
+    v(q.change_percent),      // نسبة التغير
+    v(q.change),              // مقدار التغير
+    v(q.high != null ? q.high : f.week_high),   // أعلى
+    v(q.low  != null ? q.low  : f.week_low),    // أدنى
+    v(q.volume),              // حجم التداول
+    v(f.pe_ratio),            // مكرر الربحية
+    v(f.eps),                 // ربحية السهم
+    v(f.market_cap),          // القيمة السوقية
+    v(f.dividend_yield),      // عائد التوزيعات
+    v(f.sector),              // القطاع
+  ];
+}
+
+// تحديد قائمة الرموز المطلوبة: يدوياً → أو من آخر بيانات → أو من قوائم الحركة
+async function sahmkResolveSymbols() {
+  if (Array.isArray(SAHMK_SYMBOLS) && SAHMK_SYMBOLS.length) return SAHMK_SYMBOLS.slice();
+  if (Array.isArray(rows) && rows.length) {
+    const syms = [...new Set(rows.map(r => r.sym).filter(Boolean))];
+    if (syms.length) return syms;
+  }
+  // احتياطي: اجمع رموزاً من الرابحين/الخاسرين/الأكثر حجماً (نقاط مجانية)
+  try {
+    const [g, l, vv] = await Promise.all([
+      sahmkApi('market/gainers/', { limit: 50, index: SAHMK_INDEX }),
+      sahmkApi('market/losers/',  { limit: 50, index: SAHMK_INDEX }),
+      sahmkApi('market/volume/',  { limit: 50, index: SAHMK_INDEX }),
+    ]);
+    const set = new Set();
+    (g.gainers || []).forEach(x => x.symbol && set.add(x.symbol));
+    (l.losers  || []).forEach(x => x.symbol && set.add(x.symbol));
+    (vv.stocks || []).forEach(x => x.symbol && set.add(x.symbol));
+    return [...set];
+  } catch (e) { console.warn('[sahmk] تعذّر جمع الرموز الاحتياطي:', e.message); return []; }
+}
+
+// إثراء اختياري بالأساسيات عبر /company (طلب لكل سهم — مطفأ افتراضياً)
+async function sahmkEnrich(symbols) {
+  const out = {};
+  for (const sym of symbols) {
+    try {
+      const c  = await sahmkApi('company/' + sym + '/');
+      const fn = c.fundamentals || {};
+      out[sym] = {
+        pe_ratio: fn.pe_ratio, eps: fn.eps, market_cap: fn.market_cap,
+        week_high: fn.week_high, week_low: fn.week_low, sector: c.sector,
+      };
+    } catch (e) { /* تجاهل سهماً فشل ولا توقف الباقي */ }
+  }
+  return out;
+}
+
+// الدالة الرئيسية: تُرجع data بصيغة processData (رؤوس + صفوف)
+async function sahmkLoadMarket() {
+  const HEADERS = [
+    'اسم الشركة', 'رمز', 'السعر', 'نسبة التغير', 'مقدار التغير',
+    'أعلى 52 أسبوع', 'أدنى 52 أسبوع', 'حجم التداول',
+    'مكرر الربحية', 'ربحية السهم', 'القيمة السوقية', 'عائد التوزيعات', 'القطاع'
+  ];
+  const data = [HEADERS];
+
+  // صف المؤشر (يتعرّف عليه processData كـ tasiObj لاحتوائه على TASI)
+  try {
+    const m = await sahmkApi('market/summary/', { index: SAHMK_INDEX });
+    data.push(sahmkRow({
+      name: 'مؤشر ' + SAHMK_INDEX + ' TASI',
+      symbol: SAHMK_INDEX,
+      price: m.index_value,
+      change: m.index_change,
+      change_percent: m.index_change_percent,
+    }));
+  } catch (e) { console.warn('[sahmk] تعذّر ملخص السوق:', e.message); }
+
+  // الأسعار المجمّعة عبر /quotes على دفعات
+  const symbols = await sahmkResolveSymbols();
+  const quotes  = [];
+  for (let i = 0; i < symbols.length; i += SAHMK_BATCH) {
+    const chunk = symbols.slice(i, i + SAHMK_BATCH);
+    if (!chunk.length) continue;
+    try {
+      const r = await sahmkApi('quotes', { symbols: chunk.join(',') });
+      (r.quotes || []).forEach(q => quotes.push(q));
+    } catch (e) { console.warn('[sahmk] دفعة quotes فشلت:', e.message); }
+  }
+
+  // إثراء اختياري
+  let fund = {};
+  if (SAHMK_ENRICH_FUNDAMENTALS && quotes.length) {
+    fund = await sahmkEnrich(quotes.map(q => q.symbol).filter(Boolean));
+  }
+
+  quotes.forEach(q => data.push(sahmkRow(q, fund[q.symbol])));
+  console.info('[sahmk] تم بناء ' + (data.length - 1) + ' صف من sahmk.');
+  return data;
+}
+
+/* ─────────────────────────────────────
+   نقطة التحميل الموحّدة — تبديل شفاف بين المصدرين
+───────────────────────────────────── */
 function loadCSV() {
   const btn = document.getElementById('btnRefresh');
-  btn.disabled = true;
-  document.getElementById('icoRefresh').textContent = '⏳';
-  setLoading('جارٍ تحميل بيانات السوق...');
+  const ico = document.getElementById('icoRefresh');
+  if (btn) btn.disabled = true;
+  if (ico) ico.textContent = '⏳';
+  setLoading(USE_SAHMK_API
+    ? 'جارٍ تحميل بيانات السوق من sahmk...'
+    : 'جارٍ تحميل بيانات السوق...');
 
-  tryAllSources().then(data => {
-    btn.disabled = false;
-    document.getElementById('icoRefresh').textContent = '🔄';
+  // معالج النتيجة نفسه للمصدرين — البيانات دائماً مصفوفة صفوف (الصف 0 رؤوس)
+  const onResult = (data) => {
+    if (btn) btn.disabled = false;
+    if (ico) ico.textContent = '🔄';
     if (!data || data.length < 2) {
       showError(
         'تعذّر الاتصال بمصدر البيانات عبر جميع المسارات المتاحة.' +
@@ -4371,13 +4659,39 @@ function loadCSV() {
       return;
     }
     try { processData(data); }
-    catch(e) {
+    catch (e) {
       showError('خطأ في معالجة البيانات: ' + e.message);
       console.error('[تداول بلس]', e);
     }
-  });
-}
+  };
 
+  const onFail = (e) => {
+    if (btn) btn.disabled = false;
+    if (ico) ico.textContent = '🔄';
+    console.error('[تداول بلس] فشل مصدر البيانات:', e);
+    showError('تعذّر تحميل البيانات: ' + (e && e.message ? e.message : e));
+  };
+
+  // رجوع تلقائي للمصدر القديم (جوجل شيت + ياهو) عند أي فشل في sahmk
+  const fallbackLegacy = (why) => {
+    console.warn('[تداول بلس] تحوّل تلقائي للمصدر القديم:', why);
+    setLoading('جارٍ التحويل لمصدر البيانات الاحتياطي...');
+    tryAllSources().then(onResult).catch(onFail);
+  };
+
+  // ★★ نقطة التبديل الوحيدة ★★
+  if (USE_SAHMK_API) {
+    // المصدر المستقبلي (sahmk). لو رجع فارغاً أو فشل → رجوع تلقائي للقديم.
+    sahmkLoadMarket()
+      .then(data => {
+        if (!data || data.length < 2) fallbackLegacy('بيانات sahmk فارغة');
+        else onResult(data);
+      })
+      .catch(e => fallbackLegacy(e && e.message ? e.message : e));
+  } else {
+    tryAllSources().then(onResult).catch(onFail);     // المصدر الحالي المستقر
+  }
+}
 
 /* ─────────────────────────────────────
    MODAL — Stock Detail Card
@@ -4870,7 +5184,7 @@ function pfRender() {
           <div class="pf-metric-val">${fmt(val)} ر.س</div>
         </div>
       </div>
-      ${techEvalHTML(r)}
+      ${techEvalHTML(r, 'watchlist')}
       <div class="pf-card-actions">
         <button class="pf-btn buy"      onclick="pfOpenBuyModal('${h.sym}','${h.name.replace(/'/g,"\\'")}')">📈 شراء</button>
         <button class="pf-btn"          onclick="pfOpenAddQtyModal('${h.sym}')">➕ إضافة كمية</button>
@@ -5208,7 +5522,7 @@ function wlRender() {
           <div class="pf-metric-val">${vol}</div>
         </div>
       </div>
-      ${techEvalHTML(r)}
+      ${techEvalHTML(r, 'monitor')}
       <div class="pf-card-actions">
         <button class="pf-btn buy"      onclick="event.stopPropagation();pfOpenBuyModal('${w.sym}','${(w.name||'').replace(/'/g,"\\'")}')">📈 شراء</button>
         <button class="pf-btn add-pf"   onclick="event.stopPropagation();wlAddToPortfolio('${w.sym}')">➕ إضافة للمحفظة</button>
@@ -5617,7 +5931,7 @@ function pfAnalyze(sym, name) {
     </div>
 
     <!-- ② الأهداف السعرية -->
-    ${(target1||target2||target3||stopLoss) ? `
+    ${(target1||target2||target3||stopLoss) ? _wrapIfLocked('analysis', `
     <div class="an-section">
       <div class="an-sec-title">📈 الأهداف السعرية المتدرجة</div>
       <div style="display:grid;grid-template-columns:repeat(${[target1,target2,target3,stopLoss].filter(Boolean).length},1fr);gap:8px">
@@ -5626,7 +5940,7 @@ function pfAnalyze(sym, name) {
         ${target3?`<div class="an-target-card tg-purple"><div class="an-target-val">${fmt(target3)} ريال</div><div class="an-target-lbl">الهدف البعيد</div><div class="an-target-pct">+${(((target3-cur)/cur)*100).toFixed(1)}%</div></div>`:''}
         ${stopLoss?`<div class="an-target-card tg-red"><div class="an-target-val">${fmt(stopLoss)} ريال</div><div class="an-target-lbl">وقف الخسارة</div><div class="an-target-pct">${(((stopLoss-cur)/cur)*100).toFixed(1)}%</div></div>`:''}
       </div>
-    </div>` : ''}
+    </div>`) : ''}
 
     <!-- ③ الدعم والمقاومة -->
     ${supports.length ? `
@@ -6285,10 +6599,12 @@ function techEvalCompute(r) {
   return { price, high, low, vol, pe, position, positionText, positionColor, volRating, peRating, target1, target2, stopLoss };
 }
 
-function techEvalHTML(r) {
+function techEvalHTML(r, secKey) {
   const t = techEvalCompute(r);
   const fmt = v => v !== null && v !== undefined
     ? v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+  /* 🔒 تظليل الأهداف ووقف الخسارة — يتحكم به الأدمن (تلقائي/مفتوح/مقفل) */
+  const locked = _targetsLocked(secKey);
 
   if (!t || t.position === null) {
     return `<div style="font-size:10.5px;color:var(--txt-m);margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr)">⚠️ بيانات غير كافية لحساب التقييم الفني (يلزم سعر/أعلى/أدنى)</div>`;
@@ -6301,12 +6617,23 @@ function techEvalHTML(r) {
         ${t.pe ? `<div>P/E: <strong style="color:var(--txt)">${fmt(t.pe)}${t.peRating ? ' (' + t.peRating + ')' : ''}</strong></div>` : ''}
         <div>حجم التداول: <strong style="color:var(--txt)">${t.volRating}</strong></div>
       </div>
-      ${t.target1 !== null ? `
+      ${t.target1 !== null ? (locked ? `
+      <div style="position:relative;margin-top:2px">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;filter:blur(5px);-webkit-filter:blur(5px);user-select:none;pointer-events:none">
+          <div style="color:var(--txt-m)">🎯 هدف 1: <strong style="color:#4ade80">${fmt(t.target1)} ر.س</strong></div>
+          <div style="color:var(--txt-m)">🎯 هدف 2: <strong style="color:#4ade80">${fmt(t.target2)} ر.س</strong></div>
+          <div style="color:var(--txt-m)">🛑 وقف خسارة: <strong style="color:#f87171">${fmt(t.stopLoss)} ر.س</strong></div>
+        </div>
+        <div onclick="event.stopPropagation();showSupportNotice()" title="اشترك لعرض الأهداف ووقف الخسارة"
+             style="position:absolute;inset:-2px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;background:rgba(0,0,0,.10)">
+          <span style="background:rgba(17,24,39,.92);color:#fcd34d;border:1px solid rgba(245,158,11,.45);border-radius:20px;padding:5px 13px;font-size:10.5px;font-weight:700;white-space:nowrap">🔒 اشترك لعرض الأهداف ووقف الخسارة</span>
+        </div>
+      </div>` : `
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px">
         <div style="color:var(--txt-m)">🎯 هدف 1: <strong style="color:#4ade80">${fmt(t.target1)} ر.س</strong></div>
         <div style="color:var(--txt-m)">🎯 هدف 2: <strong style="color:#4ade80">${fmt(t.target2)} ر.س</strong></div>
         <div style="color:var(--txt-m)">🛑 وقف خسارة: <strong style="color:#f87171">${fmt(t.stopLoss)} ر.س</strong></div>
-      </div>` : ''}
+      </div>`) : ''}
     </div>`;
 }
 
@@ -6513,7 +6840,7 @@ async function marketStockLoadHistorical(sym, overlayId) {
     }
 
     const block = document.getElementById(`histQuickBlock-${overlayId}`);
-    if (block) block.innerHTML = histQuickBlockHTML(sym, overlayId);
+    if (block) block.innerHTML = _wrapIfLocked('analysis', histQuickBlockHTML(sym, overlayId));
 
     if (!extracted || extracted.length === 0) {
       const block2 = document.getElementById(`histQuickBlock-${overlayId}`);
@@ -7269,7 +7596,7 @@ function _renderOpportunities(filter, histAll) {
                 `<span style="font-size:9.5px;background:rgba(255,255,255,.05);padding:2px 7px;border-radius:4px;color:var(--txt-m)">${sig}</span>`
               ).join('')}
             </div>
-            ${techEvalHTML(s)}
+            ${techEvalHTML(s, 'analysis')}
             <div style="display:flex;gap:6px;margin-top:10px" onclick="event.stopPropagation()">
               <button onclick="closeAllOverlays();pfOpenBuyModal('${s.sym}','${(s.name || '').replace(/'/g, "\\'")}')"
                 style="flex:1;padding:8px 6px;border-radius:10px;border:none;
@@ -7305,7 +7632,7 @@ function _renderOpportunities(filter, histAll) {
         <div style="font-size:11px;color:${h.predColor};font-weight:700">${h.predIcon} زخم قصير المدى: ${h.predLabel}</div>
       </div>` : `
       <div style="font-size:10.5px;color:var(--txt-m);margin-top:6px;padding-top:6px;border-top:1px solid var(--bdr)">⚠️ لا تتوفر بيانات تاريخية كافية لهذا السهم بعد (RSI/الدعم/التوقع)</div>`;
-    const techRow = techEvalHTML(s);
+    const techRow = techEvalHTML(s, 'analysis');
 
     return `
     <div class="wl-card" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="marketStockAnalysis('${s.sym}','${s.name.replace(/'/g,"\\'")}')">
@@ -7421,6 +7748,24 @@ function marketStockAnalysis(sym, name) {
     }
   }
 
+  const _maTgtHTML = target1 ? `
+      <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:12px;color:#4ade80;margin-bottom:8px;font-weight:600">🎯 الأهداف السعرية</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+          <div style="background:#0d2a1a;border:1px solid #166534;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#4ade80">${fmt(target1)} ر.س</div>
+            <div style="font-size:10px;color:#4ade80;margin-top:2px">الهدف الأول</div>
+          </div>
+          <div style="background:#0d1a3a;border:1px solid #1e3a8a;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#93c5fd">${fmt(target2)} ر.س</div>
+            <div style="font-size:10px;color:#93c5fd;margin-top:2px">الهدف الثاني</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;text-align:center">
+          <div style="font-size:11px;color:var(--txt-m)">وقف الخسارة المقترح</div>
+          <div style="font-size:14px;font-weight:700;color:#f87171">${fmt(stopLoss)} ر.س</div>
+        </div>
+      </div>` : '';
   // عرض التحليل في نافذة منبثقة
   const overlayId = 'market-analysis-' + Date.now();
   const overlay = document.createElement('div');
@@ -7475,27 +7820,10 @@ function marketStockAnalysis(sym, name) {
         </div>
       </div>
 
-      ${target1 ? `
-      <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
-        <div style="font-size:12px;color:#4ade80;margin-bottom:8px;font-weight:600">🎯 الأهداف السعرية</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
-          <div style="background:#0d2a1a;border:1px solid #166534;border-radius:8px;padding:10px;text-align:center">
-            <div style="font-size:14px;font-weight:700;color:#4ade80">${fmt(target1)} ر.س</div>
-            <div style="font-size:10px;color:#4ade80;margin-top:2px">الهدف الأول</div>
-          </div>
-          <div style="background:#0d1a3a;border:1px solid #1e3a8a;border-radius:8px;padding:10px;text-align:center">
-            <div style="font-size:14px;font-weight:700;color:#93c5fd">${fmt(target2)} ر.س</div>
-            <div style="font-size:10px;color:#93c5fd;margin-top:2px">الهدف الثاني</div>
-          </div>
-        </div>
-        <div style="margin-top:10px;text-align:center">
-          <div style="font-size:11px;color:var(--txt-m)">وقف الخسارة المقترح</div>
-          <div style="font-size:14px;font-weight:700;color:#f87171">${fmt(stopLoss)} ر.س</div>
-        </div>
-      </div>` : ''}
+      ${target1 ? (_targetsLocked('analysis') ? _lockOverlayWrap(_maTgtHTML) : _maTgtHTML) : ''}
 
       <div id="histQuickBlock-${overlayId}" style="margin-bottom:16px">
-        ${histQuickBlockHTML(sym, overlayId)}
+        ${_wrapIfLocked('analysis', histQuickBlockHTML(sym, overlayId))}
       </div>
 
       <div style="display:flex;gap:10px">
@@ -8740,9 +9068,15 @@ function showSignupNudge() {
 }
 
 /* ── قيد النوافذ المنبثقة (يضبطه الأدمن لكل مستخدم) ── */
+function _currentTabKey() {
+  const b = document.querySelector('.nav-btn.active[data-tab]');
+  return b ? b.getAttribute('data-tab') : 'home';
+}
 function popupsBlockedForUser() {
   if (!sbUser || isAdmin()) return false;
-  if (userRestrictions && userRestrictions.no_popups) return true;
+  /* 🪟 منع المنبثقات حسب القسم المفتوح حالياً */
+  const k = _currentTabKey();
+  if (ADMIN_TAB_DEFS.some(t => t.k === k) && _secFlags(userRestrictions, k).noPop) return true;
   /* 💳 اشتراك المنبثقات المنتهي يمنعها تلقائياً */
   return _subInfo(userRestrictions, 'popups').expired;
 }

@@ -811,6 +811,10 @@ td.td-sec{text-align:right;font-size:13px;color:var(--txt-2)}
 }
 .app-disclaimer strong{color:var(--txt-2)}
 .app-disclaimer p{margin:0 0 8px}
+.pred-filter{background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt-2);
+  border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.pred-filter.active{background:var(--g-mid);border-color:var(--g-mid);color:#fff}
+.pred-filter:hover{border-color:var(--g-accent)}
 .dc-toggle{
   display:flex;align-items:center;justify-content:center;gap:8px;
   width:100%;background:none;border:none;cursor:pointer;font-family:inherit;
@@ -1272,7 +1276,7 @@ canvas#mdChart{display:block;width:100% !important}
       <span class="nav-ico">📈</span> العوائد
     </button>
     <button class="nav-btn" data-tab="all" onclick="switchTab('all',this)">
-      <span class="nav-ico">📊</span> جميع الأسهم
+      <span class="nav-ico">🔮</span> رادار الانفجارات
     </button>
     <button class="nav-btn" data-tab="analysis" onclick="switchTab('analysis',this)">
       <span class="nav-ico">⚡</span> تحليل السوق
@@ -1503,12 +1507,42 @@ canvas#mdChart{display:block;width:100% !important}
   </div>
 </div>
 
-<!-- جميع الأسهم -->
+<!-- جميع الأسهم — متنبئ الانفجار السعري -->
 <div class="section-panel" id="panel-all">
-  <div class="coming-soon">
-    <div class="coming-soon-ico">📊</div>
-    <div class="coming-soon-title">جميع الأسهم</div>
-    <div class="coming-soon-sub">عرض موسّع لجميع أسهم السوق السعودي مع إمكانية التصفية والمقارنة</div>
+  <div class="pf-wrap">
+    <div class="wl-header">
+      <div class="wl-title">🔮 متنبئ الانفجار السعري</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div id="predUpdated" style="font-size:11px;color:var(--txt-m);text-align:left"></div>
+        <button id="predScanBtn" onclick="predScanAll()"
+          style="background:linear-gradient(135deg,var(--g-mid),var(--g-accent));border:none;color:#fff;
+          border-radius:10px;padding:8px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">
+          🔮 مسح الانفجارات</button>
+      </div>
+    </div>
+
+    <div id="predProgress" style="display:none;margin-bottom:14px;background:var(--surf-alt);
+      border:1px solid var(--bdr);border-radius:12px;padding:12px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:12px;color:var(--txt-2);font-weight:700">🔮 جارٍ مسح الأسهم...</div>
+        <div id="predPct" style="font-size:13px;font-weight:800;color:var(--g-mid)">0%</div>
+      </div>
+      <div style="background:var(--bdr);border-radius:8px;height:8px;overflow:hidden">
+        <div id="predBar" style="height:100%;width:0%;border-radius:8px;transition:width .3s;
+          background:linear-gradient(90deg,var(--g-mid),var(--g-accent))"></div>
+      </div>
+      <div id="predSub" style="font-size:10.5px;color:var(--txt-m);margin-top:6px;text-align:center"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="pred-filter active" id="predFilter-all"      onclick="predSetFilter('all')">الكل <span id="predCount-all">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-high"     onclick="predSetFilter('high')">احتمال عالٍ <span id="predCount-high">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-imminent" onclick="predSetFilter('imminent')">وشيك <span id="predCount-imminent">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-up"       onclick="predSetFilter('up')">صعودي <span id="predCount-up">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-down"     onclick="predSetFilter('down')">هبوطي <span id="predCount-down">(0)</span></button>
+    </div>
+
+    <div id="predResults"></div>
   </div>
 </div>
 
@@ -2904,7 +2938,7 @@ function renderAdminSection() {
     { k: 'watchlist', t: '📁 المحفظة' },
     { k: 'monitor',   t: '👁️ المراقبة' },
     { k: 'returns',   t: '📈 العوائد' },
-    { k: 'all',       t: '📊 جميع الأسهم' },
+    { k: 'all',       t: '🔮 رادار الانفجارات' },
     { k: 'analysis',  t: '⚡ تحليل السوق' },
   ];
   const row  = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);font-size:13px';
@@ -3402,7 +3436,7 @@ const ADMIN_TAB_DEFS = [
   { k: 'watchlist', t: '📁 المحفظة' },
   { k: 'monitor',   t: '👁️ المراقبة' },
   { k: 'returns',   t: '📈 العوائد' },
-  { k: 'all',       t: '📊 جميع الأسهم' },
+  { k: 'all',       t: '🔮 رادار الانفجارات' },
   { k: 'analysis',  t: '⚡ تحليل السوق' },
 ];
 /* 💳 أقسام الاشتراك: الأقسام الخمسة + المنبثقات + الحساب كله */
@@ -6519,6 +6553,613 @@ document.addEventListener('keydown', e => {
 /* ─────────────────────────────────────
    TAB NAVIGATION
 ───────────────────────────────────── */
+/* ═══ متنبئ الانفجار السعري (قسم جميع الأسهم) ═══ */
+(function(){
+  const nz = x => (x === null || x === undefined || isNaN(x)) ? null : +x;
+
+  function SMA(a, p, end) { // متوسط بسيط ينتهي عند end (شامل)
+    if (end < p - 1) return null;
+    let s = 0; for (let i = end - p + 1; i <= end; i++) s += a[i];
+    return s / p;
+  }
+  function STD(a, p, end) { // انحراف معياري (population) للنافذة
+    if (end < p - 1) return null;
+    const m = SMA(a, p, end); let s = 0;
+    for (let i = end - p + 1; i <= end; i++) s += (a[i] - m) ** 2;
+    return Math.sqrt(s / p);
+  }
+  function EMAseries(a, p) {
+    const k = 2 / (p + 1); const out = new Array(a.length).fill(null);
+    let prev = null;
+    for (let i = 0; i < a.length; i++) {
+      if (i < p - 1) continue;
+      if (prev === null) { prev = SMA(a, p, i); out[i] = prev; }
+      else { prev = a[i] * k + prev * (1 - k); out[i] = prev; }
+    }
+    return out;
+  }
+  function RSI(closes, p, end) {
+    if (end < p) return null;
+    let g = 0, l = 0;
+    for (let i = end - p + 1; i <= end; i++) {
+      const d = closes[i] - closes[i - 1];
+      if (d >= 0) g += d; else l -= d;
+    }
+    const ag = g / p, al = l / p;
+    if (al === 0) return 100;
+    const rs = ag / al; return 100 - 100 / (1 + rs);
+  }
+  // مدى حقيقي: يستخدم OHLC إن وُجد، وإلا |c - cPrev|
+  function trueRanges(c) {
+    const tr = [null];
+    for (let i = 1; i < c.length; i++) {
+      const hi = c[i].h, lo = c[i].l, pc = c[i - 1].c;
+      if (hi != null && lo != null) tr.push(Math.max(hi - lo, Math.abs(hi - pc), Math.abs(lo - pc)));
+      else tr.push(Math.abs(c[i].c - pc));
+    }
+    return tr;
+  }
+  function ATRseries(c, p) {
+    const tr = trueRanges(c); const out = new Array(c.length).fill(null);
+    let prev = null;
+    for (let i = 1; i < c.length; i++) {
+      if (i < p) continue;
+      if (prev === null) { let s = 0; for (let j = i - p + 1; j <= i; j++) s += tr[j]; prev = s / p; }
+      else prev = (prev * (p - 1) + tr[i]) / p; // Wilder
+      out[i] = prev;
+    }
+    return out;
+  }
+  // ADX(14) — فقط عند توفر OHLC، وإلا null
+  function ADX(c, p) {
+    const n = c.length; if (n < 2 * p) return null;
+    if (c.some(x => x.h == null || x.l == null)) return null;
+    const tr = [], pdm = [], ndm = [];
+    for (let i = 1; i < n; i++) {
+      const up = c[i].h - c[i - 1].h, dn = c[i - 1].l - c[i].l;
+      pdm.push((up > dn && up > 0) ? up : 0);
+      ndm.push((dn > up && dn > 0) ? dn : 0);
+      tr.push(Math.max(c[i].h - c[i].l, Math.abs(c[i].h - c[i - 1].c), Math.abs(c[i].l - c[i - 1].c)));
+    }
+    const wilder = arr => { let s = 0; for (let i = 0; i < p; i++) s += arr[i]; const o = [s]; for (let i = p; i < arr.length; i++) { s = s - s / p + arr[i]; o.push(s); } return o; };
+    const trS = wilder(tr), pS = wilder(pdm), nS = wilder(ndm);
+    const dx = [];
+    for (let i = 0; i < trS.length; i++) {
+      const pdi = 100 * pS[i] / trS[i], ndi = 100 * nS[i] / trS[i];
+      dx.push(100 * Math.abs(pdi - ndi) / (pdi + ndi || 1));
+    }
+    if (dx.length < p) return null;
+    let s = 0; for (let i = dx.length - p; i < dx.length; i++) s += dx[i];
+    return s / p;
+  }
+  function OBVslope(c, win) {
+    let obv = 0; const series = [0];
+    for (let i = 1; i < c.length; i++) {
+      if (c[i].c > c[i - 1].c) obv += (c[i].v || 0);
+      else if (c[i].c < c[i - 1].c) obv -= (c[i].v || 0);
+      series.push(obv);
+    }
+    const n = series.length; const w = Math.min(win, n - 1);
+    if (w < 3) return 0;
+    const recent = series.slice(n - w), a = recent[0], b = recent[recent.length - 1];
+    const range = Math.max(...series.map(Math.abs)) || 1;
+    return (b - a) / range; // موجب = تجميع، سالب = توزيع
+  }
+
+  function predAnalyze(candles, opts) {
+    opts = opts || {};
+    const dailyLimit = opts.dailyLimitPct || 10;
+    const c = (candles || []).filter(x => x && nz(x.c) !== null)
+      .map(x => ({ o: nz(x.o), h: nz(x.h), l: nz(x.l), c: nz(x.c), v: nz(x.v) || 0 }));
+    const n = c.length;
+    if (n < 25) return { ok: false, bars: n, reason: 'بيانات غير كافية (<25 شمعة)' };
+
+    const closes = c.map(x => x.c);
+    const hasOHLC = c.every(x => x.h != null && x.l != null);
+    const price = closes[n - 1];
+
+    // 1) الضغط — عرض نطاق بولنجر مئوياً
+    const bwArr = new Array(n).fill(null);
+    for (let i = 19; i < n; i++) {
+      const sma = SMA(closes, 20, i), sd = STD(closes, 20, i);
+      if (sma) bwArr[i] = (4 * sd) / sma * 100;
+    }
+    const bw = bwArr[n - 1];
+    // ترتيب مئوي لآخر 100 (كلما أدنى = ضغط أقوى)
+    const hist = bwArr.slice(Math.max(0, n - 100)).filter(x => x != null);
+    const below = hist.filter(x => x < bw).length;
+    const bwPct = hist.length ? below / hist.length : 1; // 0 = الأضيق
+    const squeezeStrength = Math.max(0, 1 - bwPct);
+
+    // مدة الضغط: شموع متتالية بقي فيها BW تحت متوسطه المتحرك
+    const bwVals = bwArr.map((x, i) => ({ x, i })).filter(o => o.x != null);
+    let pressureDuration = 0;
+    {
+      const arr = bwVals.map(o => o.x);
+      for (let i = arr.length - 1; i >= 20; i--) {
+        let m = 0; for (let j = i - 20; j < i; j++) m += arr[j]; m /= 20;
+        if (arr[i] < m) pressureDuration++; else break;
+      }
+    }
+
+    // ضغط TTM: بولنجر داخل كيلتنر (EMA20 ± 1.5×ATR)
+    const ema20 = EMAseries(closes, 20);
+    const atr = ATRseries(c, 14);
+    let ttm = false;
+    {
+      const sma20 = SMA(closes, 20, n - 1), sd20 = STD(closes, 20, n - 1);
+      const e20 = ema20[n - 1], a = atr[n - 1];
+      if (sma20 && a) {
+        const bbU = sma20 + 2 * sd20, bbL = sma20 - 2 * sd20;
+        const kcU = e20 + 1.5 * a, kcL = e20 - 1.5 * a;
+        ttm = bbU < kcU && bbL > kcL;
+      }
+    }
+
+    // الحجم: انكماش (هدوء) أو انفجار (بدء الحركة)
+    const volSMA = SMA(c.map(x => x.v), 20, n - 1);
+    const lastV = c[n - 1].v;
+    const volContraction = volSMA ? (SMA(c.map(x => x.v), 5, n - 1) < volSMA * 0.85) : false;
+    const volExpansion = volSMA ? (lastV > volSMA * 1.5) : false;
+
+    // ADX
+    const adx = ADX(c, 14);
+
+    // 2) احتمال الانفجار (0–96)
+    let probability =
+      squeezeStrength * 40 +
+      Math.min(pressureDuration * 2, 20) +
+      (ttm ? 15 : 0) +
+      (volContraction ? 10 : 0) +
+      ((adx != null && adx < 20) ? 8 : 0) +
+      (bwPct < 0.2 ? 7 : 0) +
+      (volExpansion ? 8 : 0);
+    probability = Math.max(0, Math.min(96, Math.round(probability)));
+
+    // 3) اتجاه الكسر — نتيجة موزونة
+    const ema50 = EMAseries(closes, 50), ema200 = EMAseries(closes, 200);
+    let dir = 0;
+    const e20 = ema20[n - 1], e50 = ema50[n - 1], e200 = ema200[n - 1];
+    if (e20 != null && e50 != null && e200 != null) {
+      if (e20 > e50 && e50 > e200) dir += 2;
+      else if (e20 < e50 && e50 < e200) dir -= 2;
+      else dir += (e20 > e50 ? 1 : -1);
+    } else if (e20 != null && e50 != null) dir += (e20 > e50 ? 1 : -1);
+
+    const obv = OBVslope(c, 50);           // الأهم أثناء الضغط (نافذة أطول تلتقط الاتجاه السائد)
+    dir += obv > 0.05 ? 2 : obv < -0.05 ? -2 : 0;
+
+    const roc = (p) => (n - 1 - p >= 0 && closes[n - 1 - p]) ? (price - closes[n - 1 - p]) / closes[n - 1 - p] : 0;
+    const mom = (roc(10) > 0 ? 1 : -1) + (roc(40) > 0 ? 1 : -1);
+    dir += mom > 0 ? 1 : mom < 0 ? -1 : 0;
+
+    const rsi = RSI(closes, 14, n - 1);
+    // تباعد RSI مبسّط: مقارنة قاع/قمة السعر بقاع/قمة RSI على آخر 14
+    let rsiDiv = 0;
+    if (n > 30) {
+      const pA = price, pB = closes[n - 15];
+      const rA = rsi, rB = RSI(closes, 14, n - 15);
+      if (rB != null && rA != null) {
+        if (pA < pB && rA > rB) rsiDiv = 1;   // تباعد صعودي
+        else if (pA > pB && rA < rB) rsiDiv = -1; // تباعد هبوطي
+      }
+    }
+    dir += rsiDiv;
+
+    // هيكل السوق: قمم/قيعان أعلى مقابل أدنى على آخر 20
+    {
+      const w = closes.slice(Math.max(0, n - 20));
+      const half = Math.floor(w.length / 2);
+      const maxA = Math.max(...w.slice(0, half)), maxB = Math.max(...w.slice(half));
+      const minA = Math.min(...w.slice(0, half)), minB = Math.min(...w.slice(half));
+      if (maxB > maxA && minB > minA) dir += 1;
+      else if (maxB < maxA && minB < minA) dir -= 1;
+    }
+
+    const direction = dir >= 3 ? 'up' : dir <= -3 ? 'down' : 'none';
+
+    // 4) الهدف (حركة مقيسة) والتوقيت
+    const win = Math.max(pressureDuration, 20);
+    const seg = c.slice(Math.max(0, n - win));
+    const hi = hasOHLC ? Math.max(...seg.map(x => x.h)) : Math.max(...seg.map(x => x.c));
+    const lo = hasOHLC ? Math.min(...seg.map(x => x.l)) : Math.min(...seg.map(x => x.c));
+    const rangeMove = hi - lo;
+    const atrMove = (atr[n - 1] || 0) * 2;
+    const measured = Math.max(rangeMove, atrMove);
+    let target = null, targetPct = null, daysToTarget = null;
+    if (direction !== 'none') {
+      target = direction === 'up' ? price + measured : price - measured;
+      targetPct = (target - price) / price * 100;
+      // قيد حد التذبذب اليومي: وزّع الحركة على أيام
+      daysToTarget = Math.max(1, Math.ceil(Math.abs(targetPct) / dailyLimit));
+    }
+
+    const timing =
+      bwPct < 0.15 ? { level: 3, text: 'وشيك جداً (1–3 شموع)' } :
+      bwPct < 0.30 ? { level: 2, text: 'قريب (خلال أيام)' } :
+      { level: 1, text: 'تراكم مبكّر' };
+
+    return {
+      ok: true, bars: n, hasOHLC, price,
+      bw: +bw.toFixed(2), bwPct: +bwPct.toFixed(3), squeezeStrength: +squeezeStrength.toFixed(3),
+      pressureDuration, ttm, volContraction, volExpansion,
+      adx: adx != null ? +adx.toFixed(1) : null,
+      rsi: rsi != null ? +rsi.toFixed(1) : null,
+      obvSlope: +obv.toFixed(3),
+      probability, dirScore: dir, direction,
+      target: target != null ? +target.toFixed(2) : null,
+      targetPct: targetPct != null ? +targetPct.toFixed(2) : null,
+      daysToTarget, dailyLimit, timing,
+    };
+  }
+  /* ═══════════════════════════════════════════════════════════════
+     طبقة البيانات + الواجهة لقسم «📊 جميع الأسهم» (متنبئ الانفجار)
+     ═══════════════════════════════════════════════════════════════ */
+
+  // حد التذبذب اليومي: السوق الرئيسي ±10% (نمو ±30%). قابل للتعديل.
+  const PRED_DAILY_LIMIT = 10;
+  const PRED_CONC = 5;              // عدد الأسهم المُجلبة بالتوازي
+  const PRED_CACHE = {};            // sym → شموع OHLCV (سنة/يومي)
+  let   PRED_RESULTS = [];
+  let   PRED_FILTER  = 'all';
+  let   PRED_SCANNING = false;
+  let   PRED_BUILT = false;
+  let   PRED_LAST_TS = null;        // وقت آخر مسح (epoch)
+  let   PRED_AUTORAN = false;       // ضمان التشغيل التلقائي مرة واحدة لكل جلسة
+  const PRED_LS_KEY  = 'tadawulPlus_predScan';
+  // أيام إجازات السوق (تُعطّل التشغيل التلقائي فيها). املأها بصيغة YYYY-MM-DD مثال: ['2026-09-23']
+  const PRED_HOLIDAYS = [];
+
+  // ── التخزين الدائم للنتائج ──
+  function predSaveCache() {
+    try { localStorage.setItem(PRED_LS_KEY, JSON.stringify({ ts: PRED_LAST_TS, results: PRED_RESULTS })); } catch (e) {}
+  }
+  function predLoadCache() {
+    try {
+      const raw = localStorage.getItem(PRED_LS_KEY); if (!raw) return;
+      const o = JSON.parse(raw);
+      if (o && Array.isArray(o.results)) { PRED_RESULTS = o.results; PRED_LAST_TS = o.ts || null; }
+    } catch (e) {}
+  }
+
+  // ── أوقات السوق السعودي (KSA = UTC+3، الأحد–الخميس، 10:00–15:00) ──
+  function predKsaParts() {
+    const d = new Date(Date.now() + 3 * 3600000);
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth(), day: d.getUTCDate(), wd: d.getUTCDay(), h: d.getUTCHours(), min: d.getUTCMinutes() };
+  }
+  function predIsHolidayYMD(y, m, day) {
+    const iso = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    return PRED_HOLIDAYS.includes(iso);
+  }
+  function predIsMarketOpen() {
+    const p = predKsaParts();
+    if (p.wd < 0 || p.wd > 4) return false;                 // الجمعة/السبت
+    if (predIsHolidayYMD(p.y, p.m, p.day)) return false;    // إجازة
+    const mins = p.h * 60 + p.min;
+    return mins >= 600 && mins < 900;                        // 10:00–15:00
+  }
+  // آخر إغلاق سوق (epoch حقيقي) = أحدث يوم تداول عند 15:00 KSA ≤ الآن
+  function predLastClose() {
+    let t = Date.now();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(t + 3 * 3600000);
+      const y = d.getUTCFullYear(), m = d.getUTCMonth(), day = d.getUTCDate(), wd = d.getUTCDay();
+      const closeEpoch = Date.UTC(y, m, day, 12, 0, 0);     // 15:00 KSA = 12:00 UTC
+      const trading = wd >= 0 && wd <= 4 && !predIsHolidayYMD(y, m, day);
+      if (trading && closeEpoch <= Date.now()) return closeEpoch;
+      t -= 24 * 3600000;
+    }
+    return Date.now() - 7 * 24 * 3600000;
+  }
+  function predIsFresh() { return PRED_LAST_TS && PRED_LAST_TS >= predLastClose(); }
+
+  function predFmtTime(ts) {
+    const d = new Date(ts), pad = n => String(n).padStart(2, '0');
+    let h = d.getHours(); const ap = h < 12 ? 'ص' : 'م'; h = h % 12 || 12;
+    return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' · ' + h + ':' + pad(d.getMinutes()) + ' ' + ap;
+  }
+  function predUpdateStamp() {
+    const btn = document.getElementById('predScanBtn');
+    if (btn && !PRED_SCANNING) btn.textContent = PRED_RESULTS.length ? '🔮 إعادة المسح' : '🔮 مسح الانفجارات';
+    const el = document.getElementById('predUpdated'); if (!el) return;
+    if (!PRED_LAST_TS) { el.innerHTML = '<span style="color:#f59e0b">لم يُحدَّث بعد — اضغط للمسح</span>'; return; }
+    const stale = !predIsFresh();
+    el.innerHTML = 'آخر تحديث: ' + predFmtTime(PRED_LAST_TS) +
+      (stale ? ' · <span style="color:#dc2626;font-weight:700">⚠️ قديم — حدِّث</span>'
+             : ' · <span style="color:#16a34a">محدّث ✓</span>');
+  }
+
+
+  // جلب شموع سنة/يومي OHLCV من ياهو عبر نفس بروكسيات التطبيق
+  async function predFetchCandles(sym) {
+    if (PRED_CACHE[sym]) return PRED_CACHE[sym];
+    const ticker = (sym === 'TASI') ? '^TASI.SR' : sym + '.SR';
+    const directUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1y';
+    const proxies = [
+      (typeof PRIVATE_PROXY !== 'undefined' ? PRIVATE_PROXY : '') + encodeURIComponent(directUrl),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl),
+      'https://corsproxy.io/?url=' + encodeURIComponent(directUrl),
+      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(directUrl),
+    ];
+    for (const purl of proxies) {
+      try {
+        const res = await fetch(purl, { signal: AbortSignal.timeout(12000) });
+        if (!res.ok) continue;
+        const data = JSON.parse(await res.text());
+        const r = data && data.chart && data.chart.result && data.chart.result[0];
+        if (!r || !r.timestamp) continue;
+        const q = r.indicators.quote[0];
+        const out = [];
+        for (let i = 0; i < r.timestamp.length; i++) {
+          if (q.close[i] == null) continue;
+          out.push({ o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+        }
+        if (out.length >= 25) { PRED_CACHE[sym] = out; return out; }
+      } catch (e) { /* جرّب البروكسي التالي */ }
+    }
+    return null;
+  }
+
+  // 🔒 هل قسم «جميع الأسهم» مقفل لهذا المستخدم؟ (يتحكم به الأدمن كباقي الأقسام)
+  function predLocked() {
+    return typeof _targetsLocked === 'function' && _targetsLocked('all');
+  }
+  function predRenderLocked() {
+    const btn = document.getElementById('predScanBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '🔒 محتوى للمشتركين'; }
+    ['all', 'high', 'imminent', 'up', 'down'].forEach(f => {
+      const el = document.getElementById('predCount-' + f); if (el) el.textContent = '(0)';
+    });
+    const wrap = document.getElementById('predResults'); if (!wrap) return;
+    const teaser = '<div style="filter:blur(6px);-webkit-filter:blur(6px);pointer-events:none;user-select:none">' +
+      '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>' +
+      ['أرامكو 2222', 'الراجحي 1120', 'سابك 2010', 'الاتصالات 7010', 'معادن 1211'].map((nm, i) =>
+        '<tr style="border-bottom:1px solid var(--bdr)"><td style="padding:11px 6px;color:var(--txt-m)">' + (i + 1) + '</td>' +
+        '<td style="padding:11px 6px;font-weight:700">' + nm + '</td>' +
+        '<td style="padding:11px 6px;text-align:center">••.••</td>' +
+        '<td style="padding:11px 6px;text-align:center;color:#16a34a;font-weight:800">•• %</td>' +
+        '<td style="padding:11px 6px;text-align:center">🟢 ••••</td></tr>').join('') +
+      '</tbody></table></div>';
+    wrap.innerHTML = '<div style="position:relative">' + teaser +
+      '<div onclick="if(typeof showSupportNotice===\'function\')showSupportNotice()" title="اشترك لعرض المتنبئ" ' +
+      'style="position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;cursor:pointer;border-radius:12px;background:rgba(0,0,0,.12)">' +
+      '<span style="font-size:32px">🔒</span>' +
+      '<span style="background:rgba(17,24,39,.92);color:#fcd34d;border:1px solid rgba(245,158,11,.45);border-radius:20px;padding:8px 18px;font-size:12.5px;font-weight:800;white-space:nowrap">اشترك لعرض متنبئ الانفجار</span>' +
+      '</div></div>';
+  }
+
+  function predShowProgress(show) {
+    const el = document.getElementById('predProgress');
+    if (el) el.style.display = show ? 'block' : 'none';
+  }
+  function predSetProgress(done, total, ok) {
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const bar = document.getElementById('predBar'), p = document.getElementById('predPct'),
+          sub = document.getElementById('predSub');
+    if (bar) bar.style.width = pct + '%';
+    if (p) p.textContent = pct + '%';
+    if (sub) sub.textContent = 'حُلِّل ' + done + ' من ' + total + ' سهم · نتائج صالحة: ' + ok;
+  }
+
+  async function predScanAll() {
+    if (PRED_SCANNING) return;
+    if (predLocked()) { if (typeof showSupportNotice === 'function') showSupportNotice(); return; }
+    if (!Array.isArray(rows) || rows.length === 0) {
+      if (typeof showToast === 'function') showToast('⚠️ حمّل بيانات السوق أولاً'); return;
+    }
+    PRED_SCANNING = true; PRED_RESULTS = [];
+    const list = rows.filter(r => r.sym);
+    const total = list.length; let done = 0, ok = 0, idx = 0;
+    const btn = document.getElementById('predScanBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ المسح...'; }
+    predShowProgress(true); predSetProgress(0, total, 0);
+
+    async function worker() {
+      while (idx < list.length) {
+        const r = list[idx++];
+        try {
+          const candles = await predFetchCandles(r.sym);
+          if (candles) {
+            const a = predAnalyze(candles, { dailyLimitPct: PRED_DAILY_LIMIT });
+            if (a.ok) { a.sym = r.sym; a.name = r.name; PRED_RESULTS.push(a); ok++; }
+          }
+        } catch (e) { /* تخطَّ السهم الفاشل */ }
+        done++; predSetProgress(done, total, ok);
+      }
+    }
+    const ws = []; for (let i = 0; i < PRED_CONC; i++) ws.push(worker());
+    await Promise.all(ws);
+
+    PRED_RESULTS.sort((x, y) => y.probability - x.probability);
+    PRED_SCANNING = false;
+    PRED_LAST_TS = Date.now();
+    predSaveCache();
+    if (btn) { btn.disabled = false; btn.textContent = '🔮 إعادة المسح'; }
+    predShowProgress(false);
+    predRender();
+    predUpdateStamp();
+  }
+
+  const dirChip = d =>
+    d === 'up'   ? '<span style="color:#16a34a;font-weight:800">🟢 صعودي</span>' :
+    d === 'down' ? '<span style="color:#dc2626;font-weight:800">🔴 هبوطي</span>' :
+                   '<span style="color:var(--txt-m);font-weight:700">⚪ غير محسوم</span>';
+
+  const probColor = p => p >= 75 ? '#dc2626' : p >= 55 ? '#f4a20a' : '#16a34a';
+
+  function predCount(f) {
+    if (f === 'all') return PRED_RESULTS.length;
+    if (f === 'up') return PRED_RESULTS.filter(r => r.direction === 'up').length;
+    if (f === 'down') return PRED_RESULTS.filter(r => r.direction === 'down').length;
+    if (f === 'imminent') return PRED_RESULTS.filter(r => r.timing.level >= 2).length;
+    if (f === 'high') return PRED_RESULTS.filter(r => r.probability >= 70).length;
+    return 0;
+  }
+
+  function predRender() {
+    if (predLocked()) { predRenderLocked(); return; }
+    const _sb = document.getElementById('predScanBtn');
+    if (_sb && !PRED_SCANNING && String(_sb.textContent).indexOf('🔒') >= 0) {
+      _sb.disabled = false; _sb.textContent = '🔮 مسح الانفجارات';
+    }
+    ['all', 'high', 'imminent', 'up', 'down'].forEach(f => {
+      const el = document.getElementById('predCount-' + f);
+      if (el) el.textContent = '(' + predCount(f) + ')';
+    });
+    const wrap = document.getElementById('predResults');
+    if (!wrap) return;
+    if (!PRED_RESULTS.length) {
+      wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)">' +
+        '<div style="font-size:34px;margin-bottom:10px">🔮</div>' +
+        '<div style="font-size:14px;font-weight:700;margin-bottom:6px">متنبئ الانفجار السعري</div>' +
+        '<div style="font-size:12px;line-height:1.9;max-width:520px;margin:0 auto">' +
+        'يقيس ضغط التقلب (انكماش النطاق) لكل سهم، ويقدّر احتمال الانفجار واتجاهه المرجّح. ' +
+        'اضغط «مسح الانفجارات» لبدء تحليل كل الأسهم.</div></div>';
+      return;
+    }
+    let list = PRED_RESULTS.slice();
+    if (PRED_FILTER === 'up') list = list.filter(r => r.direction === 'up');
+    else if (PRED_FILTER === 'down') list = list.filter(r => r.direction === 'down');
+    else if (PRED_FILTER === 'imminent') list = list.filter(r => r.timing.level >= 2);
+    else if (PRED_FILTER === 'high') list = list.filter(r => r.probability >= 70);
+
+    if (!list.length) { wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--txt-m)">لا نتائج ضمن هذا الفلتر</div>'; return; }
+
+    const rowsHtml = list.map((r, i) => {
+      const tgt = (r.direction !== 'none' && r.targetPct != null)
+        ? (r.targetPct > 0 ? '+' : '') + r.targetPct + '%<span style="color:var(--txt-m);font-size:10px"> / ' + r.daysToTarget + 'ي</span>'
+        : '—';
+      const timeBadge = r.timing.level >= 3 ? '🔴 ' : r.timing.level >= 2 ? '🟠 ' : '⚪ ';
+      return '<tr onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;border-bottom:1px solid var(--bdr)">' +
+        '<td style="padding:9px 6px;color:var(--txt-m);font-size:11px">' + (i + 1) + '</td>' +
+        '<td style="padding:9px 6px"><div style="font-weight:700;font-size:12.5px">' + (r.name || '—') + '</div>' +
+          '<div style="color:var(--txt-m);font-size:10.5px">' + r.sym + (r.hasOHLC ? '' : ' · تقديري') + '</div></td>' +
+        '<td style="padding:9px 6px;text-align:center;font-weight:700">' + r.price.toFixed(2) + '</td>' +
+        '<td style="padding:9px 6px;min-width:110px">' +
+          '<div style="display:flex;align-items:center;gap:6px">' +
+          '<div style="flex:1;height:7px;background:var(--bdr);border-radius:4px;overflow:hidden">' +
+          '<div style="height:100%;width:' + r.probability + '%;background:' + probColor(r.probability) + '"></div></div>' +
+          '<span style="font-weight:800;font-size:12px;color:' + probColor(r.probability) + '">' + r.probability + '%</span></div></td>' +
+        '<td style="padding:9px 6px;text-align:center;font-size:11.5px">' + Math.round(r.squeezeStrength * 100) + '%' + (r.ttm ? ' 🔒' : '') + '</td>' +
+        '<td style="padding:9px 6px;text-align:center">' + dirChip(r.direction) + '</td>' +
+        '<td style="padding:9px 6px;text-align:center;font-weight:700;font-size:11.5px">' + tgt + '</td>' +
+        '<td style="padding:9px 6px;text-align:center;font-size:11px;white-space:nowrap">' + timeBadge + r.timing.text + '</td>' +
+        '<td style="padding:9px 6px;text-align:center;white-space:nowrap">' +
+          '<button onclick="event.stopPropagation();predAddWatch(\'' + r.sym + '\')" title="إضافة للمراقبة" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:13px;margin-inline-start:3px">👁️</button>' +
+          '<button onclick="event.stopPropagation();predAddPortfolio(\'' + r.sym + '\')" title="إضافة للمحفظة" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:13px">📈</button>' +
+        '</td>' +
+        '</tr>';
+    }).join('');
+
+    wrap.innerHTML =
+      '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+      '<thead><tr style="border-bottom:2px solid var(--bdr);color:var(--txt-m);font-size:11px">' +
+      '<th style="padding:8px 6px">#</th><th style="padding:8px 6px;text-align:right">السهم</th>' +
+      '<th style="padding:8px 6px">السعر</th><th style="padding:8px 6px">احتمال الانفجار</th>' +
+      '<th style="padding:8px 6px">الضغط</th><th style="padding:8px 6px">الاتجاه</th>' +
+      '<th style="padding:8px 6px">الهدف</th><th style="padding:8px 6px">التوقيت</th>' +
+      '<th style="padding:8px 6px">إضافة</th>' +
+      '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' +
+      '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;padding:12px 8px;line-height:1.8">' +
+      '⚠️ ترجيحات فنية احتمالية لأغراض تعليمية فقط، وليست توصية أو نصيحة استثمارية. ' +
+      'الهدف مقيّد بحد التذبذب اليومي (±' + PRED_DAILY_LIMIT + '% للسوق الرئيسي) وموزّع على أيام.</div>';
+  }
+
+  function predSetFilter(f) {
+    PRED_FILTER = f;
+    document.querySelectorAll('.pred-filter').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('predFilter-' + f);
+    if (btn) btn.classList.add('active');
+    predRender();
+  }
+
+  function predInit() {
+    PRED_BUILT = true;
+    if (predLocked()) { predRenderLocked(); return; }
+    if (!PRED_RESULTS.length) predLoadCache();   // استرجاع النتائج المحفوظة
+    predRender();
+    predUpdateStamp();
+    // تشغيل تلقائي مرة واحدة بعد إغلاق السوق إن كانت البيانات قديمة
+    if (!PRED_AUTORAN && !predIsFresh() && !predIsMarketOpen() && Array.isArray(rows) && rows.length) {
+      PRED_AUTORAN = true;
+      predScanAll();
+    } else if (!predIsFresh() && typeof showToast === 'function') {
+      showToast(PRED_RESULTS.length
+        ? '⚠️ بيانات المتنبئ قديمة — اضغط «إعادة المسح» للتحديث'
+        : '🔮 اضغط «مسح الانفجارات» لتحديث المتنبئ');
+    }
+  }
+
+  // نافذة تفاصيل التنبؤ (مخصّصة للقسم — تعرض ما حسبه المتنبئ فعلاً)
+  function predShowDetail(res) {
+    if (!res) return;
+    let ov = document.getElementById('predDetailOv');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'predDetailOv';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:16px';
+      ov.onclick = e => { if (e.target === ov) ov.style.display = 'none'; };
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') ov.style.display = 'none'; });
+      document.body.appendChild(ov);
+    }
+    const dirTxt = res.direction === 'up' ? '🟢 صعودي' : res.direction === 'down' ? '🔴 هبوطي' : '⚪ غير محسوم';
+    const tgt = (res.direction !== 'none' && res.targetPct != null)
+      ? ((res.targetPct > 0 ? '+' : '') + res.targetPct + '% خلال ~' + res.daysToTarget + ' يوم') : '—';
+    const pc = res.probability >= 75 ? '#dc2626' : res.probability >= 55 ? '#f4a20a' : '#16a34a';
+    const cell = (label, val) => '<div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:10px">' +
+      '<div style="font-size:10.5px;color:var(--txt-m);margin-bottom:3px">' + label + '</div>' +
+      '<div style="font-weight:800;font-size:13.5px">' + val + '</div></div>';
+    ov.innerHTML = '<div style="background:var(--surf);color:var(--txt);border-radius:16px;max-width:470px;width:100%;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.4);max-height:90vh;overflow:auto">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">' +
+        '<div><div style="font-weight:800;font-size:16px">' + (res.name || '—') + '</div>' +
+        '<div style="color:var(--txt-m);font-size:12px">' + res.sym + ' · ' + res.price.toFixed(2) + ' ر.س' + (res.hasOHLC ? '' : ' · تقديري') + '</div></div>' +
+        '<button onclick="document.getElementById(\'predDetailOv\').style.display=\'none\'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt-m)">✕</button></div>' +
+      '<div style="display:flex;gap:10px;margin-bottom:14px">' +
+        '<div style="flex:1;text-align:center;background:var(--surf-alt);border-radius:12px;padding:14px"><div style="font-size:11px;color:var(--txt-m)">احتمال الانفجار</div><div style="font-size:26px;font-weight:900;color:' + pc + '">' + res.probability + '%</div></div>' +
+        '<div style="flex:1;text-align:center;background:var(--surf-alt);border-radius:12px;padding:14px"><div style="font-size:11px;color:var(--txt-m)">الاتجاه المرجّح</div><div style="font-size:17px;font-weight:800;margin-top:8px">' + dirTxt + '</div></div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+        cell('التوقيت المتوقع', res.timing.text) +
+        cell('الهدف', tgt) +
+        cell('شدة الضغط', Math.round(res.squeezeStrength * 100) + '%') +
+        cell('مدة الضغط', res.pressureDuration + ' شمعة') +
+        cell('ضغط TTM', res.ttm ? '✅ فعّال' : '—') +
+        cell('عرض النطاق BW', res.bw + '%') +
+        cell('RSI', res.rsi != null ? res.rsi : '—') +
+        cell('ADX', res.adx != null ? res.adx : '— (تقديري)') +
+        cell('اتجاه OBV', res.obvSlope > 0.05 ? 'تجميع ⬆️' : res.obvSlope < -0.05 ? 'توزيع ⬇️' : 'محايد') +
+        cell('الحجم', res.volExpansion ? 'انفجار 🔥' : res.volContraction ? 'انكماش 🤫' : 'عادي') +
+      '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:14px">' +
+        '<button onclick="predAddWatch(\'' + res.sym + '\')" style="flex:1;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">👁️ إضافة للمراقبة</button>' +
+        '<button onclick="predAddPortfolio(\'' + res.sym + '\')" style="flex:1;background:linear-gradient(135deg,var(--g-mid),var(--g-accent));border:none;color:#fff;border-radius:10px;padding:11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">📈 إضافة للمحفظة</button>' +
+      '</div>' +
+      '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;padding:12px 4px 2px;line-height:1.7">⚠️ ترجيح فني احتمالي لأغراض تعليمية فقط وليس نصيحة استثمارية. الهدف مقيّد بحد التذبذب اليومي (±' + res.dailyLimit + '%).</div>' +
+    '</div>';
+    ov.style.display = 'flex';
+  }
+
+  window.predScanAll = predScanAll;
+  window.predSetFilter = predSetFilter;
+  window.predInit = predInit;
+  window.predOpen = function (sym) {
+    const r = PRED_RESULTS.find(x => x.sym === sym);
+    if (r) predShowDetail(r);
+  };
+  // ➕ إضافة سهم من المتنبئ إلى المراقبة/المحفظة (يعيد استخدام دوال التطبيق)
+  window.predAddWatch = function (sym) {
+    const r = PRED_RESULTS.find(x => x.sym === sym); const nm = r ? r.name : sym;
+    if (typeof wlAddFromOpportunity === 'function') wlAddFromOpportunity(sym, nm);
+    else if (typeof wlAdd === 'function') wlAdd(sym, nm);
+  };
+  window.predAddPortfolio = function (sym) {
+    const r = PRED_RESULTS.find(x => x.sym === sym); const nm = r ? r.name : sym;
+    const ov = document.getElementById('predDetailOv'); if (ov) ov.style.display = 'none';
+    if (typeof closeAllOverlays === 'function') closeAllOverlays();
+    if (typeof pfOpenBuyModal === 'function') pfOpenBuyModal(sym, nm);
+  };
+
+})();
+
 function switchTab(tab, btn) {
   if (tab === 'admin' && !(typeof isAdmin === 'function' && isAdmin())) {
     showToast('⛔ هذا القسم للأدمن فقط'); return;
@@ -6531,6 +7172,7 @@ function switchTab(tab, btn) {
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'returns') renderReturns();
   if (tab === 'analysis') { marketAnalysisFilter('all'); updateHistCacheStatus(); }
+  if (tab === 'all') predInit();
   if (tab === 'admin' && typeof renderAdminSection === 'function') renderAdminSection();
 }
 

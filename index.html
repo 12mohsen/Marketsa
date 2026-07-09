@@ -815,6 +815,13 @@ td.td-sec{text-align:right;font-size:13px;color:var(--txt-2)}
   border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .pred-filter.active{background:var(--g-mid);border-color:var(--g-mid);color:#fff}
 .pred-filter:hover{border-color:var(--g-accent)}
+@keyframes annFlash{
+  0%,100%{box-shadow:0 0 0 rgba(245,158,11,0);filter:brightness(1)}
+  50%{box-shadow:0 0 20px 3px rgba(245,158,11,.8);filter:brightness(1.4)}
+}
+@keyframes annShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+#adminAnnounce{background-size:200% 100%}
+#adminAnnounce.ann-flash{animation:annFlash .7s ease-in-out 6, annShine 2.2s linear 2}
 .dc-toggle{
   display:flex;align-items:center;justify-content:center;gap:8px;
   width:100%;background:none;border:none;cursor:pointer;font-family:inherit;
@@ -1385,6 +1392,7 @@ canvas#mdChart{display:block;width:100% !important}
 
 <!-- الرئيسية -->
 <div class="section-panel active" id="panel-home">
+<div id="sahmkOfficialOverview" style="display:none;max-width:1100px;margin:0 auto;padding:0 8px"></div>
 <div class="tbl-wrap">
   <div class="tbl-box">
 
@@ -1533,6 +1541,11 @@ canvas#mdChart{display:block;width:100% !important}
       </div>
       <div id="predSub" style="font-size:10.5px;color:var(--txt-m);margin-top:6px;text-align:center"></div>
     </div>
+
+    <input id="predSearchBox" type="text" oninput="predSearch(this.value)"
+      placeholder="🔍 ابحث باسم السهم أو رمزه..." autocomplete="off"
+      style="width:100%;box-sizing:border-box;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);
+      border-radius:10px;padding:10px 14px;font-size:13px;font-family:inherit;margin-bottom:12px;outline:none" />
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
       <button class="pred-filter active" id="predFilter-all"      onclick="predSetFilter('all')">الكل <span id="predCount-all">(0)</span></button>
@@ -1946,6 +1959,18 @@ const SAHMK_SYMBOLS = [];
    عند الإطفاء تبقى هذه الحقول فارغة (—) في مسار sahmk، بينما السعر
    والتغير والحجم والأعلى/الأدنى تظهر طبيعية. */
 const SAHMK_ENRICH_FUNDAMENTALS = false;
+
+/* 🔗 الوضع الهجين (موصى به): الأساسيات (P/E, EPS, القيمة السوقية, القطاع,
+   التوزيعات, أعلى/أدنى 52 أسبوع) تبقى من جوجل شيت، والأسعار الحية (السعر,
+   التغير, الحجم) تُجلب من sahmk وتُغطّى فوقها. يعمل فقط عندما USE_SAHMK_API=true.
+   اجعله false لاستخدام sahmk وحده (بلا أساسيات). */
+const SAHMK_HYBRID = true;
+
+/* 🆓 ميزات الباقة المجانية (تعمل مع بقاء الجدول على الشيت/ياهو):
+   نظرة سوق رسمية أعلى الرئيسية + سعر رسمي عند فتح السهم — عبر نقاط
+   المجانية المخزّنة في الوسيط. تحتاج فقط مفتاح سهمك المجاني في الـWorker.
+   اجعله false لإيقاف ميزات سهمك المجانية كلياً. */
+const SAHMK_FREE_FEATURES = true;
 
 /* ─────────────────────────────────────
    SUPABASE — الحسابات وتسجيل الدخول
@@ -2816,13 +2841,21 @@ function applyAppSettings() {
     if (!bar) {
       bar = document.createElement('div');
       bar.id = 'adminAnnounce';
-      bar.style.cssText = 'background:linear-gradient(90deg,rgba(124,58,237,.28),rgba(99,102,241,.22));' +
-        'border-bottom:1px solid rgba(139,92,246,.4);padding:9px 16px;text-align:center;' +
-        'font-size:12.5px;font-weight:600;color:var(--txt)';
+      bar.style.cssText = 'background:linear-gradient(90deg,#b45309,#f59e0b,#fde68a,#f59e0b,#b45309);' +
+        'border-bottom:1px solid rgba(245,158,11,.65);padding:10px 16px;text-align:center;' +
+        'font-size:13px;font-weight:800;color:#241500;letter-spacing:.2px;text-shadow:0 1px 0 rgba(255,255,255,.25)';
       const hdr = document.querySelector('.app-header');
       if (hdr) hdr.parentNode.insertBefore(bar, hdr.nextSibling);
     }
-    bar.textContent = '📢 ' + s.announcement;
+    const _annTxt = '📢 ' + s.announcement;
+    // أطلِق الوميض فقط عند أول ظهور أو عند تغيّر نص الإعلان (لا كل مزامنة)
+    if (bar.textContent !== _annTxt || bar.dataset.annShown !== '1') {
+      bar.textContent = _annTxt;
+      bar.dataset.annShown = '1';
+      bar.classList.remove('ann-flash');
+      void bar.offsetWidth;            // إجبار إعادة التدفق ليعيد الأنيميشن من البداية
+      bar.classList.add('ann-flash');
+    }
     bar.style.display = 'block';
   } else if (bar) bar.style.display = 'none';
   _updateGate();
@@ -4672,6 +4705,54 @@ async function sahmkLoadMarket() {
 /* ─────────────────────────────────────
    نقطة التحميل الموحّدة — تبديل شفاف بين المصدرين
 ───────────────────────────────────── */
+/* ═══ الوضع الهجين: تغطية أسعار الشيت بأسعار sahmk الحية ═══
+   الأساسيات (P/E, EPS, القيمة السوقية, القطاع, التوزيعات, أعلى/أدنى 52 أسبوع)
+   تبقى من الشيت؛ نُحدّث فقط: السعر، نسبة التغير، مقدار التغير، الحجم. */
+async function sahmkOverlayLivePrices() {
+  if (!Array.isArray(rows) || !rows.length) return;
+  try {
+    // المؤشر من ملخص السوق
+    try {
+      const m = await sahmkApi('market/summary/', { index: SAHMK_INDEX });
+      if (tasiObj) {
+        if (m.index_value != null)          tasiObj.price  = String(m.index_value);
+        if (m.index_change_percent != null) tasiObj.chg    = m.index_change_percent;
+        if (m.index_change != null)         tasiObj.chgAbs = m.index_change;
+      }
+    } catch (e) { /* تجاهل المؤشر */ }
+
+    const symbols = [...new Set(rows.map(r => r.sym).filter(Boolean))];
+    let patched = 0;
+    for (let i = 0; i < symbols.length; i += SAHMK_BATCH) {
+      const chunk = symbols.slice(i, i + SAHMK_BATCH);
+      if (!chunk.length) continue;
+      let r;
+      try { r = await sahmkApi('quotes', { symbols: chunk.join(',') }); }
+      catch (e) { continue; }
+      (r.quotes || []).forEach(q => {
+        const row = rows.find(x => x.sym === q.symbol);
+        if (!row) return;
+        if (q.price != null)          row.price  = String(q.price);
+        if (q.change_percent != null) row.chg    = q.change_percent;
+        if (q.change != null)         row.chgAbs = q.change;
+        if (q.volume != null)         row.vol    = String(q.volume);
+        patched++;
+      });
+    }
+    if (patched) {
+      if (typeof buildSectors === 'function')  buildSectors();
+      if (typeof updateStats === 'function')   updateStats();
+      if (typeof updateTasiBar === 'function') updateTasiBar(tasiObj);
+      if (typeof render === 'function')        render();
+      if (typeof onDataReady === 'function')   onDataReady();
+      const lbl = document.getElementById('lblUpdate');
+      if (lbl) lbl.textContent = 'أسعار حية (sahmk) · ' +
+        new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+      console.info('[sahmk هجين] حُدّثت أسعار ' + patched + ' سهم حياً.');
+    }
+  } catch (e) { console.warn('[sahmk هجين] فشل تغطية الأسعار:', e.message); }
+}
+
 function loadCSV() {
   const btn = document.getElementById('btnRefresh');
   const ico = document.getElementById('icoRefresh');
@@ -4714,8 +4795,17 @@ function loadCSV() {
   };
 
   // ★★ نقطة التبديل الوحيدة ★★
-  if (USE_SAHMK_API) {
-    // المصدر المستقبلي (sahmk). لو رجع فارغاً أو فشل → رجوع تلقائي للقديم.
+  if (USE_SAHMK_API && SAHMK_HYBRID) {
+    // هجين: الأساسيات من جوجل شيت + الأسعار الحية من sahmk فوقها
+    tryAllSources()
+      .then(data => {
+        if (!data || data.length < 2) { fallbackLegacy('تعذّر تحميل الشيت'); return; }
+        onResult(data);              // اعرض بيانات الشيت (الأساسيات) فوراً
+        sahmkOverlayLivePrices();    // ثم غطِّ الأسعار الحية بصمت
+      })
+      .catch(onFail);
+  } else if (USE_SAHMK_API) {
+    // المصدر المستقبلي (sahmk فقط). لو رجع فارغاً أو فشل → رجوع تلقائي للقديم.
     sahmkLoadMarket()
       .then(data => {
         if (!data || data.length < 2) fallbackLegacy('بيانات sahmk فارغة');
@@ -6802,6 +6892,7 @@ document.addEventListener('keydown', e => {
   const PRED_CACHE = {};            // sym → شموع OHLCV (سنة/يومي)
   let   PRED_RESULTS = [];
   let   PRED_FILTER  = 'all';
+  let   PRED_SEARCH  = '';
   let   PRED_SCANNING = false;
   let   PRED_BUILT = false;
   let   PRED_LAST_TS = null;        // وقت آخر مسح (epoch)
@@ -7023,7 +7114,20 @@ document.addEventListener('keydown', e => {
     else if (PRED_FILTER === 'imminent') list = list.filter(r => r.timing.level >= 2);
     else if (PRED_FILTER === 'high') list = list.filter(r => r.probability >= 70);
 
-    if (!list.length) { wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--txt-m)">لا نتائج ضمن هذا الفلتر</div>'; return; }
+    const q = (PRED_SEARCH || '').trim();
+    if (q) {
+      const nq = (typeof arNormalize === 'function') ? arNormalize(q) : q.toLowerCase();
+      list = list.filter(r => {
+        const nm = (typeof arNormalize === 'function') ? arNormalize(r.name || '') : String(r.name || '').toLowerCase();
+        return nm.includes(nq) || String(r.sym || '').includes(q);
+      });
+    }
+
+    if (!list.length) {
+      wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--txt-m)">' +
+        (q ? 'لا نتائج للبحث «' + q + '»' : 'لا نتائج ضمن هذا الفلتر') + '</div>';
+      return;
+    }
 
     const rowsHtml = list.map((r, i) => {
       const tgt = (r.direction !== 'none' && r.targetPct != null)
@@ -7141,9 +7245,38 @@ document.addEventListener('keydown', e => {
   window.predScanAll = predScanAll;
   window.predSetFilter = predSetFilter;
   window.predInit = predInit;
+  window.predSearch = function (v) { PRED_SEARCH = v || ''; predRender(); };
   window.predOpen = function (sym) {
-    const r = PRED_RESULTS.find(x => x.sym === sym);
-    if (r) predShowDetail(r);
+    const res = PRED_RESULTS.find(x => x.sym === sym);
+    const nm  = res ? res.name : sym;
+    // بحث متسامح عن صف السهم في بيانات السوق: بالرمز، ثم بالأرقام، ثم بالاسم
+    let base = null;
+    if (typeof rows !== 'undefined' && Array.isArray(rows) && rows.length) {
+      const t = String(sym).trim();
+      base = rows.find(x => String(x.sym || '').trim() === t);
+      if (!base) {
+        const dig = t.replace(/\D/g, '');
+        if (dig) base = rows.find(x => String(x.sym || '').replace(/\D/g, '') === dig);
+      }
+      if (!base && nm && typeof arNormalize === 'function') {
+        const nn = arNormalize(nm);
+        base = rows.find(x => arNormalize(x.name || '') === nn);
+      }
+    }
+    // عُثر على صف كامل → النافذة الغنية (بيانات + تقييم فني + أهداف)
+    if (base) {
+      if (base.sym && typeof marketStockAnalysis === 'function') { marketStockAnalysis(base.sym, base.name || nm); return; }
+      if (typeof openModal === 'function') { openModal(base); return; }
+    }
+    // لم يُعثر على صف — غالباً بيانات السوق لم تكتمل بعد
+    if ((!Array.isArray(rows) || rows.length === 0) && typeof showToast === 'function') {
+      showToast('⏳ جارٍ تحميل بيانات السوق — أعد المحاولة بعد لحظات');
+    }
+    if (typeof openModal === 'function') {
+      const obj = { sym: sym, name: nm };
+      if (res) obj.price = res.price;
+      openModal(obj);
+    }
   };
   // ➕ إضافة سهم من المتنبئ إلى المراقبة/المحفظة (يعيد استخدام دوال التطبيق)
   window.predAddWatch = function (sym) {
@@ -9903,6 +10036,8 @@ switchTab = function (tab, btn) {
       </div>
       <div class="md-change-badge nt" id="mdChangeBadge">—</div>
     </div>
+    <div id="mdOfficialPrice" style="display:none;margin:0 16px 12px;padding:8px 14px;border-radius:10px;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.35);font-size:12px;color:#4ade80;text-align:center;font-weight:600"></div>
+    <div id="mdLiquidity" style="display:none;margin:0 16px 14px;padding:10px 14px;border-radius:10px;background:var(--surf-alt);border:1px solid var(--bdr);font-size:12px;text-align:right"></div>
 
     <div class="md-chart-wrap">
       <div class="md-chart-title">
@@ -10077,5 +10212,183 @@ switchTab = function (tab, btn) {
   </div>
 </div>
 
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ميزات الباقة المجانية من سهمك (نظرة سوق رسمية + سعر عند فتح السهم)
+   تعمل عبر الوسيط بنقاط مجانية مخزّنة، والجدول يبقى على الشيت/ياهو.
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
+  if (typeof SAHMK_FREE_FEATURES === 'undefined' || !SAHMK_FREE_FEATURES) return;
+  console.info('%c[sahmk free] الميزات المجانية + 💧 تدفّق السيولة مفعّلة (نسخة السيولة)', 'color:#16a34a;font-weight:bold');
+  const IDX = (typeof SAHMK_INDEX !== 'undefined') ? SAHMK_INDEX : 'TASI';
+  const api = (path, params) => (typeof sahmkApi === 'function')
+    ? sahmkApi(path, params || {}) : Promise.reject(new Error('لا يوجد وسيط'));
+
+  const num = v => (v == null || isNaN(v)) ? '—'
+    : Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const fmtMoney = v => {
+    v = Number(v) || 0; const a = Math.abs(v);
+    if (a >= 1e9) return (v / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+    if (a >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+    return v.toFixed(0);
+  };
+
+  // ── نظرة السوق الرسمية ──
+  async function sfOverview() {
+    const box = document.getElementById('sahmkOfficialOverview');
+    if (!box) return;
+    try {
+      const [m, g, l] = await Promise.all([
+        api('market/summary/', { index: IDX }),
+        api('market/gainers/', { limit: 5, index: IDX }),
+        api('market/losers/',  { limit: 5, index: IDX }),
+      ]);
+      const up = (m.index_change_percent || 0) >= 0;
+      const clr = up ? '#16a34a' : '#dc2626';
+      const movers = (arr, key) => (arr[key] || []).map(x => {
+        const c = (x.change_percent == null) ? '—' : ((x.change_percent >= 0 ? '+' : '') + x.change_percent + '%');
+        const cc = (x.change_percent || 0) >= 0 ? '#16a34a' : '#dc2626';
+        return '<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;font-size:11.5px;border-bottom:1px solid var(--bdr)">' +
+          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (x.name || x.symbol) + '</span>' +
+          '<span style="color:' + cc + ';font-weight:700;flex-shrink:0">' + c + '</span></div>';
+      }).join('') || '<div style="font-size:11px;color:var(--txt-m)">—</div>';
+
+      box.innerHTML =
+        '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px;margin:0 0 14px;box-shadow:var(--sh-sm)">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+            '<div style="font-weight:800;font-size:13.5px">🏛️ نظرة السوق الرسمية <span style="color:var(--txt-m);font-weight:600;font-size:11px">— سهمك</span></div>' +
+            '<button onclick="sahmkFreeRefresh()" title="تحديث" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--txt-m)">🔄</button>' +
+          '</div>' +
+          '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap">' +
+            '<span style="font-size:24px;font-weight:900">' + num(m.index_value) + '</span>' +
+            '<span style="color:' + clr + ';font-weight:800;font-size:14px">' + (up ? '▲ +' : '▼ ') + (m.index_change_percent != null ? m.index_change_percent : '—') + '%</span>' +
+            '<span style="color:var(--txt-m);font-size:11px">' + IDX + (m.is_delayed ? ' · مؤخّر' : ' · لحظي') + (m.market_mood ? ' · ' + m.market_mood : '') + '</span>' +
+          '</div>' +
+          '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+            '<div style="flex:1;min-width:150px"><div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:4px">📈 أعلى الرابحين</div>' + movers(g, 'gainers') + '</div>' +
+            '<div style="flex:1;min-width:150px"><div style="font-size:11px;color:#dc2626;font-weight:700;margin-bottom:4px">📉 أعلى الخاسرين</div>' + movers(l, 'losers') + '</div>' +
+          '</div>' +
+          '<div style="font-size:9.5px;color:var(--txt-m);text-align:center;margin-top:10px">بيانات رسمية · مخزّنة وتُحدَّث كل بضع ساعات</div>' +
+        '</div>';
+      box.style.display = 'block';
+    } catch (e) {
+      box.style.display = 'none';   // المفتاح/الوسيط غير مضبوط بعد → إخفاء بهدوء
+      console.warn('[sahmk free] نظرة السوق غير متاحة:', e && e.message);
+    }
+  }
+  window.sahmkFreeRefresh = sfOverview;
+
+  // ── سعر رسمي عند فتح السهم ──
+  // يبني HTML صندوق (السعر الرسمي + تدفّق السيولة) من استجابة /quote
+  function sfLiquidityBox(q) {
+    let html = '';
+    if (q && q.price != null) {
+      const chg = q.change_percent;
+      html += '<div style="font-weight:700;margin-bottom:8px;color:#4ade80">🏛️ السعر الرسمي (سهمك): ' +
+        Number(q.price).toFixed(2) + ' ر.س' +
+        (chg != null ? ' · <span style="color:' + (chg >= 0 ? '#16a34a' : '#dc2626') + '">' + (chg >= 0 ? '+' : '') + chg + '%</span>' : '') +
+        (q.is_delayed ? ' · مؤخّر' : ' · لحظي') + '</div>';
+    }
+    const L = q && q.liquidity;
+    if (L && (L.net_value != null || L.inflow_value != null)) {
+      const net = Number(L.net_value || (L.inflow_value - L.outflow_value) || 0);
+      const inflow = Number(L.inflow_value || 0), outflow = Number(L.outflow_value || 0);
+      const total = (inflow + outflow) || 1;
+      const inPct = Math.max(2, Math.min(98, Math.round(inflow / total * 100)));
+      const nClr = net >= 0 ? '#16a34a' : '#dc2626';
+      html += '<div style="font-weight:800;margin-bottom:7px">💧 تدفّق السيولة ' +
+          '<span style="color:var(--txt-m);font-weight:500;font-size:10px">(رسمي — سهمك)</span></div>' +
+        '<div style="margin-bottom:7px">الصافي: <b style="color:' + nClr + '">' + (net >= 0 ? '+' : '') + fmtMoney(net) + ' ر.س</b> · ' +
+          '<span style="color:' + nClr + ';font-weight:700">' + (net >= 0 ? 'تجميع ⬆️' : 'تصريف ⬇️') + '</span></div>' +
+        '<div style="display:flex;height:9px;border-radius:5px;overflow:hidden;margin-bottom:5px">' +
+          '<div style="width:' + inPct + '%;background:#16a34a"></div>' +
+          '<div style="width:' + (100 - inPct) + '%;background:#dc2626"></div></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px">' +
+          '<span style="color:#16a34a;font-weight:700">شراء ' + fmtMoney(inflow) + '</span>' +
+          '<span style="color:#dc2626;font-weight:700">بيع ' + fmtMoney(outflow) + '</span></div>';
+    }
+    return html;
+  }
+
+  function sfInjectOfficial(sym) {
+    const el  = document.getElementById('mdOfficialPrice');
+    const liq = document.getElementById('mdLiquidity');
+    if (!el || !sym) return;
+    el.style.display = 'none';
+    if (liq) liq.style.display = 'none';
+    api('quote/' + encodeURIComponent(sym) + '/').then(q => {
+      if (q && q.price != null) {
+        const chg = q.change_percent;
+        el.innerHTML = '🏛️ السعر الرسمي (سهمك): <b>' + Number(q.price).toFixed(2) + ' ر.س</b>' +
+          (chg != null ? ' · <span style="color:' + (chg >= 0 ? '#4ade80' : '#f87171') + '">' + (chg >= 0 ? '+' : '') + chg + '%</span>' : '') +
+          (q.is_delayed ? ' · مؤخّر' : ' · لحظي');
+        el.style.display = 'block';
+      }
+      // 💧 تدفّق السيولة (بيانات رسمية فريدة غير موجودة في الشيت/ياهو)
+      const L = q && q.liquidity;
+      if (liq && L && (L.net_value != null || L.inflow_value != null)) {
+        const net = Number(L.net_value || (L.inflow_value - L.outflow_value) || 0);
+        const inflow = Number(L.inflow_value || 0), outflow = Number(L.outflow_value || 0);
+        const total = (inflow + outflow) || 1;
+        const inPct = Math.max(2, Math.min(98, Math.round(inflow / total * 100)));
+        const nClr = net >= 0 ? '#16a34a' : '#dc2626';
+        liq.innerHTML =
+          '<div style="font-weight:800;margin-bottom:7px">💧 تدفّق السيولة ' +
+            '<span style="color:var(--txt-m);font-weight:500;font-size:10px">(رسمي — سهمك)</span></div>' +
+          '<div style="margin-bottom:7px">الصافي: <b style="color:' + nClr + '">' + (net >= 0 ? '+' : '') + fmtMoney(net) + ' ر.س</b> · ' +
+            '<span style="color:' + nClr + ';font-weight:700">' + (net >= 0 ? 'تجميع ⬆️' : 'تصريف ⬇️') + '</span></div>' +
+          '<div style="display:flex;height:9px;border-radius:5px;overflow:hidden;margin-bottom:5px">' +
+            '<div style="width:' + inPct + '%;background:#16a34a"></div>' +
+            '<div style="width:' + (100 - inPct) + '%;background:#dc2626"></div></div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:11px">' +
+            '<span style="color:#16a34a;font-weight:700">شراء ' + fmtMoney(inflow) + '</span>' +
+            '<span style="color:#dc2626;font-weight:700">بيع ' + fmtMoney(outflow) + '</span></div>';
+        liq.style.display = 'block';
+      } else if (liq) { liq.style.display = 'none'; }
+    }).catch(() => { el.style.display = 'none'; if (liq) liq.style.display = 'none'; });
+  }
+  // لفّ openModal لإظهار السعر الرسمي بعد فتح النافذة
+  if (typeof window.openModal === 'function') {
+    const _open = window.openModal;
+    window.openModal = function (s) {
+      const r = _open.apply(this, arguments);
+      try { const sym = s && (s.sym || s.symbol); if (sym) sfInjectOfficial(String(sym).trim()); } catch (e) {}
+      return r;
+    };
+  }
+
+  // لفّ نافذة التحليل الغنية (رادار الانفجارات + تحليل السوق) لإضافة السيولة
+  if (typeof window.marketStockAnalysis === 'function') {
+    const _ma = window.marketStockAnalysis;
+    window.marketStockAnalysis = function (sym, name) {
+      const r = _ma.apply(this, arguments);
+      try {
+        if (sym) {
+          const ovs = document.querySelectorAll('[id^="market-analysis-"]');
+          const ov = ovs[ovs.length - 1];
+          if (ov) {
+            const box = document.createElement('div');
+            box.style.cssText = 'margin:0 0 16px;padding:11px 14px;border-radius:10px;background:var(--surf-alt);border:1px solid var(--bdr);font-size:12px;text-align:right;display:none';
+            const anchor = ov.querySelector('[id^="histQuickBlock-"]');
+            if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(box, anchor);
+            else { const modal = ov.querySelector('.market-analysis-modal'); if (modal) modal.appendChild(box); }
+            api('quote/' + encodeURIComponent(String(sym).trim()) + '/').then(q => {
+              const html = sfLiquidityBox(q);
+              if (html) { box.innerHTML = html; box.style.display = 'block'; }
+            }).catch(() => {});
+          }
+        }
+      } catch (e) {}
+      return r;
+    };
+  }
+
+  const boot = () => setTimeout(sfOverview, 1500);
+  if (document.readyState !== 'loading') boot();
+  else document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
 </body>
 </html>

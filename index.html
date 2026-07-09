@@ -4845,7 +4845,7 @@ function openModal(s) {
   // Price
   const priceN = toNum(s.price);
   document.getElementById('mdPrice').textContent = priceN !== null
-    ? priceN.toLocaleString('ar-SA', {minimumFractionDigits:2, maximumFractionDigits:2})
+    ? priceN.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
     : '—';
 
   const highN  = toNum(s.high);
@@ -4862,7 +4862,7 @@ function openModal(s) {
   else if (highN !== null && lowN !== null)        prevEst = (highN + lowN) / 2;          // تقدير قديم
 
   document.getElementById('mdPrev').textContent = prevEst !== null
-    ? prevEst.toLocaleString('ar-SA',{minimumFractionDigits:2,maximumFractionDigits:2})
+    ? prevEst.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
     : '—';
 
   // Change badge
@@ -4914,9 +4914,9 @@ function openModal(s) {
   }
 
   setCell('mdHigh', priceN !== null && highN !== null
-    ? highN.toLocaleString('ar-SA',{minimumFractionDigits:2}) : '—', 'grn');
+    ? highN.toLocaleString('en-US',{minimumFractionDigits:2}) : '—', 'grn');
   setCell('mdLow',  priceN !== null && lowN !== null
-    ? lowN.toLocaleString('ar-SA',{minimumFractionDigits:2}) : '—', 'red');
+    ? lowN.toLocaleString('en-US',{minimumFractionDigits:2}) : '—', 'red');
 
   // Draw chart
   drawMdChart(priceN, highN, lowN);
@@ -5968,7 +5968,7 @@ function formatVolume(v) {
   if (v >= 1e9) return (v / 1e9).toFixed(2) + ' مليار';
   if (v >= 1e6) return (v / 1e6).toFixed(2) + ' مليون';
   if (v >= 1e3) return (v / 1e3).toFixed(1) + ' ألف';
-  return v.toLocaleString('ar-SA');
+  return v.toLocaleString('en-US');
 }
 
 function pfAnalyze(sym, name) {
@@ -6451,7 +6451,7 @@ function openTASIAnalysis() {
   const lowN   = toNum(t.low);
   const volN   = toNum(t.vol);
   const cur    = priceN || 0;
-  const fmt    = v => v.toLocaleString('ar-SA', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmt    = v => v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtN   = v => v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 
   document.getElementById('anTitle').textContent = 'تحليل · المؤشر العام TASI';

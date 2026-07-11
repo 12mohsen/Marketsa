@@ -1934,7 +1934,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-07-v68 — 🛡️ مزامنة ذكية (إصلاح سقوط الجلسة 429) + 💳 اشتراك مستقل لكل قسم + تمرير داخلي لنافذة الإدارة', 'color:#7c3aed;font-weight:bold;font-size:12px');
+console.log('%c[تداول بلس] البناء: 2026-07-12-v73 — 📁 الرئيسية (تلقائي) تتبع اشتراك تحليل السوق + قفل أهداف مستقل لكل قسم', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2840,9 +2840,13 @@ function _isPaidFor(k) {
 function _targetsLocked(secKey) {
   if (!secKey) return false;
   if (typeof isAdmin === 'function' && isAdmin()) return false;
+  /* القفل مستقل لكل قسم حسب اختيار الأدمن: مفتوحة / مقفلة / تلقائي (حسب الاشتراك) */
   const lt = _secFlags(userRestrictions, secKey).lockT;
   if (lt === 'open') return false;   // فتحها الأدمن
   if (lt === 'lock') return true;    // أقفلها الأدمن
+  /* 📁 الرئيسية في الوضع التلقائي تتبع اشتراك «⚡ تحليل السوق»:
+     أهداف نافذة تفاصيل السهم تُفتح فقط عند اشتراك تحليل السوق النشط، وإلا تُقفل. */
+  if (secKey === 'home') return !_isPaidFor('analysis');
   /* تلقائي (حسب الاشتراك): مفتوحة للمجاني وللمشترك النشط،
      وتُقفل فقط لمن كان لديه اشتراك مدفوع وانتهت مدته. */
   const si = _subInfo(userRestrictions, secKey);
@@ -4881,6 +4885,17 @@ function adminEditUser(email) {
       <div style="font-size:11.5px;color:var(--txt-m);direction:ltr;text-align:left;margin-bottom:12px">${bulk ? (_admBulkTargets.slice(0, 6).join('<br>') + (_admBulkTargets.length > 6 ? `<br>… و${_admBulkTargets.length - 6} آخرين` : '')) : email}</div>
 
       <div style="font-size:11.5px;font-weight:700;color:#fbbf24;margin-bottom:4px">الأقسام المتاحة له</div>
+      <div style="border:1px solid var(--bdr);border-radius:12px;padding:8px 10px;margin-bottom:10px">
+        <div style="display:flex;gap:6px;align-items:center;padding:2px 0">
+          <span style="font-size:10.5px;color:var(--txt);font-weight:700;flex:1">📁 الرئيسية · 🎯 الأهداف ووقف الخسارة</span>
+          <select id="admUTgt-home" style="font-size:10.5px;padding:5px 8px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);cursor:pointer;font-family:inherit">
+            <option value="" ${!_secFlags(r,'home').lockT ? 'selected' : ''}>⚙️ تلقائي (حسب الاشتراك)</option>
+            <option value="open" ${_secFlags(r,'home').lockT === 'open' ? 'selected' : ''}>🔓 مفتوحة للمستخدم</option>
+            <option value="lock" ${_secFlags(r,'home').lockT === 'lock' ? 'selected' : ''}>🔒 مقفلة (مظللة)</option>
+          </select>
+        </div>
+        <div style="font-size:9.5px;color:var(--txt-m);line-height:1.5">تتحكّم بأهداف السهم في نافذة تفاصيل السهم المفتوحة من الصفحة الرئيسية.</div>
+      </div>
       ${ADMIN_TAB_DEFS.map(t => { const fl = _secFlags(r, t.k); const hot = hiSecs.includes(t.k); return `
         <div style="${hot ? 'border:2px solid #22c55e;border-radius:12px;padding:8px 10px;margin-bottom:10px;box-shadow:0 0 10px rgba(34,197,94,.35)' : ''}">
         <label style="${row};cursor:pointer;border-bottom:none">
@@ -5088,6 +5103,8 @@ async function adminSaveUser() {
     blurFlag[t.k] = !!document.getElementById('admUBlurV-' + t.k).value;
     tgtFlag[t.k]  = document.getElementById('admUTgt-' + t.k).value;
   });
+  const _homeTgtEl = document.getElementById('admUTgt-home');
+  if (_homeTgtEl) tgtFlag.home = _homeTgtEl.value;
   const no_popups = ADMIN_TAB_DEFS.some(t => popFlag[t.k]);
   const blur_view = ADMIN_TAB_DEFS.some(t => blurFlag[t.k]);
   const exemptEl = document.getElementById('admUExempt');
@@ -5119,6 +5136,13 @@ async function adminSaveUser() {
         cur.lock_targets = (tgtFlag[k] === 'open' || tgtFlag[k] === 'lock') ? tgtFlag[k] : null;
       }
       subs[k] = cur;
+    }
+    /* 📁 قفل أهداف الصفحة الرئيسية (بلا اشتراك — lock_targets فقط) */
+    {
+      const _hv = tgtFlag.home;
+      subs.home = Object.assign({}, (prev.subs && prev.subs.home) || {}, {
+        lock_targets: (_hv === 'open' || _hv === 'lock') ? _hv : null,
+      });
     }
     const acc = subs.account;
     return { email, hidden_tabs, blocked, no_popups, blur_view, subs,
@@ -7220,7 +7244,7 @@ function pfAnalyze(sym, name) {
     </div>
 
     <!-- ② الأهداف السعرية -->
-    ${(target1||target2||target3||stopLoss) ? _wrapIfLocked('analysis', `
+    ${(target1||target2||target3||stopLoss) ? _wrapIfLocked(_currentTabKey(), `
     <div class="an-section">
       <div class="an-sec-title">📈 الأهداف السعرية المتدرجة</div>
       <div style="display:grid;grid-template-columns:repeat(${[target1,target2,target3,stopLoss].filter(Boolean).length},1fr);gap:8px">
@@ -8820,7 +8844,7 @@ async function marketStockLoadHistorical(sym, overlayId) {
     }
 
     const block = document.getElementById(`histQuickBlock-${overlayId}`);
-    if (block) block.innerHTML = _wrapIfLocked('analysis', histQuickBlockHTML(sym, overlayId));
+    if (block) block.innerHTML = _wrapIfLocked(_currentTabKey(), histQuickBlockHTML(sym, overlayId));
 
     if (!extracted || extracted.length === 0) {
       const block2 = document.getElementById(`histQuickBlock-${overlayId}`);
@@ -9800,10 +9824,10 @@ function marketStockAnalysis(sym, name) {
         </div>
       </div>
 
-      ${target1 ? (_targetsLocked('analysis') ? _lockOverlayWrap(_maTgtHTML) : _maTgtHTML) : ''}
+      ${target1 ? (_targetsLocked(_currentTabKey()) ? _lockOverlayWrap(_maTgtHTML) : _maTgtHTML) : ''}
 
       <div id="histQuickBlock-${overlayId}" style="margin-bottom:16px">
-        ${_wrapIfLocked('analysis', histQuickBlockHTML(sym, overlayId))}
+        ${_wrapIfLocked(_currentTabKey(), histQuickBlockHTML(sym, overlayId))}
       </div>
 
       <div style="display:flex;gap:10px">
@@ -11080,8 +11104,10 @@ function popupsBlockedForUser() {
   /* 🪟 منع المنبثقات حسب القسم المفتوح حالياً */
   const k = _currentTabKey();
   if (ADMIN_TAB_DEFS.some(t => t.k === k) && _secFlags(userRestrictions, k).noPop) return true;
-  /* 💳 اشتراك المنبثقات المنتهي يمنعها تلقائياً */
-  return _subInfo(userRestrictions, 'popups').expired;
+  /* 💳 انتهاء الاشتراك لا يحجب المحتوى — سياسة التطبيق: بعد الانتهاء تبقى الأقسام متاحة،
+     ويُظلَّل فقط قسم «الأهداف ووقف الخسارة» عبر _targetsLocked. لذا لا نمنع فتح التحليل/التفاصيل
+     بسبب انتهاء الاشتراك؛ يبقى المنع فقط عبر «منع المنبثقات» اليدوي من الأدمن (أعلاه). */
+  return false;
 }
 
 function showSupportNotice() {

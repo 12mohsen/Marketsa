@@ -1569,6 +1569,10 @@ canvas#mdChart{display:block;width:100% !important}
       <button class="pred-filter"        id="predFilter-up"       onclick="predSetFilter('up')">صعودي <span id="predCount-up">(0)</span></button>
       <button class="pred-filter"        id="predFilter-down"     onclick="predSetFilter('down')">هبوطي <span id="predCount-down">(0)</span></button>
       <button class="pred-filter"        id="predFilter-base"     onclick="predSetFilter('base')">🧱 قاعدة <span id="predCount-base">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-success"  onclick="predSetFilter('success')" style="display:none">✅ نجح <span id="predCount-success">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-fail"     onclick="predSetFilter('fail')" style="display:none">❌ لم ينجح <span id="predCount-fail">(0)</span></button>
+      <span id="predRateBadge" style="display:none;align-self:center;font-size:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px"></span>
+      <button id="predAdminStatsToggle" onclick="predToggleUserStats()" title="إظهار/إخفاء إحصائيات الدقّة للمستخدمين" style="display:none;margin-inline-start:auto;padding:6px 12px;border-radius:20px;border:1.5px solid var(--bdr);background:var(--surf-alt);font-size:11px;font-weight:700;cursor:pointer"></button>
     </div>
 
     <div id="predResults"></div>
@@ -1934,7 +1938,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-12-v73 — 📁 الرئيسية (تلقائي) تتبع اشتراك تحليل السوق + قفل أهداف مستقل لكل قسم', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-12-v77 — 🎯 دقّة المتنبّئ + دقّة كل سهم للمستخدمين + سبب الفشل (عكسي/قصور/ثبات) للتطوير', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2845,8 +2849,11 @@ function _targetsLocked(secKey) {
   if (lt === 'open') return false;   // فتحها الأدمن
   if (lt === 'lock') return true;    // أقفلها الأدمن
   /* 📁 الرئيسية في الوضع التلقائي تتبع اشتراك «⚡ تحليل السوق»:
-     أهداف نافذة تفاصيل السهم تُفتح فقط عند اشتراك تحليل السوق النشط، وإلا تُقفل. */
-  if (secKey === 'home') return !_isPaidFor('analysis');
+     مفتوحة للمجاني وللمشترك النشط، وتُقفل فقط عند انتهاء اشتراك تحليل السوق المدفوع. */
+  if (secKey === 'home') {
+    const sa = _subInfo(userRestrictions, 'analysis');
+    return sa.plan === 'paid' && sa.expired;
+  }
   /* تلقائي (حسب الاشتراك): مفتوحة للمجاني وللمشترك النشط،
      وتُقفل فقط لمن كان لديه اشتراك مدفوع وانتهت مدته. */
   const si = _subInfo(userRestrictions, secKey);
@@ -8081,6 +8088,145 @@ document.addEventListener('keydown', e => {
   const PRED_CACHE = {};            // sym → شموع OHLCV (سنة/يومي)
   let _symInd = {};                 // 📊 مؤشرات المدى الطويل المحسوبة مسبقاً (symbol → صف)
   let _symIndLoaded = false;
+
+  /* 🎯 تتبّع دقّة المتنبّئ (نجح / لم ينجح) */
+  let _predOutcomes = [];
+  let _predStats = { success: 0, fail: 0, pending: 0, total: 0, rate: null };
+  let _predSymAcc = {};   // دقّة كل سهم: { symbol: {s,f,rate} }
+  /* شارة دقّة السهم السابقة (تظهر إن كانت الإحصائيات مرئية وعينة ≥2) */
+  function predSymAccBadge(sym) {
+    if (!predStatsVisible()) return '';
+    const a = _predSymAcc[sym];
+    if (!a || (a.s + a.f) < 2) return '';
+    const c = a.rate >= 60 ? '#4ade80' : a.rate >= 40 ? '#fbbf24' : '#f87171';
+    return '<div style="font-size:9.5px;color:' + c + '" title="نسبة نجاح تنبؤات هذا السهم سابقاً">🎯 دقّة سابقة: ' + a.rate + '% (' + (a.s + a.f) + ')</div>';
+  }
+  function predStatsVisible() {
+    return (typeof isAdmin === 'function' && isAdmin()) || !!(appSettings && appSettings.showPredStats);
+  }
+  async function predRecordSnapshot() {
+    if (!sb || !(typeof isAdmin === 'function' && isAdmin())) return;
+    if (!Array.isArray(PRED_RESULTS) || !PRED_RESULTS.length) return;
+    const kd = new Date(Date.now() + 3 * 3600000);
+    const predDate = kd.toISOString().slice(0, 10);
+    const rows = PRED_RESULTS
+      .filter(r => r.probability >= 70 && (r.direction === 'up' || r.direction === 'down') && r.targetPct != null && r.price)
+      .map(r => ({
+        symbol: r.sym, name: r.name || r.sym, pred_date: predDate,
+        direction: r.direction, probability: Math.round(r.probability),
+        entry_price: +(+r.price).toFixed(2),
+        target_pct: r.targetPct,
+        target_price: +(+r.price * (1 + r.targetPct / 100)).toFixed(2),
+        days_to_target: r.daysToTarget || 5,
+      }));
+    if (!rows.length) return;
+    try { await sb.from('predictions').upsert(rows, { onConflict: 'symbol,pred_date' }); }
+    catch (e) { console.warn('[pred] تعذّر تسجيل التنبؤات:', e && e.message); }
+  }
+  async function predLoadOutcomes() {
+    if (!sb) return;
+    try {
+      const { data, error } = await sb.from('predictions')
+        .select('*').order('pred_date', { ascending: false }).limit(1000);
+      if (error) throw error;
+      _predOutcomes = data || [];
+      const st = { success: 0, fail: 0, pending: 0, total: _predOutcomes.length, rate: null };
+      _predOutcomes.forEach(p => {
+        if (p.outcome === 'success') st.success++;
+        else if (p.outcome === 'fail') st.fail++;
+        else st.pending++;
+      });
+      const done = st.success + st.fail;
+      st.rate = done ? Math.round(st.success / done * 100) : null;
+      _predStats = st;
+      const acc = {};
+      _predOutcomes.forEach(p => {
+        if (p.outcome !== 'success' && p.outcome !== 'fail') return;
+        const a = acc[p.symbol] = acc[p.symbol] || { s: 0, f: 0 };
+        if (p.outcome === 'success') a.s++; else a.f++;
+      });
+      Object.keys(acc).forEach(k => { const a = acc[k]; a.rate = Math.round(a.s / (a.s + a.f) * 100); });
+      _predSymAcc = acc;
+    } catch (e) { _predOutcomes = []; }
+  }
+  function predUpdateStatsChips() {
+    const vis = predStatsVisible();
+    const sEl = document.getElementById('predFilter-success');
+    const fEl = document.getElementById('predFilter-fail');
+    const rEl = document.getElementById('predRateBadge');
+    const tEl = document.getElementById('predAdminStatsToggle');
+    if (sEl) sEl.style.display = vis ? '' : 'none';
+    if (fEl) fEl.style.display = vis ? '' : 'none';
+    const cS = document.getElementById('predCount-success'); if (cS) cS.textContent = '(' + _predStats.success + ')';
+    const cF = document.getElementById('predCount-fail'); if (cF) cF.textContent = '(' + _predStats.fail + ')';
+    if (rEl) {
+      if (vis && _predStats.rate != null) {
+        const c = _predStats.rate >= 60 ? '#4ade80' : _predStats.rate >= 40 ? '#fbbf24' : '#f87171';
+        rEl.style.display = '';
+        rEl.innerHTML = '🎯 دقّة المتنبّئ: <b style="color:' + c + '">' + _predStats.rate + '%</b> <span style="color:var(--txt-m);font-size:10px">(' + _predStats.success + '/' + (_predStats.success + _predStats.fail) + ')</span>';
+      } else rEl.style.display = 'none';
+    }
+    if (tEl) {
+      if (typeof isAdmin === 'function' && isAdmin()) {
+        tEl.style.display = '';
+        const on = !!(appSettings && appSettings.showPredStats);
+        tEl.textContent = on ? '👁️ الإحصائيات ظاهرة للمستخدمين' : '🔒 الإحصائيات مخفية عن المستخدمين';
+        tEl.style.borderColor = on ? '#22c55e' : 'var(--bdr)';
+        tEl.style.color = on ? '#4ade80' : 'var(--txt-m)';
+      } else tEl.style.display = 'none';
+    }
+  }
+  async function predToggleUserStats() {
+    if (!(typeof isAdmin === 'function' && isAdmin())) { if (typeof showToast === 'function') showToast('⛔ للأدمن فقط'); return; }
+    const on = !(appSettings && appSettings.showPredStats);
+    appSettings = Object.assign({}, appSettings, { showPredStats: on });
+    try {
+      await sb.from('app_settings').upsert({ id: 1, data: appSettings, updated_at: new Date().toISOString() });
+      if (typeof showToast === 'function') showToast(on ? '👁️ أصبحت إحصائيات الدقّة ظاهرة للمستخدمين' : '🔒 أُخفيت إحصائيات الدقّة عن المستخدمين');
+    } catch (e) { if (typeof showToast === 'function') showToast('⚠️ تعذّر الحفظ'); }
+    predUpdateStatsChips();
+  }
+  function predRenderOutcomes(kind, wrap) {
+    wrap = wrap || document.getElementById('predResults');
+    if (!wrap) return;
+    const want = kind === 'success' ? 'success' : 'fail';
+    const reasonTxt = { reverse: '↩️ عكسي', short: '📉 قصور', flat: '➡️ ثبات' };
+    let list = _predOutcomes.filter(p => p.outcome === want);
+    const q = (PRED_SEARCH || '').trim();
+    if (q) list = list.filter(p => String(p.name || '').includes(q) || String(p.symbol || '').includes(q));
+    if (!list.length) {
+      wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--txt-m)">لا تنبؤات ' + (want === 'success' ? 'ناجحة' : 'غير ناجحة') + ' بعد. تُقيَّم التنبؤات تلقائياً بعد انقضاء مدّتها.</div>';
+      return;
+    }
+    const nfmt = v => (v == null ? '—' : (+v).toFixed(2));
+    const rowsHtml = list.map((p, i) => {
+      const dir = p.direction === 'up' ? '<span style="color:#16a34a;font-weight:800">🟢 صعودي</span>' : '<span style="color:#dc2626;font-weight:800">🔴 هبوطي</span>';
+      const oc = want === 'success' ? '<span style="color:#4ade80;font-weight:800">✅ نجح</span>' : '<span style="color:#f87171;font-weight:800">❌ لم ينجح</span>';
+      return '<tr style="border-bottom:1px solid var(--bdr)">' +
+        '<td style="padding:8px 6px;color:var(--txt-m);font-size:11px">' + (i + 1) + '</td>' +
+        '<td style="padding:8px 6px"><div style="font-weight:700;font-size:12px">' + (p.name || '—') + '</div><div style="color:var(--txt-m);font-size:10px">' + p.symbol + '</div></td>' +
+        '<td style="padding:8px 6px;text-align:center;font-size:10.5px;white-space:nowrap">' + p.pred_date + '</td>' +
+        '<td style="padding:8px 6px;text-align:center">' + dir + '</td>' +
+        '<td style="padding:8px 6px;text-align:center;font-size:11px;white-space:nowrap">' + nfmt(p.entry_price) + ' ← ' + nfmt(p.target_price) + '</td>' +
+        '<td style="padding:8px 6px;text-align:center;font-size:11px">' + nfmt(p.hit_price) + '</td>' +
+        '<td style="padding:8px 6px;text-align:center">' + oc + '</td>' +
+        (want === 'fail' ? ('<td style="padding:8px 6px;text-align:center;font-size:10.5px;white-space:nowrap">' + (reasonTxt[p.fail_reason] || '—') + '</td>') : '') +
+        '</tr>';
+    }).join('');
+    wrap.innerHTML =
+      '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+      '<thead><tr style="border-bottom:2px solid var(--bdr);color:var(--txt-m);font-size:11px">' +
+      '<th style="padding:8px 6px">#</th><th style="padding:8px 6px;text-align:right">السهم</th>' +
+      '<th style="padding:8px 6px">تاريخ التنبؤ</th><th style="padding:8px 6px">الاتجاه</th>' +
+      '<th style="padding:8px 6px">دخول ← هدف</th><th style="padding:8px 6px">وصل إلى</th>' +
+      '<th style="padding:8px 6px">النتيجة</th>' + (want === 'fail' ? '<th style="padding:8px 6px">السبب</th>' : '') + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' +
+      '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;padding:12px 8px;line-height:1.8">🎯 «نجح» = بلوغ السعر الهدف خلال المدّة المتوقّعة. تقييم آلي للأغراض التعليمية فقط.</div>';
+    if (want === 'fail') {
+      const rc = { reverse: 0, short: 0, flat: 0 };
+      list.forEach(p => { if (rc[p.fail_reason] != null) rc[p.fail_reason]++; });
+      wrap.innerHTML = '<div style="font-size:11px;color:var(--txt-m);background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center">📊 أسباب الفشل — ↩️ عكسي: <b style="color:#f87171">' + rc.reverse + '</b> · 📉 قصور: <b style="color:#fbbf24">' + rc.short + '</b> · ➡️ ثبات: <b>' + rc.flat + '</b></div>' + wrap.innerHTML;
+    }
+  }
   async function predLoadIndicators(force) {
     if (_symIndLoaded && !force) return;
     try {
@@ -8290,6 +8436,7 @@ document.addEventListener('keydown', e => {
     predShowProgress(false);
     predRender();
     predUpdateStamp();
+    predRecordSnapshot().then(() => predLoadOutcomes()).then(() => predRender());
   }
 
   const dirChip = d =>
@@ -8306,6 +8453,8 @@ document.addEventListener('keydown', e => {
     if (f === 'imminent') return PRED_RESULTS.filter(r => r.timing.level >= 2).length;
     if (f === 'high') return PRED_RESULTS.filter(r => r.probability >= 70).length;
     if (f === 'base') return PRED_RESULTS.filter(r => _symInd[r.sym] && _symInd[r.sym].base_flag).length;
+    if (f === 'success') return _predStats.success;
+    if (f === 'fail') return _predStats.fail;
     return 0;
   }
 
@@ -8321,6 +8470,8 @@ document.addEventListener('keydown', e => {
     });
     const wrap = document.getElementById('predResults');
     if (!wrap) return;
+    predUpdateStatsChips();
+    if (PRED_FILTER === 'success' || PRED_FILTER === 'fail') { predRenderOutcomes(PRED_FILTER, wrap); return; }
     if (!PRED_RESULTS.length) {
       wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)">' +
         '<div style="font-size:34px;margin-bottom:10px">🔮</div>' +
@@ -8360,7 +8511,7 @@ document.addEventListener('keydown', e => {
       return '<tr onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;border-bottom:1px solid var(--bdr)">' +
         '<td style="padding:9px 6px;color:var(--txt-m);font-size:11px">' + (i + 1) + '</td>' +
         '<td style="padding:9px 6px"><div style="font-weight:700;font-size:12.5px">' + (r.name || '—') + '</div>' +
-          '<div style="color:var(--txt-m);font-size:10.5px">' + r.sym + (r.hasOHLC ? '' : ' · تقديري') + '</div></td>' +
+          '<div style="color:var(--txt-m);font-size:10.5px">' + r.sym + (r.hasOHLC ? '' : ' · تقديري') + '</div>' + predSymAccBadge(r.sym) + '</td>' +
         '<td style="padding:9px 6px;text-align:center;font-weight:700">' + r.price.toFixed(2) + '</td>' +
         '<td style="padding:9px 6px;min-width:110px">' +
           '<div style="display:flex;align-items:center;gap:6px">' +
@@ -8409,6 +8560,8 @@ document.addEventListener('keydown', e => {
     predRender();
     predLoadIndicators().then(() => predRender());   // 📊 حمّل إشارات المدى الطويل ثم أعد الرسم
     predUpdateStamp();
+    predLoadOutcomes().then(() => predRender());     // 🎯 حمّل نتائج دقّة المتنبّئ
+    if (typeof isAdmin === 'function' && isAdmin()) predRecordSnapshot();
     // تشغيل تلقائي مرة واحدة بعد إغلاق السوق إن كانت البيانات قديمة
     if (!PRED_AUTORAN && !predIsFresh() && !predIsMarketOpen() && Array.isArray(rows) && rows.length) {
       PRED_AUTORAN = true;
@@ -8473,6 +8626,7 @@ document.addEventListener('keydown', e => {
 
   window.predScanAll = predScanAll;
   window.predSetFilter = predSetFilter;
+  window.predToggleUserStats = predToggleUserStats;
   window.predInit = predInit;
   window.predSearch = function (v) { PRED_SEARCH = v || ''; predRender(); };
   window.predOpen = function (sym) {
@@ -9268,6 +9422,23 @@ function histScheduleAutoRefresh() {
   checkAndRefresh();                          // فحص فوري عند فتح التطبيق
   setInterval(checkAndRefresh, 15 * 60 * 1000); // ثم كل 15 دقيقة
 }
+
+/* ── 🔄 تحديث تلقائي للأسعار أثناء تداول السوق (كل 60 ثانية) ── */
+function _autoPriceRefresh() {
+  try {
+    if (document.hidden) return;                                   // التبويب مخفي — لا تحدّث
+    if (typeof loadCSV !== 'function') return;
+    const btn = document.getElementById('btnRefresh');
+    if (btn && btn.disabled) return;                              // تحديث جارٍ بالفعل — تجنّب التداخل
+    const d = new Date(Date.now() + 3 * 3600000);                // توقيت الرياض (UTC+3)
+    const wd = d.getUTCDay();                                     // 0=الأحد ... 4=الخميس
+    const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+    const marketOpen = (wd >= 0 && wd <= 4) && mins >= 600 && mins < 900;  // 10:00–15:00
+    if (!marketOpen) return;                                      // خارج ساعات التداول — الأسعار ثابتة
+    loadCSV();
+  } catch (e) { /* تجاهل */ }
+}
+setInterval(_autoPriceRefresh, 60 * 1000);
 
 setTimeout(histScheduleAutoRefresh, 5000);   // بعد 5 ثوانٍ من التحميل
 

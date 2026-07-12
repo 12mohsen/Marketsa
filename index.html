@@ -1938,7 +1938,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-12-v83 — 🏛️ «نظرة السوق الرسمية» مخفية افتراضياً مع زر تحكّم للأدمن + زر اشتراك على الأقسام المضبَّبة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-12-v85 — 🛡️ مؤشّر حالة حماية الوقت في لوحة الأدمن + منع التحايل بوقت الخادم', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2046,6 +2046,7 @@ if (_authFromConfirm) {
 let _lastSyncUid = null, _lastSyncAt = 0;
 if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  syncServerTime();   // 🛡️ اجلب وقت الخادم الموثوق
   /* الجلسة محفوظة تلقائياً في المتصفح وتتجدد ذاتياً — يبقى المستخدم متصلاً */
   sb.auth.getSession().then(({ data }) => {
     sbUser = (data && data.session) ? data.session.user : null;
@@ -2465,6 +2466,25 @@ const ADMIN_EMAILS = ['abd1234ify@gmail.com', 'market13s@hotmail.com'];
 const SUPPORT_EMAIL = 'market13S@hotmail.com';
 let appSettings = {};
 
+/* 🛡️ وقت الخادم الموثوق — لمنع التحايل بتغيير ساعة الجهاز */
+let _serverOffset = 0;        // ملّي ثانية تُضاف لوقت الجهاز للوصول لوقت الخادم
+let _serverTimeReady = false;
+async function syncServerTime() {
+  try {
+    if (!sb) return;
+    const { data, error } = await sb.rpc('server_now');
+    if (error || !data) return;
+    const ms = new Date(data).getTime();
+    if (!isNaN(ms)) { _serverOffset = ms - Date.now(); _serverTimeReady = true; }
+  } catch (e) { /* الدالة غير منشورة بعد → نعتمد وقت الجهاز مؤقتاً */ }
+}
+/* الوقت المعتمد: وقت الخادم (آمن) ما لم يُفعّل الأدمن «وضع اختبار الوقت» */
+function nowTrusted() {
+  if (appSettings && appSettings.allowClockTest) return Date.now();   // 🧪 اختبار: وقت الجهاز
+  if (_serverTimeReady) return Date.now() + _serverOffset;            // 🛡️ آمن: وقت الخادم
+  return Date.now();                                                   // احتياط قبل جلب وقت الخادم
+}
+
 /* ══════════ 🛡️ نظام الأدوار والصلاحيات الإشرافية ══════════
    • الأدمن الرئيسي: إيميله ضمن ADMIN_EMAILS — صلاحية كاملة، وهو وحده يعيّن المشرفين.
    • المشرف: مستخدم عادي مُنح role='supervisor' في جدول profiles، مع صلاحيات
@@ -2814,7 +2834,7 @@ function _subInfo(r, k) {
   const start = o.start ? new Date(o.start) : null;
   if (!start || days <= 0) return { plan: 'paid', expired: false, daysLeft: null, expiry: null, price, days, showPay };
   const expiry = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
-  const msLeft = expiry.getTime() - Date.now();
+  const msLeft = expiry.getTime() - nowTrusted();
   return {
     plan: 'paid',
     expired: msLeft <= 0,
@@ -3458,6 +3478,17 @@ function renderAdminSection() {
           <span>🏛️ إظهار «نظرة السوق الرسمية» في الرئيسية (فعّلها عند توفّر بيانات لحظية)</span>
           <input type="checkbox" id="admMarketOverview" ${s.showMarketOverview ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
         </label>
+        <label style="${row};cursor:pointer">
+          <span>🧪 وضع اختبار الوقت (اعتماد ساعة الجهاز) — <b>أطفئه لمنع التحايل</b> بتغيير ساعة الجهاز</span>
+          <input type="checkbox" id="admAllowClockTest" ${s.allowClockTest ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+        </label>
+        <div style="font-size:10.5px;line-height:1.7;padding:2px 0 8px;color:var(--txt-m)">${
+          s.allowClockTest
+            ? '🧪 <b style="color:#fbbf24">الحالة:</b> وضع الاختبار مفعّل — يعتمد <b>ساعة الجهاز</b> (غير آمن للإنتاج — أطفئه عند النشر)'
+            : (_serverTimeReady
+                ? '🛡️ <b style="color:#4ade80">الحماية مفعّلة</b> — يعتمد <b>وقت الخادم</b> · الوقت الآن: ' + new Date(nowTrusted()).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                : '⚠️ <b style="color:#f87171">لم يُجلب وقت الخادم</b> — نفّذ <b>server_time.sql</b> ثم أعد فتح اللوحة')
+        }</div>
         <label style="${row};cursor:pointer">
           <span>🛠️ وضع الصيانة (يغلق التطبيق للجميع عداك)</span>
           <input type="checkbox" id="admMaintenance" ${s.maintenance ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
@@ -5199,6 +5230,7 @@ async function adminSave() {
     hiddenTabs:     tabKeys.filter(k => !document.getElementById('admTab-' + k).checked),
     requireLogin:   document.getElementById('admRequireLogin').checked,
     showMarketOverview: document.getElementById('admMarketOverview').checked,
+    allowClockTest: document.getElementById('admAllowClockTest').checked,
     maintenance:    document.getElementById('admMaintenance').checked,
     maintenanceMsg: document.getElementById('admMaintMsg').value.trim(),
     announcement:   document.getElementById('admAnnounce').value.trim(),

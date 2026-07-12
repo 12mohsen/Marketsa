@@ -1938,7 +1938,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-12-v77 — 🎯 دقّة المتنبّئ + دقّة كل سهم للمستخدمين + سبب الفشل (عكسي/قصور/ثبات) للتطوير', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-12-v83 — 🏛️ «نظرة السوق الرسمية» مخفية افتراضياً مع زر تحكّم للأدمن + زر اشتراك على الأقسام المضبَّبة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2953,13 +2953,13 @@ function applyAppSettings() {
     const homeBtn = document.querySelector('.nav-btn[data-tab="home"]');
     if (homeBtn) try { switchTab('home', homeBtn); } catch (e) {}
   }
-  /* العرض الضبابي للقسم كاملاً — مُعطّل عمداً:
-     المطلوب أن تُظلَّل «الأهداف ووقف الخسارة» فقط (عبر _targetsLocked) دون حجب المحتوى كله. */
+  /* 🌫️ العرض الضبابي للقسم كاملاً — مفعّل حسب اختيار الأدمن لكل قسم (👁️ واضح / 🌫️ ضبابي).
+     مستقلّ عن قفل «الأهداف» (مقفلة مظللة). الأدمن يُستثنى دائماً. */
   ADMIN_TAB_DEFS.forEach(t => {
     const id = 'panel-' + t.k;
     const p = document.getElementById(id);
     if (!p) return;
-    const doBlur = false;   // لا نحجب المحتوى الكامل — القفل يقتصر على الأهداف
+    const doBlur = !(typeof isAdmin === 'function' && isAdmin()) && _secFlags(userRestrictions, t.k).blur;
     p.style.filter = doBlur ? 'blur(6px)' : '';
     p.style.userSelect = doBlur ? 'none' : '';
     p.style.pointerEvents = doBlur ? 'none' : '';
@@ -2970,9 +2970,10 @@ function applyAppSettings() {
         tag = document.createElement('div');
         tag.id = id + '-blurTag';
         tag.style.cssText = 'position:sticky;top:70px;z-index:50;text-align:center;margin:-4px 0 8px';
-        tag.innerHTML = `<span style="display:inline-block;background:rgba(0,0,0,.75);color:#fcd34d;
-          border:1px solid rgba(245,158,11,.4);border-radius:20px;padding:8px 18px;font-size:12.5px;
-          font-weight:700;backdrop-filter:blur(2px)">🌫️ المحتوى محجوب — تواصل مع الدعم لتفعيل العرض الكامل</span>`;
+        tag.innerHTML = `<span onclick="if(typeof showSupportNotice==='function')showSupportNotice()"
+          style="display:inline-block;cursor:pointer;background:rgba(17,24,39,.92);color:#fcd34d;
+          border:1px solid rgba(245,158,11,.5);border-radius:20px;padding:9px 20px;font-size:12.5px;
+          font-weight:700;backdrop-filter:blur(2px);box-shadow:0 4px 14px rgba(0,0,0,.4)">🔒 اشترك لعرض المحتوى كاملاً</span>`;
         p.parentNode.insertBefore(tag, p);
       }
       tag.style.display = 'block';
@@ -3452,6 +3453,10 @@ function renderAdminSection() {
         <label style="${row};cursor:pointer">
           <span>🔐 إلزام تسجيل الدخول لاستخدام التطبيق</span>
           <input type="checkbox" id="admRequireLogin" ${s.requireLogin ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+        </label>
+        <label style="${row};cursor:pointer">
+          <span>🏛️ إظهار «نظرة السوق الرسمية» في الرئيسية (فعّلها عند توفّر بيانات لحظية)</span>
+          <input type="checkbox" id="admMarketOverview" ${s.showMarketOverview ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
         </label>
         <label style="${row};cursor:pointer">
           <span>🛠️ وضع الصيانة (يغلق التطبيق للجميع عداك)</span>
@@ -4840,7 +4845,8 @@ async function adminBulkApply(allMode) {
       subFree:     { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: keep.no_popups, blur_view: keep.blur_view },
     }[preset];
     const row = { email, hidden_tabs: P.hidden_tabs, blocked: P.blocked,
-             no_popups: P.no_popups, blur_view: P.blur_view, updated_at: now };
+             no_popups: P.no_popups, blur_view: P.blur_view, updated_at: now,
+             show_pred_stats: !!(_admRestr[email] && _admRestr[email].show_pred_stats) };
     if (preset === 'subFree') { row.subs = {}; row.sub_plan = 'free'; row.sub_start = null; }
     return row;
   });
@@ -4939,6 +4945,12 @@ function adminEditUser(email) {
       <label style="${row};cursor:pointer">
         <span>🛡️ استثناء من «التطبيق على الكل»</span>
         <input type="checkbox" id="admUExempt" ${r.sub_exempt ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+      </label>`}
+
+      ${bulk ? '' : `
+      <label style="${row};cursor:pointer">
+        <span>📊 إظهار إحصائيات دقّة المتنبّئ لهذا المستخدم (نجح/لم ينجح)</span>
+        <input type="checkbox" id="admUPredStats" ${r.show_pred_stats ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
       </label>`}
 
       <label style="${row};cursor:pointer;color:#fca5a5;font-weight:700;border-bottom:none">
@@ -5115,6 +5127,7 @@ async function adminSaveUser() {
   const no_popups = ADMIN_TAB_DEFS.some(t => popFlag[t.k]);
   const blur_view = ADMIN_TAB_DEFS.some(t => blurFlag[t.k]);
   const exemptEl = document.getElementById('admUExempt');
+  const predStatsEl = document.getElementById('admUPredStats');
   /* 💳 اجمع اشتراك كل قسم */
   const secIn = {};
   for (const d of SUB_SECTION_DEFS) {
@@ -5157,6 +5170,7 @@ async function adminSaveUser() {
              sub_plan: acc.plan, sub_price: acc.price, sub_days: acc.days,
              sub_start: acc.start, sub_show_pay: acc.show_pay,
              sub_exempt: exemptEl ? exemptEl.checked : !!prev.sub_exempt,
+             show_pred_stats: predStatsEl ? predStatsEl.checked : !!prev.show_pred_stats,
              updated_at: now };
   });
   const { error } = await sb.from('user_restrictions').upsert(rows);
@@ -5184,6 +5198,7 @@ async function adminSave() {
   appSettings = Object.assign({}, appSettings, {
     hiddenTabs:     tabKeys.filter(k => !document.getElementById('admTab-' + k).checked),
     requireLogin:   document.getElementById('admRequireLogin').checked,
+    showMarketOverview: document.getElementById('admMarketOverview').checked,
     maintenance:    document.getElementById('admMaintenance').checked,
     maintenanceMsg: document.getElementById('admMaintMsg').value.trim(),
     announcement:   document.getElementById('admAnnounce').value.trim(),
@@ -7263,7 +7278,7 @@ function pfAnalyze(sym, name) {
     </div>`) : ''}
 
     <!-- ③ الدعم والمقاومة -->
-    ${supports.length ? `
+    ${supports.length ? _wrapIfLocked(_currentTabKey(), `
     <div class="an-section">
       <div class="an-sec-title">🎯 مستويات الدعم والمقاومة</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -7280,7 +7295,7 @@ function pfAnalyze(sym, name) {
           </div>
         </div>
       </div>
-    </div>` : ''}
+    </div>`) : ''}
 
     <!-- ④ الصفقة -->
     <div class="an-section">
@@ -7587,6 +7602,7 @@ function pfAnalyzeRenderHist(histData, cur, highN, lowN, volN, fmt) {
     </div>
 
     <!-- الأهداف المحسوبة من البيانات التاريخية -->
+    ${_wrapIfLocked(_currentTabKey(), `
     <div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px">📈 أهداف محسوبة من البيانات التاريخية (${prices.length} يوم)</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:6px">
@@ -7611,7 +7627,7 @@ function pfAnalyzeRenderHist(histData, cur, highN, lowN, volN, fmt) {
           <div style="font-size:10px;color:#f87171">${(((sl-cur)/cur)*100).toFixed(1)}%</div>
         </div>
       </div>
-    </div>
+    </div>`)}
 
     <!-- الإشارات الفنية -->
     ${signals.length ? `
@@ -8102,7 +8118,9 @@ document.addEventListener('keydown', e => {
     return '<div style="font-size:9.5px;color:' + c + '" title="نسبة نجاح تنبؤات هذا السهم سابقاً">🎯 دقّة سابقة: ' + a.rate + '% (' + (a.s + a.f) + ')</div>';
   }
   function predStatsVisible() {
-    return (typeof isAdmin === 'function' && isAdmin()) || !!(appSettings && appSettings.showPredStats);
+    return (typeof isAdmin === 'function' && isAdmin())
+      || !!(appSettings && appSettings.showPredStats)
+      || !!(userRestrictions && userRestrictions.show_pred_stats);
   }
   async function predRecordSnapshot() {
     if (!sb || !(typeof isAdmin === 'function' && isAdmin())) return;
@@ -8147,6 +8165,22 @@ document.addEventListener('keydown', e => {
       });
       Object.keys(acc).forEach(k => { const a = acc[k]; a.rate = Math.round(a.s / (a.s + a.f) * 100); });
       _predSymAcc = acc;
+      /* 📈 الدقّة حسب مستوى الاحتمال + ⏱️ متوسط أيام بلوغ الهدف */
+      const bk = { '70': { s: 0, f: 0 }, '80': { s: 0, f: 0 }, '90': { s: 0, f: 0 } };
+      let daysSum = 0, daysN = 0;
+      _predOutcomes.forEach(p => {
+        if (p.outcome !== 'success' && p.outcome !== 'fail') return;
+        const pr = +p.probability || 0;
+        const key = pr >= 90 ? '90' : pr >= 80 ? '80' : '70';
+        if (p.outcome === 'success') bk[key].s++; else bk[key].f++;
+        if (p.outcome === 'success' && p.hit_date && p.pred_date) {
+          const dd = (new Date(p.hit_date) - new Date(p.pred_date)) / 86400000;
+          if (dd >= 0) { daysSum += dd; daysN++; }
+        }
+      });
+      Object.keys(bk).forEach(k => { const b = bk[k]; const d = b.s + b.f; b.rate = d ? Math.round(b.s / d * 100) : null; });
+      _predStats.byProb = bk;
+      _predStats.avgDays = daysN ? Math.round(daysSum / daysN * 10) / 10 : null;
     } catch (e) { _predOutcomes = []; }
   }
   function predUpdateStatsChips() {
@@ -8221,6 +8255,12 @@ document.addEventListener('keydown', e => {
       '<th style="padding:8px 6px">دخول ← هدف</th><th style="padding:8px 6px">وصل إلى</th>' +
       '<th style="padding:8px 6px">النتيجة</th>' + (want === 'fail' ? '<th style="padding:8px 6px">السبب</th>' : '') + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' +
       '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;padding:12px 8px;line-height:1.8">🎯 «نجح» = بلوغ السعر الهدف خلال المدّة المتوقّعة. تقييم آلي للأغراض التعليمية فقط.</div>';
+    if (want === 'success') {
+      const b = _predStats.byProb || {};
+      const cell = k => { const x = b[k] || {}; const lbl = k === '90' ? '90%+' : k + '–' + (Number(k) + 9) + '%'; return lbl + ': <b>' + (x.rate != null ? x.rate + '%' : '—') + '</b>'; };
+      const avg = _predStats.avgDays != null ? _predStats.avgDays + ' يوم' : '—';
+      wrap.innerHTML = '<div style="font-size:11px;color:var(--txt-m);background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center;line-height:1.9">⏱️ متوسط بلوغ الهدف: <b style="color:#4ade80">' + avg + '</b><br>📈 الدقّة حسب الاحتمال — ' + cell('70') + ' · ' + cell('80') + ' · ' + cell('90') + '</div>' + wrap.innerHTML;
+    }
     if (want === 'fail') {
       const rc = { reverse: 0, short: 0, flat: 0 };
       list.forEach(p => { if (rc[p.fail_reason] != null) rc[p.fail_reason]++; });
@@ -11688,6 +11728,8 @@ switchTab = function (tab, btn) {
   async function sfOverview() {
     const box = document.getElementById('sahmkOfficialOverview');
     if (!box) return;
+    /* 🏛️ مخفية افتراضياً — تظهر فقط عند تفعيل الأدمن «إظهار نظرة السوق الرسمية» */
+    if (!(appSettings && appSettings.showMarketOverview)) { box.style.display = 'none'; box.innerHTML = ''; return; }
     try {
       const [m, g, l] = await Promise.all([
         api('market/summary/', { index: IDX }),

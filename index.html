@@ -1249,7 +1249,7 @@ canvas#mdChart{display:block;width:100% !important}
       <div class="brand-ico">📈</div>
       <div>
         <div class="brand-name">مراقبة السوق السعودي</div>
-        <div class="brand-sub">بيانات مباشرة · تداول بلس</div>
+        <div class="brand-sub">أسعار متأخرة · تداول بلس</div>
       </div>
     </div>
     <div class="hdr-right">
@@ -1938,7 +1938,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-13-v91 — 🕒 عرض آخر تحديث للبيانات التاريخية + شموع القاعدة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-13-v94 — 🕒 ساعة تدقّ كل ثانية + تحديث تلقائي حقيقي للأسعار (بلا كاش)', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -4815,6 +4815,12 @@ async function adminSyncHistorical() {
   histLoadStats();
 }
 
+/* 🕒 ساعة الأسعار المتأخرة: الوقت الحالي ناقص مدة التأخير (~15 دقيقة) بتوقيت الرياض */
+function delayedClock() {
+  return new Date(Date.now() - 15 * 60 * 1000)
+    .toLocaleTimeString('en-GB', { timeZone: 'Asia/Riyadh', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
 /* تنسيق وقت آخر تحديث بتوقيت الرياض: 2026/07/15 · 12:13 ص */
 function _histFmt(iso) {
   const d = new Date(iso);
@@ -5776,7 +5782,7 @@ function processData(data) {
   // Timestamp
   const now = new Date();
   document.getElementById('lblUpdate').textContent =
-    'آخر تحديث: ' + now.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+    '🕒 ' + delayedClock() + ' — أسعار متأخرة · العملة ر.س';
 
   render();
 
@@ -6085,8 +6091,7 @@ async function sahmkOverlayLivePrices() {
       if (typeof render === 'function')        render();
       if (typeof onDataReady === 'function')   onDataReady();
       const lbl = document.getElementById('lblUpdate');
-      if (lbl) lbl.textContent = 'أسعار حية (sahmk) · ' +
-        new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+      if (lbl) lbl.textContent = '🕒 ' + delayedClock() + ' — أسعار متأخرة · العملة ر.س';
       console.info('[sahmk هجين] حُدّثت أسعار ' + patched + ' سهم حياً.');
     }
   } catch (e) { console.warn('[sahmk هجين] فشل تغطية الأسعار:', e.message); }
@@ -9601,12 +9606,27 @@ function _autoPriceRefresh() {
     const d = new Date(Date.now() + 3 * 3600000);                // توقيت الرياض (UTC+3)
     const wd = d.getUTCDay();                                     // 0=الأحد ... 4=الخميس
     const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
-    const marketOpen = (wd >= 0 && wd <= 4) && mins >= 600 && mins < 900;  // 10:00–15:00
+    const marketOpen = (wd >= 0 && wd <= 4) && mins >= 600 && mins < 910;  // 10:00–15:10
     if (!marketOpen) return;                                      // خارج ساعات التداول — الأسعار ثابتة
+    // نظّف كاش عروض الأسعار حتى يجلب أرقاماً جديدة فعلاً (بدل الكاش 5 دقائق)
+    try { if (typeof _sahmkMem !== 'undefined') for (const k of [..._sahmkMem.keys()]) if (/quote/i.test(k)) _sahmkMem.delete(k); } catch (_) {}
     loadCSV();
   } catch (e) { /* تجاهل */ }
 }
 setInterval(_autoPriceRefresh, 60 * 1000);
+
+/* 🕒 ساعة حيّة تدقّ كل ثانية (توقيت الرياض) — وقت الأسعار المتأخرة أثناء التداول */
+function _tickClock() {
+  const el = document.getElementById('lblUpdate');
+  if (!el) return;
+  const d = new Date(Date.now() + 3 * 3600000);
+  const wd = d.getUTCDay(), mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+  const open = (wd >= 0 && wd <= 4) && mins >= 600 && mins < 910;
+  el.textContent = open
+    ? '🕒 ' + delayedClock() + ' — أسعار متأخرة · العملة ر.س'
+    : '🕒 أسعار متأخرة · العملة ر.س · السوق مغلق';
+}
+setInterval(_tickClock, 1000);
 
 setTimeout(histScheduleAutoRefresh, 5000);   // بعد 5 ثوانٍ من التحميل
 

@@ -523,6 +523,8 @@ html.dark .pf-btn.analyze{background:#1a0d2e;border-color:#6b21a8;color:#d8b4fe}
 .an-val.pos{color:#18a449}
 .an-val.neg{color:var(--r-accent)}
 .an-val.gold{color:var(--gold)}
+.an-kpi-card,.an-target-card{min-width:0}
+.an-kpi-val,.an-target-val,.an-target-pct,.an-val,.an-lbl,.an-sec-title{overflow-wrap:anywhere;word-break:break-word}
 .an-verdict{
   padding:14px 16px;border-radius:12px;
   display:flex;align-items:flex-start;gap:10px;
@@ -554,6 +556,21 @@ html.dark .wl-btn.add-pf{background:#0d2a1a;border-color:#166534;color:#4ade80}
   .pf-card-pnl{text-align:right}
   .wl-header{flex-direction:column;align-items:flex-start}
   .wl-header .pf-search-row{max-width:100%}
+  /* 🔧 نافذة التحليل على الجوال — منع خروج المحتوى عن الصندوق */
+  .an-modal-overlay{padding:10px}
+  .an-head{padding:16px 16px 12px}
+  .an-body{padding:14px 13px 18px;gap:12px}
+  .an-section{padding:12px 11px}
+  .an-kpi-card{padding:9px 6px}
+  .an-kpi-val{font-size:14.5px}
+  .an-kpi-lbl{font-size:9.5px}
+  .an-target-card{padding:10px 6px}
+  .an-target-val{font-size:12.5px}
+  .an-target-lbl{font-size:9.5px}
+  .an-target-pct{font-size:11px}
+  .an-lbl{font-size:12px}
+  .an-val{font-size:12px}
+  .an-verdict-text{font-size:12px}
 }
 
 .coming-soon{
@@ -1938,7 +1955,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-13-v94 — 🕒 ساعة تدقّ كل ثانية + تحديث تلقائي حقيقي للأسعار (بلا كاش)', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-13-v95 — 📱 إصلاح خروج محتوى نافذة التحليل عن الصندوق على الجوال', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG

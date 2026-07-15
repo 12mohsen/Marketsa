@@ -1785,7 +1785,7 @@ canvas#mdChart{display:block;width:100% !important}
     <p>
       يُقدَّم هذا التطبيق لأغراض <strong>معلوماتية وتعليمية فقط</strong>، ولا يُعدّ
       توصية أو استشارة استثمارية أو دعوة لشراء أو بيع أي ورقة مالية. البيانات
-      المعروضة قد تكون <strong>متأخرة 15 إلى 20 دقيقة</strong>.
+      المعروضة قد تكون <strong>متأخرة 15 دقيقة</strong>.
     </p>
     <p>
       جميع القرارات الاستثمارية تقع على <strong>مسؤولية المستخدم وحده</strong>،
@@ -2362,7 +2362,7 @@ function showTermsModal() {
       <div style="font-size:11px;color:var(--txt-m);margin-bottom:10px">الإصدار 1.0 — تاريخ السريان: ١٤ يوليو ٢٠٢٦</div>
 
       <h4 style="margin:14px 0 4px;font-size:13.5px;color:#4ade80;font-weight:800">1. طبيعة الخدمة — معلوماتية وتعليمية فقط</h4>
-      <p style="margin:0 0 8px">يُقدَّم التطبيق ومحتواه لأغراض معلوماتية وتعليمية عامة فقط. لا يُشكّل أيٌّ مما يُعرض فيه — بشكل مباشر أو غير مباشر — توصية أو استشارة استثمارية أو مالية أو قانونية أو ضريبية، ولا دعوة أو عرضاً لشراء أو بيع أو الاكتتاب في أي ورقة مالية. البيانات المعروضة قد تكون <b>متأخرة 15 إلى 20 دقيقة</b> أو أكثر.</p>
+      <p style="margin:0 0 8px">يُقدَّم التطبيق ومحتواه لأغراض معلوماتية وتعليمية عامة فقط. لا يُشكّل أيٌّ مما يُعرض فيه — بشكل مباشر أو غير مباشر — توصية أو استشارة استثمارية أو مالية أو قانونية أو ضريبية، ولا دعوة أو عرضاً لشراء أو بيع أو الاكتتاب في أي ورقة مالية. البيانات المعروضة قد تكون <b>متأخرة 15 دقيقة</b>.</p>
 
       <h4 style="margin:14px 0 4px;font-size:13.5px;color:#4ade80;font-weight:800">2. عدم الترخيص</h4>
       <p style="margin:0 0 8px">التطبيق ومالكه ليسا جهةً مرخّصة من هيئة السوق المالية (CMA) ولا من شركة السوق المالية السعودية (تداول) ولا من أي جهة تنظيمية، ولا يقدّمان أي نشاط يستوجب ترخيصاً بموجب نظام السوق المالية.</p>
@@ -2618,7 +2618,11 @@ async function syncServerTime() {
     const { data, error } = await sb.rpc('server_now');
     if (error || !data) return;
     const ms = new Date(data).getTime();
-    if (!isNaN(ms)) { _serverOffset = ms - Date.now(); _serverTimeReady = true; }
+    if (!isNaN(ms)) {
+      _serverOffset = ms - Date.now(); _serverTimeReady = true;
+      /* 🔄 بعد معرفة الوقت الموثوق: أعِد تطبيق التظليل حسب حالة الاشتراك الصحيحة */
+      try { if (typeof applyAppSettings === 'function') applyAppSettings(); } catch (e) {}
+    }
   } catch (e) { /* الدالة غير منشورة بعد → نعتمد وقت الجهاز مؤقتاً */ }
 }
 /* الوقت المعتمد: وقت الخادم (آمن) ما لم يُفعّل الأدمن «وضع اختبار الوقت» */
@@ -3064,6 +3068,31 @@ function _wrapIfLocked(secKey, html) {
   if (!html) return html;
   return _targetsLocked(secKey) ? _lockOverlayWrap(html) : html;
 }
+/* 🔄 التظليل (تظليل «الأهداف/وقف الخسارة») يُبنى داخل innerHTML لحظة الرسم.
+   عند تحديث الصفحة تُرسَم البطاقات أحياناً قبل تحميل قيود المستخدم/وقت الخادم،
+   فيُحسب الاشتراك «غير منتهٍ» ويختفي التظليل. هذه الدالة تُعيد رسم المحتوى
+   الظاهر بعد اكتمال التحميل ليُعاد تطبيق التظليل — تُستدعى من applyAppSettings.
+   تُعيد الرسم فقط عند تغيّر حالة القفل فعلياً (عبر البصمة) تفادياً للوميض. */
+let _lastLockSig = null;
+function _reapplyLockShading() {
+  try {
+    /* لا تُعِد الرسم قبل توفّر بيانات السوق (وإلا يُفرَّغ الجدول) */
+    if (typeof rows === 'undefined' || !(rows.length || tasiObj)) return;
+    if (typeof _targetsLocked !== 'function') return;
+    const sig = ['home','watchlist','monitor','analysis','all','returns']
+      .map(k => _targetsLocked(k) ? '1' : '0').join('');
+    if (sig === _lastLockSig) return;   // لا تغيير → لا داعي لإعادة الرسم
+    _lastLockSig = sig;
+    if (typeof render === 'function') render();               // الرئيسية (الجدول)
+    if (typeof onDataReady === 'function') onDataReady();      // المحفظة + المراقبة + العوائد
+    /* تحليل السوق والمتنبّئ: أعد الرسم فقط إن كان القسم مفتوحاً (رسمهما أثقل) */
+    const aPanel = document.getElementById('panel-analysis');
+    if (aPanel && aPanel.classList.contains('active') && typeof marketAnalysisFilter === 'function')
+      marketAnalysisFilter(typeof marketAnalysisActiveFilter !== 'undefined' ? marketAnalysisActiveFilter : 'all');
+    const allPanel = document.getElementById('panel-all');
+    if (allPanel && allPanel.classList.contains('active') && typeof predInit === 'function') predInit();
+  } catch (e) {}
+}
 /* الإغلاق التلقائي: إعادة فحص انتهاء الاشتراك كل دقيقة */
 let _subWatchTimer = null;
 function _startSubWatch() {
@@ -3196,6 +3225,9 @@ function applyAppSettings() {
     bar.style.display = 'block';
   } else if (bar) bar.style.display = 'none';
   _updateGate();
+  /* 🔄 أعِد تطبيق تظليل «الأهداف/وقف الخسارة» بعد تحميل القيود/الإعدادات
+     (يمنع اختفاء التظليل عند تحديث الصفحة) */
+  _reapplyLockShading();
 }
 
 /* بوابة الدخول/الصيانة */
@@ -3600,6 +3632,13 @@ function renderAdminSection() {
       #adminSectionWrap .admGrid > .admCol-primary{order:1}
       #adminSectionWrap .admGrid > .admCol-secondary{order:2}
       @media (max-width:900px){#adminSectionWrap .admGrid{grid-template-columns:1fr;gap:14px}}
+      #adminSectionWrap .admUserRow{border-radius:9px;transition:background .15s}
+      #adminSectionWrap .admUserRow:hover{background:rgba(255,255,255,.03)}
+      @media (max-width:640px){
+        #adminSectionWrap .admUserRow{flex-wrap:wrap;align-items:flex-start}
+        #adminSectionWrap .admUserRow .admUserInfo{flex:1 1 100%;min-width:0}
+        #adminSectionWrap .admUserRow .admUserBtns{width:100%;justify-content:flex-start;margin-top:6px}
+      }
     </style>
     <div class="admGrid">
 
@@ -4810,9 +4849,9 @@ function adminRenderUsers(query) {
         ? ' <span title="' + (_cons.agreed_at ? 'وافق في ' + new Date(_cons.agreed_at).toLocaleString('en-GB') : 'وافق') + '" style="display:inline-block;background:rgba(74,222,128,.16);color:#86efac;border:1px solid rgba(74,222,128,.45);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">وافق ✓</span>'
         : ' <span title="لم يوافق على الشروط بعد" style="display:inline-block;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid rgba(148,163,184,.4);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:700;direction:rtl;white-space:nowrap">لم يوافق</span>';
       return `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;
-                  padding:9px 2px;border-bottom:1px solid var(--bdr)${subExpired ? ';background:rgba(248,113,113,.06);border-right:3px solid #f87171;padding-right:7px;border-radius:0 8px 8px 0' : ''}">
-        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <div class="admUserRow" style="display:flex;align-items:center;justify-content:space-between;gap:8px;
+                  padding:9px 6px;border-bottom:1px solid var(--bdr)${subExpired ? ';background:rgba(248,113,113,.06);border-right:3px solid #f87171;padding-right:7px;border-radius:0 8px 8px 0' : ''}">
+        <div class="admUserInfo" style="display:flex;align-items:center;gap:8px;min-width:0">
           ${isMe ? '<span style="width:15px"></span>' : `<input type="checkbox" class="admUserSel" data-email="${u.email}"
             style="width:15px;height:15px;cursor:pointer;flex-shrink:0">`}
           <div style="min-width:0">
@@ -4826,7 +4865,7 @@ function adminRenderUsers(query) {
             ${u.created_at ? `<div style="font-size:9px;color:var(--txt-m)">📅 سجّل: ${new Date(u.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { year:'numeric', month:'short', day:'numeric' })} · ${_accountAge(u.created_at)}</div>` : ''}
           </div>
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+        <div class="admUserBtns" style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
           <button onclick="adminCopyEmail('${u.email}')" title="نسخ الإيميل"
             style="padding:6px 9px;border-radius:8px;border:1px solid var(--bdr);
                    background:var(--surf-alt);color:var(--txt);font-size:11px;font-weight:700;cursor:pointer">📋</button>

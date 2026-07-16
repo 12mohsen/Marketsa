@@ -1963,7 +1963,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-16-v109 — 🎯 كل قوائم الرادار مرتّبة بالإشارة الأقوى أولاً + خط أوضح · إشارة موحّدة + فلتر «جاهز» · الزوايا الزمنية · بداية الدورة · نجح/لم ينجح', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-16-v110 — ⚖️ مؤشّر مخاطرة/عائد لكل صف في الرادار (مقارنة بلا فتح) · إشارة موحّدة + فلتر «جاهز» · الزوايا الزمنية · بداية الدورة · نجح/لم ينجح', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -9000,13 +9000,20 @@ document.addEventListener('keydown', e => {
         : '—';
       const timeBadge = r.timing.level >= 3 ? '🔴 ' : r.timing.level >= 2 ? '🟠 ' : '⚪ ';
       const sig = predSignal(r);
+      /* ⚖️ مخاطرة/عائد من الأهداف الواقعية (يتيح المقارنة بلا فتح السهم) */
+      let rr = null;
+      try {
+        const _br = (typeof rows !== 'undefined' && Array.isArray(rows)) ? rows.find(x => String(x.sym) === String(r.sym)) : null;
+        if (_br && typeof _smartTargets === 'function') { const _tg = _smartTargets(r.price, toNum(_br.high), toNum(_br.low)); if (_tg && _tg.rr != null) rr = _tg.rr; }
+      } catch (e) {}
       return '<tr onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;border-bottom:1px solid var(--bdr)">' +
         '<td style="padding:9px 6px;color:var(--txt-m);font-size:11px">' + (i + 1) + '</td>' +
         '<td style="padding:9px 6px">' +
           '<div style="display:inline-block;font-size:11.5px;font-weight:800;padding:2px 11px;border-radius:20px;margin-bottom:4px;background:rgba(' + sig.bg + ',.2);color:' + sig.c + ';border:1px solid rgba(' + sig.bg + ',.5)">' + sig.t + '</div>' +
           '<div style="font-weight:800;font-size:14px">' + (r.name || '—') + '</div>' +
           '<div style="color:var(--txt-m);font-size:11.5px">' + r.sym + (r.hasOHLC ? '' : ' · تقديري') + '</div>' + predSymAccBadge(r.sym) +
-          (r.elStage ? '<div style="display:inline-block;margin-top:2px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (r.elStage === 'مبكّرة' ? '74,222,128' : r.elStage === 'منتصف' ? '251,191,36' : '248,113,113') + ',.15);color:' + (r.elStage === 'مبكّرة' ? '#4ade80' : r.elStage === 'منتصف' ? '#fbbf24' : '#f87171') + '">🌊 ' + r.elStage + (r.elWave ? ' · م' + r.elWave : '') + '</div>' : '') + '</td>' +
+          (r.elStage ? '<div style="display:inline-block;margin-top:2px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (r.elStage === 'مبكّرة' ? '74,222,128' : r.elStage === 'منتصف' ? '251,191,36' : '248,113,113') + ',.15);color:' + (r.elStage === 'مبكّرة' ? '#4ade80' : r.elStage === 'منتصف' ? '#fbbf24' : '#f87171') + '">🌊 ' + r.elStage + (r.elWave ? ' · م' + r.elWave : '') + '</div>' : '') +
+          (rr != null ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (rr >= 1.5 ? '74,222,128' : rr >= 1 ? '251,191,36' : '148,163,184') + ',.16);color:' + (rr >= 1.5 ? '#4ade80' : rr >= 1 ? '#fbbf24' : '#94a3b8') + '" title="مخاطرة/عائد — كلما زاد كان أفضل">⚖️ ع/م ' + rr + '</div>' : '') + '</td>' +
         '<td style="padding:9px 6px;text-align:center;font-weight:700">' + r.price.toFixed(2) + '</td>' +
         '<td style="padding:9px 6px;min-width:110px">' +
           '<div style="display:flex;align-items:center;gap:6px">' +

@@ -1963,7 +1963,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-16-v111 — 💾 كاش سهمك دائم (localStorage · 15د) يقلّل الطلبات ويبقى بعد التحديث · مؤشّر مخاطرة/عائد · إشارة موحّدة · الزوايا الزمنية · نجح/لم ينجح', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-16-v113 — 🔄 مسح الرادار تلقائي عند فتح الأدمن (يحدّث للجميع بلا زر) + يدوي متاح · نتائج موحّدة · كاش سهمك دائم · مخاطرة/عائد', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -8909,6 +8909,7 @@ document.addEventListener('keydown', e => {
     PRED_SCANNING = false;
     PRED_LAST_TS = Date.now();
     predSaveCache();
+    radarUploadShared();   // 🌐 وحّد النتائج لكل المستخدمين (الأدمن فقط)
     if (btn) { btn.disabled = false; btn.textContent = '🔮 إعادة المسح'; }
     predShowProgress(false);
     predRender();
@@ -9069,6 +9070,28 @@ document.addEventListener('keydown', e => {
     predRender();
   }
 
+  /* 🌐 يرفع نتائج المسح لجدول مشترك (الأدمن فقط) → يقرأها كل المستخدمين متطابقة */
+  async function radarUploadShared() {
+    if (!sb || !(typeof isAdmin === 'function' && isAdmin()) || !PRED_RESULTS.length) return;
+    try {
+      await sb.from('radar_results').upsert({ id: 1, data: PRED_RESULTS, scanned_at: new Date().toISOString() });
+    } catch (e) { console.warn('[radar] رفع النتائج المشتركة تعذّر:', e && e.message); }
+  }
+  /* 🌐 يقرأ النتائج المشتركة (الموحّدة للجميع) ويعرضها — يُرجع true إن نجح */
+  async function radarLoadShared() {
+    if (!sb) return false;
+    try {
+      const { data, error } = await sb.from('radar_results').select('data, scanned_at').eq('id', 1).maybeSingle();
+      if (error || !data || !Array.isArray(data.data) || !data.data.length) return false;
+      PRED_RESULTS = data.data;
+      PRED_LAST_TS = data.scanned_at ? new Date(data.scanned_at).getTime() : Date.now();
+      try { predSaveCache(); } catch (e) {}
+      predRender(); predUpdateStamp();
+      console.info('[radar] ✓ نتائج مشتركة موحّدة:', PRED_RESULTS.length, 'سهم');
+      return true;
+    } catch (e) { return false; }
+  }
+
   function predInit() {
     PRED_BUILT = true;
     if (predLocked()) { predRenderLocked(); return; }
@@ -9078,15 +9101,26 @@ document.addEventListener('keydown', e => {
     predUpdateStamp();
     predLoadOutcomes().then(() => predRender());     // 🎯 حمّل نتائج دقّة المتنبّئ
     if (typeof isAdmin === 'function' && isAdmin()) predRecordSnapshot();
-    // تشغيل تلقائي مرة واحدة بعد إغلاق السوق إن كانت البيانات قديمة
-    if (!PRED_AUTORAN && !predIsFresh() && !predIsMarketOpen() && Array.isArray(rows) && rows.length) {
-      PRED_AUTORAN = true;
-      predScanAll();
-    } else if (!predIsFresh() && typeof showToast === 'function') {
-      showToast(PRED_RESULTS.length
-        ? '⚠️ بيانات المتنبئ قديمة — اضغط «إعادة المسح» للتحديث'
-        : '🔮 اضغط «مسح الانفجارات» لتحديث المتنبئ');
-    }
+    /* 🌐 حمّل النتائج المشتركة الموحّدة أولاً؛ إن لم تتوفّر → مسح محلي احتياطي (كما كان) */
+    radarLoadShared().then(loaded => {
+      const isAdm = typeof isAdmin === 'function' && isAdmin();
+      /* 🔄 تلقائي للأدمن: إن كانت النتائج المشتركة قديمة (قبل آخر إغلاق سوق) أعد المسح وارفعها للجميع بلا ضغط زر */
+      if (isAdm && !PRED_AUTORAN && !predIsFresh() && !predIsMarketOpen() && Array.isArray(rows) && rows.length) {
+        PRED_AUTORAN = true;
+        predScanAll();
+        return;
+      }
+      if (loaded) return;
+      /* مستخدم عادي بلا نتائج مشتركة → مسح محلي احتياطي (كما كان) */
+      if (!PRED_AUTORAN && !predIsFresh() && !predIsMarketOpen() && Array.isArray(rows) && rows.length) {
+        PRED_AUTORAN = true;
+        predScanAll();
+      } else if (!predIsFresh() && typeof showToast === 'function') {
+        showToast(PRED_RESULTS.length
+          ? '⚠️ بيانات المتنبئ قديمة — اضغط «إعادة المسح» للتحديث'
+          : '🔮 اضغط «مسح الانفجارات» لتحديث المتنبئ');
+      }
+    });
   }
 
   // نافذة تفاصيل التنبؤ (مخصّصة للقسم — تعرض ما حسبه المتنبئ فعلاً)

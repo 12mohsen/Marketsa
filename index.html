@@ -1320,6 +1320,9 @@ canvas#mdChart{display:block;width:100% !important}
     <button class="nav-btn" data-tab="analysis" onclick="switchTab('analysis',this)">
       <span class="nav-ico">⚡</span> تحليل السوق
     </button>
+    <button class="nav-btn" data-tab="sniper" onclick="switchTab('sniper',this)">
+      <span class="nav-ico">🎯</span> قنّاص الفرص
+    </button>
     <button class="nav-btn" data-tab="admin" id="navAdminBtn" style="display:none" onclick="switchTab('admin',this)">
       <span class="nav-ico">⚙️</span> الأدمن
     </button>
@@ -1588,6 +1591,7 @@ canvas#mdChart{display:block;width:100% !important}
       <button class="pred-filter"        id="predFilter-down"     onclick="predSetFilter('down')">هبوطي <span id="predCount-down">(0)</span></button>
       <button class="pred-filter"        id="predFilter-base"     onclick="predSetFilter('base')">🧱 قاعدة <span id="predCount-base">(0)</span></button>
       <button class="pred-filter"        id="predFilter-elliott"  onclick="predSetFilter('elliott')">🌊 بداية دورة <span id="predCount-elliott">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-confl"    onclick="predSetFilter('confl')">🎯 تقاطع <span id="predCount-confl">(0)</span></button>
       <button class="pred-filter"        id="predFilter-success"  onclick="predSetFilter('success')" style="display:none">✅ نجح <span id="predCount-success">(0)</span></button>
       <button class="pred-filter"        id="predFilter-fail"     onclick="predSetFilter('fail')" style="display:none">❌ لم ينجح <span id="predCount-fail">(0)</span></button>
       <span id="predRateBadge" style="display:none;align-self:center;font-size:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px"></span>
@@ -1595,6 +1599,17 @@ canvas#mdChart{display:block;width:100% !important}
     </div>
 
     <div id="predResults"></div>
+  </div>
+</div>
+
+<!-- 🎯 قنّاص الفرص: الأسهم ذات خطة دخول جاهزة -->
+<div class="section-panel" id="panel-sniper">
+  <div style="max-width:920px;margin:0 auto;padding:16px 12px 40px">
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:25px;font-weight:900">🎯 قنّاص الفرص</div>
+      <div style="font-size:14.5px;color:var(--txt-m);margin-top:6px;line-height:1.8">أسهم لها <b>خطة دخول جاهزة</b> من إليوت (دخول · وقف · هدف · مخاطرة‑عائد) مرتّبة بالأقوى — اختر توقيتك بلا بحث.</div>
+    </div>
+    <div id="sniperList"></div>
   </div>
 </div>
 
@@ -1963,7 +1978,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-17-v117 — 🔒 إخفاء إحصائيات الدقّة يصل للمستخدمين فوراً (مزامنة) · «تحليل السوق» والرادار موحّدان · كاش سهمك · مخاطرة/عائد', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-17-v134 — 🔎 تكبير خط «قنّاص الفرص» ليكون أوضح للقراءة · خطة الدخول تخضع لقفل الاشتراك · القسم ضمن تحكّم الأدمن', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -4643,6 +4658,7 @@ const ADMIN_TAB_DEFS = [
   { k: 'monitor',   t: '👁️ المراقبة' },
   { k: 'returns',   t: '📈 العوائد' },
   { k: 'all',       t: '🔮 رادار الانفجارات' },
+  { k: 'sniper',    t: '🎯 قنّاص الفرص' },
   { k: 'analysis',  t: '⚡ تحليل السوق' },
 ];
 /* 💳 أقسام الاشتراك: الأقسام الخمسة + المنبثقات + الحساب كله */
@@ -5197,7 +5213,8 @@ async function adminBulkApply(allMode) {
     }[preset];
     const row = { email, hidden_tabs: P.hidden_tabs, blocked: P.blocked,
              no_popups: P.no_popups, blur_view: P.blur_view, updated_at: now,
-             show_pred_stats: !!(_admRestr[email] && _admRestr[email].show_pred_stats) };
+             show_pred_stats: !!(_admRestr[email] && _admRestr[email].show_pred_stats),
+             see_backtest: !!(_admRestr[email] && _admRestr[email].see_backtest) };
     if (preset === 'subFree') { row.subs = {}; row.sub_plan = 'free'; row.sub_start = null; }
     return row;
   });
@@ -5302,6 +5319,12 @@ function adminEditUser(email) {
       <label style="${row};cursor:pointer">
         <span>📊 إظهار إحصائيات دقّة المتنبّئ لهذا المستخدم (نجح/لم ينجح)</span>
         <input type="checkbox" id="admUPredStats" ${r.show_pred_stats ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+      </label>`}
+
+      ${bulk ? '' : `
+      <label style="${row};cursor:pointer">
+        <span>🧪 السماح بمختبر اختبار إليوت على الماضي</span>
+        <input type="checkbox" id="admUBacktest" ${r.see_backtest ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
       </label>`}
 
       <label style="${row};cursor:pointer;color:#fca5a5;font-weight:700;border-bottom:none">
@@ -5479,6 +5502,7 @@ async function adminSaveUser() {
   const blur_view = ADMIN_TAB_DEFS.some(t => blurFlag[t.k]);
   const exemptEl = document.getElementById('admUExempt');
   const predStatsEl = document.getElementById('admUPredStats');
+  const backtestEl = document.getElementById('admUBacktest');
   /* 💳 اجمع اشتراك كل قسم */
   const secIn = {};
   for (const d of SUB_SECTION_DEFS) {
@@ -5522,6 +5546,7 @@ async function adminSaveUser() {
              sub_start: acc.start, sub_show_pay: acc.show_pay,
              sub_exempt: exemptEl ? exemptEl.checked : !!prev.sub_exempt,
              show_pred_stats: predStatsEl ? predStatsEl.checked : !!prev.show_pred_stats,
+             see_backtest: backtestEl ? backtestEl.checked : !!prev.see_backtest,
              updated_at: now };
   });
   const { error } = await sb.from('user_restrictions').upsert(rows);
@@ -8896,7 +8921,7 @@ document.addEventListener('keydown', e => {
             if (a.ok) {
               a.sym = r.sym; a.name = r.name;
               /* 🌊 مرحلة دورة إليوت لهذا السهم (لفلتر «بداية دورة» والشارة) */
-              try { const _el = (typeof elliottCompute === 'function') ? elliottCompute(candles, a.price) : null; if (_el) { a.elStage = _el.stage; a.elWave = _el.nowWave; a.elDir = _el.dir; } } catch (e) {}
+              try { const _el = (typeof elliottCompute === 'function') ? elliottCompute(candles, a.price) : null; if (_el) { a.elStage = _el.stage; a.elWave = _el.nowWave; a.elDir = _el.dir; a.elConf = _el.confidence; a.elConfl = _el.confluence; a.elPlan = _el.plan; } } catch (e) {}
               PRED_RESULTS.push(a); ok++;
             }
           }
@@ -8946,6 +8971,7 @@ document.addEventListener('keydown', e => {
     if (f === 'high') return PRED_RESULTS.filter(r => r.probability >= 70).length;
     if (f === 'base') return PRED_RESULTS.filter(r => _symInd[r.sym] && _symInd[r.sym].base_flag).length;
     if (f === 'elliott') return PRED_RESULTS.filter(r => r.elStage === 'مبكّرة').length;
+    if (f === 'confl') return PRED_RESULTS.filter(r => r.elConfl).length;
     if (f === 'success') return _predStats.success;
     if (f === 'fail') return _predStats.fail;
     return 0;
@@ -8967,7 +8993,7 @@ document.addEventListener('keydown', e => {
     if (_sb && !PRED_SCANNING && String(_sb.textContent).indexOf('🔒') >= 0) {
       _sb.disabled = false; _sb.textContent = '🔮 مسح الانفجارات';
     }
-    ['all', 'ready', 'high', 'imminent', 'up', 'down', 'base', 'elliott'].forEach(f => {
+    ['all', 'ready', 'high', 'imminent', 'up', 'down', 'base', 'elliott', 'confl'].forEach(f => {
       const el = document.getElementById('predCount-' + f);
       if (el) el.textContent = '(' + predCount(f) + ')';
     });
@@ -8992,6 +9018,7 @@ document.addEventListener('keydown', e => {
     else if (PRED_FILTER === 'high') list = list.filter(r => r.probability >= 70);
     else if (PRED_FILTER === 'base') list = list.filter(r => _symInd[r.sym] && _symInd[r.sym].base_flag);
     else if (PRED_FILTER === 'elliott') list = list.filter(r => r.elStage === 'مبكّرة');
+    else if (PRED_FILTER === 'confl') list = list.filter(r => r.elConfl);
 
     const q = (PRED_SEARCH || '').trim();
     if (q) {
@@ -9023,6 +9050,16 @@ document.addEventListener('keydown', e => {
         const _br = (typeof rows !== 'undefined' && Array.isArray(rows)) ? rows.find(x => String(x.sym) === String(r.sym)) : null;
         if (_br && typeof _smartTargets === 'function') { const _tg = _smartTargets(r.price, toNum(_br.high), toNum(_br.low)); if (_tg && _tg.rr != null) rr = _tg.rr; }
       } catch (e) {}
+      /* 🎯 شارة التقاطع الذكية: تفرّق «تقاطع» (هدف يوافق الاتجاه القصير) عن «هدف لاحق» (يخالفه = بعد التصحيح) */
+      let elConflBadge = '';
+      if (r.elConfl) {
+        const targetUp = r.elConfl.price > (r.price || 0);
+        const later = (r.direction === 'up' && !targetUp) || (r.direction === 'down' && targetUp);
+        const bg = later ? '251,191,36' : '74,222,128', clr = later ? '#fbbf24' : '#4ade80', arrow = targetUp ? '↑' : '↓';
+        const lbl = (later ? '🎯 هدف لاحق ' : '🎯 تقاطع ') + arrow + ' @ ' + r.elConfl.price;
+        const tip = later ? 'هدف مؤكّد بطريقتين لكن بعد اكتمال الحركة القصيرة الحالية — راقب، لا تدخل الآن' : 'تقاطع إليوت + مربع التسعة — هدف مؤكّد بطريقتين';
+        elConflBadge = '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:20px;background:rgba(' + bg + ',.22);color:' + clr + ';border:1px solid rgba(' + bg + ',.55)" title="' + tip + '">' + lbl + '</div>';
+      }
       return '<tr onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;border-bottom:1px solid var(--bdr)">' +
         '<td style="padding:9px 6px;color:var(--txt-m);font-size:11px">' + (i + 1) + '</td>' +
         '<td style="padding:9px 6px">' +
@@ -9030,7 +9067,9 @@ document.addEventListener('keydown', e => {
           '<div style="font-weight:800;font-size:14px">' + (r.name || '—') + '</div>' +
           '<div style="color:var(--txt-m);font-size:11.5px">' + r.sym + (r.hasOHLC ? '' : ' · تقديري') + '</div>' + predSymAccBadge(r.sym) +
           (r.elStage ? '<div style="display:inline-block;margin-top:2px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (r.elStage === 'مبكّرة' ? '74,222,128' : r.elStage === 'منتصف' ? '251,191,36' : '248,113,113') + ',.15);color:' + (r.elStage === 'مبكّرة' ? '#4ade80' : r.elStage === 'منتصف' ? '#fbbf24' : '#f87171') + '">🌊 ' + r.elStage + (r.elWave ? ' · م' + r.elWave : '') + '</div>' : '') +
-          (rr != null ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (rr >= 1.5 ? '74,222,128' : rr >= 1 ? '251,191,36' : '148,163,184') + ',.16);color:' + (rr >= 1.5 ? '#4ade80' : rr >= 1 ? '#fbbf24' : '#94a3b8') + '" title="مخاطرة/عائد — كلما زاد كان أفضل">⚖️ ع/م ' + rr + '</div>' : '') + '</td>' +
+          (rr != null ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (rr >= 1.5 ? '74,222,128' : rr >= 1 ? '251,191,36' : '148,163,184') + ',.16);color:' + (rr >= 1.5 ? '#4ade80' : rr >= 1 ? '#fbbf24' : '#94a3b8') + '" title="مخاطرة/عائد — كلما زاد كان أفضل">⚖️ ع/م ' + rr + '</div>' : '') +
+          (r.elConf != null ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (r.elConf >= 60 ? '74,222,128' : r.elConf >= 40 ? '251,191,36' : '248,113,113') + ',.16);color:' + (r.elConf >= 60 ? '#4ade80' : r.elConf >= 40 ? '#fbbf24' : '#f87171') + '" title="ثقة إليوت من دقّته التاريخية لهذا السهم">🎯 ثقة ' + r.elConf + '%</div>' : '') +
+          elConflBadge + '</td>' +
         '<td style="padding:9px 6px;text-align:center;font-weight:700">' + r.price.toFixed(2) + '</td>' +
         '<td style="padding:9px 6px;min-width:110px">' +
           '<div style="display:flex;align-items:center;gap:6px">' +
@@ -9174,6 +9213,38 @@ document.addEventListener('keydown', e => {
     ov.style.display = 'flex';
   }
 
+  /* 🎯 قنّاص الفرص: قائمة الأسهم ذات خطة دخول إليوت جاهزة، مرتّبة بالأقوى */
+  function sniperRender() {
+    const wrap = document.getElementById('sniperList');
+    if (!wrap) return;
+    let list = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
+    list.sort((a, b) => (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
+    if (!list.length) {
+      wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)"><div style="font-size:40px;margin-bottom:12px">🎯</div>' +
+        '<div style="font-size:17px;font-weight:700;margin-bottom:8px">لا فرص جاهزة الآن</div>' +
+        '<div style="font-size:14px;line-height:2;max-width:560px;margin:0 auto">تظهر هنا الأسهم التي كوّنت خطة دخول إليوت (موجة 2→3 أو 4→5 في دورة صاعدة). افتح «رادار الانفجارات» واضغط «إعادة المسح» لتحديثها.</div></div>';
+      return;
+    }
+    wrap.innerHTML = list.map(r => {
+      const p = r.elPlan;
+      const rrClr = p.rr >= 2 ? '#4ade80' : '#fbbf24';
+      const confClr = r.elConf >= 60 ? '#4ade80' : r.elConf >= 40 ? '#fbbf24' : '#f87171';
+      return '<div onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+          '<div><div style="font-weight:800;font-size:18px">' + (r.name || r.sym) + '</div><div style="font-size:13px;color:var(--txt-m);margin-top:3px">' + r.sym + ' · ' + p.phase + (r.elConf != null ? ' · 🎯 ثقة <b style="color:' + confClr + '">' + r.elConf + '%</b>' : '') + '</div></div>' +
+          '<div style="text-align:left"><div style="font-size:22px;font-weight:900">' + r.price.toFixed(2) + '</div><div style="font-size:12px;color:var(--txt-m)">السعر الحالي</div></div>' +
+        '</div>' +
+        _wrapIfLocked('sniper',
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">' +
+          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">🎯 دخول قرب</div><div style="font-size:18px;font-weight:900;color:#4ade80">' + p.entry + '</div></div>' +
+          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">🛑 وقف</div><div style="font-size:18px;font-weight:900;color:#f87171">' + p.stop + '</div></div>' +
+          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">🏁 هدف</div><div style="font-size:18px;font-weight:900;color:#38bdf8">' + p.target + '</div></div>' +
+          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">⚖️ ع/م</div><div style="font-size:18px;font-weight:900;color:' + rrClr + '">' + p.rr + '</div></div>' +
+        '</div>') + '</div>';
+    }).join('') +
+      '<div style="font-size:12.5px;color:var(--txt-m);text-align:center;padding:12px;line-height:1.9">📋 خطط تعليمية من إليوت — انتظر <b>تأكيد الارتداد قرب الدخول</b>، ونفّذ بوقف خسارة. ليست نصيحة استثمارية.</div>';
+  }
+  window.sniperRender = sniperRender;
   window.predScanAll = predScanAll;
   window.predSetFilter = predSetFilter;
   window.predToggleUserStats = predToggleUserStats;
@@ -9258,6 +9329,7 @@ function switchTab(tab, btn) {
   if (tab === 'returns') renderReturns();
   if (tab === 'analysis') { marketAnalysisFilter('all'); updateHistCacheStatus(); }
   if (tab === 'all') predInit();
+  if (tab === 'sniper' && typeof sniperRender === 'function') sniperRender();
   if (tab === 'admin' && typeof renderAdminSection === 'function') renderAdminSection();
 }
 
@@ -10509,6 +10581,56 @@ function _renderOpportunities(filter, histAll) {
 /* ─────────────────────────────────────
    MARKET STOCK ANALYSIS (General Stock Analysis)
 ───────────────────────────────────── */
+/* 🔢 مربع التسعة (جان / علم الأرقام): من نقطة محورية → أهداف بإضافة/طرح دورات (2 لكل 360°)
+   وعدد الدورات = الجذر الرقمي. مقياس ثابت (4–5 أرقام) لتفادي هشاشة الفواصل العشرية. */
+function gannSquare9(price, dir) {
+  const p0 = toNum(price); if (!p0 || p0 <= 0) return null;
+  let scale = 1, p = p0;
+  while (p < 1000) { p *= 10; scale *= 10; }
+  while (p >= 100000) { p /= 10; scale /= 10; }
+  const intP = Math.round(p);
+  const droot = n => { n = Math.abs(Math.round(n)); while (n > 9) { n = String(n).split('').reduce((a, d) => a + (+d), 0); } return n || 9; };
+  const N = droot(intP);
+  const sq = Math.sqrt(intP);
+  const s = dir === 'down' ? -1 : 1;
+  const lvl = rot => +(Math.pow(Math.max(0.0001, sq + s * rot), 2) / scale).toFixed(2);
+  return { N, dir, half: lvl(1), one: lvl(2), balance: lvl(2 * N) };
+}
+/* 🎯 معايرة نِسب إليوت من تاريخ السهم نفسه (بدل النِّسب النظرية الثابتة التي تُبالغ).
+   يقيس متوسط ارتداد/امتداد كل موجة عبر دورات السهم السابقة → نِسب واقعية لهذا السهم. */
+function _elliottCalibrate(piv) {
+  const R2 = [], E3 = [], R4 = [], E5 = [];
+  for (let a = 0; a + 5 < piv.length; a++) {
+    const L1 = piv[a + 1].p - piv[a].p; if (Math.abs(L1) < 1e-6) continue;
+    const w2 = piv[a + 2].p - piv[a + 1].p, w3 = piv[a + 3].p - piv[a + 2].p,
+          w4 = piv[a + 4].p - piv[a + 3].p, w5 = piv[a + 5].p - piv[a + 4].p;
+    if (Math.abs(w3) < 1e-6) continue;
+    R2.push(Math.abs(w2) / Math.abs(L1)); E3.push(Math.abs(w3) / Math.abs(L1));
+    R4.push(Math.abs(w4) / Math.abs(w3)); E5.push(Math.abs(w5) / Math.abs(L1));
+  }
+  const med = arr => { if (!arr.length) return null; const s = arr.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  const cl = (v, lo, hi, def) => (v == null ? def : Math.min(hi, Math.max(lo, v)));
+  return {
+    r2: cl(med(R2), 0.3, 0.9, 0.618),
+    e3: cl(med(E3), 0.6, 2.618, 1.618),
+    r4: cl(med(R4), 0.2, 0.7, 0.382),
+    e5: cl(med(E5), 0.4, 1.618, 1.0),
+    n: R2.length,
+  };
+}
+/* 🎯 ثقة إليوت لهذا السهم: كم نسبة مطابقة إسقاطاته لموجاته الفعلية عبر دوراته التاريخية.
+   عالية = دورات منتظمة يُوثَق بإليوتها · ضعيفة = مشوّش، تعامل بحذر. */
+function _elliottConfidence(piv, cal) {
+  let hits = 0, ev = 0, cycles = 0;
+  for (let a = 0; a + 3 < piv.length; a++) {
+    const L1 = piv[a + 1].p - piv[a].p; if (Math.abs(L1) < 1e-6) continue;
+    const w2 = piv[a + 1].p - cal.r2 * L1, w3 = w2 + cal.e3 * L1, w4 = w3 - cal.r4 * (w3 - w2), w5 = w4 + cal.e5 * L1;
+    const proj = [w2, w3, w4, w5]; let ch = 0, ce = 0;
+    for (let k = 0; k < 4; k++) { const pv = piv[a + 2 + k]; if (!pv) break; const err = Math.abs(proj[k] - pv.p) / pv.p * 100; ce++; if (err <= 7) ch++; }
+    if (ce >= 2) { hits += ch; ev += ce; cycles++; }
+  }
+  return { pct: ev ? Math.round(hits / ev * 100) : null, cycles };
+}
 /* 🌊 موجات إليوت — إسقاط تلقائي: يكتشف الموجة الأولى (أبرز تأرجح حديث: قاع↔قمة)
    ويحسب أهداف الموجات 2‑3‑4‑5 وA‑B‑C بعلاقات فيبوناتشي. تعليمي احتمالي فقط. */
 function elliottCompute(series, curPrice) {
@@ -10580,21 +10702,57 @@ function elliottCompute(series, curPrice) {
     if (rhythm) nextTurnIn = rhythm - ((win.length - 1) - piv[piv.length - 1].i);
   }
   const curP = toNum(curPrice) || P1;
-  const w2 = P1 - 0.618 * L1;
-  const w3 = w2 + 1.618 * L1;
-  const w4 = w3 - 0.382 * (w3 - w2);
-  const w5 = w4 + 1.0 * L1;              // مساواة الموجة الأولى (شائع)
+  const _cal = _elliottCalibrate(piv);   // 🎯 نِسب معايَرة على هذا السهم
+  const _conf = _elliottConfidence(piv, _cal);   // 🎯 ثقة إليوت لهذا السهم
+  const w2 = P1 - _cal.r2 * L1;
+  const w3 = w2 + _cal.e3 * L1;
+  const w4 = w3 - _cal.r4 * (w3 - w2);
+  const w5 = w4 + _cal.e5 * L1;
   const imp = w5 - P0;
   const A = w5 - 0.5 * imp;
   const B = A + 0.618 * (w5 - A);
   const C = B - (w5 - A);                // C ≈ طول A
+  /* 🔢 مربع التسعة من النقطة المحورية (P0) + كشف التقاطع مع أهداف إليوت */
+  const _gann = (typeof gannSquare9 === 'function') ? gannSquare9(P0, up ? 'up' : 'down') : null;
+  let _confluence = null;
+  if (_gann) {
+    const _pc = toNum(curPrice) || P1;
+    const elT = [{ k: '3', v: w3 }, { k: '2', v: w2 }];          // أهداف قريبة فعّالة فقط (لا الموجة 5 البعيدة)
+    const gT = [{ g: 'دورة', v: _gann.one }, { g: 'نصف دورة', v: _gann.half }];   // دورات قريبة فقط
+    let best = null;
+    gT.forEach(gl => elT.forEach(et => {
+      if (!et.v || !gl.v) return;
+      const err = Math.abs(gl.v - et.v) / et.v * 100;
+      const price = (gl.v + et.v) / 2;
+      const relevant = _pc ? (Math.abs(price / _pc - 1) <= 0.30) : true;   // ضمن ±30% من السعر الحالي فقط
+      if (err <= 1.5 && relevant && (!best || err < best.err)) best = { price: +price.toFixed(2), wave: et.k, gann: gl.g, err: +err.toFixed(1) };
+    }));
+    _confluence = best;
+  }
+  /* 🎯 الإتقان الصادق: لا تُظهر تقاطعاً/إشارة إليوت قوية إلا حيث ثقة إليوت التاريخية معتبرة (≥50%)
+     — فيُستخدم إليوت حيث يعمل فقط، ويُتجاهل على الأسهم المشوّشة تلقائياً. */
+  if (_conf.pct != null && _conf.pct < 50) _confluence = null;
   const rnd = v => +v.toFixed(2);
   const pct = v => (curPrice ? +(((v - curPrice) / curPrice) * 100).toFixed(1) : null);
   const W = v => ({ v: rnd(v), pct: pct(v) });
+  /* 📋 خطة دخول تلقائية (للدورة الصاعدة فقط): موجة 2→3 أو موجة 4→5.
+     الدخول قرب قاع التصحيح · الوقف عند نقطة إبطال إليوت · الهدف الموجة الاندفاعية التالية. */
+  let _plan = null;
+  if (up) {
+    if (legs <= 2 && w3 > w2 && w2 > P0) _plan = { phase: 'الموجة 2 → 3', entry: w2, stop: P0, target: w3 };
+    else if ((nowWave === '3' || nowWave === '4') && w5 > w4 && w4 > P1) _plan = { phase: 'الموجة 4 → 5', entry: w4, stop: P1, target: w5 };
+    if (_plan) {
+      const rr = (_plan.target > _plan.entry && _plan.entry > _plan.stop) ? +((_plan.target - _plan.entry) / (_plan.entry - _plan.stop)).toFixed(1) : null;
+      if (rr && rr > 0) { _plan.rr = rr; _plan.entry = rnd(_plan.entry); _plan.stop = rnd(_plan.stop); _plan.target = rnd(_plan.target); }
+      else _plan = null;
+    }
+  }
   return {
     dir: up ? 'up' : 'down',
     stage, stageColor, nowWave, legs,
     rhythm, nextTurnIn,
+    confidence: _conf.pct, confN: _conf.cycles,
+    gann: _gann, confluence: _confluence, plan: _plan,
     cur: rnd(curP),
     P0: rnd(P0), P1: rnd(P1),
     w2: W(w2), w3: W(w3), w4: W(w4), w5: W(w5), A: W(A), B: W(B), C: W(C),
@@ -10650,6 +10808,12 @@ function elliottHTML(e) {
   return `
     <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="font-size:12px;color:#38bdf8;font-weight:700;margin-bottom:6px">🌊 موجات إليوت (إسقاط تلقائي) · ${dirTxt}</div>
+      ${e.confidence != null && e.confN >= 2 ? (() => {
+        const p = e.confidence; const c = p >= 60 ? '#4ade80' : p >= 40 ? '#fbbf24' : '#f87171';
+        const lbl = p >= 60 ? 'عالية' : p >= 40 ? 'متوسطة' : 'ضعيفة';
+        const hint = p >= 60 ? 'إليوت موثوق لهذا السهم' : p >= 40 ? 'ثقة متوسطة — طابِقها بمؤشّرات أخرى' : 'دورات مشوّشة — تعامل بحذر شديد';
+        return `<div style="display:flex;align-items:center;gap:8px;font-size:10.5px;background:rgba(${p >= 60 ? '74,222,128' : p >= 40 ? '251,191,36' : '248,113,113'},.1);border:1px solid rgba(${p >= 60 ? '74,222,128' : p >= 40 ? '251,191,36' : '248,113,113'},.35);border-radius:8px;padding:6px 9px;margin-bottom:8px">🎯 <b style="color:${c}">ثقة إليوت ${lbl} · ${p}%</b> <span style="color:var(--txt-m)">(من ${e.confN} دورة سابقة) — ${hint}</span></div>`;
+      })() : ''}
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap">
         <span style="font-size:10.5px;color:var(--txt-m)">الموجة الأولى (الأساس): ${e.P0} → ${e.P1} ر.س</span>
         <span style="font-size:10px;color:var(--txt-m)">📍 مرحلة الدورة: <b style="color:${e.stageColor}">${e.stage}</b> · قرب الموجة <b style="color:${e.stageColor}">${e.nowWave}</b></span>
@@ -10663,6 +10827,17 @@ function elliottHTML(e) {
              ${pctS(w.pct)}
            </div>`).join('')}
       </div>
+      ${e.gann ? `<div style="font-size:10.5px;color:#fcd34d;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.7">🔢 <b>مربع التسعة</b> (من ${e.dir === 'up' ? 'القاع' : 'القمة'} ${e.P0}): نصف دورة <b>${e.gann.half}</b> · دورة <b>${e.gann.one}</b> · الاتزان (${e.gann.N} دورة) <b>${e.gann.balance}</b></div>` : ''}
+      ${e.confluence ? `<div style="font-size:11px;color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.4);border-radius:8px;padding:8px 9px;margin-top:8px;line-height:1.7;font-weight:700">🎯 منطقة قوية: إليوت (الموجة ${e.confluence.wave}) ومربع التسعة (${e.confluence.gann}) يتقاطعان عند ~<b>${e.confluence.price}</b> — هدف مؤكّد بطريقتين مستقلّتين.</div>` : ''}
+      ${e.plan ? `<div style="background:rgba(56,189,248,.09);border:1px solid rgba(56,189,248,.4);border-radius:10px;padding:11px;margin-top:10px">
+        <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:7px">📋 خطة الدخول (${e.plan.phase})</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center">
+          <div style="background:var(--surf-alt);border-radius:8px;padding:7px"><div style="font-size:9px;color:var(--txt-m)">🎯 دخول قرب</div><div style="font-size:14px;font-weight:900;color:#4ade80">${e.plan.entry}</div></div>
+          <div style="background:var(--surf-alt);border-radius:8px;padding:7px"><div style="font-size:9px;color:var(--txt-m)">🛑 وقف الخسارة</div><div style="font-size:14px;font-weight:900;color:#f87171">${e.plan.stop}</div></div>
+          <div style="background:var(--surf-alt);border-radius:8px;padding:7px"><div style="font-size:9px;color:var(--txt-m)">🏁 الهدف</div><div style="font-size:14px;font-weight:900;color:#38bdf8">${e.plan.target}</div></div>
+        </div>
+        <div style="font-size:10px;color:var(--txt-m);text-align:center;margin-top:7px;line-height:1.6">مخاطرة/عائد ≈ <b style="color:${e.plan.rr >= 2 ? '#4ade80' : '#fbbf24'}">${e.plan.rr}</b> · <b>انتظر تأكيد الارتداد قرب الدخول</b> — لا تلتقط سكيناً هابطاً · تعليمي لا نصيحة</div>
+      </div>` : ''}
       ${e.stage === 'متأخّرة'
         ? `<div style="font-size:10px;color:#fca5a5;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.28);border-radius:8px;padding:7px 9px;margin-top:8px;line-height:1.7">⚠️ الدورة <b>متأخّرة</b> — أغلب الموجات تحقّقت (قرب الموجة ${e.nowWave})، وفرص الالتقاط المبكّر محدودة. راقب تصحيح A‑B‑C أو بداية دورة جديدة.</div>`
         : e.stage === 'مبكّرة'
@@ -10673,6 +10848,137 @@ function elliottHTML(e) {
       <div style="font-size:9.5px;color:var(--txt-m);margin-top:8px;line-height:1.6">إسقاط آليّ مبنيّ على فيبوناتشي والساق النشطة الحالية — تقديري تعليمي فقط، وليس نصيحة استثمارية.</div>
     </div>`;
 }
+
+/* 🧪 اختبار إليوت على الماضي: يقارن الإسقاط الفيبوناتشي بالموجات الفعلية اللاحقة (نقاط الانعطاف)
+   ويقيّم كل موجة (متوقّع مقابل فعلي + خطأ%) + الإيقاع الزمني — لتشخيص لماذا نجح/فشل النموذج. */
+function elliottBacktest(series) {
+  if (!Array.isArray(series) || series.length < 30) return null;
+  const pts = series.map(r => ({
+    t: r.date || r.d || r.t || (Array.isArray(r) ? r[1] : ''),
+    c: toNum(r.close != null ? r.close : (r.c != null ? r.c : (Array.isArray(r) ? r[2] : null))),
+  })).filter(p => p.c && p.c > 0);
+  if (pts.length < 30) return null;
+  pts.sort((a, b) => (a.t < b.t ? -1 : 1));
+  const vals = pts.map(p => p.c);
+  const zz = (v, pct) => {
+    const piv = []; let trend = 0, exV = v[0], exI = 0;
+    for (let i = 1; i < v.length; i++) { const c = v[i];
+      if (trend >= 0) { if (c >= exV) { exV = c; exI = i; } else if (c <= exV * (1 - pct)) { piv.push({ i: exI, p: exV }); trend = -1; exV = c; exI = i; } }
+      else { if (c <= exV) { exV = c; exI = i; } else if (c >= exV * (1 + pct)) { piv.push({ i: exI, p: exV }); trend = 1; exV = c; exI = i; } } }
+    piv.push({ i: exI, p: exV }); return piv;
+  };
+  let piv = []; for (const thr of [0.06, 0.05, 0.04, 0.03, 0.02]) { piv = zz(vals, thr); if (piv.length >= 5) break; } if (piv.length < 4) piv = zz(vals, 0.015);
+  if (piv.length && piv[0].i !== 0) piv.unshift({ i: 0, p: vals[0] });
+  let loi = 0, hii = 0; for (let i = 0; i < piv.length; i++) { if (piv[i].p < piv[loi].p) loi = i; if (piv[i].p > piv[hii].p) hii = i; }
+  const upCycle = loi < hii; let anchor = upCycle ? loi : hii;
+  /* اختر محوراً تتوفّر بعده موجات فعليّة كافية للتقييم؛ إن كان متأخّراً جرّب المحور الآخر */
+  if (anchor + 3 >= piv.length) { anchor = upCycle ? hii : loi; }        // جرّب الطرف الآخر
+  if (anchor + 3 >= piv.length) { anchor = Math.max(0, piv.length - 5); } // وإلا تراجع لضمان 3 موجات لاحقة
+  if (anchor + 3 >= piv.length) return null;
+  const P0 = piv[anchor].p, P1 = piv[anchor + 1].p; if (P1 === P0) return null;
+  const L1 = P1 - P0;
+  const _cal = _elliottCalibrate(piv);   // 🎯 نِسب معايَرة على هذا السهم
+  const proj = { 2: P1 - _cal.r2 * L1 }; proj[3] = proj[2] + _cal.e3 * L1; proj[4] = proj[3] - _cal.r4 * (proj[3] - proj[2]); proj[5] = proj[4] + _cal.e5 * L1;
+  const w5 = proj[5], imp = w5 - P0; proj.A = w5 - 0.5 * imp; proj.B = proj.A + 0.618 * (w5 - proj.A); proj.C = proj.B - (w5 - proj.A);
+  const wk = [['2', 2], ['3', 3], ['4', 4], ['5', 5], ['A', 'A'], ['B', 'B'], ['C', 'C']];
+  const TOL = 7; const rows = []; let mainHit = null;   // ±7% = منطقة الهدف (كيف تُستخدم أهداف إليوت فعلاً)
+  wk.forEach(([lbl, k], idx) => {
+    const pv = piv[anchor + 2 + idx]; const pr = +proj[k].toFixed(2);
+    if (!pv) { rows.push({ wave: lbl, proj: pr, actual: null, err: null, hit: null, note: 'لم تتشكّل بعد' }); return; }
+    const ac = +pv.p.toFixed(2); const err = +(Math.abs(pr - ac) / ac * 100).toFixed(1);
+    const hit = err <= TOL; rows.push({ wave: lbl, proj: pr, actual: ac, err, hit });
+    if (lbl === '3') mainHit = hit;
+  });
+  const durs = []; for (let i = anchor + 1; i < piv.length; i++) durs.push(piv[i].i - piv[i - 1].i);
+  durs.sort((a, b) => a - b); const rhythm = durs.length ? durs[Math.floor(durs.length / 2)] : null;
+  const hits = rows.filter(r => r.hit === true).length, evaluated = rows.filter(r => r.hit !== null).length;
+  return { dir: upCycle ? 'up' : 'down', P0: +P0.toFixed(2), P1: +P1.toFixed(2), rhythm, rows, hits, evaluated, cal: _cal,
+    accuracy: evaluated ? Math.round(hits / evaluated * 100) : null, mainHit,
+    overall: mainHit === true ? 'نجح' : (mainHit === false ? 'لم ينجح' : 'غير مكتمل') };
+}
+/* 🖼️ مخطط الاختبار: مسار الأسعار الفعلي (خط رمادي) + الإسقاط المتوقّع (خط أزرق متقطّع)
+   ونقاط خضراء (مطابق) / حمراء (بعيد) لكل موجة — يُظهر أين أصاب النموذج وأين أخطأ. */
+function elliottBacktestSVG(bt) {
+  const labels = ['', '1', '2', '3', '4', '5', 'A', 'B', 'C'];
+  const actual = [bt.P0, bt.P1], proj = [bt.P0, bt.P1];
+  bt.rows.forEach(r => { actual.push(r.actual != null ? r.actual : null); proj.push(r.proj != null ? r.proj : null); });
+  const allV = actual.concat(proj).filter(v => v != null);
+  let mn = Math.min.apply(null, allV), mx = Math.max.apply(null, allV); if (mx <= mn) mx = mn + 1;
+  const pd = (mx - mn) * 0.12; mn -= pd; mx += pd;
+  const W = 420, H = 230, L = 18, R = 18, T = 20, Bm = 24, pw = W - L - R, ph = H - T - Bm, n = actual.length;
+  const X = i => L + pw * (i / (n - 1)); const Y = v => T + ph * (1 - (v - mn) / (mx - mn));
+  let ap = '', prev = null;
+  actual.forEach((v, i) => { if (v == null) return; if (prev) ap += `<line x1="${X(prev.i).toFixed(1)}" y1="${Y(prev.v).toFixed(1)}" x2="${X(i).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#94a3b8" stroke-width="2"/>`; prev = { i, v }; });
+  let pp = ''; prev = null;
+  proj.forEach((v, i) => { if (v == null) return; if (prev) pp += `<line x1="${X(prev.i).toFixed(1)}" y1="${Y(prev.v).toFixed(1)}" x2="${X(i).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.9"/>`; prev = { i, v }; });
+  let nod = '';
+  for (let i = 0; i < n; i++) {
+    if (actual[i] != null) {
+      const rw = i >= 2 ? bt.rows[i - 2] : null;
+      const clr = i < 2 ? '#cbd5e1' : (rw && rw.hit === true ? '#22c55e' : rw && rw.hit === false ? '#ef4444' : '#64748b');
+      nod += `<circle cx="${X(i).toFixed(1)}" cy="${Y(actual[i]).toFixed(1)}" r="5" fill="${clr}" stroke="#0b1220" stroke-width="1.5"/>`;
+      if (labels[i]) nod += `<text x="${X(i).toFixed(1)}" y="${(Y(actual[i]) - 9).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="800" fill="${clr}">${labels[i]}</text>`;
+    }
+    if (i >= 2 && proj[i] != null) nod += `<circle cx="${X(i).toFixed(1)}" cy="${Y(proj[i]).toFixed(1)}" r="3.2" fill="none" stroke="#38bdf8" stroke-width="1.5"/>`;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="direction:ltr;margin:4px 0">${ap}${pp}${nod}</svg>`;
+}
+function elliottBacktestHTML(bt, name) {
+  if (!bt) return '<div style="padding:16px;color:var(--txt-m);font-size:12px;text-align:center">⚠️ لا توجد دورة ماضية مكتملة كافية لاختبار هذا السهم.</div>';
+  const okC = bt.overall === 'نجح' ? '#4ade80' : bt.overall === 'لم ينجح' ? '#f87171' : '#fbbf24';
+  const dirTxt = bt.dir === 'up' ? '🟢 صاعد' : '🔴 هابط';
+  const rowsHtml = bt.rows.map(r => {
+    const ico = r.hit === true ? '✅' : r.hit === false ? '❌' : '⏳';
+    const clr = r.hit === true ? '#4ade80' : r.hit === false ? '#f87171' : 'var(--txt-m)';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:11.5px">
+      <span style="color:var(--txt-m);min-width:52px">الموجة ${r.wave}</span>
+      <span style="color:var(--txt);flex:1;text-align:center">متوقّع <b>${r.proj}</b>${r.actual != null ? ' · فعلي <b>' + r.actual + '</b> · خطأ ' + r.err + '%' : ' · ' + (r.note || '—')}</span>
+      <span style="color:${clr};font-weight:800">${ico}</span>
+    </div>`;
+  }).join('');
+  const w3 = bt.rows.find(r => r.wave === '3');
+  let reason;
+  if (w3 && w3.hit === true) reason = '✅ الموجة الثالثة (الأقوى) تحقّقت بدقّة — الإسقاط تبع الواقع جيداً.';
+  else if (w3 && w3.hit === false) reason = '❌ الموجة الثالثة لم تبلغ الهدف (خطأ ' + w3.err + '%) — الحركة أضعف أو التصحيح أعمق من المتوقّع؛ هنا نضبط نِسب الإسقاط.';
+  else reason = '⏳ الموجة الثالثة لم تتشكّل بعد في هذه العيّنة.';
+  return `
+    <div style="font-size:13px;font-weight:800;margin-bottom:4px">🧪 اختبار إليوت على الماضي · ${name || ''}</div>
+    <div style="font-size:11px;color:var(--txt-m);margin-bottom:6px">المسار ${dirTxt} · الموجة الأولى: ${bt.P0} → ${bt.P1} · الإيقاع ~${bt.rhythm || '—'} يوم/موجة</div>
+    ${bt.cal ? `<div style="font-size:10px;color:#c4b5fd;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:8px;padding:6px 8px;margin-bottom:6px">🎯 نموذج معايَر على ${bt.cal.n} دورة من هذا السهم · تصحيح ${bt.cal.r2.toFixed(2)} · امتداد الموجة3 ${bt.cal.e3.toFixed(2)} · الموجة5 ${bt.cal.e5.toFixed(2)}</div>` : ''}
+    ${elliottBacktestSVG(bt)}
+    <div style="display:flex;gap:12px;justify-content:center;font-size:9.5px;color:var(--txt-m);margin-bottom:8px;flex-wrap:wrap">
+      <span>▬ الفعلي</span><span style="color:#38bdf8">┈ المتوقّع</span><span style="color:#22c55e">● مطابق</span><span style="color:#ef4444">● بعيد</span>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <div style="flex:1;text-align:center;background:var(--surf-alt);border-radius:10px;padding:10px"><div style="font-size:10px;color:var(--txt-m)">النتيجة</div><div style="font-size:16px;font-weight:900;color:${okC}">${bt.overall}</div></div>
+      <div style="flex:1;text-align:center;background:var(--surf-alt);border-radius:10px;padding:10px"><div style="font-size:10px;color:var(--txt-m)">الدقّة</div><div style="font-size:16px;font-weight:900">${bt.accuracy != null ? bt.accuracy + '%' : '—'}</div><div style="font-size:9px;color:var(--txt-m)">${bt.hits}/${bt.evaluated} موجة</div></div>
+    </div>
+    ${rowsHtml}
+    <div style="font-size:11px;color:var(--txt);background:var(--surf-alt);border:1px solid var(--bdr);border-radius:8px;padding:9px;margin-top:10px;line-height:1.7">📋 <b>لماذا؟</b> ${reason}</div>
+    <div style="font-size:9.5px;color:var(--txt-m);margin-top:8px;line-height:1.6">يقارن إسقاط فيبوناتشي بالموجات الفعلية على تاريخ السهم. «مطابق» = ضمن منطقة الهدف ±7% (كما تُستخدم أهداف إليوت فعلاً). أداة تعليمية — إليوت تقريبي لا دقيق.</div>`;
+}
+window.elliottShowBacktest = async function (sym, name) {
+  let ov = document.getElementById('elBtOv');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'elBtOv';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:16px';
+    ov.onclick = e => { if (e.target === ov) ov.style.display = 'none'; };
+    document.body.appendChild(ov);
+  }
+  const box = h => '<div style="background:var(--surf);color:var(--txt);border-radius:16px;max-width:460px;width:100%;padding:20px;max-height:88vh;overflow:auto">' +
+    '<div style="text-align:left;margin-bottom:2px"><button onclick="document.getElementById(\'elBtOv\').style.display=\'none\'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt-m)">✕</button></div>' + h + '</div>';
+  ov.innerHTML = box('<div style="text-align:center;padding:24px;color:var(--txt-m)"><div style="font-size:26px;margin-bottom:8px">⏳</div>جارٍ تحليل تاريخ السهم…</div>');
+  ov.style.display = 'flex';
+  let ser = null;
+  /* 📈 التاريخ الكامل من القاعدة (سنوات) — موجات كافية للاختبار على الأسهم الكبيرة */
+  try { if (typeof histDbLoad === 'function') { const dbc = await histDbLoad(sym, 30); if (dbc && dbc.length >= 30) ser = dbc; } } catch (e) {}
+  if (!ser) {
+    try { ser = (typeof histDailyRawCache !== 'undefined' && histDailyRawCache[sym]) ? histDailyRawCache[sym]
+        : (typeof histAllDailyCache !== 'undefined' && histAllDailyCache && histAllDailyCache.bySymbol) ? histAllDailyCache.bySymbol[sym] : null; } catch (e) {}
+  }
+  const bt = ser ? elliottBacktest(ser) : null;
+  ov.innerHTML = box(elliottBacktestHTML(bt, name));
+};
 
 function marketStockAnalysis(sym, name) {
   const r = rows.find(r => r.sym === sym);
@@ -10821,6 +11127,7 @@ function marketStockAnalysis(sym, name) {
       </div>
 
       ${_elliottHTML ? _wrapIfLocked(_currentTabKey(), _elliottHTML) : ''}
+      ${(_elliottHTML && ((typeof isAdmin === 'function' && isAdmin()) || (typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.see_backtest))) ? `<button onclick="event.stopPropagation();elliottShowBacktest('${sym}','${(name || '').replace(/'/g, "\\'")}')" style="width:100%;margin-bottom:16px;background:linear-gradient(135deg,#0e7490,#0891b2);border:none;color:#fff;border-radius:10px;padding:11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">🧪 اختبار إليوت على الماضي (تقرير النجاح/الفشل)</button>` : ''}
 
       <div style="display:flex;gap:10px">
         <button onclick="closeMarketAnalysis('${overlayId}');histOpen('${sym}','${name.replace(/'/g,"\\'")}')" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-weight:600;cursor:pointer">📅 عرض الجدول الكامل</button>

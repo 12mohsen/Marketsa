@@ -1610,6 +1610,24 @@ canvas#mdChart{display:block;width:100% !important}
       <div style="font-size:14.5px;color:var(--txt-m);margin-top:6px;line-height:1.8">أسهم لها <b>خطة دخول جاهزة</b> من إليوت (دخول · وقف · هدف · مخاطرة‑عائد) مرتّبة بالأقوى — اختر توقيتك بلا بحث.</div>
       <button id="sniperRescanBtn" onclick="sniperRescan(this)" style="display:none;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">🔮 إعادة المسح وتحديث الفرص</button>
     </div>
+    <button id="sniperGoldenBtn" onclick="sniperGolden()" style="display:block;margin:0 auto 12px;background:linear-gradient(135deg,#b8860b,#facc15);color:#1a1a1a;border:none;border-radius:10px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">💎 الفرص الذهبية فقط</button>
+    <button id="sniperTgToggle" onclick="tgUnlock()" style="display:none;margin:0 auto 10px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:9px 18px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">🔒 ربط تنبيه تلجرام (أدمن رئيسي)</button>
+    <div id="sniperTgBox" style="display:none;max-width:460px;margin:0 auto 14px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:14px;text-align:right">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">🔔 تنبيه الفرص الذهبية عبر تلجرام</div>
+      <div style="font-size:11.5px;color:#facc15;font-weight:700;margin-bottom:4px">① توكن البوت (من BotFather — يحوي «:») :</div>
+      <input id="tgTokenInp" dir="ltr" placeholder="8918798901:AAE..." style="width:100%;box-sizing:border-box;margin-bottom:10px;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font-family:monospace;font-size:13px;text-align:left">
+      <div style="font-size:11.5px;color:#38bdf8;font-weight:700;margin-bottom:4px">② معرّف المجموعة Chat ID (يبدأ بـ -100) :</div>
+      <input id="tgChatInp" dir="ltr" placeholder="-1003888432660" style="width:100%;box-sizing:border-box;margin-bottom:6px;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font-family:monospace;font-size:13px;text-align:left">
+      <button onclick="tgFetchChatId()" style="width:100%;margin-bottom:10px;padding:9px;border-radius:8px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.12);color:#38bdf8;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px">🔍 جلب المعرّف تلقائياً (بعد إرسال رسالة للبوت)</button>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="tgAutoInp"> إرسال تلقائي بعد كل مسح عند وجود فرصة ذهبية</label>
+      <div style="font-size:11px;color:#4ade80;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px;margin-bottom:10px;line-height:1.7">🎯 <b>تتبّع الصفقات مفعّل تلقائياً:</b> أي سهم تضيفه لـ«المراقبة» يُثبَّت بخطته، وتصلك رسالة تلجرام عند تحقّق كل هدف أو ضرب الوقف.</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="tgSaveSettings()" style="flex:1;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#166534,#22c55e);color:#fff;font-weight:800;cursor:pointer;font-family:inherit">💾 حفظ</button>
+        <button onclick="tgTest()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font-weight:800;cursor:pointer;font-family:inherit">🔔 اختبار</button>
+      </div>
+      <div id="tgStatus" style="font-size:11.5px;margin-top:8px;line-height:1.6"></div>
+      <div style="font-size:10.5px;color:var(--txt-m);margin-top:8px;line-height:1.7">🔒 محميّ برقم سرّي، ويظهر للأدمن الرئيسي فقط (لا المشرفون). التوكن يُحفظ على جهازك فقط. <b>لو نسيت الرقم السرّي:</b> امسح بيانات الموقع من المتصفّح ليُعاد إنشاؤه.</div>
+    </div>
     <input id="sniperSearchInput" oninput="sniperSearch(this.value)" placeholder="🔍 ابحث باسم السهم أو رمزه…" style="width:100%;max-width:420px;margin:0 auto 14px;display:block;padding:11px 14px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;font-family:inherit;text-align:center;box-sizing:border-box">
     <div id="sniperList"></div>
   </div>
@@ -1980,8 +1998,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-18-v150';
-console.log('%c[تداول بلس] البناء: 2026-07-18-v150 — 🎯 مُعايِر النجاح (بلا بايثون): نسبة نجاح فعلية من تاريخك حسب درجة التوافق (تتراكم) أو الاحتمال (فوراً) — تحوّل مقياس التوافق من رأي إلى احتمال مُعاير', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-18-v160';
+console.log('%c[تداول بلس] البناء: 2026-07-18-v160 — 🎯 تتبّع صفقات المراقبة: أي سهم تضيفه يُثبَّت بخطته (دخول/وقف/هدف1/2/نهائي)، وتصلك رسالة تلجرام فور تحقّق هدف أو ضرب وقف — لقياس نتائج التحليل', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -8984,6 +9002,7 @@ document.addEventListener('keydown', e => {
     PRED_LAST_TS = Date.now();
     predSaveCache();
     radarUploadShared();   // 🌐 وحّد النتائج لكل المستخدمين (الأدمن فقط)
+    try { tgNotifyGolden(); } catch (e) {}   // 🔔 تنبيه تلجرام عند وجود فرصة ذهبية (أدمن)
     if (btn) { btn.disabled = false; btn.textContent = '🔮 إعادة المسح'; }
     predShowProgress(false);
     predRender();
@@ -9390,6 +9409,24 @@ document.addEventListener('keydown', e => {
     ];
   }
   function _snConflCount(r) { return _snConflParts(r).filter(Boolean).length; }
+  /* 💎 فرصة ذهبية: تكتمل فيها البنية + التوقيت + الانحياز معاً — توافق ≥4 + زناد صعودي +
+     غير قرب عرض + انحياز صاعد + نافذة نشطة/قريبة + جراهام غير غالٍ + ع/م ≥1.5 + ليست حديثة.
+     الندرة مقصودة: الذهبي يعني «اكتملت الشروط» لا «بنية جيدة فقط». */
+  function _snGolden(r) {
+    if (!r.elPlan || !r.elPlan.rr) return false;
+    if (r.bars && r.bars < 240) return false;                        // ليس حديثاً
+    if (_snConflCount(r) < 4) return false;                          // توافق ≥ 4
+    if (!(r.elTrig && r.elTrig.dir === 'bull')) return false;        // زناد صعودي
+    if (r.elZone && r.elZone.inSupply) return false;                 // ليس قرب منطقة عرض
+    if (!(r.elCircle && r.elCircle.bias === 'صاعد')) return false;   // 📊 انحياز صاعد
+    if (!(r.elTime && r.elTime.barsFromNow <= 12 && r.elTime.barsFromNow >= -3)) return false;   // 🕐 نافذة نشطة/قريبة
+    const gr = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null;
+    if (gr && gr.verdict === 'غالٍ') return false;                   // جراهام غير غالٍ
+    const st = r.elPlan.stop, tg = r.elPlan.target;
+    const rrNow = (r.price > st) ? (tg - r.price) / (r.price - st) : null;
+    if (rrNow == null || rrNow < 1.5) return false;                  // ع/م حالي ≥ 1.5
+    return true;
+  }
   /* 🎯 معايرة النجاح: نسبة نجاح فعلية من تاريخك — حسب درجة التوافق (تتراكم) أو الاحتمال (متوفّرة الآن) */
   function snCalib(r, cN) {
     const MIN = 8;   // حدّ أدنى من الحالات المكتملة حتى نثق بالنسبة
@@ -9405,6 +9442,8 @@ document.addEventListener('keydown', e => {
     return null;
   }
   let SNIPER_SEARCH = '';
+  let SNIPER_GOLDEN = false;
+  window.sniperGolden = function () { SNIPER_GOLDEN = !SNIPER_GOLDEN; try { sniperRender(); } catch (e) {} };
   /* 🔤 تطبيع عربي للبحث: يوحّد الهمزات والتاء المربوطة والألف المقصورة، ويحذف التشكيل والشرطة والمسافات */
   function _arNorm(s) {
     return String(s || '')
@@ -9484,6 +9523,21 @@ document.addEventListener('keydown', e => {
     /* زر إعادة المسح: للأدمن فقط (يحسب المزايا الجديدة ويرفعها للجميع) */
     const _rb = document.getElementById('sniperRescanBtn');
     if (_rb) _rb.style.display = (typeof isAdmin === 'function' && isAdmin()) ? 'inline-block' : 'none';
+    /* أداة تلجرام: للأدمن الرئيسي فقط (لا المشرفين) + تعبئة القيم المحفوظة */
+    const _tgT = document.getElementById('sniperTgToggle');
+    const _tgAllowed = (typeof isSuperAdmin === 'function') ? isSuperAdmin() : (typeof isAdmin === 'function' && isAdmin());
+    if (_tgT) _tgT.style.display = _tgAllowed ? 'inline-block' : 'none';
+    if (!_tgAllowed) { const _box = document.getElementById('sniperTgBox'); if (_box) _box.style.display = 'none'; }   // أخفِ الصندوق عن غير المخوّل
+    const _tt = document.getElementById('tgTokenInp'); if (_tt && !_tt.value) _tt.value = localStorage.getItem('tg_bot_token') || '';
+    const _tc = document.getElementById('tgChatInp'); if (_tc && !_tc.value) _tc.value = localStorage.getItem('tg_chat_id') || '';
+    const _ta = document.getElementById('tgAutoInp'); if (_ta) _ta.checked = localStorage.getItem('tg_auto') === '1';
+    /* زر الفرص الذهبية: يعكس حالته */
+    const _gb = document.getElementById('sniperGoldenBtn');
+    if (_gb) {
+      _gb.textContent = SNIPER_GOLDEN ? '💎 عرض كل الفرص' : '💎 الفرص الذهبية فقط';
+      _gb.style.background = SNIPER_GOLDEN ? 'linear-gradient(135deg,#166534,#22c55e)' : 'linear-gradient(135deg,#b8860b,#facc15)';
+      _gb.style.color = SNIPER_GOLDEN ? '#fff' : '#1a1a1a';
+    }
     /* 🔄 يملأ نفسه دون فتح الرادار: كاش محلي أولاً، ثم النتائج المشتركة من القاعدة */
     if (!(Array.isArray(PRED_RESULTS) && PRED_RESULTS.length)) {
       try { predLoadCache(); } catch (e) {}
@@ -9497,6 +9551,7 @@ document.addEventListener('keydown', e => {
       const q = _arNorm(SNIPER_SEARCH);
       if (q) list = list.filter(r => _arNorm(r.sym).includes(q) || _arNorm(r.name).includes(q));
     }
+    if (SNIPER_GOLDEN) list = list.filter(_snGolden);
     /* 🧩 عنقود التوافق: كم مدرسة تتفق (معرّفة على مستوى الوحدة _snConflCount) */
     const _snCount = _snConflCount;
     const _snYoung = r => !!(r.bars && r.bars < 240);   // أقل من ~سنة تداول → تاريخ غير كافٍ
@@ -9507,6 +9562,12 @@ document.addEventListener('keydown', e => {
       ((_snTimeActive(b) ? 1 : 0) - (_snTimeActive(a) ? 1 : 0)) ||
       (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
     if (!list.length) {
+      if (SNIPER_GOLDEN) {
+        wrap.innerHTML = '<div style="text-align:center;padding:44px 20px;color:var(--txt-m)"><div style="font-size:42px;margin-bottom:12px">💎</div>' +
+          '<div style="font-size:17px;font-weight:800;margin-bottom:8px;color:#facc15">لا فرصة ذهبية الآن — والانتظار قرار رابح</div>' +
+          '<div style="font-size:13.5px;line-height:2;max-width:560px;margin:0 auto">لم يجد النظام إعداداً <b>تكتمل فيه كل الشروط معاً</b> (توافق ≥4 · زناد صعودي · انحياز صاعد · نافذة نشطة/قريبة · بعيد عن العرض · جراهام غير غالٍ · ع/م ≥1.5 · ليس حديثاً). هذا طبيعي — الفرص الممتازة نادرة. لا تُخفّض معاييرك؛ اضغط «عرض كل الفرص» للمراقبة، وعُد لاحقاً.</div></div>';
+        return;
+      }
       if (SNIPER_SEARCH) {
         wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)"><div style="font-size:36px;margin-bottom:10px">🔍</div>' +
           '<div style="font-size:16px;font-weight:700;margin-bottom:6px">لا فرصة تطابق «' + SNIPER_SEARCH + '»</div>' +
@@ -9521,8 +9582,8 @@ document.addEventListener('keydown', e => {
     const _snTotal = list.length;
     wrap.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:11px;margin-bottom:14px">' +
-        '<span style="font-size:14px;color:var(--txt-m);font-weight:700">🎯 عدد الفرص الجاهزة</span>' +
-        '<span style="font-size:20px;font-weight:900;color:#4ade80">' + _snTotal + '</span>' +
+        '<span style="font-size:14px;color:var(--txt-m);font-weight:700">' + (SNIPER_GOLDEN ? '💎 فرص ذهبية' : '🎯 عدد الفرص الجاهزة') + '</span>' +
+        '<span style="font-size:20px;font-weight:900;color:' + (SNIPER_GOLDEN ? '#facc15' : '#4ade80') + '">' + _snTotal + '</span>' +
         '<span style="font-size:13px;color:var(--txt-m)">سهم</span>' +
       '</div>' +
       list.map((r, i) => {
@@ -9617,6 +9678,200 @@ document.addEventListener('keydown', e => {
     try { await predScanAll(); } catch (e) { console.warn('[sniper] مسح تعذّر:', e && e.message); }
     try { await sniperRender(); } catch (e) {}
     if (btn) { btn.disabled = false; btn.textContent = t0 || '🔮 إعادة المسح وتحديث الفرص'; }
+  };
+  /* 🔔 تنبيه تلجرام (أدمن): التوكن وChat ID محفوظان محلياً على جهاز الأدمن فقط — لا يُشاركان */
+  /* يجلب JSON من واجهة تلجرام مع تجاوز حظر CORS: مباشر ثم بروكسي خاص ثم عامّة */
+  async function _tgFetchJson(apiUrl) {
+    const tries = [
+      apiUrl,
+      'https://tadawul-proxy.abdmohsen94.workers.dev/?url=' + encodeURIComponent(apiUrl),
+      'https://corsproxy.io/?url=' + encodeURIComponent(apiUrl),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl),
+      'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(apiUrl)
+    ];
+    for (const u of tries) {
+      try {
+        const res = await fetch(u);
+        const txt = await res.text();
+        let j; try { j = JSON.parse(txt); } catch (e) { continue; }
+        if (j && typeof j.ok !== 'undefined') return j;
+      } catch (e) { /* جرّب البروكسي التالي */ }
+    }
+    return null;
+  }
+  async function tgSend(text) {
+    const token = (localStorage.getItem('tg_bot_token') || '').trim();
+    const chat = (localStorage.getItem('tg_chat_id') || '').trim();
+    if (!token || !chat) return { ok: false, err: 'اضبط التوكن وChat ID أولاً' };
+    const url = 'https://api.telegram.org/bot' + token + '/sendMessage?chat_id=' + encodeURIComponent(chat) +
+      '&parse_mode=HTML&disable_web_page_preview=true&text=' + encodeURIComponent(text);
+    const j = await _tgFetchJson(url);
+    if (!j) return { ok: false, err: 'تعذّر الاتصال (شبكة/بروكسي)' };
+    return j.ok ? { ok: true } : { ok: false, err: j.description || 'فشل الإرسال' };
+  }
+  async function tgNotifyGolden() {
+    if (!(typeof isAdmin === 'function' && isAdmin())) return;
+    if (localStorage.getItem('tg_auto') !== '1') return;
+    if (!localStorage.getItem('tg_bot_token') || !localStorage.getItem('tg_chat_id')) return;
+    const gold = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr && _snGolden(r));
+    if (!gold.length) return;
+    const key = new Date().toISOString().slice(0, 10) + ':' + gold.map(r => r.sym).sort().join(',');
+    if (localStorage.getItem('tg_last_golden') === key) return;    // لا تُكرّر نفس المجموعة في اليوم
+    const lines = gold.slice(0, 12).map((r, i) => {
+      const p = r.elPlan;
+      return (i + 1) + '. <b>' + (r.name || r.sym) + '</b> (' + r.sym + ') — ' + r.price.toFixed(2) + ' ر.س\n' +
+        '   🎯 دخول ' + p.entry + ' · 🛑 وقف ' + p.stop + ' · 🏁 هدف ' + p.target;
+    }).join('\n');
+    const msg = '💎 <b>فرص ذهبية — تداول بلس</b>\nاكتملت الشروط في ' + gold.length + ' سهم:\n\n' + lines +
+      '\n\n⚠️ تعليمي لا نصيحة استثمارية — التزم وقف الخسارة.';
+    const res = await tgSend(msg);
+    if (res.ok) localStorage.setItem('tg_last_golden', key);
+    else console.warn('[tg] فشل تنبيه تلجرام:', res.err);
+  }
+  /* 📡 السعر الحيّ لسهم (الأحدث من بيانات السوق ثم المراقبة ثم آخر مسح) */
+  function _livePriceOf(sym) {
+    try {
+      const rr = (typeof rows !== 'undefined' && Array.isArray(rows)) ? rows.find(x => x.sym === sym) : null;
+      if (rr && toNum(rr.price)) return toNum(rr.price);
+    } catch (e) {}
+    try { const w = (typeof watchlist !== 'undefined') ? watchlist.find(x => x.sym === sym) : null; if (w && toNum(w.currentPrice)) return toNum(w.currentPrice); } catch (e) {}
+    const pr = PRED_RESULTS.find(x => x.sym === sym); if (pr && toNum(pr.price)) return toNum(pr.price);
+    return null;
+  }
+  /* 🎯 متتبّع صفقات المراقبة: يثبّت خطة كل سهم مُضاف ويُنبّه على تلجرام عند تحقّق هدف أو ضرب وقف */
+  function watchTrackCheck() {
+    if (!(typeof isSuperAdmin === 'function' && isSuperAdmin())) return;
+    if (!localStorage.getItem('tg_bot_token') || !localStorage.getItem('tg_chat_id')) return;   // تلجرام غير مضبوط
+    if (typeof watchlist === 'undefined' || !Array.isArray(watchlist) || !watchlist.length) return;
+    let store; try { store = JSON.parse(localStorage.getItem('tg_trades') || '{}'); } catch (e) { store = {}; }
+    const syms = new Set(watchlist.map(w => w.sym));
+    Object.keys(store).forEach(k => { if (!syms.has(k)) delete store[k]; });   // نظّف المحذوف من المراقبة
+    watchlist.forEach(w => {
+      const price = _livePriceOf(w.sym);
+      if (!store[w.sym]) {
+        const r = PRED_RESULTS.find(x => x.sym === w.sym);
+        const plan = r && r.elPlan;
+        if (!plan || !plan.rr || !price) return;   // لا خطة/سعر → لا تتبّع
+        const t1 = +(plan.entry + 0.382 * (plan.target - plan.entry)).toFixed(2);
+        const t2 = +(plan.entry + 0.618 * (plan.target - plan.entry)).toFixed(2);
+        /* ثبّت الخطة، وعلّم ما تحقّق مسبقاً بلا إرسال (ننبّه للعبور المستقبلي فقط) */
+        store[w.sym] = {
+          name: w.name || r.name || w.sym, entry: plan.entry, stop: plan.stop, t1: t1, t2: t2, target: plan.target,
+          hit: { t1: price >= t1, t2: price >= t2, final: price >= plan.target, stop: price <= plan.stop }, at: Date.now()
+        };
+        return;   // لا تنبيه لحظة الالتقاط
+      }
+      if (!price) return;
+      const tr = store[w.sym], name = tr.name || w.sym;
+      const pct = v => (v - tr.entry) / tr.entry * 100;
+      const send = t => { try { tgSend(t); } catch (e) {} };
+      if (!tr.hit.stop && price <= tr.stop) { tr.hit.stop = true; send('🛑 <b>' + name + '</b> (' + w.sym + ')\nضرب وقف الخسارة عند ' + tr.stop + ' — الخطة لم تنجح ❌\nالسعر الآن: ' + price.toFixed(2)); }
+      if (!tr.hit.t1 && price >= tr.t1) { tr.hit.t1 = true; send('🎯 <b>' + name + '</b> (' + w.sym + ')\nتحقّق الهدف الأول ' + tr.t1 + ' ✅ (+' + pct(tr.t1).toFixed(1) + '% من الدخول)\nالسعر الآن: ' + price.toFixed(2)); }
+      if (!tr.hit.t2 && price >= tr.t2) { tr.hit.t2 = true; send('🎯 <b>' + name + '</b> (' + w.sym + ')\nتحقّق الهدف الثاني ' + tr.t2 + ' ✅ (+' + pct(tr.t2).toFixed(1) + '%)\nالسعر الآن: ' + price.toFixed(2)); }
+      if (!tr.hit.final && price >= tr.target) { tr.hit.final = true; send('🏁 <b>' + name + '</b> (' + w.sym + ')\nتحقّق الهدف النهائي ' + tr.target + ' 🎉 — الصفقة مكتملة!\nالسعر الآن: ' + price.toFixed(2)); }
+    });
+    try { localStorage.setItem('tg_trades', JSON.stringify(store)); } catch (e) {}
+  }
+  window.watchTrackCheck = watchTrackCheck;
+  /* 🔒 قفل إعدادات تلجرام برقم سرّي (يُحفظ مجزّأً على الجهاز) */
+  function _tgHash(s) { let h = 0; s = String(s); for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; } return 'h' + h; }
+  /* نافذة إدخال أنيقة (بديل prompt) — تُرجع Promise بالقيمة أو null */
+  function _tgAsk(title, sub, danger) {
+    return new Promise(resolve => {
+      const old = document.getElementById('tgAskOv'); if (old) old.remove();
+      const accent = danger ? '220,38,38' : '124,58,237';
+      const ov = document.createElement('div');
+      ov.id = 'tgAskOv';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);padding:16px';
+      ov.innerHTML =
+        '<div style="background:linear-gradient(180deg,#141b2e,#101626);border:1px solid rgba(255,255,255,.08);border-radius:18px;max-width:380px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.5)">' +
+          '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">' +
+            '<div style="flex:none;width:44px;height:44px;border-radius:13px;background:rgba(' + accent + ',.16);border:1px solid rgba(' + accent + ',.3);display:flex;align-items:center;justify-content:center;font-size:20px">🔒</div>' +
+            '<div style="text-align:right;flex:1"><div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:5px">' + title + '</div><div style="font-size:12px;color:#8891a8;line-height:1.6">' + (sub || '') + '</div></div>' +
+          '</div>' +
+          '<input id="tgAskInp" type="password" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:16px;text-align:center;letter-spacing:3px;margin-bottom:16px;font-family:inherit">' +
+          '<div style="display:flex;gap:10px">' +
+            '<button id="tgAskOk" style="flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,rgba(' + accent + ',1),rgba(' + accent + ',.75));color:#fff;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px">موافق</button>' +
+            '<button id="tgAskCancel" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#cbd5e1;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">إلغاء</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(ov);
+      const inp = ov.querySelector('#tgAskInp');
+      const done = v => { ov.remove(); resolve(v); };
+      ov.querySelector('#tgAskOk').onclick = () => done(inp.value);
+      ov.querySelector('#tgAskCancel').onclick = () => done(null);
+      ov.onclick = e => { if (e.target === ov) done(null); };
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(inp.value); else if (e.key === 'Escape') done(null); });
+      setTimeout(() => inp.focus(), 60);
+    });
+  }
+  window.tgUnlock = async function () {
+    const box = document.getElementById('sniperTgBox');
+    if (!box) return;
+    if (box.style.display !== 'none') { box.style.display = 'none'; return; }   // مفتوح → أغلق
+    const toast = m => { if (typeof showToast === 'function') showToast(m); };
+    const stored = localStorage.getItem('tg_pin') || '';
+    if (!stored) {
+      const p1 = await _tgAsk('إنشاء رقم سرّي', 'أنشئ رقماً سرّياً يحمي إعدادات تلجرام. احفظه جيداً — لن يظهر لاحقاً.');
+      if (p1 == null || p1 === '') return;
+      const p2 = await _tgAsk('تأكيد الرقم السرّي', 'أعد إدخال الرقم السرّي نفسه للتأكيد.');
+      if (p1 !== p2) { toast('⚠️ الرقمان غير متطابقين — أعد المحاولة'); return; }
+      localStorage.setItem('tg_pin', _tgHash(p1));
+      box.style.display = 'block'; toast('✅ أُنشئ الرقم السرّي وفُتحت الإعدادات');
+      return;
+    }
+    const p = await _tgAsk('إعدادات تلجرام محمية', 'أدخل الرقم السرّي لفتح الإعدادات.');
+    if (p == null) return;
+    if (_tgHash(p) === stored) box.style.display = 'block';
+    else toast('⚠️ رقم سرّي خاطئ');
+  };
+  window.tgSaveSettings = function () {
+    const v1 = ((document.getElementById('tgTokenInp') || {}).value || '').trim();
+    const v2 = ((document.getElementById('tgChatInp') || {}).value || '').trim();
+    const a = !!((document.getElementById('tgAutoInp') || {}).checked);
+    /* 🧠 كشف تلقائي يصحّح التبديل: التوكن يحوي «:» · المعرّف رقم (يبدأ بـ - غالباً) */
+    let token = '', chat = '';
+    [v1, v2].forEach(v => {
+      if (!v) return;
+      if (v.indexOf(':') > -1 && !token) token = v;
+      else if (/^-?\d+$/.test(v) && !chat) chat = v;
+    });
+    if (!token) token = v1.indexOf(':') > -1 ? v1 : v2;   // احتياطي
+    if (!chat) chat = /^-?\d+$/.test(v2) ? v2 : v1;
+    localStorage.setItem('tg_bot_token', token);
+    localStorage.setItem('tg_chat_id', chat);
+    localStorage.setItem('tg_auto', a ? '1' : '0');
+    /* أعد ترتيب الحقول للعرض الصحيح تلقائياً */
+    const ti = document.getElementById('tgTokenInp'); if (ti) ti.value = token;
+    const ci = document.getElementById('tgChatInp'); if (ci) ci.value = chat;
+    const s = document.getElementById('tgStatus'); if (s) { s.style.color = '#4ade80'; s.textContent = '✅ حُفظت (ورتّبتُ الحقلين تلقائياً)' + (a ? ' · التلقائي مفعّل' : ''); }
+  };
+  window.tgFetchChatId = async function () {
+    const v1 = ((document.getElementById('tgTokenInp') || {}).value || '').trim();
+    const v2 = ((document.getElementById('tgChatInp') || {}).value || '').trim();
+    const t = v1.indexOf(':') > -1 ? v1 : (v2.indexOf(':') > -1 ? v2 : v1);   // 🧠 التوكن = الحقل الذي يحوي «:»
+    const s = document.getElementById('tgStatus');
+    if (!t || t.indexOf(':') < 0) { if (s) { s.style.color = '#f87171'; s.textContent = '⚠️ ألصق توكن البوت (يحوي «:») أولاً'; } return; }
+    if (s) { s.style.color = 'var(--txt-m)'; s.textContent = '⏳ جارٍ الجلب… (تأكّد أنك أرسلت رسالة للبوت أولاً)'; }
+    try {
+      const j = await _tgFetchJson('https://api.telegram.org/bot' + t + '/getUpdates');
+      if (!j) { if (s) { s.style.color = '#f87171'; s.textContent = '⚠️ تعذّر الاتصال (شبكة/بروكسي)'; } return; }
+      if (!j.ok) { if (s) { s.style.color = '#f87171'; s.textContent = '⚠️ ' + (j.description || 'توكن غير صحيح'); } return; }
+      const ids = [];
+      (j.result || []).forEach(u => {
+        const c = (u.message && u.message.chat) || (u.channel_post && u.channel_post.chat) || (u.my_chat_member && u.my_chat_member.chat);
+        if (c && c.id != null && !ids.find(x => x.id === c.id)) ids.push({ id: c.id, name: c.title || c.first_name || c.username || '' });
+      });
+      if (!ids.length) { if (s) { s.style.color = '#fbbf24'; s.textContent = '⚠️ لا رسائل بعد — أرسل رسالة لبوتك (أو انشر في قناتك بعد جعله مشرفاً) ثم أعد المحاولة'; } return; }
+      const inp = document.getElementById('tgChatInp'); if (inp) inp.value = ids[ids.length - 1].id;   // عبّئ آخر محادثة
+      if (s) { s.style.color = '#4ade80'; s.textContent = '✅ وُجد: ' + ids.map(x => x.id + (x.name ? ' (' + x.name + ')' : '')).join(' · ') + ' — عبّأتُ الأخير، اضغط حفظ'; }
+    } catch (e) { if (s) { s.style.color = '#f87171'; s.textContent = '⚠️ ' + ((e && e.message) || 'خطأ شبكة'); } }
+  };
+  window.tgTest = async function () {
+    window.tgSaveSettings();
+    const s = document.getElementById('tgStatus'); if (s) { s.style.color = 'var(--txt-m)'; s.textContent = '⏳ جارٍ إرسال رسالة اختبار…'; }
+    const res = await tgSend('🔔 <b>اختبار تداول بلس</b>\nتم ربط تنبيه الفرص الذهبية بنجاح ✅');
+    if (s) { s.style.color = res.ok ? '#4ade80' : '#f87171'; s.textContent = res.ok ? '✅ وصلت رسالة الاختبار — الربط يعمل' : '⚠️ ' + (res.err || 'فشل الإرسال'); }
   };
   window.predScanAll = predScanAll;
   window.predSetFilter = predSetFilter;
@@ -10522,6 +10777,9 @@ function _autoPriceRefresh() {
   } catch (e) { /* تجاهل */ }
 }
 setInterval(_autoPriceRefresh, 60 * 1000);
+/* 🎯 تتبّع صفقات المراقبة والتنبيه على تلجرام — كل 60 ثانية + مرة بعد التحميل */
+setInterval(() => { try { if (typeof window.watchTrackCheck === 'function') window.watchTrackCheck(); } catch (e) {} }, 60 * 1000);
+setTimeout(() => { try { if (typeof window.watchTrackCheck === 'function') window.watchTrackCheck(); } catch (e) {} }, 8000);
 
 /* 🕒 ساعة حيّة تدقّ كل ثانية (توقيت الرياض) — وقت الأسعار المتأخرة أثناء التداول */
 function _tickClock() {

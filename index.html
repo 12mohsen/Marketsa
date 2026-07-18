@@ -1608,6 +1608,7 @@ canvas#mdChart{display:block;width:100% !important}
     <div style="text-align:center;margin-bottom:12px">
       <div style="font-size:25px;font-weight:900">🎯 قنّاص الفرص</div>
       <div style="font-size:14.5px;color:var(--txt-m);margin-top:6px;line-height:1.8">أسهم لها <b>خطة دخول جاهزة</b> من إليوت (دخول · وقف · هدف · مخاطرة‑عائد) مرتّبة بالأقوى — اختر توقيتك بلا بحث.</div>
+      <button id="sniperRescanBtn" onclick="sniperRescan(this)" style="display:none;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">🔮 إعادة المسح وتحديث الفرص</button>
     </div>
     <div id="sniperList"></div>
   </div>
@@ -1978,7 +1979,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-18-v142 — 📊 الدائرة الرقمية (قاعدة نصف المدى 50% + الأرباع، الجوهرة الصادقة من «علم الرقم»): انحياز الاتجاه + مستوى ربعي + الهدف التالي في القنّاص', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-18-v144';
+console.log('%c[تداول بلس] البناء: 2026-07-18-v144 — ⚙️ مسح تلقائي بالكامل: يعيد الحساب ويرفع للجميع تلقائياً عند تغيّر الإصدار أو قِدم البيانات (بلا أزرار يدوية) · الدائرة الرقمية + مستويات جان', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -8739,6 +8741,26 @@ document.addEventListener('keydown', e => {
   let   PRED_BUILT = false;
   let   PRED_LAST_TS = null;        // وقت آخر مسح (epoch)
   let   PRED_AUTORAN = false;       // ضمان التشغيل التلقائي مرة واحدة لكل جلسة
+  let   PRED_AUTORAN2 = false;      // ضمان مسح ترقية الإصدار مرة واحدة لكل جلسة
+  /* يكشف أن النتائج المحمّلة مُسِحت بإصدار أقدم (تفتقر لأحدث مزايا) → تستوجب مسحاً تلقائياً.
+     نحدّث اسم الحقل هنا مع كل ميزة جديدة تُحسب أثناء المسح. */
+  function _resultsOutdated() {
+    if (!Array.isArray(PRED_RESULTS) || !PRED_RESULTS.length) return false;
+    return PRED_RESULTS.every(r => r && r.elCircle === undefined);   // elCircle = أحدث ميزة (v142)
+  }
+  /* ⚙️ مسح تلقائي كامل (للأدمن): إن كانت النتائج بإصدار قديم أو قديمة بالوقت والسوق مغلق. */
+  async function _autoUpgradeScan() {
+    if (PRED_AUTORAN2) return;
+    if (!(typeof isAdmin === 'function' && isAdmin())) return;
+    if (PRED_SCANNING) return;
+    if (!(Array.isArray(rows) && rows.length)) return;              // بيانات السوق غير جاهزة بعد
+    const needs = _resultsOutdated() || (!predIsFresh() && !predIsMarketOpen());
+    if (!needs) return;
+    PRED_AUTORAN2 = true;
+    try { if (typeof showToast === 'function') showToast('⚙️ تحديث تلقائي للفرص بأحدث إصدار…'); } catch (e) {}
+    try { await predScanAll(); } catch (e) { console.warn('[auto] مسح تلقائي تعذّر:', e && e.message); }
+    try { await sniperRender(); } catch (e) {}
+  }
   const PRED_LS_KEY  = 'tadawulPlus_predScan';
   // أيام إجازات السوق (تُعطّل التشغيل التلقائي فيها). املأها بصيغة YYYY-MM-DD مثال: ['2026-09-23']
   const PRED_HOLIDAYS = [];
@@ -9159,6 +9181,8 @@ document.addEventListener('keydown', e => {
         predScanAll();
         return;
       }
+      /* ⚙️ ترقية تلقائية: لو النتائج المشتركة بإصدار أقدم (تنقصها مزايا)، امسح وارفع للجميع بلا زر */
+      _autoUpgradeScan();
       if (loaded) return;   // نتائج مشتركة حديثة → استخدمها كما هي (موحّدة)
       if (!predIsFresh() && typeof showToast === 'function') {
         showToast(PRED_RESULTS.length
@@ -9402,6 +9426,9 @@ document.addEventListener('keydown', e => {
   async function sniperRender() {
     const wrap = document.getElementById('sniperList');
     if (!wrap) return;
+    /* زر إعادة المسح: للأدمن فقط (يحسب المزايا الجديدة ويرفعها للجميع) */
+    const _rb = document.getElementById('sniperRescanBtn');
+    if (_rb) _rb.style.display = (typeof isAdmin === 'function' && isAdmin()) ? 'inline-block' : 'none';
     /* 🔄 يملأ نفسه دون فتح الرادار: كاش محلي أولاً، ثم النتائج المشتركة من القاعدة */
     if (!(Array.isArray(PRED_RESULTS) && PRED_RESULTS.length)) {
       try { predLoadCache(); } catch (e) {}
@@ -9495,8 +9522,19 @@ document.addEventListener('keydown', e => {
         '</div>') + '</div>';
     }).join('') +
       '<div style="font-size:12.5px;color:var(--txt-m);text-align:center;padding:12px;line-height:1.9">🧩 <b>مقياس التوافق (من 5):</b> إليوت + مربع 9 + هرمونيك + عرض/طلب + زناد الشموع (بُعد «أين»). و<b>🕐 النافذة الزمنية</b> تُسقط موعد الانعكاس من إيقاع الأيام (بُعد «متى») — تقريبية بجودة معلنة. الهرمونيك والمناطق تقريبية والزناد دقيق. ليست نصيحة استثمارية — نفّذ بوقف خسارة عند تأكيد الارتداد.</div>';
+    /* ⚙️ ترقية تلقائية بلا زر: لو البيانات بإصدار قديم يمسح الأدمن ويرفع للجميع في الخلفية */
+    _autoUpgradeScan();
   }
   window.sniperRender = sniperRender;
+  /* 🔮 إعادة مسح من داخل القنّاص (للأدمن): يعيد الحساب بأحدث بناء ثم يحدّث القائمة */
+  window.sniperRescan = async function (btn) {
+    if (!(typeof isAdmin === 'function' && isAdmin())) return;
+    const t0 = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ المسح…'; }
+    try { await predScanAll(); } catch (e) { console.warn('[sniper] مسح تعذّر:', e && e.message); }
+    try { await sniperRender(); } catch (e) {}
+    if (btn) { btn.disabled = false; btn.textContent = t0 || '🔮 إعادة المسح وتحديث الفرص'; }
+  };
   window.predScanAll = predScanAll;
   window.predSetFilter = predSetFilter;
   window.predToggleUserStats = predToggleUserStats;

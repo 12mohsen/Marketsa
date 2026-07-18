@@ -1978,7 +1978,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-17-v134 — 🔎 تكبير خط «قنّاص الفرص» ليكون أوضح للقراءة · خطة الدخول تخضع لقفل الاشتراك · القسم ضمن تحكّم الأدمن', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-18-v140 — 🐛 إصلاح: نافذة تفاصيل السهم تحسب إليوت من التاريخ الكامل تلقائياً فور الفتح (لا يظهر «هابط» خاطئ ثم يصحّح بعد «الجدول الكامل») · النافذة الزمنية', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -8922,6 +8922,11 @@ document.addEventListener('keydown', e => {
               a.sym = r.sym; a.name = r.name;
               /* 🌊 مرحلة دورة إليوت لهذا السهم (لفلتر «بداية دورة» والشارة) */
               try { const _el = (typeof elliottCompute === 'function') ? elliottCompute(candles, a.price) : null; if (_el) { a.elStage = _el.stage; a.elWave = _el.nowWave; a.elDir = _el.dir; a.elConf = _el.confidence; a.elConfl = _el.confluence; a.elPlan = _el.plan; } } catch (e) {}
+              /* 🕯️ الزناد (شمعة انعكاسية) + 📦 منطقة عرض/طلب — لعنقود القنّاص */
+              try { a.elTrig = _candleReversal(candles); } catch (e) {}
+              try { a.elZone = _zones(candles, a.price); } catch (e) {}
+              try { a.elHarm = _harmonic(candles, a.price); } catch (e) {}
+              try { a.elTime = _timeWindow(candles); } catch (e) {}
               PRED_RESULTS.push(a); ok++;
             }
           }
@@ -9213,27 +9218,205 @@ document.addEventListener('keydown', e => {
     ov.style.display = 'flex';
   }
 
+  /* 🕯️ الزناد: كشف شمعة يابانية انعكاسية على آخر شمعة (مطرقة/شهاب/ابتلاع/هرامي) */
+  function _candleReversal(cds) {
+    if (!Array.isArray(cds) || cds.length < 7) return null;
+    const num = x => (typeof x === 'number' && isFinite(x)) ? x : null;
+    const n = cds.length, c = cds[n - 1], p = cds[n - 2];
+    const o = num(c.o), h = num(c.h), l = num(c.l), cl = num(c.c);
+    const po = num(p.o), pcl = num(p.c);
+    if ([o, h, l, cl, po, pcl].some(v => v === null)) return null;
+    const body = Math.abs(cl - o), up = h - Math.max(o, cl), dn = Math.min(o, cl) - l;
+    const bull = cl > o, bear = cl < o, pBody = Math.abs(pcl - po);
+    const back = cds.slice(Math.max(0, n - 7), n - 1);
+    const avgPrev = back.reduce((s, x) => s + (num(x.c) || 0), 0) / (back.length || 1);
+    const downTrend = cl < avgPrev, upTrend = cl > avgPrev;
+    let name = null, dir = null, strong = false;
+    if (dn >= 2 * body && up <= body * 0.8 && body > 0 && downTrend) { name = 'مطرقة'; dir = 'bull'; strong = dn >= 2.5 * body; }
+    else if (up >= 2 * body && dn <= body * 0.8 && body > 0 && upTrend) { name = 'شهاب'; dir = 'bear'; strong = up >= 2.5 * body; }
+    else if (bull && pcl < po && cl >= po && o <= pcl && body > pBody) { name = 'ابتلاع شرائي'; dir = 'bull'; strong = body > pBody * 1.3; }
+    else if (bear && pcl > po && cl <= po && o >= pcl && body > pBody) { name = 'ابتلاع بيعي'; dir = 'bear'; strong = body > pBody * 1.3; }
+    else if (pcl < po && bull && Math.max(o, cl) <= Math.max(po, pcl) && Math.min(o, cl) >= Math.min(po, pcl) && pBody > body * 1.5 && downTrend) { name = 'هرامي صعودي'; dir = 'bull'; }
+    else if (pcl > po && bear && Math.max(o, cl) <= Math.max(po, pcl) && Math.min(o, cl) >= Math.min(po, pcl) && pBody > body * 1.5 && upTrend) { name = 'هرامي هبوطي'; dir = 'bear'; }
+    if (!name) return null;
+    return { name: name, dir: dir, strong: strong };
+  }
+  /* 📦 العرض والطلب (تقريبي): قاعدة صغيرة تسبق اندفاعاً قوياً = منطقة أوامر */
+  function _zones(cds, price) {
+    if (!Array.isArray(cds) || cds.length < 20 || !price) return null;
+    const num = x => (typeof x === 'number' && isFinite(x)) ? x : 0;
+    const bodies = cds.map(c => Math.abs(num(c.c) - num(c.o)));
+    const avg = (bodies.reduce((s, b) => s + b, 0) / bodies.length) || 1e-9;
+    let demand = null, supply = null;
+    for (let i = cds.length - 1; i >= 2; i--) {
+      if (bodies[i] < avg * 1.8) continue;                 // ليست حركة قوية
+      const c = cds[i], base = cds[i - 1], strongUp = num(c.c) > num(c.o);
+      const zLo = Math.min(num(base.o), num(base.c), num(base.l));
+      const zHi = Math.max(num(base.o), num(base.c), num(base.h));
+      if (strongUp && !demand && zHi < price * 1.02) demand = { lo: zLo, hi: zHi };
+      if (!strongUp && !supply && zLo > price * 0.98) supply = { lo: zLo, hi: zHi };
+      if (demand && supply) break;
+    }
+    const inDemand = !!(demand && price >= demand.lo * 0.995 && price <= demand.hi * 1.01);
+    const inSupply = !!(supply && price <= supply.hi * 1.005 && price >= supply.lo * 0.99);
+    return { demand: demand, supply: supply, inDemand: inDemand, inSupply: inSupply };
+  }
+
+  /* 🦋 التحليل التوافقي (الهرمونيك): كشف XABCD ومطابقة نسب فيبوناتشي */
+  function _harmonic(cds, price) {
+    if (!Array.isArray(cds) || cds.length < 25 || !price) return null;
+    const num = x => (typeof x === 'number' && isFinite(x)) ? x : null;
+    const vals = cds.map(c => num(c.c)).filter(v => v && v > 0);
+    if (vals.length < 25) return null;
+    const win = vals.slice(-Math.min(160, vals.length));
+    const zz = (v, pct) => {
+      const piv = []; let tr = 0, exV = v[0], exI = 0;
+      for (let i = 1; i < v.length; i++) {
+        const c = v[i];
+        if (tr >= 0) { if (c >= exV) { exV = c; exI = i; } else if (c <= exV * (1 - pct)) { piv.push({ i: exI, p: exV }); tr = -1; exV = c; exI = i; } }
+        else { if (c <= exV) { exV = c; exI = i; } else if (c >= exV * (1 + pct)) { piv.push({ i: exI, p: exV }); tr = 1; exV = c; exI = i; } }
+      }
+      piv.push({ i: exI, p: exV }); return piv;
+    };
+    let piv = []; for (const thr of [0.05, 0.04, 0.03]) { piv = zz(win, thr); if (piv.length >= 5) break; }
+    if (piv.length < 5) return null;
+    const P = piv.slice(-5), X = P[0].p, A = P[1].p, B = P[2].p, C = P[3].p, D = P[4].p;
+    const XA = Math.abs(A - X), AB = Math.abs(B - A), BC = Math.abs(C - B), CD = Math.abs(D - C), AD = Math.abs(D - A);
+    if (XA < 1e-6 || AB < 1e-6 || BC < 1e-6) return null;
+    const rAB = AB / XA, rBC = BC / AB, rCD = CD / BC, rAD = AD / XA;
+    const inR = (v, lo, hi) => v >= lo && v <= hi;
+    let name = null;
+    if (inR(rAB, .55, .68) && inR(rBC, .38, .9) && inR(rCD, 1.1, 1.7) && inR(rAD, .72, .85)) name = 'جارتلي';
+    else if (inR(rAB, .35, .55) && inR(rBC, .38, .9) && inR(rCD, 1.5, 2.7) && inR(rAD, .84, .93)) name = 'الخفاش';
+    else if (inR(rAB, .7, .86) && inR(rBC, .38, .9) && inR(rCD, 1.5, 2.5) && inR(rAD, 1.2, 1.7)) name = 'الفراشة';
+    else if (inR(rAB, .35, .65) && inR(rBC, .38, .9) && inR(rCD, 2.0, 3.9) && inR(rAD, 1.5, 1.75)) name = 'السرطان';
+    if (!name) return null;
+    if (Math.abs(price - D) / price > 0.06) return null;   // لا بد أن يكون D (منطقة PRZ) قرب السعر
+    return { name: name, dir: D < C ? 'bull' : 'bear', D: +D.toFixed(2) };
+  }
+
+  /* 🕐 النافذة الزمنية (تكييف يومي لزوايا جان الزمنية): إيقاع الأيام بين القمم/القيعان
+     يُسقط موعد الانعكاس القادم تقريبياً — يجيب «متى» فوق «أين». */
+  function _timeWindow(cds) {
+    if (!Array.isArray(cds) || cds.length < 30) return null;
+    const num = x => (typeof x === 'number' && isFinite(x)) ? x : null;
+    const vals = cds.map(c => num(c.c)).filter(v => v && v > 0);
+    if (vals.length < 30) return null;
+    const win = vals.slice(-Math.min(200, vals.length)), N = win.length;
+    const zz = (v, pct) => {
+      const piv = []; let tr = 0, exV = v[0], exI = 0;
+      for (let i = 1; i < v.length; i++) {
+        const c = v[i];
+        if (tr >= 0) { if (c >= exV) { exV = c; exI = i; } else if (c <= exV * (1 - pct)) { piv.push({ i: exI, p: exV }); tr = -1; exV = c; exI = i; } }
+        else { if (c <= exV) { exV = c; exI = i; } else if (c >= exV * (1 + pct)) { piv.push({ i: exI, p: exV }); tr = 1; exV = c; exI = i; } }
+      }
+      piv.push({ i: exI, p: exV }); return piv;
+    };
+    let piv = []; for (const thr of [0.06, 0.045, 0.03]) { piv = zz(win, thr); if (piv.length >= 4) break; }
+    if (piv.length < 4) return null;
+    const gaps = []; for (let k = 1; k < piv.length; k++) gaps.push(piv[k].i - piv[k - 1].i);
+    const valid = gaps.filter(g => g >= 2);
+    if (valid.length < 2) return null;
+    const sorted = valid.slice().sort((a, b) => a - b);
+    const med = sorted[Math.floor(sorted.length / 2)];           // الإيقاع (وسيط الأيام)
+    const nextIdx = piv[piv.length - 1].i + med;
+    const barsFromNow = Math.round(nextIdx - (N - 1));
+    const mean = valid.reduce((s, g) => s + g, 0) / valid.length;
+    const sd = Math.sqrt(valid.reduce((s, g) => s + (g - mean) * (g - mean), 0) / valid.length);
+    const cv = sd / (mean || 1);
+    const quality = cv < 0.35 ? 'عالية' : cv < 0.6 ? 'متوسطة' : 'منخفضة';
+    return { rhythm: med, barsFromNow: barsFromNow, quality: quality };
+  }
+  /* يحوّل «أيام تداول من اليوم» إلى تاريخ متوقّع (يتخطّى الجمعة/السبت) */
+  function _snDateAfter(bars) {
+    const names = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const d = new Date(); let added = 0, n = Math.max(0, bars);
+    while (added < n) { d.setDate(d.getDate() + 1); const wd = d.getDay(); if (wd !== 5 && wd !== 6) added++; }
+    return names[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  const _snTimeActive = r => !!(r.elTime && r.elTime.barsFromNow <= 1 && r.elTime.barsFromNow >= -2);
+
   /* 🎯 قنّاص الفرص: قائمة الأسهم ذات خطة دخول إليوت جاهزة، مرتّبة بالأقوى */
-  function sniperRender() {
+  async function sniperRender() {
     const wrap = document.getElementById('sniperList');
     if (!wrap) return;
+    /* 🔄 يملأ نفسه دون فتح الرادار: كاش محلي أولاً، ثم النتائج المشتركة من القاعدة */
+    if (!(Array.isArray(PRED_RESULTS) && PRED_RESULTS.length)) {
+      try { predLoadCache(); } catch (e) {}
+      if (!(Array.isArray(PRED_RESULTS) && PRED_RESULTS.length)) {
+        wrap.innerHTML = '<div style="text-align:center;padding:44px 20px;color:var(--txt-m)"><div style="font-size:30px;margin-bottom:10px">⏳</div><div style="font-size:15px;font-weight:700">جارِ تحميل الفرص…</div></div>';
+        try { await radarLoadShared(); } catch (e) {}
+      }
+    }
     let list = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
-    list.sort((a, b) => (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
+    /* 🧩 عنقود التوافق: كم مدرسة تتفق (إليوت + مربع9 + هرمونيك + عرض/طلب + زناد) من 5 */
+    const _snParts = r => [
+      true,                                        // 🌊 إليوت (خطة دخول قائمة)
+      !!r.elConfl,                                 // 🔢 مربع التسعة
+      !!(r.elHarm && r.elHarm.dir === 'bull'),     // 🦋 الهرمونيك
+      !!(r.elZone && r.elZone.inDemand),           // 📦 العرض/الطلب
+      !!(r.elTrig && r.elTrig.dir === 'bull')      // 🕯️ الزناد
+    ];
+    const _snCount = r => _snParts(r).filter(Boolean).length;
+    list.sort((a, b) => _snCount(b) - _snCount(a) ||
+      ((b.elTrig && b.elTrig.dir === 'bull' ? 1 : 0) - (a.elTrig && a.elTrig.dir === 'bull' ? 1 : 0)) ||
+      ((_snTimeActive(b) ? 1 : 0) - (_snTimeActive(a) ? 1 : 0)) ||
+      (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
     if (!list.length) {
       wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)"><div style="font-size:40px;margin-bottom:12px">🎯</div>' +
         '<div style="font-size:17px;font-weight:700;margin-bottom:8px">لا فرص جاهزة الآن</div>' +
         '<div style="font-size:14px;line-height:2;max-width:560px;margin:0 auto">تظهر هنا الأسهم التي كوّنت خطة دخول إليوت (موجة 2→3 أو 4→5 في دورة صاعدة). افتح «رادار الانفجارات» واضغط «إعادة المسح» لتحديثها.</div></div>';
       return;
     }
-    wrap.innerHTML = list.map(r => {
+    const _snTotal = list.length;
+    wrap.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:11px;margin-bottom:14px">' +
+        '<span style="font-size:14px;color:var(--txt-m);font-weight:700">🎯 عدد الفرص الجاهزة</span>' +
+        '<span style="font-size:20px;font-weight:900;color:#4ade80">' + _snTotal + '</span>' +
+        '<span style="font-size:13px;color:var(--txt-m)">سهم</span>' +
+      '</div>' +
+      list.map((r, i) => {
       const p = r.elPlan;
+      const rank = i + 1;
+      const rankClr = rank === 1 ? '#facc15' : rank === 2 ? '#cbd5e1' : rank === 3 ? '#d8925a' : 'var(--txt-m)';
       const rrClr = p.rr >= 2 ? '#4ade80' : '#fbbf24';
       const confClr = r.elConf >= 60 ? '#4ade80' : r.elConf >= 40 ? '#fbbf24' : '#f87171';
       return '<div onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-          '<div><div style="font-weight:800;font-size:18px">' + (r.name || r.sym) + '</div><div style="font-size:13px;color:var(--txt-m);margin-top:3px">' + r.sym + ' · ' + p.phase + (r.elConf != null ? ' · 🎯 ثقة <b style="color:' + confClr + '">' + r.elConf + '%</b>' : '') + '</div></div>' +
+          '<div style="display:flex;align-items:center;gap:11px">' +
+            '<div style="flex:none;width:34px;height:34px;border-radius:50%;background:var(--surf);border:2px solid ' + rankClr + ';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:' + rankClr + '">' + rank + '</div>' +
+            '<div><div style="font-weight:800;font-size:18px">' + (r.name || r.sym) + '</div><div style="font-size:13px;color:var(--txt-m);margin-top:3px">' + r.sym + ' · ' + p.phase + (r.elConf != null ? ' · 🎯 ثقة <b style="color:' + confClr + '">' + r.elConf + '%</b>' : '') + '</div></div>' +
+          '</div>' +
           '<div style="text-align:left"><div style="font-size:22px;font-weight:900">' + r.price.toFixed(2) + '</div><div style="font-size:12px;color:var(--txt-m)">السعر الحالي</div></div>' +
         '</div>' +
+        (function () {
+          const cN = _snCount(r), cClr = cN >= 4 ? '#4ade80' : cN >= 3 ? '#38bdf8' : '#94a3b8';
+          const pips = [0, 1, 2, 3, 4].map(i => '<span style="width:10px;height:10px;border-radius:50%;background:' + (i < cN ? cClr : 'rgba(148,163,184,.22)') + '"></span>').join('');
+          return '<div style="display:flex;align-items:center;gap:9px;margin-bottom:11px"><span style="font-size:13px;color:var(--txt-m);font-weight:700">🧩 التوافق</span><span style="display:flex;gap:5px">' + pips + '</span><span style="font-size:14px;font-weight:900;color:' + cClr + '">' + cN + '/5</span></div>';
+        })() +
+        (function () {
+          let b = '';
+          const chip = (bg, bd, fg, txt) => '<span style="background:' + bg + ';border:1px solid ' + bd + ';color:' + fg + ';border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;white-space:nowrap">' + txt + '</span>';
+          if (r.elTrig) {
+            if (r.elTrig.dir === 'bull') b += chip('rgba(34,197,94,.14)', 'rgba(34,197,94,.4)', '#4ade80', '🕯️ زناد صعودي: ' + r.elTrig.name + (r.elTrig.strong ? ' 💪' : ''));
+            else b += chip('rgba(248,113,113,.12)', 'rgba(248,113,113,.4)', '#f87171', '⚠️ زناد هبوطي: ' + r.elTrig.name);
+          }
+          if (r.elHarm) {
+            if (r.elHarm.dir === 'bull') b += chip('rgba(168,85,247,.15)', 'rgba(168,85,247,.45)', '#c084fc', '🦋 هرمونيك: ' + r.elHarm.name);
+            else b += chip('rgba(248,113,113,.12)', 'rgba(248,113,113,.4)', '#f87171', '🦋 هرمونيك هبوطي: ' + r.elHarm.name);
+          }
+          if (r.elConfl) b += chip('rgba(250,204,21,.13)', 'rgba(250,204,21,.4)', '#facc15', '🔢 مربع 9');
+          if (r.elZone && r.elZone.inDemand) b += chip('rgba(56,189,248,.14)', 'rgba(56,189,248,.4)', '#38bdf8', '📦 داخل منطقة طلب');
+          else if (r.elZone && r.elZone.inSupply) b += chip('rgba(245,158,11,.14)', 'rgba(245,158,11,.4)', '#fbbf24', '📦 قرب منطقة عرض');
+          if (r.elTime) {
+            const bn = r.elTime.barsFromNow, q = r.elTime.quality;
+            if (bn <= 1 && bn >= -2) b += chip('rgba(34,197,94,.16)', 'rgba(34,197,94,.5)', '#4ade80', '🕐 نافذة زمنية نشطة الآن' + (q !== 'منخفضة' ? ' · جودة ' + q : ''));
+            else if (bn > 1 && bn <= 12) b += chip('rgba(56,189,248,.13)', 'rgba(56,189,248,.4)', '#38bdf8', '🕐 نافذة بعد ~' + bn + ' يوم تداول · ' + _snDateAfter(bn));
+            else if (bn > 12) b += chip('rgba(148,163,184,.12)', 'rgba(148,163,184,.35)', '#94a3b8', '🕐 نافذة بعيدة ~' + bn + ' يوم');
+            else b += chip('rgba(148,163,184,.12)', 'rgba(148,163,184,.35)', '#94a3b8', '🕐 نافذة سابقة — راقب انعكاساً');
+          }
+          return b ? '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">' + b + '</div>' : '';
+        })() +
         _wrapIfLocked('sniper',
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">' +
           '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">🎯 دخول قرب</div><div style="font-size:18px;font-weight:900;color:#4ade80">' + p.entry + '</div></div>' +
@@ -9242,7 +9425,7 @@ document.addEventListener('keydown', e => {
           '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">⚖️ ع/م</div><div style="font-size:18px;font-weight:900;color:' + rrClr + '">' + p.rr + '</div></div>' +
         '</div>') + '</div>';
     }).join('') +
-      '<div style="font-size:12.5px;color:var(--txt-m);text-align:center;padding:12px;line-height:1.9">📋 خطط تعليمية من إليوت — انتظر <b>تأكيد الارتداد قرب الدخول</b>، ونفّذ بوقف خسارة. ليست نصيحة استثمارية.</div>';
+      '<div style="font-size:12.5px;color:var(--txt-m);text-align:center;padding:12px;line-height:1.9">🧩 <b>مقياس التوافق (من 5):</b> إليوت + مربع 9 + هرمونيك + عرض/طلب + زناد الشموع (بُعد «أين»). و<b>🕐 النافذة الزمنية</b> تُسقط موعد الانعكاس من إيقاع الأيام (بُعد «متى») — تقريبية بجودة معلنة. الهرمونيك والمناطق تقريبية والزناد دقيق. ليست نصيحة استثمارية — نفّذ بوقف خسارة عند تأكيد الارتداد.</div>';
   }
   window.sniperRender = sniperRender;
   window.predScanAll = predScanAll;
@@ -10983,12 +11166,12 @@ window.elliottShowBacktest = async function (sym, name) {
 function marketStockAnalysis(sym, name) {
   const r = rows.find(r => r.sym === sym);
   if (!r) return;
-  /* 🌊 إسقاط موجات إليوت من شموع القاعدة (أو الكاش اليومي) — تلقائي */
-  let _elliottHTML = '';
+  /* 🌊 إسقاط موجات إليوت — يُحسب من التاريخ الكامل (القاعدة) بعد فتح النافذة مباشرةً،
+     لتفادي اتجاه خاطئ ناتج عن كاش يومي قصير (كان يظهر «هابط» ثم يصحّح لـ«صاعد»). */
+  let _ser = null;
   try {
-    let _ser = (typeof histDailyRawCache !== 'undefined' && histDailyRawCache[sym]) ? histDailyRawCache[sym]
-             : (typeof histAllDailyCache !== 'undefined' && histAllDailyCache && histAllDailyCache.bySymbol) ? histAllDailyCache.bySymbol[sym] : null;
-    if (_ser) { const _er = elliottCompute(_ser, toNum(r.price)); if (_er) _elliottHTML = elliottHTML(_er); }
+    _ser = (typeof histDailyRawCache !== 'undefined' && histDailyRawCache[sym]) ? histDailyRawCache[sym]
+         : (typeof histAllDailyCache !== 'undefined' && histAllDailyCache && histAllDailyCache.bySymbol) ? histAllDailyCache.bySymbol[sym] : null;
   } catch (e) {}
 
   const price = toNum(r.price);
@@ -11126,8 +11309,8 @@ function marketStockAnalysis(sym, name) {
         ${_wrapIfLocked(_currentTabKey(), histQuickBlockHTML(sym, overlayId))}
       </div>
 
-      ${_elliottHTML ? _wrapIfLocked(_currentTabKey(), _elliottHTML) : ''}
-      ${(_elliottHTML && ((typeof isAdmin === 'function' && isAdmin()) || (typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.see_backtest))) ? `<button onclick="event.stopPropagation();elliottShowBacktest('${sym}','${(name || '').replace(/'/g, "\\'")}')" style="width:100%;margin-bottom:16px;background:linear-gradient(135deg,#0e7490,#0891b2);border:none;color:#fff;border-radius:10px;padding:11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">🧪 اختبار إليوت على الماضي (تقرير النجاح/الفشل)</button>` : ''}
+      <div id="elliottBox-${overlayId}">${_ser ? '<div style="text-align:center;padding:18px;color:var(--txt-m);font-size:12px">⏳ جارٍ حساب موجات إليوت من التاريخ الكامل…</div>' : ''}</div>
+      ${(_ser && ((typeof isAdmin === 'function' && isAdmin()) || (typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.see_backtest))) ? `<button onclick="event.stopPropagation();elliottShowBacktest('${sym}','${(name || '').replace(/'/g, "\\'")}')" style="width:100%;margin-bottom:16px;background:linear-gradient(135deg,#0e7490,#0891b2);border:none;color:#fff;border-radius:10px;padding:11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">🧪 اختبار إليوت على الماضي (تقرير النجاح/الفشل)</button>` : ''}
 
       <div style="display:flex;gap:10px">
         <button onclick="closeMarketAnalysis('${overlayId}');histOpen('${sym}','${name.replace(/'/g,"\\'")}')" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-weight:600;cursor:pointer">📅 عرض الجدول الكامل</button>
@@ -11141,6 +11324,18 @@ function marketStockAnalysis(sym, name) {
     overlay.style.opacity = '1';
     overlay.querySelector('.market-analysis-modal').style.transform = 'scale(1)';
   }, 10);
+
+  /* 🌊 احسب إليوت من التاريخ الكامل (سنوات من القاعدة) وحدّث الصندوق — يمنع ظهور اتجاه خاطئ من كاش قصير */
+  (async function () {
+    let ser = null;
+    try { if (typeof histDbLoad === 'function') { const dbc = await histDbLoad(sym, 40); if (dbc && dbc.length >= 30) ser = dbc; } } catch (e) {}
+    if (!ser || ser.length < 30) ser = _ser;      // احتياطي: الكاش القصير إن تعذّر التاريخ الكامل
+    const box = document.getElementById('elliottBox-' + overlayId);
+    if (!box) return;                              // أُغلقت النافذة
+    let html = '';
+    try { if (ser && ser.length >= 20) { const er = elliottCompute(ser, toNum(r.price)); if (er) html = elliottHTML(er); } } catch (e) {}
+    box.innerHTML = html ? _wrapIfLocked(_currentTabKey(), html) : '';
+  })();
 }
 
 function closeMarketAnalysis(id) {

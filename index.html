@@ -1620,7 +1620,7 @@ canvas#mdChart{display:block;width:100% !important}
       <input id="tgChatInp" dir="ltr" placeholder="-1003888432660" style="width:100%;box-sizing:border-box;margin-bottom:6px;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font-family:monospace;font-size:13px;text-align:left">
       <button onclick="tgFetchChatId()" style="width:100%;margin-bottom:10px;padding:9px;border-radius:8px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.12);color:#38bdf8;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px">🔍 جلب المعرّف تلقائياً (بعد إرسال رسالة للبوت)</button>
       <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="tgAutoInp"> إرسال تلقائي بعد كل مسح عند وجود فرصة ذهبية</label>
-      <div style="font-size:11px;color:#4ade80;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px;margin-bottom:10px;line-height:1.7">🎯 <b>تتبّع الصفقات مفعّل تلقائياً:</b> أي سهم تضيفه لـ«المراقبة» يُثبَّت بخطته، وتصلك رسالة تلجرام عند تحقّق كل هدف أو ضرب الوقف.</div>
+      <div style="font-size:11px;color:#4ade80;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px;margin-bottom:10px;line-height:1.7">🎯 <b>تتبّع الصفقات 24/7:</b> أي سهم تضيفه لـ«المراقبة» يُثبَّت بخطته ويُرفع للخادم، فيفحص أثناء التداول ويرسل لك تلجرام عند تحقّق هدف أو ضرب وقف — <b>حتى والتطبيق مغلق</b> (يتطلّب نشر دالة الخادم وجدولتها).</div>
       <div style="display:flex;gap:8px">
         <button onclick="tgSaveSettings()" style="flex:1;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#166534,#22c55e);color:#fff;font-weight:800;cursor:pointer;font-family:inherit">💾 حفظ</button>
         <button onclick="tgTest()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font-weight:800;cursor:pointer;font-family:inherit">🔔 اختبار</button>
@@ -1998,8 +1998,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-18-v160';
-console.log('%c[تداول بلس] البناء: 2026-07-18-v160 — 🎯 تتبّع صفقات المراقبة: أي سهم تضيفه يُثبَّت بخطته (دخول/وقف/هدف1/2/نهائي)، وتصلك رسالة تلجرام فور تحقّق هدف أو ضرب وقف — لقياس نتائج التحليل', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-18-v161';
+console.log('%c[تداول بلس] البناء: 2026-07-18-v161 — 🌐 تتبّع صفقات 24/7 (خادمي): التطبيق يزامن صفقات المراقبة لجدول tracked_trades، ودالة الخادم track-trades تفحص الأسعار وتُنبّه تلجرام حتى والتطبيق مغلق', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -9738,41 +9738,38 @@ document.addEventListener('keydown', e => {
     const pr = PRED_RESULTS.find(x => x.sym === sym); if (pr && toNum(pr.price)) return toNum(pr.price);
     return null;
   }
-  /* 🎯 متتبّع صفقات المراقبة: يثبّت خطة كل سهم مُضاف ويُنبّه على تلجرام عند تحقّق هدف أو ضرب وقف */
-  function watchTrackCheck() {
+  /* 🎯 مُزامِن صفقات المراقبة → جدول tracked_trades: يثبّت خطة كل سهم مُضاف (بحالة أولية تمنع
+     التنبيهات الكاذبة)، ويحذف ما خرج من المراقبة. الفحص والتنبيه يتمّان على الخادم (24/7). */
+  async function watchTrackSync() {
     if (!(typeof isSuperAdmin === 'function' && isSuperAdmin())) return;
-    if (!localStorage.getItem('tg_bot_token') || !localStorage.getItem('tg_chat_id')) return;   // تلجرام غير مضبوط
-    if (typeof watchlist === 'undefined' || !Array.isArray(watchlist) || !watchlist.length) return;
-    let store; try { store = JSON.parse(localStorage.getItem('tg_trades') || '{}'); } catch (e) { store = {}; }
-    const syms = new Set(watchlist.map(w => w.sym));
-    Object.keys(store).forEach(k => { if (!syms.has(k)) delete store[k]; });   // نظّف المحذوف من المراقبة
+    if (typeof sb === 'undefined' || !sb) return;
+    const chat = (localStorage.getItem('tg_chat_id') || '').trim();
+    if (!chat) return;                                        // تلجرام غير مضبوط
+    if (typeof watchlist === 'undefined' || !Array.isArray(watchlist)) return;
+    const syms = watchlist.map(w => w.sym).filter(Boolean);
+    const trades = [];
     watchlist.forEach(w => {
-      const price = _livePriceOf(w.sym);
-      if (!store[w.sym]) {
-        const r = PRED_RESULTS.find(x => x.sym === w.sym);
-        const plan = r && r.elPlan;
-        if (!plan || !plan.rr || !price) return;   // لا خطة/سعر → لا تتبّع
-        const t1 = +(plan.entry + 0.382 * (plan.target - plan.entry)).toFixed(2);
-        const t2 = +(plan.entry + 0.618 * (plan.target - plan.entry)).toFixed(2);
-        /* ثبّت الخطة، وعلّم ما تحقّق مسبقاً بلا إرسال (ننبّه للعبور المستقبلي فقط) */
-        store[w.sym] = {
-          name: w.name || r.name || w.sym, entry: plan.entry, stop: plan.stop, t1: t1, t2: t2, target: plan.target,
-          hit: { t1: price >= t1, t2: price >= t2, final: price >= plan.target, stop: price <= plan.stop }, at: Date.now()
-        };
-        return;   // لا تنبيه لحظة الالتقاط
-      }
-      if (!price) return;
-      const tr = store[w.sym], name = tr.name || w.sym;
-      const pct = v => (v - tr.entry) / tr.entry * 100;
-      const send = t => { try { tgSend(t); } catch (e) {} };
-      if (!tr.hit.stop && price <= tr.stop) { tr.hit.stop = true; send('🛑 <b>' + name + '</b> (' + w.sym + ')\nضرب وقف الخسارة عند ' + tr.stop + ' — الخطة لم تنجح ❌\nالسعر الآن: ' + price.toFixed(2)); }
-      if (!tr.hit.t1 && price >= tr.t1) { tr.hit.t1 = true; send('🎯 <b>' + name + '</b> (' + w.sym + ')\nتحقّق الهدف الأول ' + tr.t1 + ' ✅ (+' + pct(tr.t1).toFixed(1) + '% من الدخول)\nالسعر الآن: ' + price.toFixed(2)); }
-      if (!tr.hit.t2 && price >= tr.t2) { tr.hit.t2 = true; send('🎯 <b>' + name + '</b> (' + w.sym + ')\nتحقّق الهدف الثاني ' + tr.t2 + ' ✅ (+' + pct(tr.t2).toFixed(1) + '%)\nالسعر الآن: ' + price.toFixed(2)); }
-      if (!tr.hit.final && price >= tr.target) { tr.hit.final = true; send('🏁 <b>' + name + '</b> (' + w.sym + ')\nتحقّق الهدف النهائي ' + tr.target + ' 🎉 — الصفقة مكتملة!\nالسعر الآن: ' + price.toFixed(2)); }
+      const r = PRED_RESULTS.find(x => x.sym === w.sym);
+      const plan = r && r.elPlan;
+      if (!plan || !plan.rr) return;
+      const t1 = +(plan.entry + 0.382 * (plan.target - plan.entry)).toFixed(2);
+      const t2 = +(plan.entry + 0.618 * (plan.target - plan.entry)).toFixed(2);
+      const price = _livePriceOf(w.sym) || plan.entry;
+      trades.push({
+        sym: w.sym, name: w.name || r.name || w.sym, entry: plan.entry, stop: plan.stop,
+        t1: t1, t2: t2, target: plan.target, chat_id: chat,
+        hit: { t1: price >= t1, t2: price >= t2, final: price >= plan.target, stop: price <= plan.stop }   // حالة أولية
+      });
     });
-    try { localStorage.setItem('tg_trades', JSON.stringify(store)); } catch (e) {}
+    try {
+      /* أدرِج الجديد فقط (لا تلمس الموجود لتبقى الخطة والحالة مثبّتتين) */
+      if (trades.length) await sb.from('tracked_trades').upsert(trades, { onConflict: 'sym', ignoreDuplicates: true });
+      /* احذف ما لم يعد في المراقبة (الرموز أرقام، فالصيغة آمنة) */
+      if (syms.length) await sb.from('tracked_trades').delete().not('sym', 'in', '(' + syms.join(',') + ')');
+      else await sb.from('tracked_trades').delete().neq('sym', '__none__');
+    } catch (e) { console.warn('[track] مزامنة الصفقات تعذّرت:', e && e.message); }
   }
-  window.watchTrackCheck = watchTrackCheck;
+  window.watchTrackSync = watchTrackSync;
   /* 🔒 قفل إعدادات تلجرام برقم سرّي (يُحفظ مجزّأً على الجهاز) */
   function _tgHash(s) { let h = 0; s = String(s); for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; } return 'h' + h; }
   /* نافذة إدخال أنيقة (بديل prompt) — تُرجع Promise بالقيمة أو null */
@@ -10777,9 +10774,9 @@ function _autoPriceRefresh() {
   } catch (e) { /* تجاهل */ }
 }
 setInterval(_autoPriceRefresh, 60 * 1000);
-/* 🎯 تتبّع صفقات المراقبة والتنبيه على تلجرام — كل 60 ثانية + مرة بعد التحميل */
-setInterval(() => { try { if (typeof window.watchTrackCheck === 'function') window.watchTrackCheck(); } catch (e) {} }, 60 * 1000);
-setTimeout(() => { try { if (typeof window.watchTrackCheck === 'function') window.watchTrackCheck(); } catch (e) {} }, 8000);
+/* 🎯 مزامنة صفقات المراقبة لقاعدة البيانات (الخادم يفحص ويُنبّه 24/7) — كل دقيقتين + مرة بعد التحميل */
+setInterval(() => { try { if (typeof window.watchTrackSync === 'function') window.watchTrackSync(); } catch (e) {} }, 120 * 1000);
+setTimeout(() => { try { if (typeof window.watchTrackSync === 'function') window.watchTrackSync(); } catch (e) {} }, 9000);
 
 /* 🕒 ساعة حيّة تدقّ كل ثانية (توقيت الرياض) — وقت الأسعار المتأخرة أثناء التداول */
 function _tickClock() {

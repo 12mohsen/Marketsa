@@ -1978,7 +1978,7 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-console.log('%c[تداول بلس] البناء: 2026-07-18-v140 — 🐛 إصلاح: نافذة تفاصيل السهم تحسب إليوت من التاريخ الكامل تلقائياً فور الفتح (لا يظهر «هابط» خاطئ ثم يصحّح بعد «الجدول الكامل») · النافذة الزمنية', 'color:#7c3aed;font-weight:bold;font-size:14px');
+console.log('%c[تداول بلس] البناء: 2026-07-18-v142 — 📊 الدائرة الرقمية (قاعدة نصف المدى 50% + الأرباع، الجوهرة الصادقة من «علم الرقم»): انحياز الاتجاه + مستوى ربعي + الهدف التالي في القنّاص', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -8927,6 +8927,8 @@ document.addEventListener('keydown', e => {
               try { a.elZone = _zones(candles, a.price); } catch (e) {}
               try { a.elHarm = _harmonic(candles, a.price); } catch (e) {}
               try { a.elTime = _timeWindow(candles); } catch (e) {}
+              try { a.elGann = _gannLevels(candles, a.price); } catch (e) {}
+              try { a.elCircle = _digitalCircle(candles, a.price); } catch (e) {}
               PRED_RESULTS.push(a); ok++;
             }
           }
@@ -9336,6 +9338,66 @@ document.addEventListener('keydown', e => {
   }
   const _snTimeActive = r => !!(r.elTime && r.elTime.barsFromNow <= 1 && r.elTime.barsFromNow >= -2);
 
+  /* 🔢 مستوى جان الزاوي الدقيق (طريقة الجذر ± دلالة الزاوية من «كشف الأسرار»):
+     السعر → جذر تربيعي → ± (الدرجة/180) → تربيع → مستوى دعم/مقاومة عند 45/90/135/180/360. */
+  function _gannAngle(base, deg, up) {
+    const p0 = Math.abs(base); if (!p0) return null;
+    let scale = 1, p = p0;
+    while (p < 1000) { p *= 10; scale *= 10; }
+    while (p >= 100000) { p /= 10; scale /= 10; }
+    const sq = Math.sqrt(Math.round(p)), ind = deg / 180, r = up ? sq + ind : sq - ind;
+    if (r <= 0) return null;
+    return +((r * r) / scale).toFixed(2);
+  }
+  function _gannLevels(cds, price) {
+    if (!Array.isArray(cds) || cds.length < 25 || !price) return null;
+    const num = x => (typeof x === 'number' && isFinite(x)) ? x : null;
+    const vals = cds.map(c => num(c.c)).filter(v => v && v > 0);
+    if (vals.length < 25) return null;
+    const win = vals.slice(-Math.min(200, vals.length));
+    const zz = (v, pct) => {
+      const piv = []; let tr = 0, exV = v[0], exI = 0;
+      for (let i = 1; i < v.length; i++) {
+        const c = v[i];
+        if (tr >= 0) { if (c >= exV) { exV = c; exI = i; } else if (c <= exV * (1 - pct)) { piv.push({ p: exV, t: 'H' }); tr = -1; exV = c; exI = i; } }
+        else { if (c <= exV) { exV = c; exI = i; } else if (c >= exV * (1 + pct)) { piv.push({ p: exV, t: 'L' }); tr = 1; exV = c; exI = i; } }
+      }
+      piv.push({ p: exV, t: tr >= 0 ? 'H' : 'L' }); return piv;
+    };
+    let piv = []; for (const thr of [0.06, 0.045, 0.03]) { piv = zz(win, thr); if (piv.length >= 3) break; }
+    let lastLow = null, lastHigh = null;
+    for (let i = piv.length - 1; i >= 0; i--) { if (!lastLow && piv[i].t === 'L') lastLow = piv[i].p; if (!lastHigh && piv[i].t === 'H') lastHigh = piv[i].p; if (lastLow && lastHigh) break; }
+    if (!lastLow) lastLow = Math.min.apply(null, win);
+    if (!lastHigh) lastHigh = Math.max.apply(null, win);
+    const degs = [45, 90, 135, 180, 360], consider = [];
+    degs.forEach(d => { const v = _gannAngle(lastLow, d, true); if (v) consider.push({ deg: d, price: v, type: 'مقاومة' }); });
+    degs.forEach(d => { const v = _gannAngle(lastHigh, d, false); if (v && v > 0) consider.push({ deg: d, price: v, type: 'دعم' }); });
+    let near = null;
+    consider.forEach(x => { const err = Math.abs(x.price - price) / price; if (err <= 0.012 && (!near || err < near.err)) near = { deg: x.deg, price: x.price, type: x.type, err: +(err * 100).toFixed(1) }; });
+    const above = consider.filter(x => x.type === 'مقاومة' && x.price > price * 1.005).sort((a, b) => a.price - b.price)[0] || null;
+    return { near: near, nextRes: above ? { deg: above.deg, price: above.price } : null };
+  }
+
+  /* 📊 الدائرة الرقمية (الجوهرة الصادقة من «علم الرقم»: قاعدة نصف المدى 50% + الأرباع):
+     منتصف المدى يحدّد الانحياز (فوقه صاعد/تحته هابط)، والأرباع دعوم/مقاومات وأهداف. مبدأ جان أصيل. */
+  function _digitalCircle(cds, price) {
+    if (!Array.isArray(cds) || cds.length < 30 || !price) return null;
+    const num = x => (typeof x === 'number' && isFinite(x)) ? x : null;
+    const highs = cds.map(c => num(c.h) != null ? num(c.h) : num(c.c)).filter(v => v && v > 0);
+    const lows = cds.map(c => num(c.l) != null ? num(c.l) : num(c.c)).filter(v => v && v > 0);
+    if (highs.length < 30 || lows.length < 30) return null;
+    const win = Math.min(240, highs.length);
+    const H = Math.max.apply(null, highs.slice(-win)), L = Math.min.apply(null, lows.slice(-win));
+    if (!(H > L)) return null;
+    const rng = H - L, mid = L + rng * 0.5, q1 = L + rng * 0.25, q3 = L + rng * 0.75;
+    const bias = price >= mid ? 'صاعد' : 'هابط';
+    const next = price >= mid ? (price >= q3 ? H : q3) : (price <= q1 ? L : q1);
+    const levels = [{ n: 'ربع', v: q1 }, { n: 'نصف', v: mid }, { n: '¾', v: q3 }];
+    let near = null;
+    levels.forEach(lv => { const err = Math.abs(lv.v - price) / price; if (err <= 0.015 && (!near || err < near.err)) near = { n: lv.n, v: +lv.v.toFixed(2), err: err }; });
+    return { high: +H.toFixed(2), low: +L.toFixed(2), mid: +mid.toFixed(2), bias: bias, next: +next.toFixed(2), near: near ? { n: near.n, v: near.v } : null };
+  }
+
   /* 🎯 قنّاص الفرص: قائمة الأسهم ذات خطة دخول إليوت جاهزة، مرتّبة بالأقوى */
   async function sniperRender() {
     const wrap = document.getElementById('sniperList');
@@ -9351,11 +9413,11 @@ document.addEventListener('keydown', e => {
     let list = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
     /* 🧩 عنقود التوافق: كم مدرسة تتفق (إليوت + مربع9 + هرمونيك + عرض/طلب + زناد) من 5 */
     const _snParts = r => [
-      true,                                        // 🌊 إليوت (خطة دخول قائمة)
-      !!r.elConfl,                                 // 🔢 مربع التسعة
-      !!(r.elHarm && r.elHarm.dir === 'bull'),     // 🦋 الهرمونيك
-      !!(r.elZone && r.elZone.inDemand),           // 📦 العرض/الطلب
-      !!(r.elTrig && r.elTrig.dir === 'bull')      // 🕯️ الزناد
+      true,                                                       // 🌊 إليوت (خطة دخول قائمة)
+      !!(r.elConfl || (r.elGann && r.elGann.near)),               // 🔢 مربع التسعة / مستوى جان الزاوي الدقيق
+      !!(r.elHarm && r.elHarm.dir === 'bull'),                    // 🦋 الهرمونيك
+      !!(r.elZone && r.elZone.inDemand),                          // 📦 العرض/الطلب
+      !!(r.elTrig && r.elTrig.dir === 'bull')                     // 🕯️ الزناد
     ];
     const _snCount = r => _snParts(r).filter(Boolean).length;
     list.sort((a, b) => _snCount(b) - _snCount(a) ||
@@ -9405,7 +9467,14 @@ document.addEventListener('keydown', e => {
             if (r.elHarm.dir === 'bull') b += chip('rgba(168,85,247,.15)', 'rgba(168,85,247,.45)', '#c084fc', '🦋 هرمونيك: ' + r.elHarm.name);
             else b += chip('rgba(248,113,113,.12)', 'rgba(248,113,113,.4)', '#f87171', '🦋 هرمونيك هبوطي: ' + r.elHarm.name);
           }
-          if (r.elConfl) b += chip('rgba(250,204,21,.13)', 'rgba(250,204,21,.4)', '#facc15', '🔢 مربع 9');
+          if (r.elGann && r.elGann.near) b += chip('rgba(250,204,21,.13)', 'rgba(250,204,21,.4)', '#facc15', '🔢 جان ' + r.elGann.near.deg + '° ' + r.elGann.near.type + ' @ ' + r.elGann.near.price);
+          else if (r.elConfl) b += chip('rgba(250,204,21,.13)', 'rgba(250,204,21,.4)', '#facc15', '🔢 مربع 9');
+          if (r.elGann && r.elGann.nextRes) b += chip('rgba(250,204,21,.08)', 'rgba(250,204,21,.28)', '#eab308', '⛰️ مقاومة جان ' + r.elGann.nextRes.deg + '° @ ' + r.elGann.nextRes.price);
+          if (r.elCircle) {
+            const up = r.elCircle.bias === 'صاعد';
+            b += chip(up ? 'rgba(34,197,94,.12)' : 'rgba(148,163,184,.12)', up ? 'rgba(34,197,94,.38)' : 'rgba(148,163,184,.35)', up ? '#4ade80' : '#94a3b8', '📊 انحياز ' + r.elCircle.bias + ' · منتصف المدى ' + r.elCircle.mid + ' · تالي ' + r.elCircle.next);
+            if (r.elCircle.near) b += chip('rgba(56,189,248,.1)', 'rgba(56,189,248,.32)', '#38bdf8', '📐 مستوى ' + r.elCircle.near.n + ' @ ' + r.elCircle.near.v);
+          }
           if (r.elZone && r.elZone.inDemand) b += chip('rgba(56,189,248,.14)', 'rgba(56,189,248,.4)', '#38bdf8', '📦 داخل منطقة طلب');
           else if (r.elZone && r.elZone.inSupply) b += chip('rgba(245,158,11,.14)', 'rgba(245,158,11,.4)', '#fbbf24', '📦 قرب منطقة عرض');
           if (r.elTime) {

@@ -1610,6 +1610,7 @@ canvas#mdChart{display:block;width:100% !important}
       <div style="font-size:14.5px;color:var(--txt-m);margin-top:6px;line-height:1.8">أسهم لها <b>خطة دخول جاهزة</b> من إليوت (دخول · وقف · هدف · مخاطرة‑عائد) مرتّبة بالأقوى — اختر توقيتك بلا بحث.</div>
       <button id="sniperRescanBtn" onclick="sniperRescan(this)" style="display:none;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">🔮 إعادة المسح وتحديث الفرص</button>
     </div>
+    <input id="sniperSearchInput" oninput="sniperSearch(this.value)" placeholder="🔍 ابحث باسم السهم أو رمزه…" style="width:100%;max-width:420px;margin:0 auto 14px;display:block;padding:11px 14px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;font-family:inherit;text-align:center;box-sizing:border-box">
     <div id="sniperList"></div>
   </div>
 </div>
@@ -1979,8 +1980,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-18-v145';
-console.log('%c[تداول بلس] البناء: 2026-07-18-v145 — 🌱 وسم «سهم حديث · تاريخ غير كافٍ» على الإدراجات الجديدة في القنّاص (تُدفَع لأسفل القائمة وتُنبَّه صراحةً) · مسح تلقائي · الدائرة الرقمية + جان', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-18-v148';
+console.log('%c[تداول بلس] البناء: 2026-07-18-v148 — 🎯 أهداف متدرّجة (هدف 1/2/نهائي بفيبوناتشي + نسبة لكل هدف) و⚖️ عائد/مخاطرة عند السعر الحالي بجانب المثالي في القنّاص — خطة واقعية بلا حساب يدوي', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -9362,6 +9363,18 @@ document.addEventListener('keydown', e => {
     return names[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
   }
   const _snTimeActive = r => !!(r.elTime && r.elTime.barsFromNow <= 1 && r.elTime.barsFromNow >= -2);
+  let SNIPER_SEARCH = '';
+  /* 🔤 تطبيع عربي للبحث: يوحّد الهمزات والتاء المربوطة والألف المقصورة، ويحذف التشكيل والشرطة والمسافات */
+  function _arNorm(s) {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/[ً-ْـ]/g, '')      // تشكيل + تطويل
+      .replace(/[أإآٱ]/g, 'ا')                     // كل الألفات الهمزية → ا
+      .replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/ء/g, '')
+      .replace(/ة/g, 'ه').replace(/ى/g, 'ي')
+      .replace(/[\s\-_.،,()\/\\]+/g, '');          // شرطة/مسافة/رموز
+  }
+  window.sniperSearch = function (v) { SNIPER_SEARCH = (v || '').trim(); try { sniperRender(); } catch (e) {} };
 
   /* 🔢 مستوى جان الزاوي الدقيق (طريقة الجذر ± دلالة الزاوية من «كشف الأسرار»):
      السعر → جذر تربيعي → ± (الدرجة/180) → تربيع → مستوى دعم/مقاومة عند 45/90/135/180/360. */
@@ -9439,6 +9452,10 @@ document.addEventListener('keydown', e => {
       }
     }
     let list = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
+    if (SNIPER_SEARCH) {
+      const q = _arNorm(SNIPER_SEARCH);
+      if (q) list = list.filter(r => _arNorm(r.sym).includes(q) || _arNorm(r.name).includes(q));
+    }
     /* 🧩 عنقود التوافق: كم مدرسة تتفق (إليوت + مربع9 + هرمونيك + عرض/طلب + زناد) من 5 */
     const _snParts = r => [
       true,                                                       // 🌊 إليوت (خطة دخول قائمة)
@@ -9456,6 +9473,12 @@ document.addEventListener('keydown', e => {
       ((_snTimeActive(b) ? 1 : 0) - (_snTimeActive(a) ? 1 : 0)) ||
       (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
     if (!list.length) {
+      if (SNIPER_SEARCH) {
+        wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)"><div style="font-size:36px;margin-bottom:10px">🔍</div>' +
+          '<div style="font-size:16px;font-weight:700;margin-bottom:6px">لا فرصة تطابق «' + SNIPER_SEARCH + '»</div>' +
+          '<div style="font-size:13px;line-height:1.9;max-width:520px;margin:0 auto">قد لا يكون لهذا السهم خطة دخول جاهزة حالياً. امسح الحقل لعرض كل الفرص.</div></div>';
+        return;
+      }
       wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)"><div style="font-size:40px;margin-bottom:12px">🎯</div>' +
         '<div style="font-size:17px;font-weight:700;margin-bottom:8px">لا فرص جاهزة الآن</div>' +
         '<div style="font-size:14px;line-height:2;max-width:560px;margin:0 auto">تظهر هنا الأسهم التي كوّنت خطة دخول إليوت (موجة 2→3 أو 4→5 في دورة صاعدة). افتح «رادار الانفجارات» واضغط «إعادة المسح» لتحديثها.</div></div>';
@@ -9474,6 +9497,14 @@ document.addEventListener('keydown', e => {
       const rankClr = rank === 1 ? '#facc15' : rank === 2 ? '#cbd5e1' : rank === 3 ? '#d8925a' : 'var(--txt-m)';
       const rrClr = p.rr >= 2 ? '#4ade80' : '#fbbf24';
       const confClr = r.elConf >= 60 ? '#4ade80' : r.elConf >= 40 ? '#fbbf24' : '#f87171';
+      /* 🎯 أهداف متدرّجة (فيبوناتشي على مسافة الدخول→الهدف) + نسبة ع/م عند السعر الحالي */
+      const _cur = r.price;
+      const _t1 = +(p.entry + 0.382 * (p.target - p.entry)).toFixed(2);
+      const _t2 = +(p.entry + 0.618 * (p.target - p.entry)).toFixed(2);
+      const _rrNow = (_cur > p.stop) ? +((p.target - _cur) / (_cur - p.stop)).toFixed(1) : null;
+      const _rrNowClr = _rrNow == null ? '#94a3b8' : _rrNow >= 2 ? '#4ade80' : _rrNow >= 1 ? '#fbbf24' : '#f87171';
+      const _pctTxt = v => (_cur ? ((v - _cur) / _cur * 100 >= 0 ? '+' : '') + ((v - _cur) / _cur * 100).toFixed(1) + '%' : '');
+      const _tgtBox = (lbl, v) => '<div style="background:var(--surf);border-radius:10px;padding:9px 6px"><div style="font-size:11px;color:var(--txt-m);margin-bottom:2px">' + lbl + '</div><div style="font-size:16px;font-weight:900;color:#38bdf8">' + v + '</div><div style="font-size:10px;color:#38bdf8">' + _pctTxt(v) + '</div></div>';
       return '<div onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
           '<div style="display:flex;align-items:center;gap:11px">' +
@@ -9519,12 +9550,19 @@ document.addEventListener('keydown', e => {
           return b ? '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">' + b + '</div>' : '';
         })() +
         _wrapIfLocked('sniper',
-        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;margin-bottom:8px">' +
           '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">🎯 دخول قرب</div><div style="font-size:18px;font-weight:900;color:#4ade80">' + p.entry + '</div></div>' +
           '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">🛑 وقف</div><div style="font-size:18px;font-weight:900;color:#f87171">' + p.stop + '</div></div>' +
-          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">🏁 هدف</div><div style="font-size:18px;font-weight:900;color:#38bdf8">' + p.target + '</div></div>' +
-          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:11.5px;color:var(--txt-m);margin-bottom:3px">⚖️ ع/م</div><div style="font-size:18px;font-weight:900;color:' + rrClr + '">' + p.rr + '</div></div>' +
-        '</div>') + '</div>';
+          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:10.5px;color:var(--txt-m);margin-bottom:3px">⚖️ ع/م مثالي</div><div style="font-size:18px;font-weight:900;color:' + rrClr + '">' + p.rr + '</div></div>' +
+          '<div style="background:var(--surf);border-radius:10px;padding:10px 6px"><div style="font-size:10.5px;color:var(--txt-m);margin-bottom:3px">⚖️ ع/م حالي</div><div style="font-size:18px;font-weight:900;color:' + _rrNowClr + '">' + (_rrNow != null ? _rrNow : '—') + '</div></div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">' +
+          _tgtBox('🎯 هدف 1', _t1) +
+          _tgtBox('🎯 هدف 2', _t2) +
+          _tgtBox('🏁 هدف نهائي', p.target) +
+        '</div>' +
+        '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;margin-top:8px;line-height:1.7"><b>ع/م المثالي</b> عند الدخول 🎯' + p.entry + ' · <b>الحالي</b> من سعر اليوم. الأهداف متدرّجة — <b>جزّئ أرباحك</b> عند كل هدف.</div>') +
+        '</div>';
     }).join('') +
       '<div style="font-size:12.5px;color:var(--txt-m);text-align:center;padding:12px;line-height:1.9">🧩 <b>مقياس التوافق (من 5):</b> إليوت + مربع 9 + هرمونيك + عرض/طلب + زناد الشموع (بُعد «أين»). و<b>🕐 النافذة الزمنية</b> تُسقط موعد الانعكاس من إيقاع الأيام (بُعد «متى») — تقريبية بجودة معلنة. الهرمونيك والمناطق تقريبية والزناد دقيق. ليست نصيحة استثمارية — نفّذ بوقف خسارة عند تأكيد الارتداد.</div>';
     /* ⚙️ ترقية تلقائية بلا زر: لو البيانات بإصدار قديم يمسح الأدمن ويرفع للجميع في الخلفية */

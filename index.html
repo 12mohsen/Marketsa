@@ -1619,6 +1619,8 @@ canvas#mdChart{display:block;width:100% !important}
       <div style="font-size:11.5px;color:#38bdf8;font-weight:700;margin-bottom:4px">② معرّف المجموعة Chat ID (يبدأ بـ -100) :</div>
       <input id="tgChatInp" dir="ltr" placeholder="-1003888432660" style="width:100%;box-sizing:border-box;margin-bottom:6px;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font-family:monospace;font-size:13px;text-align:left">
       <button onclick="tgFetchChatId()" style="width:100%;margin-bottom:10px;padding:9px;border-radius:8px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.12);color:#38bdf8;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px">🔍 جلب المعرّف تلقائياً (بعد إرسال رسالة للبوت)</button>
+      <div style="font-size:11.5px;color:#c084fc;font-weight:700;margin-bottom:4px">③ 💎 قناة الفرص الذهبية (اختياري — تُرسَل إليها وحدها) :</div>
+      <input id="tgGoldenInp" dir="ltr" placeholder="-1001234567890 (اتركه فارغاً ليذهب للمعرّف ②)" style="width:100%;box-sizing:border-box;margin-bottom:10px;padding:10px;border-radius:8px;border:1px solid rgba(168,85,247,.35);background:var(--surf);color:var(--txt);font-family:monospace;font-size:13px;text-align:left">
       <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="tgAutoInp"> إرسال تلقائي بعد كل مسح عند وجود فرصة ذهبية</label>
       <div style="font-size:11px;color:#4ade80;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px;margin-bottom:10px;line-height:1.7">🎯 <b>تتبّع الصفقات 24/7:</b> أي سهم تضيفه لـ«المراقبة» يُثبَّت بخطته ويُرفع للخادم، فيفحص أثناء التداول ويرسل لك تلجرام عند تحقّق هدف أو ضرب وقف — <b>حتى والتطبيق مغلق</b> (يتطلّب نشر دالة الخادم وجدولتها).</div>
       <div style="display:flex;gap:8px">
@@ -1998,8 +2000,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-18-v175';
-console.log('%c[تداول بلس] البناء: 2026-07-18-v175 — 👑 رسالة التعديل تذكر مَن نفّذه (أدمن/مشرف + بريده) وعلى مَن، مع ما تغيّر فقط — ومعها إصلاح تكرار رسائل notify-new-users', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-18-v180';
+console.log('%c[تداول بلس] البناء: 2026-07-18-v180 — 🧠 جلب المعرّف صار ذكياً: يسرد كل المحادثات بأسمائها ولا يستبدل حقلاً ممتلئاً (يملأ الفارغ المناسب) · اختبار الوجهتين', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -5670,28 +5672,47 @@ async function adminSaveUser() {
       const nm = k => { const d = ADMIN_TAB_DEFS.find(t => t.k === k); return d ? d.t : k; };
       const diffs = rows.map(r => {
         const old = _admRestr[r.email] || {};
+        const bits = [];
+        /* 🧩 الأقسام المتاحة */
         const pH = old.hidden_tabs || [], nH = r.hidden_tabs || [];
-        return {
-          email: r.email,
-          opened: pH.filter(k => nH.indexOf(k) < 0).map(nm),
-          closed: nH.filter(k => pH.indexOf(k) < 0).map(nm),
-          blockChg: (!!old.blocked !== !!r.blocked) ? (r.blocked ? '⛔ أُوقف الحساب' : '✅ رُفع الإيقاف') : '',
-        };
-      }).filter(d => d.opened.length || d.closed.length || d.blockChg);
+        const opened = pH.filter(k => nH.indexOf(k) < 0).map(nm);
+        const closed = nH.filter(k => pH.indexOf(k) < 0).map(nm);
+        if (opened.length) bits.push('✅ فُتح: ' + opened.join(' · '));
+        if (closed.length) bits.push('🚫 أُغلق: ' + closed.join(' · '));
+        if (!!old.blocked !== !!r.blocked) bits.push(r.blocked ? '⛔ أُوقف الحساب' : '✅ رُفع الإيقاف');
+        if (!!old.sub_exempt !== !!r.sub_exempt) bits.push(r.sub_exempt ? '🛡️ أُعفي من الاشتراك' : '🛡️ أُلغي الإعفاء');
+        /* 💳🌫️🪟🎯 لكل قسم: الاشتراك · الضبابي · المنبثقات · قفل الأهداف
+           نقرأ السابق عبر _secSubRaw (نفس ما يستخدمه التطبيق) لتوافق الصيغ القديمة */
+        try {
+          const nS = r.subs || {};
+          (typeof SUB_SECTION_DEFS !== 'undefined' ? SUB_SECTION_DEFS : []).forEach(d => {
+            const po = ((typeof _secSubRaw === 'function') ? _secSubRaw(old, d.k) : ((old.subs || {})[d.k])) || {};
+            const cu = nS[d.k] || {};
+            const pPlan = po.plan || 'free', cPlan = cu.plan || 'free';
+            if (pPlan !== cPlan) bits.push((cPlan === 'paid' ? '💳 فُعّل اشتراك: ' : '🆓 أُلغي الاشتراك: ') + d.t);
+            else if (cPlan === 'paid' && Number(po.days || 0) !== Number(cu.days || 0))
+              bits.push('📅 مدة اشتراك ' + d.t + ': ' + (cu.days || 0) + ' يوم');
+            if (!!po.blur !== !!cu.blur) bits.push((cu.blur ? '🌫️ ضبابي: ' : '👁️ واضح: ') + d.t);
+            if (!!po.no_popups !== !!cu.no_popups) bits.push((cu.no_popups ? '🪟 مُنعت المنبثقات: ' : '🪟 سُمحت المنبثقات: ') + d.t);
+            if ((po.lock_targets || null) !== (cu.lock_targets || null))
+              bits.push('🎯 الأهداف (' + d.t + '): ' + (cu.lock_targets === 'lock' ? 'مقفلة' : cu.lock_targets === 'open' ? 'مفتوحة' : 'تلقائي'));
+          });
+        } catch (e) {}
+        return { email: r.email, bits: bits.slice(0, 12) };
+      }).filter(d => d.bits.length);
       if (diffs.length) {
         /* 👑/🛡️ مَن نفّذ التعديل — أدمن رئيسي أم مشرف، وبريده */
         const _who = (typeof sbUser !== 'undefined' && sbUser && sbUser.email) ? sbUser.email : '—';
         const _role = (typeof isSuperAdmin === 'function' && isSuperAdmin()) ? '👑 أدمن' : '🛡️ مشرف';
         const head = _role + ': ' + _who + '\n';
-        const line = d => (d.opened.length ? '\n✅ فُتح: ' + d.opened.join(' · ') : '') +
-                          (d.closed.length ? '\n🚫 أُغلق: ' + d.closed.join(' · ') : '') +
-                          (d.blockChg ? '\n' + d.blockChg : '');
         if (diffs.length === 1) {
-          window.tgNotify('⚙️ <b>تعديل صلاحيات</b>\n' + head + '🎯 على: ' + diffs[0].email + line(diffs[0]));
+          window.tgNotify('⚙️ <b>تعديل مستخدم</b>\n' + head + '🎯 على: ' + diffs[0].email + '\n' + diffs[0].bits.join('\n'));
         } else {
-          window.tgNotify('⚙️ <b>تعديل صلاحيات جماعي</b>\n' + head + '👥 ' + diffs.length + ' مستخدم' + line(diffs[0]) +
+          window.tgNotify('⚙️ <b>تعديل جماعي</b>\n' + head + '👥 ' + diffs.length + ' مستخدم\n' + diffs[0].bits.join('\n') +
             '\n\n' + diffs.slice(0, 8).map(d => '• ' + d.email).join('\n') + (diffs.length > 8 ? '\n…' : ''));
         }
+      } else {
+        console.info('[tg] لم يتغيّر شيء فعلياً — لم تُرسل رسالة (هذا سلوك مقصود)');
       }
     }
   } catch (e) {}
@@ -9886,9 +9907,9 @@ document.addEventListener('keydown', e => {
     }
     return null;
   }
-  async function tgSend(text) {
+  async function tgSend(text, chatOverride) {
     const token = (localStorage.getItem('tg_bot_token') || '').trim();
-    const chat = (localStorage.getItem('tg_chat_id') || '').trim();
+    const chat = ((chatOverride || localStorage.getItem('tg_chat_id') || '') + '').trim();
     if (!token || !chat) return { ok: false, err: 'اضبط التوكن وChat ID أولاً' };
     const url = 'https://api.telegram.org/bot' + token + '/sendMessage?chat_id=' + encodeURIComponent(chat) +
       '&parse_mode=HTML&disable_web_page_preview=true&text=' + encodeURIComponent(text);
@@ -9911,7 +9932,8 @@ document.addEventListener('keydown', e => {
     }).join('\n');
     const msg = '💎 <b>فرص ذهبية — تداول بلس</b>\nاكتملت الشروط في ' + gold.length + ' سهم:\n\n' + lines +
       '\n\n⚠️ تعليمي لا نصيحة استثمارية — التزم وقف الخسارة.';
-    const res = await tgSend(msg);
+    /* 💎 الفرص الذهبية تذهب لقناتها المخصّصة إن ضُبطت، وإلا للمعرّف الأساسي */
+    const res = await tgSend(msg, (localStorage.getItem('tg_golden_chat') || '').trim());
     if (res.ok) localStorage.setItem('tg_last_golden', key);
     else console.warn('[tg] فشل تنبيه تلجرام:', res.err);
   }
@@ -10044,6 +10066,9 @@ document.addEventListener('keydown', e => {
     localStorage.setItem('tg_bot_token', token);
     localStorage.setItem('tg_chat_id', chat);
     localStorage.setItem('tg_auto', a ? '1' : '0');
+    /* 💎 قناة الفرص الذهبية (اختيارية) */
+    const gEl = document.getElementById('tgGoldenInp');
+    if (gEl) localStorage.setItem('tg_golden_chat', (gEl.value || '').trim());
     /* أعد ترتيب الحقول للعرض الصحيح تلقائياً */
     const ti = document.getElementById('tgTokenInp'); if (ti) ti.value = token;
     const ci = document.getElementById('tgChatInp'); if (ci) ci.value = chat;
@@ -10066,8 +10091,20 @@ document.addEventListener('keydown', e => {
         if (c && c.id != null && !ids.find(x => x.id === c.id)) ids.push({ id: c.id, name: c.title || c.first_name || c.username || '' });
       });
       if (!ids.length) { if (s) { s.style.color = '#fbbf24'; s.textContent = '⚠️ لا رسائل بعد — أرسل رسالة لبوتك (أو انشر في قناتك بعد جعله مشرفاً) ثم أعد المحاولة'; } return; }
-      const inp = document.getElementById('tgChatInp'); if (inp) inp.value = ids[ids.length - 1].id;   // عبّئ آخر محادثة
-      if (s) { s.style.color = '#4ade80'; s.textContent = '✅ وُجد: ' + ids.map(x => x.id + (x.name ? ' (' + x.name + ')' : '')).join(' · ') + ' — عبّأتُ الأخير، اضغط حفظ'; }
+      /* 🧠 تعبئة ذكية: لا تستبدل ما هو ممتلئ — املأ الحقل الفارغ المناسب */
+      const inp2 = document.getElementById('tgChatInp');
+      const inp3 = document.getElementById('tgGoldenInp');
+      const newest = ids[ids.length - 1].id;
+      let where;
+      if (inp2 && !(inp2.value || '').trim()) { inp2.value = newest; where = '→ عبّأتُ الحقل ② (الإدارة)'; }
+      else if (inp3 && !(inp3.value || '').trim()) { inp3.value = newest; where = '→ عبّأتُ الحقل ③ (القناة)'; }
+      else where = '→ الحقلان ممتلئان: انسخ المعرّف المطلوب يدوياً';
+      if (s) {
+        s.style.color = '#4ade80';
+        s.innerHTML = '✅ المحادثات الموجودة:<br>' +
+          ids.map(x => '<span style="direction:ltr;display:inline-block">' + x.id + '</span>' + (x.name ? ' — ' + x.name : '')).join('<br>') +
+          '<br><b>' + where + '</b> · ثم اضغط حفظ';
+      }
     } catch (e) { if (s) { s.style.color = '#f87171'; s.textContent = '⚠️ ' + ((e && e.message) || 'خطأ شبكة'); } }
   };
   /* 📨 إرسال رسالة تلجرام من أي مكان في التطبيق (يستخدم إعداد الأدمن المحفوظ) */
@@ -10075,8 +10112,18 @@ document.addEventListener('keydown', e => {
   window.tgTest = async function () {
     window.tgSaveSettings();
     const s = document.getElementById('tgStatus'); if (s) { s.style.color = 'var(--txt-m)'; s.textContent = '⏳ جارٍ إرسال رسالة اختبار…'; }
-    const res = await tgSend('🔔 <b>اختبار تداول بلس</b>\nتم ربط تنبيه الفرص الذهبية بنجاح ✅');
-    if (s) { s.style.color = res.ok ? '#4ade80' : '#f87171'; s.textContent = res.ok ? '✅ وصلت رسالة الاختبار — الربط يعمل' : '⚠️ ' + (res.err || 'فشل الإرسال'); }
+    /* يختبر الوجهتين: المعرّف الأساسي (②) وقناة الفرص الذهبية (③) إن ضُبطت */
+    const res = await tgSend('🔔 <b>اختبار تداول بلس</b>\nهذه وجهة <b>رسائل الإدارة والصفقات</b> ✅');
+    const g = (localStorage.getItem('tg_golden_chat') || '').trim();
+    let res2 = null;
+    if (g) res2 = await tgSend('💎 <b>اختبار قناة الفرص الذهبية</b>\nستصلك هنا الفرص <b>مكتملة الشروط</b> فقط ✅\n<i>تعليمي لا نصيحة استثمارية.</i>', g);
+    if (s) {
+      const p1 = res.ok ? '✅ الإدارة: وصلت' : '⚠️ الإدارة: ' + (res.err || 'فشل');
+      const p2 = !g ? '' : (res2 && res2.ok ? ' · ✅ القناة: وصلت' : ' · ⚠️ القناة: ' + ((res2 && res2.err) || 'فشل'));
+      const okAll = res.ok && (!g || (res2 && res2.ok));
+      s.style.color = okAll ? '#4ade80' : '#f87171';
+      s.textContent = p1 + p2;
+    }
   };
   window.predScanAll = predScanAll;
   window.predSetFilter = predSetFilter;
@@ -11038,6 +11085,7 @@ window.tgAdminInit = function () {
   const tt = document.getElementById('tgTokenInp'); if (tt && !tt.value) tt.value = localStorage.getItem('tg_bot_token') || '';
   const tc = document.getElementById('tgChatInp'); if (tc && !tc.value) tc.value = localStorage.getItem('tg_chat_id') || '';
   const ta = document.getElementById('tgAutoInp'); if (ta) ta.checked = localStorage.getItem('tg_auto') === '1';
+  const tg2 = document.getElementById('tgGoldenInp'); if (tg2 && !tg2.value) tg2.value = localStorage.getItem('tg_golden_chat') || '';
 };
 
 setInterval(_autoPriceRefresh, 60 * 1000);

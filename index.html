@@ -1998,8 +1998,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-18-v161';
-console.log('%c[تداول بلس] البناء: 2026-07-18-v161 — 🌐 تتبّع صفقات 24/7 (خادمي): التطبيق يزامن صفقات المراقبة لجدول tracked_trades، ودالة الخادم track-trades تفحص الأسعار وتُنبّه تلجرام حتى والتطبيق مغلق', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-18-v168';
+console.log('%c[تداول بلس] البناء: 2026-07-18-v168 — 👥 تحكّم منفصل بأقسام الزوار (غير المسجّلين): إخفاء إضافي لهم وحدهم، مع وراثة إخفاء المستخدمين · الأدمن مستثنى دائماً', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -3197,19 +3197,42 @@ async function syncProfileAndRestrictions() {
 function applyAppSettings() {
   const s = appSettings || {};
   /* إظهار/إخفاء الأقسام: القيود العامة + الفردية معاً */
+  /* 👥 الزائر (غير مسجّل) يرث إخفاء المستخدمين + إخفاءً إضافياً خاصاً بالزوار */
+  const _isGuest = !(typeof sbUser !== 'undefined' && sbUser);
   const hidden = new Set([
     ...(s.hiddenTabs || []),
+    ...(_isGuest ? (s.guestHiddenTabs || []) : []),
     ...((userRestrictions && userRestrictions.hidden_tabs) || []),
   ]);
   /* 💳 بعد انتهاء الاشتراك: لا تُحجب الأقسام — تبقى ظاهرة، وتُظلَّل «الأهداف ووقف الخسارة»
      فقط تلقائياً حسب الاشتراك (عبر _targetsLocked). لذا لا نضيف الأقسام المنتهية للمخفيّة. */
+  /* 👑 الأدمن مُستثنى: يرى كل الأقسام دائماً، مع علامة 🚫 تنبّهه أن القسم محجوب عن العامة */
+  const _isAdm = (typeof isAdmin === 'function' && isAdmin());
   document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
-    if (btn.dataset.tab === 'admin') { btn.style.display = isAdmin() ? '' : 'none'; return; }
-    btn.style.display = hidden.has(btn.dataset.tab) ? 'none' : '';
+    if (btn.dataset.tab === 'admin') { btn.style.display = _isAdm ? '' : 'none'; return; }
+    const isHid = hidden.has(btn.dataset.tab);
+    let mark = btn.querySelector('.hidden-mark');
+    if (isHid && _isAdm) {
+      btn.style.display = '';
+      btn.style.opacity = '.72';
+      btn.title = 'محجوب عن المستخدمين — تراه لأنك أدمن';
+      if (!mark) {
+        mark = document.createElement('span');
+        mark.className = 'hidden-mark';
+        mark.textContent = ' 🚫';
+        mark.style.cssText = 'font-size:11px';
+        btn.appendChild(mark);
+      }
+    } else {
+      btn.style.display = isHid ? 'none' : '';
+      btn.style.opacity = '';
+      btn.title = '';
+      if (mark) mark.remove();
+    }
   });
-  /* إن كان يتصفح قسماً أُغلق للتو — أعده للرئيسية */
+  /* إن كان يتصفح قسماً أُغلق للتو — أعده للرئيسية (الأدمن مُستثنى) */
   const _actBtn = document.querySelector('.nav-btn.active[data-tab]');
-  if (_actBtn && hidden.has(_actBtn.dataset.tab)) {
+  if (!_isAdm && _actBtn && hidden.has(_actBtn.dataset.tab)) {
     const homeBtn = document.querySelector('.nav-btn[data-tab="home"]');
     if (homeBtn) try { switchTab('home', homeBtn); } catch (e) {}
   }
@@ -3638,11 +3661,13 @@ function renderAdminSection() {
   const wrap = document.getElementById('adminSectionWrap');
   if (!wrap || !isAdmin()) return;
   const s = appSettings || {};
-  const tabs = [
+  /* 🧩 مصدر واحد للأقسام (ADMIN_TAB_DEFS) — فلا تتفرّق القوائم عند إضافة قسم جديد */
+  const tabs = (typeof ADMIN_TAB_DEFS !== 'undefined' && ADMIN_TAB_DEFS.length) ? ADMIN_TAB_DEFS : [
     { k: 'watchlist', t: '📁 المحفظة' },
     { k: 'monitor',   t: '👁️ المراقبة' },
     { k: 'returns',   t: '📈 العوائد' },
     { k: 'all',       t: '🔮 رادار الانفجارات' },
+    { k: 'sniper',    t: '🎯 قنّاص الفرص' },
     { k: 'analysis',  t: '⚡ تحليل السوق' },
   ];
   const row  = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);font-size:13px';
@@ -3718,6 +3743,15 @@ function renderAdminSection() {
           <label style="${row};cursor:pointer">
             <span>${t.t}</span>
             <input type="checkbox" id="admTab-${t.k}" ${(s.hiddenTabs || []).includes(t.k) ? '' : 'checked'}
+                   style="width:18px;height:18px;cursor:pointer">
+          </label>`).join('')}
+
+        <div style="${head};margin-top:20px">👥 الأقسام الظاهرة للزوار (غير المسجّلين)</div>
+        <div style="font-size:11px;color:var(--txt-m);margin:-2px 0 8px;line-height:1.75">إخفاء <b>إضافي للزوار فقط</b>. وأي قسم أخفيته عن المستخدمين أعلاه يبقى مخفياً عن الزوار تلقائياً. الأدمن مستثنى دائماً.</div>
+        ${tabs.map(t => `
+          <label style="${row};cursor:pointer">
+            <span>${t.t}</span>
+            <input type="checkbox" id="admGTab-${t.k}" ${(s.guestHiddenTabs || []).includes(t.k) ? '' : 'checked'}
                    style="width:18px;height:18px;cursor:pointer">
           </label>`).join('')}
 
@@ -4244,7 +4278,10 @@ async function _adminRemoveBankConfirmed(id) {
 /* 💵 حفظ الأسعار العامة للخدمات (تظهر في صفحة الدفع لكل المستخدمين) */
 async function adminSaveServicePrices() {
   if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
-  const keys = ['watchlist', 'monitor', 'returns', 'all', 'analysis'];
+  /* 🧩 مصدر واحد للأقسام — يشمل قنّاص الفرص وأي قسم جديد */
+  const keys = (typeof ADMIN_TAB_DEFS !== 'undefined' && ADMIN_TAB_DEFS.length)
+    ? ADMIN_TAB_DEFS.map(t => t.k)
+    : ['watchlist', 'monitor', 'returns', 'all', 'sniper', 'analysis'];
   const sp = {};
   keys.forEach(k => {
     const pEl = document.getElementById('admSvc-' + k + '-price');
@@ -5591,9 +5628,13 @@ async function adminSaveUser() {
 
 async function adminSave() {
   if (!isSuperAdmin()) { showToast('⛔ الإعدادات العامة للأدمن الرئيسي فقط'); return; }
-  const tabKeys = ['watchlist', 'monitor', 'returns', 'all', 'analysis'];
+  /* 🧩 مصدر واحد للأقسام — يشمل أي قسم جديد تلقائياً (كقنّاص الفرص) */
+  const tabKeys = (typeof ADMIN_TAB_DEFS !== 'undefined' && ADMIN_TAB_DEFS.length)
+    ? ADMIN_TAB_DEFS.map(t => t.k)
+    : ['watchlist', 'monitor', 'returns', 'all', 'sniper', 'analysis'];
   appSettings = Object.assign({}, appSettings, {
-    hiddenTabs:     tabKeys.filter(k => !document.getElementById('admTab-' + k).checked),
+    hiddenTabs:     tabKeys.filter(k => { const el = document.getElementById('admTab-' + k); return el && !el.checked; }),
+    guestHiddenTabs: tabKeys.filter(k => { const el = document.getElementById('admGTab-' + k); return el && !el.checked; }),
     requireLogin:   document.getElementById('admRequireLogin').checked,
     showMarketOverview: document.getElementById('admMarketOverview').checked,
     allowClockTest: document.getElementById('admAllowClockTest').checked,
@@ -7130,6 +7171,32 @@ function histOpenFromWatchlist(w) {
   histOpen(w.sym, w.name || w.sym, fallback);
 }
 
+/* 📡 صندوق «متتبَّع 24/7» في بطاقة المراقبة — يعرض خطة إليوت المتتبَّعة فعلاً (لا الأهداف العامة)
+   مع حالة كل هدف، حتى لا يلتبس عليك ما يُراقَب ويُرسَل لتلجرام. */
+function _trackedPlanHTML(sym, price) {
+  if (typeof window.snTrackedPlan !== 'function') return '';
+  /* 🔗 يتبع صلاحيات قسم «قنّاص الفرص»: إن كان مخفياً عن هذا المستخدم فلا يظهر الصندوق إطلاقاً */
+  const _navSn = document.querySelector('.nav-btn[data-tab="sniper"]');
+  if (_navSn && _navSn.style.display === 'none') return '';
+  const p = window.snTrackedPlan(sym);
+  if (!p) return '';
+  const cur = toNum(price);
+  const mark = lvl => cur ? (cur >= lvl ? '<span style="color:#4ade80">✅ تحقّق</span>' : '<span style="color:var(--txt-m)">⏳ بانتظار</span>') : '';
+  const stopMark = cur ? (cur <= p.stop ? '<span style="color:#f87171">🛑 ضُرب</span>' : '<span style="color:#4ade80">✅ سليم</span>') : '';
+  const row = (lbl, val, clr, st) => '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center">' +
+    '<span style="color:var(--txt-m)">' + lbl + '</span><span><b style="color:' + clr + '">' + val + '</b> ' + st + '</span></div>';
+  return '<div style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.3);border-radius:10px;padding:10px;margin-top:10px">' +
+    '<div style="font-size:11.5px;font-weight:800;color:#c084fc;margin-bottom:3px">📡 متتبَّع 24/7 — خطة إليوت</div>' +
+    '<div style="font-size:10px;color:var(--txt-m);margin-bottom:8px">هذه هي المستويات التي يراقبها الخادم ويُنبّهك عليها بتلجرام' + (p.phase ? ' · ' + p.phase : '') + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:5px;font-size:11.5px">' +
+      row('🎯 الدخول', p.entry, '#4ade80', '') +
+      row('🛑 وقف الخسارة', p.stop, '#f87171', stopMark) +
+      row('🎯 هدف 1', p.t1, '#38bdf8', mark(p.t1)) +
+      row('🎯 هدف 2', p.t2, '#38bdf8', mark(p.t2)) +
+      row('🏁 الهدف النهائي', p.target, '#38bdf8', mark(p.target)) +
+    '</div></div>';
+}
+
 function wlRender() {
   wlSyncPrices();
   const listEl  = document.getElementById('wlList');
@@ -7287,6 +7354,7 @@ function wlRender() {
         </div>
       </div>
       ${techEvalHTML(r, 'monitor')}
+      ${_wrapIfLocked('sniper', _trackedPlanHTML(w.sym, cur))}
       <div class="pf-card-actions">
         <button class="pf-btn buy"      onclick="event.stopPropagation();pfOpenBuyModal('${w.sym}','${(w.name||'').replace(/'/g,"\\'")}')">📈 شراء</button>
         <button class="pf-btn add-pf"   onclick="event.stopPropagation();wlAddToPortfolio('${w.sym}')">➕ إضافة للمحفظة</button>
@@ -9524,13 +9592,7 @@ document.addEventListener('keydown', e => {
     const _rb = document.getElementById('sniperRescanBtn');
     if (_rb) _rb.style.display = (typeof isAdmin === 'function' && isAdmin()) ? 'inline-block' : 'none';
     /* أداة تلجرام: للأدمن الرئيسي فقط (لا المشرفين) + تعبئة القيم المحفوظة */
-    const _tgT = document.getElementById('sniperTgToggle');
-    const _tgAllowed = (typeof isSuperAdmin === 'function') ? isSuperAdmin() : (typeof isAdmin === 'function' && isAdmin());
-    if (_tgT) _tgT.style.display = _tgAllowed ? 'inline-block' : 'none';
-    if (!_tgAllowed) { const _box = document.getElementById('sniperTgBox'); if (_box) _box.style.display = 'none'; }   // أخفِ الصندوق عن غير المخوّل
-    const _tt = document.getElementById('tgTokenInp'); if (_tt && !_tt.value) _tt.value = localStorage.getItem('tg_bot_token') || '';
-    const _tc = document.getElementById('tgChatInp'); if (_tc && !_tc.value) _tc.value = localStorage.getItem('tg_chat_id') || '';
-    const _ta = document.getElementById('tgAutoInp'); if (_ta) _ta.checked = localStorage.getItem('tg_auto') === '1';
+    /* (إعداد تلجرام انتقل إلى لوحة الأدمن — مكانه الطبيعي) */
     /* زر الفرص الذهبية: يعكس حالته */
     const _gb = document.getElementById('sniperGoldenBtn');
     if (_gb) {
@@ -9770,6 +9832,25 @@ document.addEventListener('keydown', e => {
     } catch (e) { console.warn('[track] مزامنة الصفقات تعذّرت:', e && e.message); }
   }
   window.watchTrackSync = watchTrackSync;
+  /* ⚡ يضمن توفّر نتائج المسح مبكراً (كاش فوري ثم المشتركة) — حتى يظهر صندوق المتتبَّع بلا تأخير */
+  window.snEnsureResults = async function () {
+    if (Array.isArray(PRED_RESULTS) && PRED_RESULTS.length) return true;
+    try { predLoadCache(); } catch (e) {}
+    if (PRED_RESULTS.length) return true;
+    try { await radarLoadShared(); } catch (e) {}
+    return !!(PRED_RESULTS && PRED_RESULTS.length);
+  };
+  /* 📡 خطة إليوت المتتبَّعة فعلياً لسهم — لعرضها في بطاقة المراقبة (نفس ما يُرفع للخادم) */
+  window.snTrackedPlan = function (sym) {
+    const r = PRED_RESULTS.find(x => x.sym === sym);
+    const plan = r && r.elPlan;
+    if (!plan || !plan.rr) return null;
+    return {
+      entry: plan.entry, stop: plan.stop, target: plan.target, phase: plan.phase,
+      t1: +(plan.entry + 0.382 * (plan.target - plan.entry)).toFixed(2),
+      t2: +(plan.entry + 0.618 * (plan.target - plan.entry)).toFixed(2)
+    };
+  };
   /* 🔒 قفل إعدادات تلجرام برقم سرّي (يُحفظ مجزّأً على الجهاز) */
   function _tgHash(s) { let h = 0; s = String(s); for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; } return 'h' + h; }
   /* نافذة إدخال أنيقة (بديل prompt) — تُرجع Promise بالقيمة أو null */
@@ -9956,6 +10037,12 @@ function switchTab(tab, btn) {
   if (tab === 'all') predInit();
   if (tab === 'sniper' && typeof sniperRender === 'function') sniperRender();
   if (tab === 'admin' && typeof renderAdminSection === 'function') renderAdminSection();
+  if (tab === 'admin' && typeof tgAdminInit === 'function') tgAdminInit();
+  if (typeof _adminHiddenNotice === 'function') _adminHiddenNotice(tab);   // 🚫 تنبيه الأدمن إن كان القسم محجوباً
+  /* ⚡ عند فتح المراقبة: تأكّد من توفّر خطط إليوت ثم أعد الرسم (يظهر صندوق المتتبَّع فوراً) */
+  if (tab === 'monitor' && typeof window.snEnsureResults === 'function') {
+    window.snEnsureResults().then(ok => { if (ok && typeof wlRender === 'function') { try { wlRender(); } catch (e) {} } });
+  }
 }
 
 /* ─────────────────────────────────────
@@ -10773,6 +10860,59 @@ function _autoPriceRefresh() {
     loadCSV();
   } catch (e) { /* تجاهل */ }
 }
+/* 🚫 شريط تنبيه للأدمن داخل أي قسم محجوب عن المستخدمين (الأدمن يراه، وهم لا) */
+function _adminHiddenNotice(tab) {
+  const panel = document.getElementById('panel-' + tab);
+  if (!panel) return;
+  let bar = panel.querySelector('.adm-hidden-bar');
+  const g = (typeof appSettings !== 'undefined' && appSettings && appSettings.hiddenTabs) || [];
+  const u = (typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.hidden_tabs) || [];
+  const isHid = g.indexOf(tab) > -1 || u.indexOf(tab) > -1;
+  const show = isHid && (typeof isAdmin === 'function' && isAdmin());
+  if (show) {
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'adm-hidden-bar';
+      bar.style.cssText = 'max-width:1100px;margin:12px auto 0;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5;font-size:12.5px;font-weight:700;text-align:center;line-height:1.7';
+      bar.textContent = '🚫 هذا القسم محجوب عن المستخدمين — تراه لأنك أدمن فقط';
+      panel.insertBefore(bar, panel.firstChild);
+    }
+  } else if (bar) bar.remove();
+}
+
+/* ⚡ حمّل نتائج المسح مبكراً ثم أعد رسم المراقبة — ليظهر صندوق «متتبَّع 24/7» فوراً بلا انتظار */
+setTimeout(() => {
+  try {
+    if (typeof window.snEnsureResults !== 'function') return;
+    window.snEnsureResults().then(ok => {
+      if (ok && typeof wlRender === 'function') { try { wlRender(); } catch (e) {} }
+    });
+  } catch (e) {}
+}, 1200);
+
+/* 🔒 انقل إعداد تنبيه تلجرام من قسم القنّاص إلى لوحة الأدمن (مكانه الطبيعي، بعيداً عن المستخدمين) */
+(function () {
+  const admin = document.getElementById('panel-admin');
+  const btn = document.getElementById('sniperTgToggle');
+  const box = document.getElementById('sniperTgBox');
+  if (!admin || !btn || !box) return;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'max-width:1200px;margin:0 auto;padding:14px 12px 0;text-align:center';
+  wrap.appendChild(btn); wrap.appendChild(box);
+  admin.insertBefore(wrap, admin.firstChild);
+})();
+/* ضبط ظهور إعداد تلجرام داخل لوحة الأدمن — للأدمن الرئيسي فقط (لا المشرفين) */
+window.tgAdminInit = function () {
+  const allowed = (typeof isSuperAdmin === 'function') ? isSuperAdmin() : false;
+  const btn = document.getElementById('sniperTgToggle');
+  const box = document.getElementById('sniperTgBox');
+  if (btn) btn.style.display = allowed ? 'inline-block' : 'none';
+  if (!allowed && box) box.style.display = 'none';
+  const tt = document.getElementById('tgTokenInp'); if (tt && !tt.value) tt.value = localStorage.getItem('tg_bot_token') || '';
+  const tc = document.getElementById('tgChatInp'); if (tc && !tc.value) tc.value = localStorage.getItem('tg_chat_id') || '';
+  const ta = document.getElementById('tgAutoInp'); if (ta) ta.checked = localStorage.getItem('tg_auto') === '1';
+};
+
 setInterval(_autoPriceRefresh, 60 * 1000);
 /* 🎯 مزامنة صفقات المراقبة لقاعدة البيانات (الخادم يفحص ويُنبّه 24/7) — كل دقيقتين + مرة بعد التحميل */
 setInterval(() => { try { if (typeof window.watchTrackSync === 'function') window.watchTrackSync(); } catch (e) {} }, 120 * 1000);

@@ -1664,7 +1664,14 @@ canvas#mdChart{display:block;width:100% !important}
     <div style="text-align:center;margin-bottom:12px">
       <div style="font-size:25px;font-weight:900">🎯 قنّاص الفرص</div>
       <div style="font-size:14.5px;color:var(--txt-m);margin-top:6px;line-height:1.8">أسهم لها <b>خطة دخول جاهزة</b> من إليوت (دخول · وقف · هدف · مخاطرة‑عائد) مرتّبة بالأقوى — اختر توقيتك بلا بحث.</div>
-      <button id="sniperRescanBtn" onclick="sniperRescan(this)" style="display:none;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">🔮 إعادة المسح وتحديث الفرص</button>
+      <button id="sniperRescanBtn" onclick="sniperRescan(this)" style="display:none;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s">🔮 إعادة المسح وتحديث الفرص</button>
+      <div id="sniperScanProg" style="display:none;max-width:420px;margin:12px auto 0">
+        <div style="height:10px;background:rgba(148,163,184,.18);border-radius:6px;overflow:hidden">
+          <div id="sniperScanBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#a855f7);transition:width .25s"></div>
+        </div>
+        <div id="sniperScanTxt" style="font-size:12px;color:#c084fc;font-weight:800;margin-top:6px">⏳ جارٍ التحضير…</div>
+      </div>
+      <div id="sniperScanStamp" style="font-size:11.5px;margin-top:9px;font-weight:700;line-height:1.8"></div>
     </div>
     <button id="sniperGoldenBtn" onclick="sniperGolden()" style="display:block;margin:0 auto 12px;background:linear-gradient(135deg,#b8860b,#facc15);color:#1a1a1a;border:none;border-radius:10px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">💎 الفرص الذهبية فقط</button>
     <button id="sniperTgToggle" onclick="tgUnlock()" style="display:none;margin:0 auto 10px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:9px 18px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">🔒 ربط تنبيه تلجرام (أدمن رئيسي)</button>
@@ -2056,8 +2063,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-19-v195';
-console.log('%c[تداول بلس] البناء: 2026-07-19-v195 — 🔒 تقرير «خريطة الأسباب» صار للأدمن ومَن يسمح له فقط (صلاحية see_diag)، والزوار ممنوعون — ويرى الباقون رسالة مختصرة محترمة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-19-v197';
+console.log('%c[تداول بلس] البناء: 2026-07-19-v197 — 🕒 سطر «آخر تحديث» في القنّاص (تاريخ · وقت · كم مضى · عدد الأسهم) يراه الجميع، مع تنبيه إن تجاوز يوماً', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -9400,6 +9407,9 @@ document.addEventListener('keydown', e => {
   function predShowProgress(show) {
     const el = document.getElementById('predProgress');
     if (el) el.style.display = show ? 'block' : 'none';
+    /* 🎯 مرآة التقدّم داخل قسم القنّاص (ليرى الأدمن تفاعلاً واضحاً) */
+    const sp = document.getElementById('sniperScanProg');
+    if (sp) sp.style.display = show ? 'block' : 'none';
   }
   function predSetProgress(done, total, ok) {
     const pct = total ? Math.round(done / total * 100) : 0;
@@ -9408,6 +9418,10 @@ document.addEventListener('keydown', e => {
     if (bar) bar.style.width = pct + '%';
     if (p) p.textContent = pct + '%';
     if (sub) sub.textContent = 'حُلِّل ' + done + ' من ' + total + ' سهم · نتائج صالحة: ' + ok;
+    /* 🎯 نفس التقدّم في القنّاص */
+    const sb2 = document.getElementById('sniperScanBar'), st = document.getElementById('sniperScanTxt');
+    if (sb2) sb2.style.width = pct + '%';
+    if (st) st.textContent = '⏳ ' + pct + '% · حُلِّل ' + done + ' من ' + total + ' سهم · فرص صالحة: ' + ok;
   }
 
   async function predScanAll() {
@@ -10027,6 +10041,26 @@ document.addEventListener('keydown', e => {
     return { high: +H.toFixed(2), low: +L.toFixed(2), mid: +mid.toFixed(2), bias: bias, next: +next.toFixed(2), near: near ? { n: near.n, v: near.v } : null };
   }
 
+  /* 🕒 آخر تحديث لنتائج القنّاص (تاريخ · وقت · كم مضى · عدد الأسهم) — يراه الجميع */
+  function sniperUpdateStamp() {
+    const el = document.getElementById('sniperScanStamp');
+    if (!el) return;
+    if (!PRED_LAST_TS) { el.style.color = '#fbbf24'; el.textContent = '⚠️ لم تُحمَّل النتائج بعد'; return; }
+    const at = new Date(PRED_LAST_TS);
+    const p = n => String(n).padStart(2, '0');
+    const dd = p(at.getDate()) + '/' + p(at.getMonth() + 1) + '/' + at.getFullYear();
+    const tt = p(at.getHours()) + ':' + p(at.getMinutes());
+    const hrs = (Date.now() - PRED_LAST_TS) / 3600000;
+    const ago = hrs < 1 ? 'قبل ' + Math.max(1, Math.round(hrs * 60)) + ' دقيقة'
+              : hrs < 24 ? 'قبل ' + Math.round(hrs) + ' ساعة'
+                         : 'قبل ' + Math.round(hrs / 24) + ' يوماً';
+    const stale = hrs > 24;
+    el.style.color = stale ? '#fbbf24' : '#4ade80';
+    el.innerHTML = (stale ? '⚠️' : '✅') + ' آخر تحديث: <b>' + dd + '</b> · <b>' + tt + '</b> (' + ago + ') · ' +
+      (Array.isArray(PRED_RESULTS) ? PRED_RESULTS.length : 0) + ' سهم' +
+      (stale ? ' — <span style="color:#fbbf24">سيُحدَّث تلقائياً عند الفتح</span>' : '');
+  }
+
   /* 🎯 قنّاص الفرص: قائمة الأسهم ذات خطة دخول إليوت جاهزة، مرتّبة بالأقوى */
   async function sniperRender() {
     const wrap = document.getElementById('sniperList');
@@ -10036,6 +10070,7 @@ document.addEventListener('keydown', e => {
     if (_rb) _rb.style.display = (typeof isAdmin === 'function' && isAdmin()) ? 'inline-block' : 'none';
     /* أداة تلجرام: للأدمن الرئيسي فقط (لا المشرفين) + تعبئة القيم المحفوظة */
     /* (إعداد تلجرام انتقل إلى لوحة الأدمن — مكانه الطبيعي) */
+    sniperUpdateStamp();                       // 🕒 آخر تحديث للنتائج
     /* زر الفرص الذهبية: يعكس حالته */
     const _gb = document.getElementById('sniperGoldenBtn');
     if (_gb) {
@@ -10236,10 +10271,34 @@ document.addEventListener('keydown', e => {
   window.sniperRescan = async function (btn) {
     if (!(typeof isAdmin === 'function' && isAdmin())) return;
     const t0 = btn ? btn.textContent : '';
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ المسح…'; }
+    const bg0 = btn ? btn.style.background : '';
+    const prog = document.getElementById('sniperScanProg');
+    const bar = document.getElementById('sniperScanBar');
+    const txt = document.getElementById('sniperScanTxt');
+    if (btn) {
+      btn.disabled = true; btn.style.cursor = 'wait';
+      btn.style.background = 'linear-gradient(135deg,#64748b,#94a3b8)';
+      btn.textContent = '⏳ جارٍ المسح… لا تغلق الصفحة';
+    }
+    if (prog) prog.style.display = 'block';
+    if (bar) bar.style.width = '0%';
+    if (txt) txt.textContent = '⏳ جارٍ تحضير قائمة الأسهم…';
     try { await predScanAll(); } catch (e) { console.warn('[sniper] مسح تعذّر:', e && e.message); }
     try { await sniperRender(); } catch (e) {}
-    if (btn) { btn.disabled = false; btn.textContent = t0 || '🔮 إعادة المسح وتحديث الفرص'; }
+    if (bar) bar.style.width = '100%';
+    if (txt) { txt.style.color = '#4ade80'; txt.textContent = '✅ اكتمل المسح وحُدّثت الفرص'; }
+    try { sniperUpdateStamp(); } catch (e) {}
+    if (btn) {
+      btn.disabled = false; btn.style.cursor = 'pointer';
+      btn.style.background = 'linear-gradient(135deg,#166534,#22c55e)';
+      btn.textContent = '✅ اكتمل المسح — تم التحديث';
+      setTimeout(() => {
+        btn.textContent = t0 || '🔮 إعادة المسح وتحديث الفرص';
+        btn.style.background = bg0 || 'linear-gradient(135deg,#7c3aed,#a855f7)';
+        if (prog) prog.style.display = 'none';
+        if (txt) txt.style.color = '#c084fc';
+      }, 4000);
+    }
   };
   /* 🔔 تنبيه تلجرام (أدمن): التوكن وChat ID محفوظان محلياً على جهاز الأدمن فقط — لا يُشاركان */
   /* يجلب JSON من واجهة تلجرام مع تجاوز حظر CORS: مباشر ثم بروكسي خاص ثم عامّة */

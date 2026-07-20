@@ -2056,8 +2056,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-19-v190';
-console.log('%c[تداول بلس] البناء: 2026-07-19-v190 — 📱 إصلاح تجمّد الشريط على الجوال: قصر «التوقّف عند المرور» على الأجهزة ذات المؤشّر (hover عالقة عند اللمس كانت توقفه)', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-19-v195';
+console.log('%c[تداول بلس] البناء: 2026-07-19-v195 — 🔒 تقرير «خريطة الأسباب» صار للأدمن ومَن يسمح له فقط (صلاحية see_diag)، والزوار ممنوعون — ويرى الباقون رسالة مختصرة محترمة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -5634,6 +5634,10 @@ function adminEditUser(email) {
       <label style="${row};cursor:pointer">
         <span>🧪 السماح بمختبر اختبار إليوت على الماضي</span>
         <input type="checkbox" id="admUBacktest" ${r.see_backtest ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+      </label>
+      <label style="${row};cursor:pointer">
+        <span>🔬 السماح بتقرير «خريطة أسباب الفرص الذهبية» (تحليلي داخلي)</span>
+        <input type="checkbox" id="admUDiag" ${r.see_diag ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
       </label>`}
 
       <label style="${row};cursor:pointer;color:#fca5a5;font-weight:700;border-bottom:none">
@@ -5812,6 +5816,7 @@ async function adminSaveUser() {
   const exemptEl = document.getElementById('admUExempt');
   const predStatsEl = document.getElementById('admUPredStats');
   const backtestEl = document.getElementById('admUBacktest');
+  const diagEl = document.getElementById('admUDiag');
   /* 💳 اجمع اشتراك كل قسم */
   const secIn = {};
   for (const d of SUB_SECTION_DEFS) {
@@ -5856,6 +5861,7 @@ async function adminSaveUser() {
              sub_exempt: exemptEl ? exemptEl.checked : !!prev.sub_exempt,
              show_pred_stats: predStatsEl ? predStatsEl.checked : !!prev.show_pred_stats,
              see_backtest: backtestEl ? backtestEl.checked : !!prev.see_backtest,
+             see_diag: diagEl ? diagEl.checked : !!prev.see_diag,
              updated_at: now };
   });
   const { error } = await sb.from('user_restrictions').upsert(rows);
@@ -9436,7 +9442,7 @@ document.addEventListener('keydown', e => {
               /* 🌊 مرحلة دورة إليوت لهذا السهم (لفلتر «بداية دورة» والشارة) */
               try { const _el = (typeof elliottCompute === 'function') ? elliottCompute(candles, a.price) : null; if (_el) { a.elStage = _el.stage; a.elWave = _el.nowWave; a.elDir = _el.dir; a.elConf = _el.confidence; a.elConfl = _el.confluence; a.elPlan = _el.plan; } } catch (e) {}
               /* 🕯️ الزناد (شمعة انعكاسية) + 📦 منطقة عرض/طلب — لعنقود القنّاص */
-              try { a.elTrig = _candleReversal(candles); } catch (e) {}
+              try { a.elTrig = _candleReversalRecent(candles, 4); } catch (e) {}   // زناد خلال آخر 4 شموع
               try { a.elZone = _zones(candles, a.price); } catch (e) {}
               try { a.elHarm = _harmonic(candles, a.price); } catch (e) {}
               try { a.elTime = _timeWindow(candles); } catch (e) {}
@@ -9740,26 +9746,74 @@ document.addEventListener('keydown', e => {
 
   /* 🕯️ الزناد: كشف شمعة يابانية انعكاسية على آخر شمعة (مطرقة/شهاب/ابتلاع/هرامي) */
   function _candleReversal(cds) {
-    if (!Array.isArray(cds) || cds.length < 7) return null;
+    if (!Array.isArray(cds) || cds.length < 8) return null;
     const num = x => (typeof x === 'number' && isFinite(x)) ? x : null;
-    const n = cds.length, c = cds[n - 1], p = cds[n - 2];
-    const o = num(c.o), h = num(c.h), l = num(c.l), cl = num(c.c);
-    const po = num(p.o), pcl = num(p.c);
-    if ([o, h, l, cl, po, pcl].some(v => v === null)) return null;
-    const body = Math.abs(cl - o), up = h - Math.max(o, cl), dn = Math.min(o, cl) - l;
-    const bull = cl > o, bear = cl < o, pBody = Math.abs(pcl - po);
-    const back = cds.slice(Math.max(0, n - 7), n - 1);
+    const n = cds.length;
+    /* قارئ شمعة: 1 = الأخيرة · 2 = التي قبلها · 3 = قبلهما */
+    const C = i => {
+      const k = cds[n - i]; if (!k) return null;
+      const o = num(k.o), h = num(k.h), l = num(k.l), cl = num(k.c);
+      if (o == null || h == null || l == null || cl == null) return null;
+      return { o, h, l, c: cl, body: Math.abs(cl - o), rng: (h - l) || 1e-9,
+               up: h - Math.max(o, cl), dn: Math.min(o, cl) - l,
+               bull: cl > o, bear: cl < o, mid: (o + cl) / 2 };
+    };
+    const c1 = C(1), c2 = C(2), c3 = C(3);
+    if (!c1 || !c2) return null;
+    const back = cds.slice(Math.max(0, n - 8), n - 1);
     const avgPrev = back.reduce((s, x) => s + (num(x.c) || 0), 0) / (back.length || 1);
-    const downTrend = cl < avgPrev, upTrend = cl > avgPrev;
+    const avgBody = (back.reduce((s, x) => s + Math.abs((num(x.c) || 0) - (num(x.o) || 0)), 0) / (back.length || 1)) || 1e-9;
+    const downTrend = c1.c < avgPrev, upTrend = c1.c > avgPrev;
     let name = null, dir = null, strong = false;
-    if (dn >= 2 * body && up <= body * 0.8 && body > 0 && downTrend) { name = 'مطرقة'; dir = 'bull'; strong = dn >= 2.5 * body; }
-    else if (up >= 2 * body && dn <= body * 0.8 && body > 0 && upTrend) { name = 'شهاب'; dir = 'bear'; strong = up >= 2.5 * body; }
-    else if (bull && pcl < po && cl >= po && o <= pcl && body > pBody) { name = 'ابتلاع شرائي'; dir = 'bull'; strong = body > pBody * 1.3; }
-    else if (bear && pcl > po && cl <= po && o >= pcl && body > pBody) { name = 'ابتلاع بيعي'; dir = 'bear'; strong = body > pBody * 1.3; }
-    else if (pcl < po && bull && Math.max(o, cl) <= Math.max(po, pcl) && Math.min(o, cl) >= Math.min(po, pcl) && pBody > body * 1.5 && downTrend) { name = 'هرامي صعودي'; dir = 'bull'; }
-    else if (pcl > po && bear && Math.max(o, cl) <= Math.max(po, pcl) && Math.min(o, cl) >= Math.min(po, pcl) && pBody > body * 1.5 && upTrend) { name = 'هرامي هبوطي'; dir = 'bear'; }
+
+    /* ① الأقوى: ثلاث شمعات متتالية */
+    if (c3 && c1.bull && c2.bull && c3.bull && c1.c > c2.c && c2.c > c3.c && c1.body > avgBody * .6 && c2.body > avgBody * .6)
+      { name = 'الجنود الثلاثة البيض'; dir = 'bull'; strong = true; }
+    else if (c3 && c1.bear && c2.bear && c3.bear && c1.c < c2.c && c2.c < c3.c && c1.body > avgBody * .6 && c2.body > avgBody * .6)
+      { name = 'الغربان الثلاثة السود'; dir = 'bear'; strong = true; }
+    /* ② نجمة الصباح / المساء */
+    else if (c3 && c3.bear && c3.body > avgBody * .8 && c2.body < c3.body * .5 && c1.bull && c1.c > c3.mid)
+      { name = 'نجمة الصباح'; dir = 'bull'; strong = true; }
+    else if (c3 && c3.bull && c3.body > avgBody * .8 && c2.body < c3.body * .5 && c1.bear && c1.c < c3.mid)
+      { name = 'نجمة المساء'; dir = 'bear'; strong = true; }
+    /* ③ الابتلاع */
+    else if (c1.bull && c2.bear && c1.c >= c2.o && c1.o <= c2.c && c1.body > c2.body)
+      { name = 'ابتلاع شرائي'; dir = 'bull'; strong = c1.body > c2.body * 1.3; }
+    else if (c1.bear && c2.bull && c1.c <= c2.o && c1.o >= c2.c && c1.body > c2.body)
+      { name = 'ابتلاع بيعي'; dir = 'bear'; strong = c1.body > c2.body * 1.3; }
+    /* ④ خط الاختراق / السحابة السوداء */
+    else if (c1.bull && c2.bear && c1.o < c2.c && c1.c > c2.mid && c1.c < c2.o)
+      { name = 'خط الاختراق'; dir = 'bull'; }
+    else if (c1.bear && c2.bull && c1.o > c2.c && c1.c < c2.mid && c1.c > c2.o)
+      { name = 'السحابة السوداء'; dir = 'bear'; }
+    /* ⑤ المطرقة / الشهاب (حسب السياق) */
+    else if (c1.dn >= 2 * c1.body && c1.up <= c1.body * .8 && c1.body > 0 && downTrend)
+      { name = 'مطرقة'; dir = 'bull'; strong = c1.dn >= 2.5 * c1.body; }
+    else if (c1.up >= 2 * c1.body && c1.dn <= c1.body * .8 && c1.body > 0 && upTrend)
+      { name = 'شهاب'; dir = 'bear'; strong = c1.up >= 2.5 * c1.body; }
+    /* ⑥ الملقط */
+    else if (downTrend && Math.abs(c1.l - c2.l) <= c1.rng * .06 && c1.bull)
+      { name = 'قاع الملقط'; dir = 'bull'; }
+    else if (upTrend && Math.abs(c1.h - c2.h) <= c1.rng * .06 && c1.bear)
+      { name = 'قمة الملقط'; dir = 'bear'; }
+    /* ⑦ الهرامي */
+    else if (c2.bear && c1.bull && Math.max(c1.o, c1.c) <= Math.max(c2.o, c2.c) && Math.min(c1.o, c1.c) >= Math.min(c2.o, c2.c) && c2.body > c1.body * 1.5 && downTrend)
+      { name = 'هرامي صعودي'; dir = 'bull'; }
+    else if (c2.bull && c1.bear && Math.max(c1.o, c1.c) <= Math.max(c2.o, c2.c) && Math.min(c1.o, c1.c) >= Math.min(c2.o, c2.c) && c2.body > c1.body * 1.5 && upTrend)
+      { name = 'هرامي هبوطي'; dir = 'bear'; }
+
     if (!name) return null;
     return { name: name, dir: dir, strong: strong };
+  }
+  /* 🕯️ الزناد يبقى صالحاً أياماً قليلة: نفحص آخر 4 شموع ونأخذ الأحدث مع عمره */
+  function _candleReversalRecent(cds, maxBack) {
+    maxBack = maxBack || 4;
+    for (let b = 0; b < maxBack; b++) {
+      const sub = b === 0 ? cds : cds.slice(0, cds.length - b);
+      const r = _candleReversal(sub);
+      if (r) { r.age = b; return r; }
+    }
+    return null;
   }
   /* 📦 العرض والطلب (تقريبي): قاعدة صغيرة تسبق اندفاعاً قوياً = منطقة أوامر */
   function _zones(cds, price) {
@@ -9872,11 +9926,11 @@ document.addEventListener('keydown', e => {
   function _snGolden(r) {
     if (!r.elPlan || !r.elPlan.rr) return false;
     if (r.bars && r.bars < 240) return false;                        // ليس حديثاً
-    if (_snConflCount(r) < 4) return false;                          // توافق ≥ 4
+    if (_snConflCount(r) < 3) return false;    // توافق ≥ 3 = إليوت + تأكيدان مستقلّان (إليوت ثابت للجميع)
     if (!(r.elTrig && r.elTrig.dir === 'bull')) return false;        // زناد صعودي
     if (r.elZone && r.elZone.inSupply) return false;                 // ليس قرب منطقة عرض
     if (!(r.elCircle && r.elCircle.bias === 'صاعد')) return false;   // 📊 انحياز صاعد
-    if (!(r.elTime && r.elTime.barsFromNow <= 12 && r.elTime.barsFromNow >= -3)) return false;   // 🕐 نافذة نشطة/قريبة
+    if (!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5)) return false;   // 🕐 نافذة نشطة/قريبة (دقّتها تقريبية ≈ شهر)
     const gr = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null;
     if (gr && gr.verdict === 'غالٍ') return false;                   // جراهام غير غالٍ
     const st = r.elPlan.stop, tg = r.elPlan.target;
@@ -10014,9 +10068,65 @@ document.addEventListener('keydown', e => {
       (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
     if (!list.length) {
       if (SNIPER_GOLDEN) {
-        wrap.innerHTML = '<div style="text-align:center;padding:44px 20px;color:var(--txt-m)"><div style="font-size:42px;margin-bottom:12px">💎</div>' +
-          '<div style="font-size:17px;font-weight:800;margin-bottom:8px;color:#facc15">لا فرصة ذهبية الآن — والانتظار قرار رابح</div>' +
-          '<div style="font-size:13.5px;line-height:2;max-width:560px;margin:0 auto">لم يجد النظام إعداداً <b>تكتمل فيه كل الشروط معاً</b> (توافق ≥4 · زناد صعودي · انحياز صاعد · نافذة نشطة/قريبة · بعيد عن العرض · جراهام غير غالٍ · ع/م ≥1.5 · ليس حديثاً). هذا طبيعي — الفرص الممتازة نادرة. لا تُخفّض معاييرك؛ اضغط «عرض كل الفرص» للمراقبة، وعُد لاحقاً.</div></div>';
+        /* 🔒 التقرير التحليلي: للأدمن أو من سمح له الأدمن فقط — والزوار ممنوعون */
+        const _diagOK = (typeof isAdmin === 'function' && isAdmin()) ||
+          !!(typeof sbUser !== 'undefined' && sbUser && typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.see_diag);
+        if (!_diagOK) {
+          wrap.innerHTML = '<div style="text-align:center;padding:44px 20px;color:var(--txt-m)"><div style="font-size:42px;margin-bottom:12px">💎</div>' +
+            '<div style="font-size:17px;font-weight:800;margin-bottom:8px;color:#facc15">لا فرصة ذهبية الآن — والانتظار قرار رابح</div>' +
+            '<div style="font-size:13.5px;line-height:2;max-width:540px;margin:0 auto">لم يكتمل إعدادٌ تجتمع فيه كل الشروط. الفرص الممتازة نادرة بطبيعتها — ولا تُخفَّض المعايير لإظهار نتائج. اضغط <b>«عرض كل الفرص»</b> لمتابعة المرشّحين، وعُد لاحقاً.</div></div>';
+          return;
+        }
+        /* 🔬 مشخِّص: أين الاختناق فعلاً؟ نعدّ كم سهماً اجتاز كل شرط */
+        const base = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
+        let conds = [
+          { n: '🌱 ليس سهماً حديثاً', f: r => !(r.bars && r.bars < 240) },
+          { n: '🧩 توافق ≥ 3/5', f: r => _snConflCount(r) >= 3 },
+          { n: '🕯️ زناد صعودي', f: r => !!(r.elTrig && r.elTrig.dir === 'bull') },
+          { n: '📦 بعيد عن منطقة العرض', f: r => !(r.elZone && r.elZone.inSupply) },
+          { n: '📊 انحياز صاعد', f: r => !!(r.elCircle && r.elCircle.bias === 'صاعد') },
+          { n: '🕐 نافذة نشطة/قريبة', f: r => !!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5) },
+          { n: '💰 جراهام غير غالٍ', f: r => { const g = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null; return !(g && g.verdict === 'غالٍ'); } },
+          { n: '⚖️ ع/م حالي ≥ 1.5', f: r => { const p = r.elPlan; const rr = (r.price > p.stop) ? (p.target - r.price) / (r.price - p.stop) : null; return rr != null && rr >= 1.5; } },
+        ];
+        const condDefs = conds;
+        conds = conds.map(c => ({ n: c.n, pass: base.filter(c.f).length }));
+        const total = base.length || 1;
+        const minPass = Math.min.apply(null, conds.map(c => c.pass));
+        const rowsD = conds.map(c => {
+          const pct = Math.round(c.pass / total * 100);
+          const bottleneck = c.pass === minPass;
+          const clr = bottleneck ? '#f87171' : pct >= 50 ? '#4ade80' : '#fbbf24';
+          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px">' +
+            '<span style="flex:1;text-align:right;color:var(--txt-m)">' + c.n + (bottleneck ? ' <b style="color:#f87171">← الاختناق</b>' : '') + '</span>' +
+            '<span style="flex:none;width:110px;height:8px;background:rgba(148,163,184,.18);border-radius:5px;overflow:hidden">' +
+              '<span style="display:block;height:100%;width:' + pct + '%;background:' + clr + '"></span></span>' +
+            '<span style="flex:none;width:62px;text-align:left;font-weight:800;color:' + clr + '">' + c.pass + '/' + total + '</span></div>';
+        }).join('');
+        wrap.innerHTML = '<div style="text-align:center;padding:30px 16px 20px;color:var(--txt-m)"><div style="font-size:40px;margin-bottom:10px">💎</div>' +
+          '<div style="font-size:17px;font-weight:800;margin-bottom:6px;color:#facc15">لا فرصة ذهبية الآن — والانتظار قرار رابح</div>' +
+          '<div style="font-size:13px;line-height:1.9;max-width:540px;margin:0 auto 16px">الفرص الممتازة نادرة بطبيعتها — و<b>الزناد</b> (شمعة انعكاس) هو الأندر لأنه لا يتشكّل كل يوم. وهذه <b>خريطة الأسباب</b> من أصل ' + total + ' فرصة:</div>' +
+          '<div style="max-width:430px;margin:0 auto;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:14px">' + rowsD + '</div>' +
+          /* 🔭 الأقرب للاكتمال — وما ينقص كلاً منها بالضبط */
+          (function () {
+            const scored = base.map(r => {
+              const miss = condDefs.filter(c => { try { return !c.f(r); } catch (e) { return true; } }).map(c => c.n);
+              return { r: r, passed: condDefs.length - miss.length, miss: miss };
+            }).sort((a, b) => b.passed - a.passed).slice(0, 3);
+            if (!scored.length) return '';
+            return '<div style="max-width:520px;margin:16px auto 0;text-align:right">' +
+              '<div style="font-size:13px;font-weight:800;color:#38bdf8;margin-bottom:8px;text-align:center">🔭 الأقرب للاكتمال — راقبها</div>' +
+              scored.map(x =>
+                '<div onclick="predOpen(\'' + x.r.sym + '\')" style="cursor:pointer;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:7px">' +
+                  '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px">' +
+                    '<span style="font-weight:800;font-size:13.5px">' + (x.r.name || x.r.sym) + ' <span style="color:var(--txt-m);font-size:11px">' + x.r.sym + '</span></span>' +
+                    '<span style="font-weight:900;font-size:13px;color:' + (x.passed >= 7 ? '#4ade80' : '#fbbf24') + '">' + x.passed + '/' + condDefs.length + '</span>' +
+                  '</div>' +
+                  '<div style="font-size:11.5px;color:var(--txt-m);line-height:1.8">' +
+                    (x.miss.length ? '<span style="color:#f87171">ينقصه:</span> ' + x.miss.join(' · ') : '✅ مكتمل') + '</div>' +
+                '</div>').join('') + '</div>';
+          })() +
+          '<div style="font-size:11.5px;margin-top:12px;line-height:1.8;max-width:520px;margin-left:auto;margin-right:auto">الشرط المعلَّم <b style="color:#f87171">«الاختناق»</b> هو الأقلّ اجتيازاً — وهو سبب الندرة. اضغط «عرض كل الفرص» للمراقبة.</div></div>';
         return;
       }
       if (SNIPER_SEARCH) {
@@ -10069,7 +10179,8 @@ document.addEventListener('keydown', e => {
           const chip = (bg, bd, fg, txt) => '<span style="background:' + bg + ';border:1px solid ' + bd + ';color:' + fg + ';border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;white-space:nowrap">' + txt + '</span>';
           if (r.bars && r.bars < 240) b += chip('rgba(251,146,60,.15)', 'rgba(251,146,60,.5)', '#fb923c', '🌱 سهم حديث · ' + r.bars + ' شمعة — تاريخ غير كافٍ، إشارات أقل موثوقية');
           if (r.elTrig) {
-            if (r.elTrig.dir === 'bull') b += chip('rgba(34,197,94,.14)', 'rgba(34,197,94,.4)', '#4ade80', '🕯️ زناد صعودي: ' + r.elTrig.name + (r.elTrig.strong ? ' 💪' : ''));
+            const _ag = r.elTrig.age ? ' · قبل ' + r.elTrig.age + ' يوم' : ' · اليوم';
+            if (r.elTrig.dir === 'bull') b += chip('rgba(34,197,94,.14)', 'rgba(34,197,94,.4)', '#4ade80', '🕯️ زناد صعودي: ' + r.elTrig.name + (r.elTrig.strong ? ' 💪' : '') + _ag);
             else b += chip('rgba(248,113,113,.12)', 'rgba(248,113,113,.4)', '#f87171', '⚠️ زناد هبوطي: ' + r.elTrig.name);
           }
           if (r.elHarm) {

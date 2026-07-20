@@ -2063,8 +2063,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-20-v198';
-console.log('%c[تداول بلس] البناء: 2026-07-20-v198 — 🔄 إصلاح تأخّر النتائج عند المستخدمين: فحص طزاجة خفيف يقارن وقت آخر مسح على القاعدة وينزّل الأحدث تلقائياً (كان يكتفي بالكاش المحلي)', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-20-v199';
+console.log('%c[تداول بلس] البناء: 2026-07-20-v199 — 🚫 شرط «لا مطاردة»: تُستبعد الفرصة إن تجاوز السعر 8% فوق الدخول المخطّط (وقف بعيد وهدف أول قريب = اختلال) · مواءمة وسم النافذة مع البوابة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -9947,7 +9947,10 @@ document.addEventListener('keydown', e => {
     if (!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5)) return false;   // 🕐 نافذة نشطة/قريبة (دقّتها تقريبية ≈ شهر)
     const gr = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null;
     if (gr && gr.verdict === 'غالٍ') return false;                   // جراهام غير غالٍ
-    const st = r.elPlan.stop, tg = r.elPlan.target;
+    const st = r.elPlan.stop, tg = r.elPlan.target, en = r.elPlan.entry;
+    /* 🚫 لا مطاردة: إن صعد السعر أكثر من 8% فوق الدخول المخطّط فالفرصة فاتت
+       (يصبح الوقف بعيداً جداً والهدف الأول قريباً — اختلال حقيقي) */
+    if (en > 0 && r.price > en * 1.08) return false;
     const rrNow = (r.price > st) ? (tg - r.price) / (r.price - st) : null;
     if (rrNow == null || rrNow < 1.5) return false;                  // ع/م حالي ≥ 1.5
     return true;
@@ -10125,6 +10128,7 @@ document.addEventListener('keydown', e => {
           { n: '📊 انحياز صاعد', f: r => !!(r.elCircle && r.elCircle.bias === 'صاعد') },
           { n: '🕐 نافذة نشطة/قريبة', f: r => !!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5) },
           { n: '💰 جراهام غير غالٍ', f: r => { const g = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null; return !(g && g.verdict === 'غالٍ'); } },
+          { n: '🚫 السعر قريب من الدخول (لا مطاردة)', f: r => { const e = r.elPlan.entry; return !(e > 0 && r.price > e * 1.08); } },
           { n: '⚖️ ع/م حالي ≥ 1.5', f: r => { const p = r.elPlan; const rr = (r.price > p.stop) ? (p.target - r.price) / (r.price - p.stop) : null; return rr != null && rr >= 1.5; } },
         ];
         const condDefs = conds;
@@ -10244,8 +10248,8 @@ document.addEventListener('keydown', e => {
           if (r.elTime) {
             const bn = r.elTime.barsFromNow, q = r.elTime.quality;
             if (bn <= 1 && bn >= -2) b += chip('rgba(34,197,94,.16)', 'rgba(34,197,94,.5)', '#4ade80', '🕐 نافذة زمنية نشطة الآن' + (q !== 'منخفضة' ? ' · جودة ' + q : ''));
-            else if (bn > 1 && bn <= 12) b += chip('rgba(56,189,248,.13)', 'rgba(56,189,248,.4)', '#38bdf8', '🕐 نافذة بعد ~' + bn + ' يوم تداول · ' + _snDateAfter(bn));
-            else if (bn > 12) b += chip('rgba(148,163,184,.12)', 'rgba(148,163,184,.35)', '#94a3b8', '🕐 نافذة بعيدة ~' + bn + ' يوم');
+            else if (bn > 1 && bn <= 25) b += chip('rgba(56,189,248,.13)', 'rgba(56,189,248,.4)', '#38bdf8', '🕐 نافذة بعد ~' + bn + ' يوم تداول · ' + _snDateAfter(bn));
+            else if (bn > 25) b += chip('rgba(148,163,184,.12)', 'rgba(148,163,184,.35)', '#94a3b8', '🕐 نافذة بعيدة ~' + bn + ' يوم');
             else b += chip('rgba(148,163,184,.12)', 'rgba(148,163,184,.35)', '#94a3b8', '🕐 نافذة سابقة — راقب انعكاساً');
           }
           return b ? '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">' + b + '</div>' : '';

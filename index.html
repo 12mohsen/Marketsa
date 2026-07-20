@@ -2063,8 +2063,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-19-v197';
-console.log('%c[تداول بلس] البناء: 2026-07-19-v197 — 🕒 سطر «آخر تحديث» في القنّاص (تاريخ · وقت · كم مضى · عدد الأسهم) يراه الجميع، مع تنبيه إن تجاوز يوماً', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-20-v198';
+console.log('%c[تداول بلس] البناء: 2026-07-20-v198 — 🔄 إصلاح تأخّر النتائج عند المستخدمين: فحص طزاجة خفيف يقارن وقت آخر مسح على القاعدة وينزّل الأحدث تلقائياً (كان يكتفي بالكاش المحلي)', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -10085,6 +10085,9 @@ document.addEventListener('keydown', e => {
         wrap.innerHTML = '<div style="text-align:center;padding:44px 20px;color:var(--txt-m)"><div style="font-size:30px;margin-bottom:10px">⏳</div><div style="font-size:15px;font-weight:700">جارِ تحميل الفرص…</div></div>';
         try { await radarLoadShared(); } catch (e) {}
       }
+    } else {
+      /* لدينا نتائج — لكن تحقّق بهدوء إن رفع الأدمن أحدث منها (بلا تعطيل العرض) */
+      radarSyncIfNewer().then(ok => { if (ok) { try { sniperRender(); } catch (e) {} } });
     }
     let list = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
     if (SNIPER_SEARCH) {
@@ -10392,12 +10395,36 @@ document.addEventListener('keydown', e => {
     } catch (e) { console.warn('[track] مزامنة الصفقات تعذّرت:', e && e.message); }
   }
   window.watchTrackSync = watchTrackSync;
-  /* ⚡ يضمن توفّر نتائج المسح مبكراً (كاش فوري ثم المشتركة) — حتى يظهر صندوق المتتبَّع بلا تأخير */
+  /* 🔄 فحص طزاجة خفيف: يسأل عن وقت آخر مسح فقط، وينزّل الكامل إن كان أحدث من نسختنا.
+     يحلّ مشكلة بقاء المستخدم على نتائج قديمة رغم رفع الأدمن مسحاً جديداً. */
+  let _lastSyncChk = 0;
+  async function radarSyncIfNewer(force) {
+    if (typeof sb === 'undefined' || !sb) return false;
+    const now = Date.now();
+    if (!force && now - _lastSyncChk < 120000) return false;   // فحص كل دقيقتين كحدّ أقصى
+    _lastSyncChk = now;
+    try {
+      const { data } = await sb.from('radar_results').select('scanned_at').eq('id', 1).maybeSingle();
+      if (!data || !data.scanned_at) return false;
+      const remote = new Date(data.scanned_at).getTime();
+      if (!PRED_LAST_TS || remote > PRED_LAST_TS + 60000) {    // أحدث بأكثر من دقيقة
+        console.info('[radar] 🔄 وُجدت نتائج أحدث — يجري التحديث');
+        return await radarLoadShared();
+      }
+    } catch (e) {}
+    return false;
+  }
+  window.snSyncIfNewer = radarSyncIfNewer;
+
+  /* ⚡ يضمن توفّر نتائج المسح مبكراً + يتحقّق من وجود أحدث */
   window.snEnsureResults = async function () {
-    if (Array.isArray(PRED_RESULTS) && PRED_RESULTS.length) return true;
-    try { predLoadCache(); } catch (e) {}
-    if (PRED_RESULTS.length) return true;
-    try { await radarLoadShared(); } catch (e) {}
+    if (!(Array.isArray(PRED_RESULTS) && PRED_RESULTS.length)) {
+      try { predLoadCache(); } catch (e) {}
+    }
+    const got = await radarSyncIfNewer(true);                  // تحقّق دائماً عند البدء
+    if (!got && !(PRED_RESULTS && PRED_RESULTS.length)) {
+      try { await radarLoadShared(); } catch (e) {}
+    }
     return !!(PRED_RESULTS && PRED_RESULTS.length);
   };
   /* 📡 خطة إليوت المتتبَّعة فعلياً لسهم — لعرضها في بطاقة المراقبة (نفس ما يُرفع للخادم) */

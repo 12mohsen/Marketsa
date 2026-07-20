@@ -2063,8 +2063,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-20-v200';
-console.log('%c[تداول بلس] البناء: 2026-07-20-v200 — 👑 ملوك التوزيعات: جلب كامل تاريخ التوزيعات وحساب السنوات المتصلة والوتيرة، ووسام 👑 (15+ سنة) و⭐ (8+) — جدول محقَّق بالبيانات لا منسوخ', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-20-v201';
+console.log('%c[تداول بلس] البناء: 2026-07-20-v201 — 🔄 تزامن حيّ بين كل الأجهزة: أي مسح من الكمبيوتر أو الجوال يظهر على البقية خلال دقيقتين (وفوراً عند العودة للتبويب) — للرادار والتوزيعات معاً', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -5261,6 +5261,33 @@ async function divLoadShared() {
     return true;
   } catch (e) { return false; }
 }
+/* 🔄 فحص طزاجة التوزيعات: يقارن وقت آخر رفع على القاعدة وينزّل الأحدث
+   (فلو مسحتَ من جهاز آخر، تلتقطه بقية الأجهزة تلقائياً) */
+let _lastDivChk = 0;
+async function divSyncIfNewer(force) {
+  if (typeof sb === 'undefined' || !sb) return false;
+  const now = Date.now();
+  if (!force && now - _lastDivChk < 120000) return false;    // مرة كل دقيقتين كحدّ أقصى
+  _lastDivChk = now;
+  try {
+    const { data } = await sb.from('dividends_shared').select('updated_at').eq('id', 1).maybeSingle();
+    if (!data || !data.updated_at) return false;
+    const remote = new Date(data.updated_at).getTime();
+    const local = (DIV_HISTORY && DIV_HISTORY._scannedAt) ? new Date(DIV_HISTORY._scannedAt).getTime() : 0;
+    if (remote > local + 60000) {
+      console.info('[div] 🔄 وُجدت توزيعات أحدث — يجري التحديث');
+      const ok = await divLoadShared();
+      if (ok) {
+        try { renderReturns(); } catch (e) {}
+        try { renderTicker(); } catch (e) {}
+        try { divUpdateStamp(); } catch (e) {}
+      }
+      return ok;
+    }
+  } catch (e) {}
+  return false;
+}
+
 /* ⚡ يُحمّل مرة عند فتح التطبيق/القسم — ويحدّث تلقائياً للأدمن إن قدُمت */
 let _divEnsured = false;
 async function divEnsureLoaded() {
@@ -10692,6 +10719,7 @@ function switchTab(tab, btn) {
     if (_dsb) _dsb.style.display = (typeof isAdmin === 'function' && isAdmin()) ? 'block' : 'none';
     if (typeof divUpdateStamp === 'function') divUpdateStamp();
     if (typeof divEnsureLoaded === 'function') divEnsureLoaded();
+    if (typeof divSyncIfNewer === 'function') divSyncIfNewer(true);   // تحقّق فوري من وجود أحدث
   }
   if (tab === 'analysis') { marketAnalysisFilter('all'); updateHistCacheStatus(); }
   if (tab === 'all') predInit();
@@ -11639,6 +11667,27 @@ function _adminHiddenNotice(tab) {
 
 /* 💰 حمّل التوزيعات المشتركة عند فتح التطبيق (لتظهر العوائد والمفكرة للجميع فوراً) */
 setTimeout(() => { try { if (typeof divEnsureLoaded === 'function') divEnsureLoaded(); } catch (e) {} }, 2500);
+
+/* 🔄 تزامن حيّ بين كل الأجهزة — كل دقيقتين ما دام التطبيق مفتوحاً وظاهراً.
+   فأي مسح تُجريه من أي جهاز (كمبيوتر أو جوال) يظهر على البقية تلقائياً. */
+setInterval(() => {
+  if (document.hidden) return;                         // لا تُرهق الشبكة والتبويب مخفي
+  try {
+    if (typeof window.snSyncIfNewer === 'function') {
+      window.snSyncIfNewer().then(ok => {
+        if (ok && typeof window.sniperRender === 'function') { try { window.sniperRender(); } catch (e) {} }
+      });
+    }
+  } catch (e) {}
+  try { if (typeof divSyncIfNewer === 'function') divSyncIfNewer(); } catch (e) {}
+}, 120 * 1000);
+
+/* وعند العودة للتبويب بعد غياب: تحقّق فوراً */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  try { if (typeof window.snSyncIfNewer === 'function') window.snSyncIfNewer(true).then(ok => { if (ok && window.sniperRender) window.sniperRender(); }); } catch (e) {}
+  try { if (typeof divSyncIfNewer === 'function') divSyncIfNewer(true); } catch (e) {}
+});
 
 /* ⚡ حمّل نتائج المسح مبكراً ثم أعد رسم المراقبة — ليظهر صندوق «متتبَّع 24/7» فوراً بلا انتظار */
 setTimeout(() => {

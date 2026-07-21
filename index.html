@@ -1360,7 +1360,7 @@ canvas#mdChart{display:block;width:100% !important}
       <span class="nav-ico">📈</span> العوائد
     </button>
     <button class="nav-btn" data-tab="all" onclick="switchTab('all',this)">
-      <span class="nav-ico">🔮</span> رادار الانفجارات
+      <span class="nav-ico">🔮</span> رادار
     </button>
     <button class="nav-btn" data-tab="analysis" onclick="switchTab('analysis',this)">
       <span class="nav-ico">⚡</span> تحليل السوق
@@ -1648,6 +1648,7 @@ canvas#mdChart{display:block;width:100% !important}
       <button class="pred-filter"        id="predFilter-base"     onclick="predSetFilter('base')">🧱 قاعدة <span id="predCount-base">(0)</span></button>
       <button class="pred-filter"        id="predFilter-elliott"  onclick="predSetFilter('elliott')">🌊 بداية دورة <span id="predCount-elliott">(0)</span></button>
       <button class="pred-filter"        id="predFilter-confl"    onclick="predSetFilter('confl')">🎯 تقاطع <span id="predCount-confl">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-confirmed" onclick="predSetFilter('confirmed')" style="border-color:rgba(34,197,94,.55)">🔥 مؤكّد <span id="predCount-confirmed">(0)</span></button>
       <button class="pred-filter"        id="predFilter-success"  onclick="predSetFilter('success')" style="display:none">✅ نجح <span id="predCount-success">(0)</span></button>
       <button class="pred-filter"        id="predFilter-fail"     onclick="predSetFilter('fail')" style="display:none">❌ لم ينجح <span id="predCount-fail">(0)</span></button>
       <span id="predRateBadge" style="display:none;align-self:center;font-size:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px"></span>
@@ -2063,8 +2064,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-20-v202';
-console.log('%c[تداول بلس] البناء: 2026-07-20-v202 — ⏱️ إصلاح جذري لدقّة المتنبّئ: المهلة كانت تُحسب على حدّ التذبذب 10% يومياً (افتراض مستحيل) فصارت الأهداف «خلال يومين» ويفشل التقييم — الآن تُحسب على مدى تذبذب السهم الفعلي (ATR)', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-21-v210';
+console.log('%c[تداول بلس] البناء: 2026-07-21-v210 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -3141,6 +3142,11 @@ function _isPaidFor(k) {
 function _targetsLocked(secKey) {
   if (!secKey) return false;
   if (typeof isAdmin === 'function' && isAdmin()) return false;
+  /* 👥 الزائر (غير مسجّل): يتبع إعداد الأدمن الخاص بالزوار وحده — مستقلّ تماماً */
+  if (!(typeof sbUser !== 'undefined' && sbUser)) {
+    const g = (typeof appSettings !== 'undefined' && appSettings) ? appSettings.guestLockTargets : null;
+    return g !== 'open';          // الافتراضي: مقفلة للزوار (تُغري بالتسجيل)
+  }
   /* القفل مستقل لكل قسم حسب اختيار الأدمن: مفتوحة / مقفلة / تلقائي (حسب الاشتراك) */
   const lt = _secFlags(userRestrictions, secKey).lockT;
   if (lt === 'open') return false;   // فتحها الأدمن
@@ -3518,7 +3524,7 @@ function openPayModal(secKey) {
   const defs = (typeof ADMIN_TAB_DEFS !== 'undefined' && ADMIN_TAB_DEFS.length)
     ? ADMIN_TAB_DEFS
     : [{ k: 'watchlist', t: '📁 المحفظة' }, { k: 'monitor', t: '👁️ المراقبة' },
-       { k: 'returns', t: '📈 العوائد' }, { k: 'all', t: '🔮 رادار الانفجارات' },
+       { k: 'returns', t: '📈 العوائد' }, { k: 'all', t: '🔮 رادار' },
        { k: 'analysis', t: '⚡ تحليل السوق' }];
   const payItems = defs.map(d => {
     const p = _svcPrice(d.k);
@@ -3743,7 +3749,7 @@ function renderAdminSection() {
     { k: 'watchlist', t: '📁 المحفظة' },
     { k: 'monitor',   t: '👁️ المراقبة' },
     { k: 'returns',   t: '📈 العوائد' },
-    { k: 'all',       t: '🔮 رادار الانفجارات' },
+    { k: 'all',       t: '🔮 رادار' },
     { k: 'sniper',    t: '🎯 قنّاص الفرص' },
     { k: 'analysis',  t: '⚡ تحليل السوق' },
   ];
@@ -3825,6 +3831,13 @@ function renderAdminSection() {
 
         <div style="${head};margin-top:20px">👥 عرض الأقسام للزوار (غير المسجّلين)</div>
         <div style="font-size:11px;color:var(--txt-m);margin:-2px 0 8px;line-height:1.75">لكل قسم اختر: <b>👁️ ظاهر</b> · <b>🌫️ ضبابي</b> (تذوّق يُغري بالتسجيل) · <b>🚫 مخفي</b>. هذه القائمة <b>مستقلّة تماماً</b> عن قائمة المسجّلين أعلاه — فإخفاء قسم عنهم لا يؤثّر على الزوار. الأدمن مستثنى دائماً.</div>
+        <label style="${row}">
+          <span>🎯 الأهداف ووقف الخسارة للزوار</span>
+          <select id="admGuestTgt" style="background:var(--surf-alt);color:var(--txt);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;cursor:pointer">
+            <option value="lock" ${s.guestLockTargets !== 'open' ? 'selected' : ''}>🔒 مقفلة (مظللة)</option>
+            <option value="open" ${s.guestLockTargets === 'open' ? 'selected' : ''}>🔓 مفتوحة للزوار</option>
+          </select>
+        </label>
         ${tabs.map(t => { const gm = ((s.guestTabMode || {})[t.k]) || ((s.guestHiddenTabs || []).includes(t.k) ? 'hide' : 'show'); return `
           <label style="${row}">
             <span>${t.t}</span>
@@ -3922,7 +3935,7 @@ function renderAdminSection() {
         <div style="${head}">📈 البيانات التاريخية للأسهم</div>
         <div style="font-size:11px;color:var(--txt-m);line-height:1.7;margin-bottom:10px">
           تُخزَّن شموع يومية (5 سنوات) لكل رمز في القاعدة، فتُقرأ بسرعة دون إعادة الجلب من المصدر في كل مرة.
-          افتح قسم «🔮 رادار الانفجارات» أولاً حتى تُحمَّل قائمة الأسهم، ثم اضغط الجلب (بذرة أولى مرة واحدة).
+          افتح قسم «🔮 رادار» أولاً حتى تُحمَّل قائمة الأسهم، ثم اضغط الجلب (بذرة أولى مرة واحدة).
         </div>
         <div style="font-size:10.5px;color:#86efac;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);border-radius:9px;padding:7px 10px;line-height:1.7;margin-bottom:10px">
           ⏰ بعد البذرة الأولى، يُحدَّث كل رمز مخزّن تلقائياً يومياً على الخادم (Edge Function + Cron) — لا حاجة للضغط يدوياً كل يوم. النشر: راجع «دليل-التحديث-اليومي.md».
@@ -4838,7 +4851,7 @@ const ADMIN_TAB_DEFS = [
   { k: 'watchlist', t: '📁 المحفظة' },
   { k: 'monitor',   t: '👁️ المراقبة' },
   { k: 'returns',   t: '📈 العوائد' },
-  { k: 'all',       t: '🔮 رادار الانفجارات' },
+  { k: 'all',       t: '🔮 رادار' },
   { k: 'sniper',    t: '🎯 قنّاص الفرص' },
   { k: 'analysis',  t: '⚡ تحليل السوق' },
 ];
@@ -5372,7 +5385,7 @@ async function adminSyncHistorical() {
   if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
   if (_histSyncing) return;
   if (!Array.isArray(rows) || !rows.length) {
-    showToast('⚠️ حمّل بيانات السوق أولاً — افتح «🔮 رادار الانفجارات» ثم عُد'); return;
+    showToast('⚠️ حمّل بيانات السوق أولاً — افتح «🔮 رادار» ثم عُد'); return;
   }
   _histSyncing = true;
   const list = rows.filter(r => r.sym);
@@ -6032,6 +6045,7 @@ async function adminSave(btn) {
   appSettings = Object.assign({}, appSettings, {
     hiddenTabs:     tabKeys.filter(k => { const el = document.getElementById('admTab-' + k); return el && !el.checked; }),
     guestTabMode:   (function () { const o = {}; tabKeys.forEach(k => { const el = document.getElementById('admGMode-' + k); if (el) o[k] = el.value; }); return o; })(),
+    guestLockTargets: (function () { const e = document.getElementById('admGuestTgt'); return e ? e.value : 'lock'; })(),
     guestHiddenTabs: tabKeys.filter(k => { const el = document.getElementById('admGMode-' + k); return el && el.value === 'hide'; }),
     requireLogin:   document.getElementById('admRequireLogin').checked,
     showAgenda:     (function () { const e = document.getElementById('admShowAgenda'); return e ? e.checked : true; })(),
@@ -9062,6 +9076,8 @@ document.addEventListener('keydown', e => {
     const rangeMove = hi - lo;
     const atrMove = (atr[n - 1] || 0) * 2;
     const measured = Math.max(rangeMove, atrMove);
+    /* 📏 مدى السهم اليومي نسبةً لسعره — أساس «حارس مسافة الوقف» و«المهلة الواقعية» */
+    const atrPctVal = price ? ((atr[n - 1] || 0) / price) * 100 : 0;
     let target = null, targetPct = null, daysToTarget = null;
     if (direction !== 'none') {
       target = direction === 'up' ? price + measured : price - measured;
@@ -9070,8 +9086,7 @@ document.addEventListener('keydown', e => {
          الخطأ السابق: قسمة الهدف على 10% (حدّ التذبذب) افترضت ضرب النسبة القصوى يومياً
          متتالياً — فصارت أهداف +20% «خلال يومين» ففشل التقييم دائماً تقريباً.
          الواقعي: السهم يقطع في اليوم ~60% من متوسط مداه الحقيقي في اتجاه واحد. */
-      const atrPct = price ? ((atr[n - 1] || 0) / price) * 100 : 0;
-      const dailyRealistic = Math.max(0.4, atrPct * 0.6);
+      const dailyRealistic = Math.max(0.4, atrPctVal * 0.6);
       daysToTarget = Math.min(30, Math.max(3, Math.ceil(Math.abs(targetPct) / dailyRealistic)));
     }
 
@@ -9080,8 +9095,37 @@ document.addEventListener('keydown', e => {
       bwPct < 0.30 ? { level: 2, text: 'قريب (خلال أيام)' } :
       { level: 1, text: 'تراكم مبكّر' };
 
+    /* ══════════════════════════════════════════════════════════
+       🔥 مؤكِّدات البداية — تعالج «الثبات» (أكبر سبب فشل: 59%)
+       ① دفقة حجم: الانفجار بلا حجم وهم
+       ② اختراق فعلي: السعر أغلق فوق سقف نطاق الانضغاط (أو تحت قاعه هبوطاً)
+       ③ سيولة كافية: الأسهم الميتة لا تتحرّك مهما ضُغطت
+       ══════════════════════════════════════════════════════════ */
+    let volSurge = null, volRatio = null, breakout = false, liqValue = null;
+    try {
+      const vols = c.slice(-21).map(x => +x.v || 0);
+      const todayVol = vols[vols.length - 1] || 0;
+      const prevVols = vols.slice(0, -1).filter(v => v > 0);
+      const avgVol = prevVols.length ? prevVols.reduce((s, v) => s + v, 0) / prevVols.length : 0;
+      volRatio = avgVol > 0 ? +(todayVol / avgVol).toFixed(2) : null;
+      volSurge = volRatio != null && volRatio >= 1.5;
+      liqValue = todayVol * price;                       // القيمة المتداولة اليوم (ريال)
+      /* الاختراق: مقارنة بأعلى/أدنى نطاق الانضغاط (بلا شمعة اليوم) */
+      const segB = c.slice(Math.max(0, n - 21), n - 1);
+      if (segB.length > 5) {
+        const rHi = hasOHLC ? Math.max(...segB.map(x => x.h)) : Math.max(...segB.map(x => x.c));
+        const rLo = hasOHLC ? Math.min(...segB.map(x => x.l)) : Math.min(...segB.map(x => x.c));
+        if (direction === 'up') breakout = price > rHi;
+        else if (direction === 'down') breakout = price < rLo;
+      }
+    } catch (e) {}
+    /* ✅ مؤكّد = حجم + اختراق + سيولة معقولة (≥ 300 ألف ريال يومياً) */
+    const confirmed = !!(volSurge && breakout && (liqValue == null || liqValue >= 300000));
+
     return {
       ok: true, bars: n, hasOHLC, price,
+      atrPct: +atrPctVal.toFixed(2),
+      volRatio, volSurge, breakout, liqValue, confirmed,
       bw: +bw.toFixed(2), bwPct: +bwPct.toFixed(3), squeezeStrength: +squeezeStrength.toFixed(3),
       pressureDuration, ttm, volContraction, volExpansion,
       adx: adx != null ? +adx.toFixed(1) : null,
@@ -9239,20 +9283,30 @@ document.addEventListener('keydown', e => {
     if (!wrap) return;
     const want = kind === 'success' ? 'success' : 'fail';
     const reasonTxt = { reverse: '↩️ عكسي', short: '📉 قصور', flat: '➡️ ثبات' };
+    /* الفلتر يُضبط من أزرار «أسباب الفشل» */
     let list = _predOutcomes.filter(p => p.outcome === want);
     const q = (PRED_SEARCH || '').trim();
     if (q) list = list.filter(p => String(p.name || '').includes(q) || String(p.symbol || '').includes(q));
+    /* 🔎 فلترة حسب سبب الفشل عند اختياره */
+    if (want === 'fail' && PRED_FAIL_REASON) list = list.filter(p => p.fail_reason === PRED_FAIL_REASON);
     if (!list.length) {
       wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--txt-m)">لا تنبؤات ' + (want === 'success' ? 'ناجحة' : 'غير ناجحة') + ' بعد. تُقيَّم التنبؤات تلقائياً بعد انقضاء مدّتها.</div>';
+      if (want === 'fail' && PRED_FAIL_REASON) {
+        wrap.innerHTML = '<div style="text-align:center;padding:24px;color:var(--txt-m)">لا أسهم بهذا السبب — <a onclick="predSetFailReason(\'\')" style="color:#38bdf8;cursor:pointer;font-weight:800">عرض الكل</a></div>';
+      }
       return;
     }
     const nfmt = v => (v == null ? '—' : (+v).toFixed(2));
     const rowsHtml = list.map((p, i) => {
       const dir = p.direction === 'up' ? '<span style="color:#16a34a;font-weight:800">🟢 صعودي</span>' : '<span style="color:#dc2626;font-weight:800">🔴 هبوطي</span>';
       const oc = want === 'success' ? '<span style="color:#4ade80;font-weight:800">✅ نجح</span>' : '<span style="color:#f87171;font-weight:800">❌ لم ينجح</span>';
-      return '<tr style="border-bottom:1px solid var(--bdr)">' +
+      /* 👆 الصف قابل للنقر — يفتح نافذة تفاصيل السهم بلا مغادرة القسم */
+      const _nm = String(p.name || p.symbol || '').replace(/'/g, "\\'");
+      return '<tr onclick="predOpen(\'' + p.symbol + '\')" title="اضغط لعرض تفاصيل السهم" ' +
+        'style="border-bottom:1px solid var(--bdr);cursor:pointer" ' +
+        'onmouseover="this.style.background=\'var(--surf-alt)\'" onmouseout="this.style.background=\'\'">' +
         '<td style="padding:8px 6px;color:var(--txt-m);font-size:11px">' + (i + 1) + '</td>' +
-        '<td style="padding:8px 6px"><div style="font-weight:700;font-size:12px">' + (p.name || '—') + '</div><div style="color:var(--txt-m);font-size:10px">' + p.symbol + '</div></td>' +
+        '<td style="padding:8px 6px"><div style="font-weight:700;font-size:12px">' + (p.name || '—') + ' <span style="color:#38bdf8;font-size:10px">🔍</span></div><div style="color:var(--txt-m);font-size:10px">' + p.symbol + '</div></td>' +
         '<td style="padding:8px 6px;text-align:center;font-size:10.5px;white-space:nowrap">' + p.pred_date + '</td>' +
         '<td style="padding:8px 6px;text-align:center">' + dir + '</td>' +
         '<td style="padding:8px 6px;text-align:center;font-size:11px;white-space:nowrap">' + nfmt(p.entry_price) + ' ← ' + nfmt(p.target_price) + '</td>' +
@@ -9277,8 +9331,28 @@ document.addEventListener('keydown', e => {
     }
     if (want === 'fail') {
       const rc = { reverse: 0, short: 0, flat: 0 };
-      list.forEach(p => { if (rc[p.fail_reason] != null) rc[p.fail_reason]++; });
-      wrap.innerHTML = '<div style="font-size:11px;color:var(--txt-m);background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center">📊 أسباب الفشل — ↩️ عكسي: <b style="color:#f87171">' + rc.reverse + '</b> · 📉 قصور: <b style="color:#fbbf24">' + rc.short + '</b> · ➡️ ثبات: <b>' + rc.flat + '</b></div>' + wrap.innerHTML;
+      _predOutcomes.filter(p => p.outcome === 'fail').forEach(p => { if (rc[p.fail_reason] != null) rc[p.fail_reason]++; });
+      const totalF = rc.reverse + rc.short + rc.flat;
+      /* 🖱️ كل سبب زرّ يفلتر القائمة عليه — والمُفعَّل مميّز */
+      const rBtn = (key, ico, label, clr, cnt) => {
+        const on = PRED_FAIL_REASON === key;
+        return '<button onclick="predSetFailReason(\'' + key + '\')" style="cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:800;' +
+          'border-radius:20px;padding:6px 13px;margin:3px;transition:all .15s;' +
+          'background:' + (on ? 'rgba(' + clr.rgb + ',.28)' : 'var(--surf)') + ';' +
+          'border:1px solid rgba(' + clr.rgb + ',' + (on ? '.7' : '.35') + ');color:' + clr.hex + '">' +
+          ico + ' ' + label + ': <b>' + cnt + '</b>' + (on ? ' ✓' : '') + '</button>';
+      };
+      const allOn = !PRED_FAIL_REASON;
+      wrap.innerHTML =
+        '<div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:9px 8px;margin-bottom:10px;text-align:center">' +
+          '<div style="font-size:11px;color:var(--txt-m);margin-bottom:5px">📊 أسباب الفشل — اضغط أيّها لعرض أسهمه</div>' +
+          '<button onclick="predSetFailReason(\'\')" style="cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:800;border-radius:20px;padding:6px 13px;margin:3px;' +
+            'background:' + (allOn ? 'rgba(148,163,184,.28)' : 'var(--surf)') + ';border:1px solid rgba(148,163,184,' + (allOn ? '.7' : '.35') + ');color:var(--txt)">الكل: <b>' + totalF + '</b>' + (allOn ? ' ✓' : '') + '</button>' +
+          rBtn('reverse', '↩️', 'عكسي', { rgb: '248,113,113', hex: '#f87171' }, rc.reverse) +
+          rBtn('short', '📉', 'قصور', { rgb: '251,191,36', hex: '#fbbf24' }, rc.short) +
+          rBtn('flat', '➡️', 'ثبات', { rgb: '148,163,184', hex: '#94a3b8' }, rc.flat) +
+          '<div style="font-size:10px;color:var(--txt-m);margin-top:6px;line-height:1.7">↩️ <b>عكسي</b>: تحرّك ضدّ الاتجاه المتوقّع · 📉 <b>قصور</b>: تحرّك صحيحاً لكن لم يبلغ الهدف · ➡️ <b>ثبات</b>: لم يتحرّك يُذكر</div>' +
+        '</div>' + wrap.innerHTML;
     }
   }
   async function predLoadIndicators(force) {
@@ -9313,6 +9387,7 @@ document.addEventListener('keydown', e => {
   let   PRED_LAST_TS = null;        // وقت آخر مسح (epoch)
   let   PRED_AUTORAN = false;       // ضمان التشغيل التلقائي مرة واحدة لكل جلسة
   let   PRED_AUTORAN2 = false;      // ضمان مسح ترقية الإصدار مرة واحدة لكل جلسة
+  let   PRED_FAIL_REASON = '';      // فلتر سبب الفشل: '' | reverse | short | flat
   /* يكشف أن النتائج المحمّلة مُسِحت بإصدار أقدم (تفتقر لأحدث مزايا) → تستوجب مسحاً تلقائياً.
      نحدّث اسم الحقل هنا مع كل ميزة جديدة تُحسب أثناء المسح. */
   function _resultsOutdated() {
@@ -9450,7 +9525,7 @@ document.addEventListener('keydown', e => {
   function predRenderLocked() {
     const btn = document.getElementById('predScanBtn');
     if (btn) { btn.disabled = true; btn.textContent = '🔒 محتوى للمشتركين'; }
-    ['all', 'high', 'imminent', 'up', 'down', 'base'].forEach(f => {
+    ['all', 'ready', 'high', 'imminent', 'up', 'down', 'base', 'elliott', 'confl', 'confirmed'].forEach(f => {
       const el = document.getElementById('predCount-' + f); if (el) el.textContent = '(0)';
     });
     const wrap = document.getElementById('predResults'); if (!wrap) return;
@@ -9529,6 +9604,8 @@ document.addEventListener('keydown', e => {
               try { a.elTime = _timeWindow(candles); } catch (e) {}
               try { a.elGann = _gannLevels(candles, a.price); } catch (e) {}
               try { a.elCircle = _digitalCircle(candles, a.price); } catch (e) {}
+              try { a.trigVol = a.elTrig ? _trigVolRatio(candles, a.elTrig.age || 0) : null; } catch (e) {}   // 🔊 حجم شمعة الزناد
+              try { a.liq20 = _liq20(candles); } catch (e) {}                                                // 💧 سيولة يومية نموذجية
               try { a.bars = Array.isArray(candles) ? candles.length : 0; } catch (e) {}   // عمق التاريخ (لوسم السهم الحديث)
               try { const _f = (typeof rows !== 'undefined' && Array.isArray(rows)) ? rows.find(x => x.sym === r.sym) : null; if (_f && _f.eps != null) a.eps = _f.eps; } catch (e) {}   // EPS لقيمة جراهام
               PRED_RESULTS.push(a); ok++;
@@ -9566,6 +9643,8 @@ document.addEventListener('keydown', e => {
     const bull = r.direction === 'up', bear = r.direction === 'down';
     const elUp = r.elDir === 'up', elEarly = r.elStage === 'مبكّرة';
     const highP = r.probability >= 70;
+    /* 🔥 «دخول قوي» صار يشترط تأكيد البداية (حجم + اختراق + سيولة) — يعالج الثبات */
+    if (bull && elUp && r.confirmed && highP) return { t: '🔥 دخول مؤكّد', c: '#22c55e', bg: '34,197,94',  rank: 4 };
     if (bull && elUp && elEarly && highP) return { t: '🟢 دخول قوي',    c: '#22c55e', bg: '34,197,94',  rank: 3 };
     if (bull && elUp)                     return { t: '🟢 دخول',         c: '#4ade80', bg: '74,222,128', rank: 2 };
     if (bull && !elUp)                    return { t: '🟡 راقب · تعارض', c: '#fbbf24', bg: '251,191,36', rank: 1 };
@@ -9582,6 +9661,7 @@ document.addEventListener('keydown', e => {
     if (f === 'base') return PRED_RESULTS.filter(r => _symInd[r.sym] && _symInd[r.sym].base_flag).length;
     if (f === 'elliott') return PRED_RESULTS.filter(r => r.elStage === 'مبكّرة').length;
     if (f === 'confl') return PRED_RESULTS.filter(r => r.elConfl).length;
+    if (f === 'confirmed') return PRED_RESULTS.filter(r => r.confirmed).length;
     if (f === 'success') return _predStats.success;
     if (f === 'fail') return _predStats.fail;
     return 0;
@@ -9603,7 +9683,8 @@ document.addEventListener('keydown', e => {
     if (_sb && !PRED_SCANNING && String(_sb.textContent).indexOf('🔒') >= 0) {
       _sb.disabled = false; _sb.textContent = '🔮 مسح الانفجارات';
     }
-    ['all', 'ready', 'high', 'imminent', 'up', 'down', 'base', 'elliott', 'confl'].forEach(f => {
+    /* ⚠️ أي فلتر جديد يجب إدراجه هنا وإلا بقي عدّاده على «(0)» المكتوب في HTML */
+    ['all', 'ready', 'high', 'imminent', 'up', 'down', 'base', 'elliott', 'confl', 'confirmed'].forEach(f => {
       const el = document.getElementById('predCount-' + f);
       if (el) el.textContent = '(' + predCount(f) + ')';
     });
@@ -9629,6 +9710,7 @@ document.addEventListener('keydown', e => {
     else if (PRED_FILTER === 'base') list = list.filter(r => _symInd[r.sym] && _symInd[r.sym].base_flag);
     else if (PRED_FILTER === 'elliott') list = list.filter(r => r.elStage === 'مبكّرة');
     else if (PRED_FILTER === 'confl') list = list.filter(r => r.elConfl);
+    else if (PRED_FILTER === 'confirmed') list = list.filter(r => r.confirmed);
 
     const q = (PRED_SEARCH || '').trim();
     if (q) {
@@ -9679,7 +9761,11 @@ document.addEventListener('keydown', e => {
           (r.elStage ? '<div style="display:inline-block;margin-top:2px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (r.elStage === 'مبكّرة' ? '74,222,128' : r.elStage === 'منتصف' ? '251,191,36' : '248,113,113') + ',.15);color:' + (r.elStage === 'مبكّرة' ? '#4ade80' : r.elStage === 'منتصف' ? '#fbbf24' : '#f87171') + '">🌊 ' + r.elStage + (r.elWave ? ' · م' + r.elWave : '') + '</div>' : '') +
           (rr != null ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (rr >= 1.5 ? '74,222,128' : rr >= 1 ? '251,191,36' : '148,163,184') + ',.16);color:' + (rr >= 1.5 ? '#4ade80' : rr >= 1 ? '#fbbf24' : '#94a3b8') + '" title="مخاطرة/عائد — كلما زاد كان أفضل">⚖️ ع/م ' + rr + '</div>' : '') +
           (r.elConf != null ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(' + (r.elConf >= 60 ? '74,222,128' : r.elConf >= 40 ? '251,191,36' : '248,113,113') + ',.16);color:' + (r.elConf >= 60 ? '#4ade80' : r.elConf >= 40 ? '#fbbf24' : '#f87171') + '" title="ثقة إليوت من دقّته التاريخية لهذا السهم">🎯 ثقة ' + r.elConf + '%</div>' : '') +
-          elConflBadge + '</td>' +
+          elConflBadge +
+          /* 🔥 شارات تأكيد البداية: دفقة حجم · اختراق فعلي */
+          (r.volSurge ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(56,189,248,.16);color:#38bdf8" title="حجم اليوم مقابل متوسط 20 يوماً — دخول سيولة">🔊 حجم ×' + (r.volRatio || '') + '</div>' : '') +
+          (r.breakout ? '<div style="display:inline-block;margin-top:2px;margin-inline-start:4px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(34,197,94,.18);color:#22c55e" title="أغلق خارج نطاق الانضغاط — بدأت الحركة فعلاً">🚀 اختراق</div>' : '') +
+          '</td>' +
         '<td style="padding:9px 6px;text-align:center;font-weight:700">' + r.price.toFixed(2) + '</td>' +
         '<td style="padding:9px 6px;min-width:110px">' +
           '<div style="display:flex;align-items:center;gap:6px">' +
@@ -9896,6 +9982,36 @@ document.addEventListener('keydown', e => {
     }
     return null;
   }
+  /* ══════════════════════════════════════════════════════════════
+     🔊 حجم شمعة الزناد — لا «دفقة اليوم»
+     الفرق جوهري: الرادار يسأل «هل بدأت الحركة؟» فيقيس حجم اليوم.
+     والقنّاص يسأل «هل الزناد صادق؟» فيقيس حجم الشمعة التي تكوّن
+     عليها النمط نفسه (قد تكون قبل 3 أيام). مطرقة بحجم ضعيف = ضجيج،
+     ونفسها بحجم ×1.5 = أيدٍ حقيقية اشترت عند القاع.
+     ══════════════════════════════════════════════════════════════ */
+  function _trigVolRatio(cds, age) {
+    try {
+      if (!Array.isArray(cds) || cds.length < 25) return null;
+      const idx = cds.length - 1 - (age || 0);
+      if (idx < 20) return null;
+      const v = +cds[idx].v || 0; if (!v) return null;
+      const prev = cds.slice(idx - 20, idx).map(x => +x.v || 0).filter(x => x > 0);
+      if (prev.length < 10) return null;
+      const avg = prev.reduce((s, x) => s + x, 0) / prev.length;
+      return avg > 0 ? +(v / avg).toFixed(2) : null;
+    } catch (e) { return null; }
+  }
+  /* 💧 السيولة النموذجية: وسيط قيمة التداول لآخر 20 يوماً.
+     نستعمل الوسيط لا المتوسط لأن يوماً شاذاً واحداً يخدع المتوسط.
+     خطة على سهم بلا سيولة وهمٌ: لا تدخل بسعرك ولا تخرج بوقفك. */
+  function _liq20(cds) {
+    try {
+      if (!Array.isArray(cds) || cds.length < 10) return null;
+      const vals = cds.slice(-20).map(x => (+x.v || 0) * (+x.c || 0)).filter(x => x > 0).sort((a, b) => a - b);
+      if (vals.length < 5) return null;
+      return Math.round(vals[Math.floor(vals.length / 2)]);
+    } catch (e) { return null; }
+  }
   /* 📦 العرض والطلب (تقريبي): قاعدة صغيرة تسبق اندفاعاً قوياً = منطقة أوامر */
   function _zones(cds, price) {
     if (!Array.isArray(cds) || cds.length < 20 || !price) return null;
@@ -10001,11 +10117,46 @@ document.addEventListener('keydown', e => {
     ];
   }
   function _snConflCount(r) { return _snConflParts(r).filter(Boolean).length; }
+  /* ══════════════════════════════════════════════════════════════════
+     🛡️ حارس مسافة الوقف — يعالج ثغرة حقيقية اكتُشفت في الميدان
+     كان شرط «ع/م حالي ≥ 1.5» يُستوفى تلقائياً كلما اقترب السعر من الوقف،
+     لأن المقام (المخاطرة) يقترب من الصفر فينفجر الرقم: سهم عند 4.81
+     بوقف 4.78 يُظهر «ع/م 16.7» — وهو سراب لا بشارة، فمسافة 0.62%
+     يضربها ضجيج جلسة واحدة. فحمينا الشرط من نفسه:
+       الوقف يجب أن يبعد ≥ مدى السهم اليومي (ATR) و ≥ 1.5% أيهما أكبر.
+     ونميّز أيضاً «لم يبدأ بعد»: السعر تحت الدخول = الخطة بانتظار الاختراق،
+     فحساب ع/م من السعر الحالي مضلِّل — المرجع وقتها هو ع/م عند الدخول.
+     ══════════════════════════════════════════════════════════════════ */
+  /* 💧 حدّ السيولة: أقلّ من هذا فالخطة غير قابلة للتنفيذ أصلاً (ريال/يوم) */
+  const SNIPER_MIN_LIQ = 300000;
+  /* بيانات ناقصة ≠ سيولة سيّئة — لا نعاقب سهماً لا نملك حجمه */
+  function _snIlliquid(r) { return r && r.liq20 != null && r.liq20 < SNIPER_MIN_LIQ; }
+  /* 🔊 زناد مؤكَّد بالحجم: النمط تكوّن بحجم أعلى من معتاده = أيدٍ حقيقية */
+  function _snTrigVolOK(r) { return !!(r && r.trigVol != null && r.trigVol >= 1.3); }
+  function _snRisk(r) {
+    const p = r && r.elPlan; if (!p) return null;
+    const st = +p.stop, en = +p.entry, px = +r.price;
+    if (!(px > 0) || !(st > 0)) return null;
+    const riskPct = ((px - st) / px) * 100;                    // بُعد الوقف عن السعر الآن
+    const atrP = (r.atrPct != null && r.atrPct > 0) ? r.atrPct : null;
+    const minPct = Math.max(1.5, atrP != null ? atrP : 1.5);   // حدّ أدنى: يوم كامل من التذبذب
+    const planRiskPct = (en > 0) ? ((en - st) / en) * 100 : null;
+    return {
+      riskPct: +riskPct.toFixed(2),
+      minPct: +minPct.toFixed(2),
+      planRiskPct: planRiskPct != null ? +planRiskPct.toFixed(2) : null,
+      tight: riskPct < minPct,          // 🚨 وقف ملتصق → ضجيج يومي يضربه
+      belowStop: riskPct <= 0,          // السعر تحت الوقف أصلاً → الخطة باطلة
+      pending: en > 0 && px < en,       // ⏳ لم يبلغ الدخول بعد (اختراق منتظر)
+      atrPct: atrP,
+    };
+  }
   /* 💎 فرصة ذهبية: تكتمل فيها البنية + التوقيت + الانحياز معاً — توافق ≥4 + زناد صعودي +
      غير قرب عرض + انحياز صاعد + نافذة نشطة/قريبة + جراهام غير غالٍ + ع/م ≥1.5 + ليست حديثة.
      الندرة مقصودة: الذهبي يعني «اكتملت الشروط» لا «بنية جيدة فقط». */
   function _snGolden(r) {
     if (!r.elPlan || !r.elPlan.rr) return false;
+    if (_snIlliquid(r)) return false;                                // 💧 سيولة تكفي للتنفيذ
     if (r.bars && r.bars < 240) return false;                        // ليس حديثاً
     if (_snConflCount(r) < 3) return false;    // توافق ≥ 3 = إليوت + تأكيدان مستقلّان (إليوت ثابت للجميع)
     if (!(r.elTrig && r.elTrig.dir === 'bull')) return false;        // زناد صعودي
@@ -10018,8 +10169,13 @@ document.addEventListener('keydown', e => {
     /* 🚫 لا مطاردة: إن صعد السعر أكثر من 8% فوق الدخول المخطّط فالفرصة فاتت
        (يصبح الوقف بعيداً جداً والهدف الأول قريباً — اختلال حقيقي) */
     if (en > 0 && r.price > en * 1.08) return false;
-    const rrNow = (r.price > st) ? (tg - r.price) / (r.price - st) : null;
-    if (rrNow == null || rrNow < 1.5) return false;                  // ع/م حالي ≥ 1.5
+    /* 🛡️ حارس مسافة الوقف: وقف أقرب من مدى يوم كامل = خروج بالضجيج لا بالخطأ */
+    const rk = _snRisk(r);
+    if (!rk || rk.belowStop || rk.tight) return false;
+    /* ⚖️ العائد/المخاطرة — من الدخول المخطّط إن لم يبلغه السعر بعد، ومن السعر الآن إن بلغه */
+    const ref = rk.pending ? en : r.price;
+    const rrRef = (ref > st) ? (tg - ref) / (ref - st) : null;
+    if (rrRef == null || rrRef < 1.5) return false;
     return true;
   }
   /* 🎯 معايرة النجاح: نسبة نجاح فعلية من تاريخك — حسب درجة التوافق (تتراكم) أو الاحتمال (متوفّرة الآن) */
@@ -10169,8 +10325,10 @@ document.addEventListener('keydown', e => {
     const _snCount = _snConflCount;
     const _snYoung = r => !!(r.bars && r.bars < 240);   // أقل من ~سنة تداول → تاريخ غير كافٍ
     list.sort((a, b) =>
+      ((_snIlliquid(a) ? 1 : 0) - (_snIlliquid(b) ? 1 : 0)) ||  // 💧 ضعيف السيولة للأسفل (خطته غير قابلة للتنفيذ)
       ((_snYoung(a) ? 1 : 0) - (_snYoung(b) ? 1 : 0)) ||        // 🌱 الأسهم الحديثة دائماً للأسفل (إشاراتها ضعيفة)
       _snCount(b) - _snCount(a) ||
+      ((_snTrigVolOK(b) ? 1 : 0) - (_snTrigVolOK(a) ? 1 : 0)) || // 🔊 الزناد المؤكَّد بالحجم يتقدّم
       ((b.elTrig && b.elTrig.dir === 'bull' ? 1 : 0) - (a.elTrig && a.elTrig.dir === 'bull' ? 1 : 0)) ||
       ((_snTimeActive(b) ? 1 : 0) - (_snTimeActive(a) ? 1 : 0)) ||
       (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
@@ -10188,6 +10346,7 @@ document.addEventListener('keydown', e => {
         /* 🔬 مشخِّص: أين الاختناق فعلاً؟ نعدّ كم سهماً اجتاز كل شرط */
         const base = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
         let conds = [
+          { n: '💧 سيولة كافية (≥300 ألف/يوم)', f: r => !_snIlliquid(r) },
           { n: '🌱 ليس سهماً حديثاً', f: r => !(r.bars && r.bars < 240) },
           { n: '🧩 توافق ≥ 3/5', f: r => _snConflCount(r) >= 3 },
           { n: '🕯️ زناد صعودي', f: r => !!(r.elTrig && r.elTrig.dir === 'bull') },
@@ -10196,7 +10355,8 @@ document.addEventListener('keydown', e => {
           { n: '🕐 نافذة نشطة/قريبة', f: r => !!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5) },
           { n: '💰 جراهام غير غالٍ', f: r => { const g = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null; return !(g && g.verdict === 'غالٍ'); } },
           { n: '🚫 السعر قريب من الدخول (لا مطاردة)', f: r => { const e = r.elPlan.entry; return !(e > 0 && r.price > e * 1.08); } },
-          { n: '⚖️ ع/م حالي ≥ 1.5', f: r => { const p = r.elPlan; const rr = (r.price > p.stop) ? (p.target - r.price) / (r.price - p.stop) : null; return rr != null && rr >= 1.5; } },
+          { n: '🛡️ الوقف بعيد بما يكفي (≥ مدى يوم)', f: r => { const k = _snRisk(r); return !!(k && !k.belowStop && !k.tight); } },
+          { n: '⚖️ ع/م ≥ 1.5', f: r => { const p = r.elPlan, k = _snRisk(r); if (!k || k.belowStop) return false; const ref = k.pending ? +p.entry : r.price; const rr = (ref > p.stop) ? (p.target - ref) / (ref - p.stop) : null; return rr != null && rr >= 1.5; } },
         ];
         const condDefs = conds;
         conds = conds.map(c => ({ n: c.n, pass: base.filter(c.f).length }));
@@ -10246,7 +10406,7 @@ document.addEventListener('keydown', e => {
       }
       wrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--txt-m)"><div style="font-size:40px;margin-bottom:12px">🎯</div>' +
         '<div style="font-size:17px;font-weight:700;margin-bottom:8px">لا فرص جاهزة الآن</div>' +
-        '<div style="font-size:14px;line-height:2;max-width:560px;margin:0 auto">تظهر هنا الأسهم التي كوّنت خطة دخول إليوت (موجة 2→3 أو 4→5 في دورة صاعدة). افتح «رادار الانفجارات» واضغط «إعادة المسح» لتحديثها.</div></div>';
+        '<div style="font-size:14px;line-height:2;max-width:560px;margin:0 auto">تظهر هنا الأسهم التي كوّنت خطة دخول إليوت (موجة 2→3 أو 4→5 في دورة صاعدة). افتح «رادار» واضغط «إعادة المسح» لتحديثها.</div></div>';
       return;
     }
     const _snTotal = list.length;
@@ -10266,8 +10426,21 @@ document.addEventListener('keydown', e => {
       const _cur = r.price;
       const _t1 = +(p.entry + 0.382 * (p.target - p.entry)).toFixed(2);
       const _t2 = +(p.entry + 0.618 * (p.target - p.entry)).toFixed(2);
-      const _rrNow = (_cur > p.stop) ? +((p.target - _cur) / (_cur - p.stop)).toFixed(1) : null;
-      const _rrNowClr = _rrNow == null ? '#94a3b8' : _rrNow >= 2 ? '#4ade80' : _rrNow >= 1 ? '#fbbf24' : '#f87171';
+      /* 🛡️ ع/م حالي لا يُعرض عارياً: إن كان الوقف ملتصقاً فالرقم منتفخ ومضلِّل،
+         وإن لم يبلغ السعر الدخول بعد فالمرجع هو الدخول لا السعر الآن. */
+      const _rk = _snRisk(r);
+      const _rrRaw = (_cur > p.stop) ? +((p.target - _cur) / (_cur - p.stop)).toFixed(1) : null;
+      const _rrTight = !!(_rk && _rk.tight && !_rk.belowStop);
+      const _rrNow = _rrTight ? '⚠️' : _rrRaw;
+      const _rrNowClr = _rrTight ? '#f87171' : _rrRaw == null ? '#94a3b8' : _rrRaw >= 2 ? '#4ade80' : _rrRaw >= 1 ? '#fbbf24' : '#f87171';
+      /* شارات المخاطرة: وقف ملتصق · تحت الوقف · بانتظار الاختراق */
+      let _riskChip = '';
+      if (_rk && _rk.belowStop)
+        _riskChip = '<span style="background:#7f1d1d;color:#fecaca;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800">🛑 السعر تحت الوقف — الخطة باطلة</span>';
+      else if (_rrTight)
+        _riskChip = '<span style="background:#7c2d12;color:#fed7aa;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800" title="مسافة أقصر من مدى السهم اليومي — تذبذب عادي يضربها">🚨 الوقف ملتصق ' + _rk.riskPct + '% (الأدنى ' + _rk.minPct + '%)</span>';
+      else if (_rk && _rk.pending)
+        _riskChip = '<span style="background:#1e3a5f;color:#93c5fd;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800" title="الخطة تبدأ عند اختراق الدخول — الشراء قبله مضاربة على المجهول">⏳ بانتظار اختراق ' + p.entry + '</span>';
       const _pctTxt = v => (_cur ? ((v - _cur) / _cur * 100 >= 0 ? '+' : '') + ((v - _cur) / _cur * 100).toFixed(1) + '%' : '');
       const _tgtBox = (lbl, v) => '<div style="background:var(--surf);border-radius:10px;padding:9px 6px"><div style="font-size:11px;color:var(--txt-m);margin-bottom:2px">' + lbl + '</div><div style="font-size:16px;font-weight:900;color:#38bdf8">' + v + '</div><div style="font-size:10px;color:#38bdf8">' + _pctTxt(v) + '</div></div>';
       return '<div onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">' +
@@ -10284,11 +10457,17 @@ document.addEventListener('keydown', e => {
           return '<div style="display:flex;align-items:center;gap:9px;margin-bottom:11px"><span style="font-size:13px;color:var(--txt-m);font-weight:700">🧩 التوافق</span><span style="display:flex;gap:5px">' + pips + '</span><span style="font-size:14px;font-weight:900;color:' + cClr + '">' + cN + '/5</span></div>';
         })() +
         (function () {
-          let b = '';
+          let b = _riskChip;   /* 🛡️ تحذير المخاطرة أولاً — قبل أي بشارة فنّية */
           const chip = (bg, bd, fg, txt) => '<span style="background:' + bg + ';border:1px solid ' + bd + ';color:' + fg + ';border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;white-space:nowrap">' + txt + '</span>';
           if (r.bars && r.bars < 240) b += chip('rgba(251,146,60,.15)', 'rgba(251,146,60,.5)', '#fb923c', '🌱 سهم حديث · ' + r.bars + ' شمعة — تاريخ غير كافٍ، إشارات أقل موثوقية');
+          /* 💧 السيولة أولاً: خطة على سهم جامد لا تُنفَّذ بسعرها مهما جمُل تحليلها */
+          if (_snIlliquid(r)) b += chip('rgba(148,163,184,.14)', 'rgba(148,163,184,.45)', '#cbd5e1', '💧 سيولة ضعيفة · ' + Math.round(r.liq20 / 1000) + ' ألف/يوم — يصعب الدخول والخروج بسعرك');
           if (r.elTrig) {
             const _ag = r.elTrig.age ? ' · قبل ' + r.elTrig.age + ' يوم' : ' · اليوم';
+            /* 🔊 هل تكوّن النمط بحجم حقيقي؟ نمط بلا حجم = ضجيج بشكل جميل */
+            if (r.trigVol != null) b += (r.trigVol >= 1.3)
+              ? chip('rgba(56,189,248,.16)', 'rgba(56,189,248,.45)', '#38bdf8', '🔊 الزناد مؤكَّد بالحجم ×' + r.trigVol)
+              : chip('rgba(148,163,184,.1)', 'rgba(148,163,184,.32)', '#94a3b8', '🔈 زناد بحجم عادي ×' + r.trigVol + ' — تأكيد أضعف');
             if (r.elTrig.dir === 'bull') b += chip('rgba(34,197,94,.14)', 'rgba(34,197,94,.4)', '#4ade80', '🕯️ زناد صعودي: ' + r.elTrig.name + (r.elTrig.strong ? ' 💪' : '') + _ag);
             else b += chip('rgba(248,113,113,.12)', 'rgba(248,113,113,.4)', '#f87171', '⚠️ زناد هبوطي: ' + r.elTrig.name);
           }
@@ -10675,6 +10854,11 @@ document.addEventListener('keydown', e => {
     }
   };
   // 🔮 النقر على سهم في المتنبّئ → نافذة التنبؤ الغنية (تُوضّح لماذا رُشّح)، وإن غابت بياناته → التحليل الكامل
+  /* 🔎 اختيار سبب الفشل لعرض أسهمه (أو '' لعرض الكل) */
+  window.predSetFailReason = function (reason) {
+    PRED_FAIL_REASON = reason || '';
+    try { predRender(); } catch (e) {}
+  };
   window.predOpen = function (sym) {
     const res = PRED_RESULTS.find(x => x.sym === sym);
     if (res) { predShowDetail(res); return; }
@@ -10760,10 +10944,25 @@ function _smartTargets(price, hi, lo) {
   const roomMult = Math.min(1.2, Math.max(0.6, 0.6 + 0.6 * (1 - pos)));      // مساحة أقل قرب القمة
   let t1 = p * (1 + 0.07 * volMult * roomMult);
   let t2 = p * (1 + 0.16 * volMult * roomMult);
-  let capped = false;
+  /* ══════════════════════════════════════════════════════════════
+     🚀 القمة السنوية ليست دائماً سقفاً — وهذا كان خطأً مقلوباً:
+     حين يكون السعر ملاصقاً لقمّته السنوية فلا يوجد في تاريخه بائع
+     أعلى منه أصلاً — هذه «منطقة اكتشاف سعر» لا مقاومة. وقصّ الهدف
+     عندها أنتج أهدافاً بهللتين (+0.06%) مقابل وقف -5%!
+     فنُفرّق الآن: قمة بعيدة = سقف حقيقي · قمة ملاصقة = انطلاق.
+     ══════════════════════════════════════════════════════════════ */
+  const roomPct = has ? (hi52 - p) / p : 1;      // المساحة حتى القمة السنوية
+  let capped = false, discovery = false;
   if (has) {
-    if (t2 > hi52) { t2 = hi52; capped = true; }
-    if (t1 > hi52) { capped = true; }
+    if (roomPct < 0.03) {
+      discovery = true;                           // ملاصق للقمة أو فوقها
+      const yrRange = hi52 - lo52;
+      t1 = Math.max(t1, hi52 * 1.04);             // امتداد فوق القمة
+      t2 = Math.max(t2, hi52 + yrRange * 0.15);   // حركة مقيسة من مدى السنة
+    } else {
+      if (t2 > hi52) { t2 = hi52; capped = true; }
+      if (t1 > hi52) { t1 = p + (hi52 - p) * 0.55; capped = true; }
+    }
   }
   if (t2 <= p) t2 = p * 1.04;                            // ضمان هدف موجب
   if (t1 >= t2 || t1 <= p) t1 = p + (t2 - p) * 0.55;     // ضمان p < t1 < t2
@@ -10773,9 +10972,13 @@ function _smartTargets(price, hi, lo) {
   const rnd = v => +v.toFixed(2);
   t1 = rnd(t1); t2 = rnd(t2); sl = rnd(sl);
   const rr = (p > sl) ? +(((t1 - p) / (p - sl))).toFixed(1) : null;
+  const t1Pct = rnd((t1 / p - 1) * 100);
+  /* 🚫 حارس الجدوى: هدف أصغر من 1.5% أو عائد/مخاطرة دون 1 = صفقة خاسرة رياضياً
+     مهما كان التحليل جميلاً. نُعلِنها بدل تجميلها. */
+  const weak = (t1Pct < 1.5) || (rr != null && rr < 1);
   return {
-    t1, t2, sl, capped, rr,
-    t1Pct: rnd((t1 / p - 1) * 100),
+    t1, t2, sl, capped, discovery, rr, weak,
+    t1Pct,
     t2Pct: rnd((t2 / p - 1) * 100),
     slPct: rnd((sl / p - 1) * 100),
   };
@@ -12663,6 +12866,8 @@ function marketStockAnalysis(sym, name) {
           <div style="font-size:11px;color:var(--txt-m)">وقف الخسارة المقترح${_tg ? ' · ' + _pct(_tg.slPct) : ''}</div>
           <div style="font-size:14px;font-weight:700;color:#f87171">${fmt(stopLoss)} ر.س</div>
         </div>
+        ${_tg && _tg.weak ? '<div style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.45);border-radius:9px;padding:9px 11px;margin-top:10px;font-size:11px;color:#fca5a5;font-weight:700;line-height:1.8">🚫 <b>لا جدوى في هذه الصفقة الآن:</b> الهدف الأول ' + _pct(_tg.t1Pct) + ' مقابل وقف ' + _pct(_tg.slPct) + ' — تخاطر بكثير لتربح قليلاً. انتظر تراجعاً إلى دعم أو اختراقاً واضحاً يفتح مساحة.</div>' : ''}
+        ${_tg && _tg.discovery ? '<div style="font-size:10.5px;color:#facc15;text-align:center;margin-top:8px;line-height:1.7">🚀 السعر عند قمّته السنوية — <b>منطقة اكتشاف سعر</b> بلا مقاومة تاريخية فوقه. الأهداف امتداد مقيس (فرصة أكبر ومخاطرة أكبر).</div>' : ''}
         ${_tg && _tg.capped ? '<div style="font-size:10px;color:var(--txt-m);text-align:center;margin-top:8px;line-height:1.7">🔵 الهدف الثاني مقيّد عند القمة السنوية (مقاومة قوية)</div>' : ''}
       </div>` : '';
   // عرض التحليل في نافذة منبثقة
@@ -14597,7 +14802,7 @@ switchTab = function (tab, btn) {
     };
   }
 
-  // لفّ نافذة التحليل الغنية (رادار الانفجارات + تحليل السوق) لإضافة السيولة
+  // لفّ نافذة التحليل الغنية (رادار + تحليل السوق) لإضافة السيولة
   if (typeof window.marketStockAnalysis === 'function') {
     const _ma = window.marketStockAnalysis;
     window.marketStockAnalysis = function (sym, name) {

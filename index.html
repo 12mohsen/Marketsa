@@ -1675,6 +1675,7 @@ canvas#mdChart{display:block;width:100% !important}
       <div id="sniperScanStamp" style="font-size:11.5px;margin-top:9px;font-weight:700;line-height:1.8"></div>
     </div>
     <button id="sniperGoldenBtn" onclick="sniperGolden()" style="display:block;margin:0 auto 12px;background:linear-gradient(135deg,#b8860b,#facc15);color:#1a1a1a;border:none;border-radius:10px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">💎 الفرص الذهبية فقط</button>
+    <button id="sniperStableBtn" onclick="sniperStable()" style="display:block;margin:0 auto 12px;background:var(--surf-alt);border:1px solid rgba(168,85,247,.5);color:#c084fc;border-radius:10px;padding:10px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">🔁 الأثبت عبر الأيام</button>
     <button id="sniperTgToggle" onclick="tgUnlock()" style="display:none;margin:0 auto 10px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:9px 18px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">🔒 ربط تنبيه تلجرام (أدمن رئيسي)</button>
     <div id="sniperTgBox" style="display:none;max-width:460px;margin:0 auto 14px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:14px;text-align:right">
       <div style="font-size:13px;font-weight:800;margin-bottom:10px">🔔 تنبيه الفرص الذهبية عبر تلجرام</div>
@@ -2064,8 +2065,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-21-v210';
-console.log('%c[تداول بلس] البناء: 2026-07-21-v210 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-21-v212';
+console.log('%c[تداول بلس] البناء: 2026-07-21-v212 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -3828,6 +3829,15 @@ function renderAdminSection() {
             <input type="checkbox" id="admTab-${t.k}" ${(s.hiddenTabs || []).includes(t.k) ? '' : 'checked'}
                    style="width:18px;height:18px;cursor:pointer">
           </label>`).join('')}
+
+        <label style="${row}">
+          <span>🔁 زر «الأثبت عبر الأيام» في القنّاص<div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px;line-height:1.7">يعرض الأسهم التي ثبت تحليلها أياماً متتالية. تحكّم عام — ويمكن إخفاؤه عن مستخدم بعينه من بطاقته.</div></span>
+          <select id="admStableMode" style="background:var(--surf-alt);color:var(--txt);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;cursor:pointer">
+            <option value="all"   ${(s.stableMode || 'all') === 'all' ? 'selected' : ''}>👁️ للجميع (مع الزوار)</option>
+            <option value="users" ${s.stableMode === 'users' ? 'selected' : ''}>🔐 للمسجّلين فقط</option>
+            <option value="admin" ${s.stableMode === 'admin' ? 'selected' : ''}>👑 للأدمن فقط</option>
+          </select>
+        </label>
 
         <div style="${head};margin-top:20px">👥 عرض الأقسام للزوار (غير المسجّلين)</div>
         <div style="font-size:11px;color:var(--txt-m);margin:-2px 0 8px;line-height:1.75">لكل قسم اختر: <b>👁️ ظاهر</b> · <b>🌫️ ضبابي</b> (تذوّق يُغري بالتسجيل) · <b>🚫 مخفي</b>. هذه القائمة <b>مستقلّة تماماً</b> عن قائمة المسجّلين أعلاه — فإخفاء قسم عنهم لا يؤثّر على الزوار. الأدمن مستثنى دائماً.</div>
@@ -5703,6 +5713,10 @@ function adminEditUser(email) {
       <label style="${row};cursor:pointer">
         <span>🔬 السماح بتقرير «خريطة أسباب الفرص الذهبية» (تحليلي داخلي)</span>
         <input type="checkbox" id="admUDiag" ${r.see_diag ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+      </label>
+      <label style="${row};cursor:pointer">
+        <span>🔁 السماح بزر «الأثبت عبر الأيام» في القنّاص<div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px">مفعّل افتراضياً — أزل العلامة لإخفائه عن هذا المستخدم وحده</div></span>
+        <input type="checkbox" id="admUStable" ${r.see_stable !== false ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
       </label>`}
 
       <label style="${row};cursor:pointer;color:#fca5a5;font-weight:700;border-bottom:none">
@@ -5882,6 +5896,7 @@ async function adminSaveUser() {
   const predStatsEl = document.getElementById('admUPredStats');
   const backtestEl = document.getElementById('admUBacktest');
   const diagEl = document.getElementById('admUDiag');
+  const stableEl = document.getElementById('admUStable');
   /* 💳 اجمع اشتراك كل قسم */
   const secIn = {};
   for (const d of SUB_SECTION_DEFS) {
@@ -5927,6 +5942,8 @@ async function adminSaveUser() {
              show_pred_stats: predStatsEl ? predStatsEl.checked : !!prev.show_pred_stats,
              see_backtest: backtestEl ? backtestEl.checked : !!prev.see_backtest,
              see_diag: diagEl ? diagEl.checked : !!prev.see_diag,
+             /* 🔁 مفعّل افتراضياً: غياب القيمة = مسموح (لا نحرم مستخدماً قديماً بصمت) */
+             see_stable: stableEl ? stableEl.checked : (prev.see_stable !== false),
              updated_at: now };
   });
   const { error } = await sb.from('user_restrictions').upsert(rows);
@@ -6046,6 +6063,7 @@ async function adminSave(btn) {
     hiddenTabs:     tabKeys.filter(k => { const el = document.getElementById('admTab-' + k); return el && !el.checked; }),
     guestTabMode:   (function () { const o = {}; tabKeys.forEach(k => { const el = document.getElementById('admGMode-' + k); if (el) o[k] = el.value; }); return o; })(),
     guestLockTargets: (function () { const e = document.getElementById('admGuestTgt'); return e ? e.value : 'lock'; })(),
+    stableMode:     (function () { const e = document.getElementById('admStableMode'); return e ? e.value : 'all'; })(),
     guestHiddenTabs: tabKeys.filter(k => { const el = document.getElementById('admGMode-' + k); return el && el.value === 'hide'; }),
     requireLogin:   document.getElementById('admRequireLogin').checked,
     showAgenda:     (function () { const e = document.getElementById('admShowAgenda'); return e ? e.checked : true; })(),
@@ -9621,6 +9639,8 @@ document.addEventListener('keydown', e => {
     PRED_RESULTS.sort((x, y) => y.probability - x.probability);
     PRED_SCANNING = false;
     PRED_LAST_TS = Date.now();
+    /* 🔁 سجّل لقطة اليوم ثم ألصق نسبة التطابق بكل سهم (قبل الرفع ليراها الجميع) */
+    try { _snHistRecord(PRED_RESULTS); _snHistApply(PRED_RESULTS); } catch (e) {}
     predSaveCache();
     radarUploadShared();   // 🌐 وحّد النتائج لكل المستخدمين (الأدمن فقط)
     try { tgNotifyGolden(); } catch (e) {}   // 🔔 تنبيه تلجرام عند وجود فرصة ذهبية (أدمن)
@@ -10194,7 +10214,102 @@ document.addEventListener('keydown', e => {
   }
   let SNIPER_SEARCH = '';
   let SNIPER_GOLDEN = false;
+  let SNIPER_STABLE = false;
   window.sniperGolden = function () { SNIPER_GOLDEN = !SNIPER_GOLDEN; try { sniperRender(); } catch (e) {} };
+
+  /* ══════════════════════════════════════════════════════════════════
+     🔁 ذاكرة التطابق — «منذ متى والتحليل ثابت على هذا السهم؟»
+     إشارةٌ تظهر اليوم وتختفي غداً ضجيج. وإشارةٌ يكرّرها التحليل عشرة
+     أيام متتالية بخطة لم تتبدّل = بنية حقيقية لا صدفة إحصائية.
+     نُسجّل لقطة واحدة لكل سهم في اليوم عند كل مسح، ثم نحسب:
+       • أيام الرصد · أيام الاتفاق · نسبة التطابق
+       • السلسلة المتّصلة (أقوى مؤشّر: متتالية لا متفرّقة)
+       • ثبات الخطة (هل بقي الدخول في حدود ±4%؟ خطة تقفز = تخمين)
+     التخزين محلي ومضغوط، وآخر 90 يوماً فقط.
+     ⚠️ الذاكرة تبدأ من اليوم — لا تاريخ رجعياً، ولا نخترع ماضياً.
+     ══════════════════════════════════════════════════════════════════ */
+  const SN_HIST_KEY = 'sniperHist_v1', SN_HIST_DAYS = 90;
+  function _snHistLoad() { try { return JSON.parse(localStorage.getItem(SN_HIST_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function _snHistSave(h) { try { localStorage.setItem(SN_HIST_KEY, JSON.stringify(h)); } catch (e) {} }
+  function _snHistToday() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  /* يسجّل لقطة اليوم: [التاريخ, اتفاق؟, درجة التوافق, الدخول] */
+  function _snHistRecord(list) {
+    if (!Array.isArray(list) || !list.length) return;
+    const h = _snHistLoad(), today = _snHistToday();
+    list.forEach(r => {
+      const sym = String((r && r.sym) || '').trim(); if (!sym) return;
+      const agree = !!(r.elPlan && r.elPlan.rr && r.elDir === 'up') ? 1 : 0;
+      const entry = (r.elPlan && +r.elPlan.entry) || 0;
+      const rec = h[sym] || (h[sym] = []);
+      const last = rec[rec.length - 1];
+      if (last && last[0] === today) { rec[rec.length - 1] = [today, agree, _snConflCount(r), entry]; }
+      else rec.push([today, agree, _snConflCount(r), entry]);
+      if (rec.length > SN_HIST_DAYS) h[sym] = rec.slice(-SN_HIST_DAYS);
+    });
+    _snHistSave(h);
+  }
+
+  /* يحسب إحصاء التطابق لسهم واحد */
+  function _snHistStats(sym) {
+    const rec = _snHistLoad()[String(sym || '').trim()];
+    if (!Array.isArray(rec) || rec.length < 2) return null;      // يوم واحد لا يصنع نمطاً
+    const seen = rec.length;
+    const agreeRows = rec.filter(x => x[1] === 1);
+    const agree = agreeRows.length;
+    let streak = 0;
+    for (let i = rec.length - 1; i >= 0; i--) { if (rec[i][1] === 1) streak++; else break; }
+    /* ثبات الخطة: تشتّت الدخول عبر أيام الاتفاق */
+    let stable = null;
+    const ents = agreeRows.map(x => +x[3]).filter(v => v > 0);
+    if (ents.length >= 2) {
+      const mn = Math.min(...ents), mx = Math.max(...ents);
+      stable = mn > 0 ? ((mx - mn) / mn) <= 0.04 : null;
+    }
+    return {
+      days: seen, agree, streak, stable,
+      pct: Math.round((agree / seen) * 100),
+      since: rec[0][0],
+    };
+  }
+
+  /* يُلصق الإحصاء بكل نتيجة — ويُبقي الأطول تاريخاً (جهاز الأدمن أو المشترك) */
+  function _snHistApply(list) {
+    if (!Array.isArray(list)) return;
+    list.forEach(r => {
+      const local = _snHistStats(r && r.sym);
+      if (!local) return;
+      if (!r.snHist || (r.snHist.days || 0) < local.days) r.snHist = local;
+    });
+  }
+  /* 🏅 «ثابت» = رُصد 3 أيام فأكثر · تطابق ≥70% · سلسلة متّصلة ≥2 */
+  function _snStable(r) {
+    const s = r && r.snHist;
+    return !!(s && s.days >= 3 && s.pct >= 70 && s.streak >= 2);
+  }
+  /* 👁️ من يرى زر «الأثبت»؟ طبقتان: مفتاح عام + استثناء فردي.
+     👑 الأدمن مستثنى دائماً — يرى كل شيء ليتفقّده. */
+  function _snStableAllowed() {
+    try {
+      if (typeof isAdmin === 'function' && isAdmin()) return true;
+      const mode = (typeof appSettings !== 'undefined' && appSettings && appSettings.stableMode) || 'all';
+      if (mode === 'admin') return false;
+      const signedIn = !!(typeof sbUser !== 'undefined' && sbUser);
+      if (!signedIn) return mode === 'all';                       // زائر
+      if (typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.see_stable === false) return false;
+      return true;
+    } catch (e) { return true; }
+  }
+  window.sniperStable = function () {
+    SNIPER_STABLE = !SNIPER_STABLE;
+    const b = document.getElementById('sniperStableBtn');
+    if (b) {
+      b.textContent = SNIPER_STABLE ? '🔁 عرض الكل' : '🔁 الأثبت عبر الأيام';
+      b.style.background = SNIPER_STABLE ? 'linear-gradient(135deg,#6b21a8,#a855f7)' : 'var(--surf-alt)';
+      b.style.color = SNIPER_STABLE ? '#fff' : '#c084fc';
+    }
+    try { sniperRender(); } catch (e) {}
+  };
   /* 🔤 تطبيع عربي للبحث: يوحّد الهمزات والتاء المربوطة والألف المقصورة، ويحذف التشكيل والشرطة والمسافات */
   function _arNorm(s) {
     return String(s || '')
@@ -10320,7 +10435,14 @@ document.addEventListener('keydown', e => {
       const q = _arNorm(SNIPER_SEARCH);
       if (q) list = list.filter(r => _arNorm(r.sym).includes(q) || _arNorm(r.name).includes(q));
     }
+    try { _snHistApply(list); } catch (e) {}     // 🔁 حدّث نسبة التطابق عند كل عرض
+    /* 👁️ أخفِ زر «الأثبت» عمّن مُنع منه — وألغِ الفلتر إن كان مفعّلاً */
+    const _stOK = _snStableAllowed();
+    const _stBtn = document.getElementById('sniperStableBtn');
+    if (_stBtn) _stBtn.style.display = _stOK ? 'block' : 'none';
+    if (!_stOK) SNIPER_STABLE = false;
     if (SNIPER_GOLDEN) list = list.filter(_snGolden);
+    if (SNIPER_STABLE) list = list.filter(_snStable);
     /* 🧩 عنقود التوافق: كم مدرسة تتفق (معرّفة على مستوى الوحدة _snConflCount) */
     const _snCount = _snConflCount;
     const _snYoung = r => !!(r.bars && r.bars < 240);   // أقل من ~سنة تداول → تاريخ غير كافٍ
@@ -10328,11 +10450,18 @@ document.addEventListener('keydown', e => {
       ((_snIlliquid(a) ? 1 : 0) - (_snIlliquid(b) ? 1 : 0)) ||  // 💧 ضعيف السيولة للأسفل (خطته غير قابلة للتنفيذ)
       ((_snYoung(a) ? 1 : 0) - (_snYoung(b) ? 1 : 0)) ||        // 🌱 الأسهم الحديثة دائماً للأسفل (إشاراتها ضعيفة)
       _snCount(b) - _snCount(a) ||
+      ((_snStable(b) ? 1 : 0) - (_snStable(a) ? 1 : 0)) ||       // 🔁 الثابت عبر الأيام يتقدّم
       ((_snTrigVolOK(b) ? 1 : 0) - (_snTrigVolOK(a) ? 1 : 0)) || // 🔊 الزناد المؤكَّد بالحجم يتقدّم
       ((b.elTrig && b.elTrig.dir === 'bull' ? 1 : 0) - (a.elTrig && a.elTrig.dir === 'bull' ? 1 : 0)) ||
       ((_snTimeActive(b) ? 1 : 0) - (_snTimeActive(a) ? 1 : 0)) ||
       (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
     if (!list.length) {
+      if (SNIPER_STABLE && !SNIPER_GOLDEN) {
+        wrap.innerHTML = '<div style="text-align:center;padding:44px 20px;color:var(--txt-m)"><div style="font-size:42px;margin-bottom:12px">🔁</div>' +
+          '<div style="font-size:17px;font-weight:800;margin-bottom:8px;color:#c084fc">لا يوجد سهم ثابت التحليل بعد</div>' +
+          '<div style="font-size:13.5px;line-height:2;max-width:540px;margin:0 auto">ذاكرة التطابق <b>تبدأ من أول يوم فتحتَ فيه هذا الإصدار</b> — ولا يمكن اختراع ماضٍ لم نسجّله. افتح التطبيق يومياً، وبعد <b>3 أيام</b> ستبدأ النسب بالظهور، وتنضج بعد أسبوعين.</div></div>';
+        return;
+      }
       if (SNIPER_GOLDEN) {
         /* 🔒 التقرير التحليلي: للأدمن أو من سمح له الأدمن فقط — والزوار ممنوعون */
         const _diagOK = (typeof isAdmin === 'function' && isAdmin()) ||
@@ -10460,6 +10589,12 @@ document.addEventListener('keydown', e => {
           let b = _riskChip;   /* 🛡️ تحذير المخاطرة أولاً — قبل أي بشارة فنّية */
           const chip = (bg, bd, fg, txt) => '<span style="background:' + bg + ';border:1px solid ' + bd + ';color:' + fg + ';border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;white-space:nowrap">' + txt + '</span>';
           if (r.bars && r.bars < 240) b += chip('rgba(251,146,60,.15)', 'rgba(251,146,60,.5)', '#fb923c', '🌱 سهم حديث · ' + r.bars + ' شمعة — تاريخ غير كافٍ، إشارات أقل موثوقية');
+          /* 🔁 ثبات التحليل عبر الأيام — أقوى من أي إشارة يوم واحد */
+          if (r.snHist && r.snHist.days >= 2) {
+            const s = r.snHist, ok = _snStable(r);
+            b += chip(ok ? 'rgba(168,85,247,.16)' : 'rgba(148,163,184,.1)', ok ? 'rgba(168,85,247,.5)' : 'rgba(148,163,184,.3)', ok ? '#c084fc' : '#94a3b8',
+              '🔁 تطابق ' + s.pct + '% · ' + s.agree + '/' + s.days + ' يوم' + (s.streak >= 2 ? ' · متتالية ' + s.streak : '') + (s.stable === false ? ' · ⚠️ خطة متذبذبة' : s.stable === true ? ' · 📌 خطة ثابتة' : ''));
+          }
           /* 💧 السيولة أولاً: خطة على سهم جامد لا تُنفَّذ بسعرها مهما جمُل تحليلها */
           if (_snIlliquid(r)) b += chip('rgba(148,163,184,.14)', 'rgba(148,163,184,.45)', '#cbd5e1', '💧 سيولة ضعيفة · ' + Math.round(r.liq20 / 1000) + ' ألف/يوم — يصعب الدخول والخروج بسعرك');
           if (r.elTrig) {

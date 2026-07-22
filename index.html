@@ -2070,8 +2070,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-22-v232';
-console.log('%c[تداول بلس] البناء: 2026-07-22-v232 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-22-v234';
+console.log('%c[تداول بلس] البناء: 2026-07-22-v234 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -10296,6 +10296,16 @@ document.addEventListener('keydown', e => {
     };
   }
   function _snAboveVwap(r) { const v = _snVwap(r); return !!(v && v.above); }
+  /* 🚦 حالة التنفيذ لسهم واحد — **مصدر واحد** يستعمله العدّ والفلترة معاً،
+     فيستحيل أن تقول الشارة رقماً وتعرض القائمة غيره. */
+  function _snExecKey(r) {
+    const p = r && r.elPlan, k = _snRisk(r);
+    if (!p || !k) return null;
+    if (k.tight) return 'tight';                                  // 🚨 وقف ملتصق
+    if (!(+p.entry > 0) || !(r.price > 0)) return null;
+    const g = ((r.price - p.entry) / p.entry) * 100;
+    return g > 8 ? 'gone' : g < -2 ? 'wait' : 'now';               // 🚫 / ⏳ / ✅
+  }
   function _snRisk(r) {
     const p = r && r.elPlan; if (!p) return null;
     const st = +p.stop, en = +p.entry, px = +r.price;
@@ -10358,6 +10368,12 @@ document.addEventListener('keydown', e => {
   let SNIPER_SEARCH = '';
   let SNIPER_GOLDEN = false;
   let SNIPER_STABLE = false;
+  let SNIPER_EXEC = '';   // 🚦 فلتر حالة التنفيذ: '' | now | wait | gone | tight
+  window.sniperExec = function (k) {
+    SNIPER_EXEC = (SNIPER_EXEC === k) ? '' : k;   // الضغط على النشط يُلغيه
+    try { sniperRender(); } catch (e) {}
+    try { const el = document.getElementById('sniperList'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+  };
   window.sniperGolden = function () { SNIPER_GOLDEN = !SNIPER_GOLDEN; try { sniperRender(); } catch (e) {} };
 
   /* ══════════════════════════════════════════════════════════════════
@@ -10680,6 +10696,13 @@ document.addEventListener('keydown', e => {
       ((b.elTrig && b.elTrig.dir === 'bull' ? 1 : 0) - (a.elTrig && a.elTrig.dir === 'bull' ? 1 : 0)) ||
       ((_snTimeActive(b) ? 1 : 0) - (_snTimeActive(a) ? 1 : 0)) ||
       (b.elPlan.rr || 0) - (a.elPlan.rr || 0) || (b.elConf || 0) - (a.elConf || 0));
+    /* 🚦 العدّ يتمّ على القائمة الكاملة **قبل** فلتر التنفيذ،
+       فتبقى أرقام الشارات ثابتة مهما اخترتَ منها — وإلا تلاشت أمام عينك. */
+    const _execN = { now: 0, wait: 0, gone: 0, tight: 0 };
+    list.forEach(r => { const k = _snExecKey(r); if (k) _execN[k]++; });
+    if (SNIPER_EXEC) list = list.filter(r => _snExecKey(r) === SNIPER_EXEC);
+    /* 🛡️ حارس: لو أفرغ الفلتر القائمة (بعد تحديث بيانات مثلاً) نُلغيه بدل عرض شاشة فارغة محيّرة */
+    if (SNIPER_EXEC && !list.length) { SNIPER_EXEC = ''; try { sniperRender(); } catch (e) {} return; }
     if (!list.length) {
       if (SNIPER_STABLE && !SNIPER_GOLDEN) {
         wrap.innerHTML = '<div style="text-align:center;padding:44px 20px;color:var(--txt-m)"><div style="font-size:42px;margin-bottom:12px">🔁</div>' +
@@ -10772,6 +10795,33 @@ document.addEventListener('keydown', e => {
         '<span style="font-size:13px;color:var(--txt-m)">سهم</span>' +
         (_snVoid ? '<span style="font-size:11.5px;color:#fca5a5;font-weight:700" title="السعر كسر نقطة إبطال إليوت فيها — لم تعد قابلة للتنفيذ">· 🛑 استُبعدت ' + _snVoid + ' خطة باطلة</span>' : '') +
       '</div>' +
+      /* ══════════════════════════════════════════════════════════════
+         🚦 فرز التنفيذ — «50 فرصة» رقمٌ يخدع
+         العدد وحده يوحي بخمسين قراراً ممكناً، والحقيقة أن أغلبها إمّا
+         فات دخوله أو لم يبلغه بعد. المنجم تصدّرت القائمة وعليها
+         «فات الدخول +25%»! فنُظهر كم منها **قابل للتنفيذ الآن** فعلاً.
+         ══════════════════════════════════════════════════════════════ */
+      (function () {
+        /* 🖱️ شارات قابلة للضغط: كل واحدة تفلتر القائمة فوراً — والضغط عليها ثانيةً يُلغي */
+        const chip = (k, rgb, txt, n, lbl, tip) => {
+          if (!n) return '';
+          const on = SNIPER_EXEC === k;
+          return '<span onclick="sniperExec(\'' + k + '\')" title="' + tip + '" style="cursor:pointer;user-select:none;'
+            + 'background:' + (on ? 'rgba(' + rgb + ',.35)' : 'rgba(' + rgb + ',.14)') + ';'
+            + 'border:' + (on ? '2px' : '1px') + ' solid rgba(' + rgb + ',' + (on ? '.95' : '.45') + ');'
+            + 'color:' + txt + ';border-radius:20px;padding:5px 12px;font-size:12.5px;font-weight:800;white-space:nowrap;transition:all .15s">'
+            + n + ' ' + lbl + (on ? ' ✕' : '') + '</span>';
+        };
+        const bits = [
+          chip('now',   '34,197,94',  '#4ade80', _execN.now,   '✅ عند الدخول الآن', 'السعر داخل نطاق الخطة — هذه وحدها قابلة للتنفيذ اليوم · اضغط للعرض'),
+          chip('wait',  '56,189,248', '#7dd3fc', _execN.wait,  '⏳ بانتظار الوصول', 'لم يبلغ السعر الدخول بعد — ضعها في المراقبة · اضغط للعرض'),
+          chip('gone',  '251,146,60', '#fb923c', _execN.gone,  '🚫 فات الدخول',     'تجاوز الدخول +8% — المطاردة تُبعد وقفك · اضغط للعرض'),
+          chip('tight', '248,113,113','#fca5a5', _execN.tight, '🚨 وقف ملتصق',      'المسافة أقلّ من تذبذب يوم — تُضرب بالضجيج · اضغط للعرض'),
+        ].filter(Boolean).join('');
+        if (!bits) return '';
+        return '<div style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:-6px 0 ' + (SNIPER_EXEC ? '8px' : '14px') + '">' + bits + '</div>'
+          + (SNIPER_EXEC ? '<div style="text-align:center;margin-bottom:12px"><span onclick="sniperExec(\'' + SNIPER_EXEC + '\')" style="cursor:pointer;font-size:12px;color:var(--txt-m);text-decoration:underline">↩️ عرض الكل (' + (_execN.now + _execN.wait + _execN.gone + _execN.tight) + ')</span></div>' : '');
+      })() +
       list.map((r, i) => {
       const p = r.elPlan;
       const rank = i + 1;

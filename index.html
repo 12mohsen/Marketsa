@@ -1826,10 +1826,12 @@ canvas#mdChart{display:block;width:100% !important}
         onkeypress="if(event.key==='Enter')authSubmit()">
 
       <input id="authEmail" type="email" placeholder="البريد الإلكتروني" autocomplete="email"
+        name="email" data-testid="login-email" aria-label="البريد الإلكتروني"
         style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;margin-bottom:10px;
                border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
                font-size:13.5px;outline:none;direction:ltr;text-align:left">
       <input id="authPass" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)"
+        name="password" autocomplete="current-password" data-testid="login-password" aria-label="كلمة المرور"
         style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;margin-bottom:10px;
                border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
                font-size:13.5px;outline:none;direction:ltr;text-align:left"
@@ -1849,7 +1851,8 @@ canvas#mdChart{display:block;width:100% !important}
       <div id="authMsg" style="display:none;font-size:12px;line-height:1.7;border-radius:9px;
            padding:9px 12px;margin-bottom:10px"></div>
 
-      <button id="authSubmitBtn" onclick="authSubmit()" style="width:100%;padding:13px;border-radius:10px;
+      <button id="authSubmitBtn" onclick="authSubmit()" data-testid="login-submit" aria-label="تسجيل الدخول"
+        style="width:100%;padding:13px;border-radius:10px;
         border:none;cursor:pointer;font-weight:800;font-size:14px;color:#fff;
         background:linear-gradient(135deg,#166534 0%,#22c55e 100%)">دخول</button>
 
@@ -2065,8 +2068,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-21-v212';
-console.log('%c[تداول بلس] البناء: 2026-07-21-v212 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-21-v215';
+console.log('%c[تداول بلس] البناء: 2026-07-21-v215 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2170,6 +2173,30 @@ if (_authFromConfirm) {
     ? document.addEventListener('DOMContentLoaded', _authShowWelcome)
     : _authShowWelcome();
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   🔗 مسار /login كرابط عميق للنافذة المنبثقة
+   التطبيق صفحة واحدة، فلا يوجد ملف /login → كان Netlify يردّ 404.
+   الحلّ طبقتان: ملف _redirects يوجّه كل المسارات إلى index.html،
+   وهذا المُعالِج يفتح نافذة الدخول عند /login أو #login ثم ينظّف الرابط.
+   يفيد الروابط المشتركة، وأدوات الاختبار التلقائي، ومن يكتب العنوان يدوياً.
+   ══════════════════════════════════════════════════════════════════ */
+function _authRouteCheck() {
+  try {
+    const p = (location.pathname || '').toLowerCase().replace(/\/+$/, '');
+    const h = (location.hash || '').toLowerCase();
+    if (p === '/login' || p === '/signin' || h === '#login') {
+      if (typeof sbUser !== 'undefined' && sbUser) { history.replaceState(null, '', '/'); return; }
+      if (typeof authOpenModal === 'function') authOpenModal();
+      if (p !== '/login' && h === '#login') history.replaceState(null, '', location.pathname);
+      else if (p === '/login' || p === '/signin') history.replaceState(null, '', '/');
+    }
+  } catch (e) {}
+}
+(document.readyState === 'loading')
+  ? document.addEventListener('DOMContentLoaded', () => setTimeout(_authRouteCheck, 400))
+  : setTimeout(_authRouteCheck, 400);
+window.addEventListener('hashchange', _authRouteCheck);
 
 let _lastSyncUid = null, _lastSyncAt = 0;
 if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
@@ -10398,7 +10425,16 @@ document.addEventListener('keydown', e => {
     const stale = hrs > 24;
     el.style.color = stale ? '#fbbf24' : '#4ade80';
     el.innerHTML = (stale ? '⚠️' : '✅') + ' آخر تحديث: <b>' + dd + '</b> · <b>' + tt + '</b> (' + ago + ') · ' +
-      (Array.isArray(PRED_RESULTS) ? PRED_RESULTS.length : 0) + ' سهم' +
+      (function () {
+        /* 🔢 وضّح الفرق بين «أسهم السوق» و«الأسهم المُحلَّلة»:
+           بعض الأسهم يُتخطّى لنقص تاريخه أو تعذّر جلبه — إخفاء ذلك يُربك المستخدم */
+        const done = Array.isArray(PRED_RESULTS) ? PRED_RESULTS.length : 0;
+        const total = (typeof rows !== 'undefined' && Array.isArray(rows)) ? rows.length : 0;
+        const skipped = total > done ? total - done : 0;
+        return done + ' سهم' + (skipped
+          ? ' <span style="color:var(--txt-m);font-weight:600" title="أسهم لم تُحلَّل: تاريخها قصير أو تعذّر جلب شموعها">من ' + total + ' (تُخطّي ' + skipped + ')</span>'
+          : '');
+      })() +
       (stale ? ' — <span style="color:#fbbf24">سيُحدَّث تلقائياً عند الفتح</span>' : '');
   }
 
@@ -12773,6 +12809,29 @@ function elliottHTML(e) {
           <div style="background:var(--surf-alt);border-radius:8px;padding:7px"><div style="font-size:9px;color:var(--txt-m)">🛑 وقف الخسارة</div><div style="font-size:14px;font-weight:900;color:#f87171">${e.plan.stop}</div></div>
           <div style="background:var(--surf-alt);border-radius:8px;padding:7px"><div style="font-size:9px;color:var(--txt-m)">🏁 الهدف</div><div style="font-size:14px;font-weight:900;color:#38bdf8">${e.plan.target}</div></div>
         </div>
+        ${(() => {
+          /* 📍 أين السعر الآن من الدخول المخطّط؟ هذا ما يزيل حيرة «الأرقام غير».
+             الدخول = قاع الموجة الذي نشتري عنده، لا السعر الحالي. نُبيّن العلاقة صراحةً. */
+          const en = +e.plan.entry, cur = +e.cur, st = +e.plan.stop, tg = +e.plan.target;
+          if (!(en > 0) || !(cur > 0)) return '';
+          const gap = ((cur - en) / en) * 100;
+          const rrNow = (cur > st) ? +((tg - cur) / (cur - st)).toFixed(1) : null;
+          let clr, msg;
+          if (gap > 8) {
+            clr = ['248,113,113', '#fca5a5'];
+            msg = `🚫 <b>فات الدخول:</b> السعر الآن ${e.cur} أي <b>+${gap.toFixed(1)}%</b> فوق منطقة الدخول ${en}. مطاردته تُبعِد وقفك وتُقرِّب هدفك — انتظر تصحيحاً أو دورة جديدة.`;
+          } else if (gap > 1.5) {
+            clr = ['251,191,36', '#fcd34d'];
+            msg = `⏳ <b>السعر تجاوز الدخول قليلاً</b> (${e.cur} مقابل ${en} · +${gap.toFixed(1)}%). ${rrNow != null ? 'ع/م الآن ≈ <b>' + rrNow + '</b>. ' : ''}الأفضل انتظار ارتداد إلى ${en} لدخول أنظف.`;
+          } else if (gap >= -2) {
+            clr = ['74,222,128', '#86efac'];
+            msg = `✅ <b>السعر عند منطقة الدخول الآن</b> (${e.cur} ≈ ${en}). هذه نقطة الخطة — لكن <b>انتظر شمعة ارتداد مؤكِّدة</b> قبل الشراء.`;
+          } else {
+            clr = ['56,189,248', '#7dd3fc'];
+            msg = `📉 <b>السعر تحت الدخول</b> (${e.cur} مقابل ${en} · ${gap.toFixed(1)}%). الخطة تنتظر ارتداده إلى ${en}؛ الشراء الآن مضاربة على القاع — إمّا انتظار الارتداد أو وقف منضبط تحت ${st}.`;
+          }
+          return `<div style="font-size:10.5px;border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.75;font-weight:700;background:rgba(${clr[0]},.1);border:1px solid rgba(${clr[0]},.45);color:${clr[1]}">${msg}</div>`;
+        })()}
         <div style="font-size:10px;color:var(--txt-m);text-align:center;margin-top:7px;line-height:1.6">مخاطرة/عائد ≈ <b style="color:${e.plan.rr >= 2 ? '#4ade80' : '#fbbf24'}">${e.plan.rr}</b> · <b>انتظر تأكيد الارتداد قرب الدخول</b> — لا تلتقط سكيناً هابطاً · تعليمي لا نصيحة</div>
       </div>` : ''}
       ${e.stage === 'متأخّرة'

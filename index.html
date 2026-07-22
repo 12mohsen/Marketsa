@@ -2071,8 +2071,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-22-v245';
-console.log('%c[تداول بلس] البناء: 2026-07-22-v245 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-22-v247';
+console.log('%c[تداول بلس] البناء: 2026-07-22-v247 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -10028,32 +10028,53 @@ document.addEventListener('keydown', e => {
     const tgt = (res.direction !== 'none' && res.targetPct != null)
       ? ((res.targetPct > 0 ? '+' : '') + res.targetPct + '% خلال ~' + res.daysToTarget + ' يوم') : '—';
     const pc = res.probability >= 75 ? '#dc2626' : res.probability >= 55 ? '#f4a20a' : '#16a34a';
-    const cell = (label, val) => '<div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:10px">' +
-      '<div style="font-size:10.5px;color:var(--txt-m);margin-bottom:3px">' + label + '</div>' +
-      '<div style="font-weight:800;font-size:13.5px">' + val + '</div></div>';
-    ov.innerHTML = '<div style="background:var(--surf);color:var(--txt);border-radius:16px;max-width:470px;width:100%;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.4);max-height:90vh;overflow:auto">' +
+    /* 📱 خلايا متناسقة على الجوال:
+       ① ارتفاع أدنى موحّد + توسيط عمودي ⇒ صفوف مستوية لا مسنّنة
+       ② الخلية الفارغة (—) تُخفَت بصرياً فلا تزاحم المعلومة الحقيقية
+       ③ clamp للحشو والخط ⇒ يتقلّص مع عرض الشاشة بلا كسر
+       ④ والعدد الفردي يُعالَج بجعل الأخيرة تمتدّ على العمودين */
+    const cells = [];
+    const cell = (label, val) => {
+      const empty = (val === '—' || val === '— (تقديري)' || val == null);
+      cells.push('<div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;'
+        + 'padding:clamp(8px,2.6vw,11px);min-height:56px;display:flex;flex-direction:column;justify-content:center;'
+        + 'gap:3px;overflow:hidden' + (empty ? ';opacity:.45' : '') + '">'
+        + '<div style="font-size:clamp(9.5px,2.7vw,11px);color:var(--txt-m);line-height:1.35">' + label + '</div>'
+        + '<div style="font-weight:800;font-size:clamp(12px,3.4vw,14px);line-height:1.35;word-break:break-word">' + val + '</div></div>');
+      return '';
+    };
+    /* بطاقتا الرأس: ارتفاع واحد وتوسيط واحد — كانتا مختلفتَي الخطّ فتبدوان مائلتين */
+    const topCard = (label, valHTML) => '<div style="flex:1;min-width:0;text-align:center;background:var(--surf-alt);'
+      + 'border-radius:12px;padding:clamp(10px,3vw,14px);min-height:84px;display:flex;flex-direction:column;'
+      + 'align-items:center;justify-content:center;gap:6px">'
+      + '<div style="font-size:clamp(10px,2.8vw,11.5px);color:var(--txt-m)">' + label + '</div>' + valHTML + '</div>';
+    ov.innerHTML = '<div style="background:var(--surf);color:var(--txt);border-radius:16px;max-width:470px;width:100%;padding:clamp(13px,4vw,20px);box-shadow:0 20px 50px rgba(0,0,0,.4);max-height:90vh;overflow:auto;box-sizing:border-box">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">' +
         '<div><div style="font-weight:800;font-size:16px">' + (res.name || '—') + '</div>' +
         '<div style="color:var(--txt-m);font-size:12px">' + res.sym + ' · ' + res.price.toFixed(2) + ' ر.س' + (res.hasOHLC ? '' : ' · تقديري') + '</div></div>' +
         '<button onclick="document.getElementById(\'predDetailOv\').style.display=\'none\'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt-m)">✕</button></div>' +
-      '<div style="display:flex;gap:10px;margin-bottom:14px">' +
-        '<div style="flex:1;text-align:center;background:var(--surf-alt);border-radius:12px;padding:14px"><div style="font-size:11px;color:var(--txt-m)">احتمال الانفجار</div><div style="font-size:26px;font-weight:900;color:' + pc + '">' + res.probability + '%</div></div>' +
-        '<div style="flex:1;text-align:center;background:var(--surf-alt);border-radius:12px;padding:14px"><div style="font-size:11px;color:var(--txt-m)">الاتجاه المرجّح</div><div style="font-size:17px;font-weight:800;margin-top:8px">' + dirTxt + '</div></div></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-        cell('التوقيت المتوقع', res.timing.text) +
-        cell('الهدف', tgt) +
-        cell('شدة الضغط', Math.round(res.squeezeStrength * 100) + '%') +
-        cell('مدة الضغط', res.pressureDuration + ' شمعة') +
-        cell('ضغط TTM', res.ttm ? '✅ فعّال' : '—') +
-        cell('عرض النطاق BW', res.bw + '%') +
-        cell('RSI', res.rsi != null ? res.rsi : '—') +
-        cell('ADX', res.adx != null ? res.adx : '— (تقديري)') +
-        cell('اتجاه OBV', res.obvSlope > 0.05 ? 'تجميع ⬆️' : res.obvSlope < -0.05 ? 'توزيع ⬇️' : 'محايد') +
-        cell('الحجم', res.volExpansion ? 'انفجار 🔥' : res.volContraction ? 'انكماش 🤫' : 'عادي') +
-        cell('الموقع ضمن 5 سنوات', (_symInd[res.sym] && _symInd[res.sym].pos_5y != null) ? Math.round(_symInd[res.sym].pos_5y) + '%' : '—') +
-        cell('الاتجاه العام (5س)', _symInd[res.sym] ? (_symInd[res.sym].trend === 'up' ? '📈 صاعد' : _symInd[res.sym].trend === 'down' ? '📉 هابط' : '➡️ عرضي') : '—') +
-        cell('قاعدة تراكم', (_symInd[res.sym] && _symInd[res.sym].base_flag) ? ('🧱 نعم · ' + (_symInd[res.sym].base_score || 0)) : '—') +
+      '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+        topCard('احتمال الانفجار', '<div style="font-size:clamp(21px,6.5vw,26px);font-weight:900;color:' + pc + '">' + res.probability + '%</div>') +
+        topCard('الاتجاه المرجّح', '<div style="font-size:clamp(14px,4.4vw,17px);font-weight:800">' + dirTxt + '</div>') +
       '</div>' +
+      (function () {
+        cell('التوقيت المتوقع', res.timing.text);
+        cell('الهدف', tgt);
+        cell('شدة الضغط', Math.round(res.squeezeStrength * 100) + '%');
+        cell('مدة الضغط', res.pressureDuration + ' شمعة');
+        cell('ضغط TTM', res.ttm ? '✅ فعّال' : '—');
+        cell('عرض النطاق BW', res.bw + '%');
+        cell('RSI', res.rsi != null ? res.rsi : '—');
+        cell('ADX', res.adx != null ? res.adx : '— (تقديري)');
+        cell('اتجاه OBV', res.obvSlope > 0.05 ? 'تجميع ⬆️' : res.obvSlope < -0.05 ? 'توزيع ⬇️' : 'محايد');
+        cell('الحجم', res.volExpansion ? 'انفجار 🔥' : res.volContraction ? 'انكماش 🤫' : 'عادي');
+        cell('الموقع ضمن 5 سنوات', (_symInd[res.sym] && _symInd[res.sym].pos_5y != null) ? Math.round(_symInd[res.sym].pos_5y) + '%' : '—');
+        cell('الاتجاه العام (5س)', _symInd[res.sym] ? (_symInd[res.sym].trend === 'up' ? '📈 صاعد' : _symInd[res.sym].trend === 'down' ? '📉 هابط' : '➡️ عرضي') : '—');
+        cell('قاعدة تراكم', (_symInd[res.sym] && _symInd[res.sym].base_flag) ? ('🧱 نعم · ' + (_symInd[res.sym].base_score || 0)) : '—');
+        /* 🔲 عدد فردي ⇒ الأخيرة تمتدّ على العمودين فلا يبقى فراغ معلّق */
+        if (cells.length % 2 === 1) cells[cells.length - 1] = cells[cells.length - 1].replace('<div style="', '<div style="grid-column:1/-1;');
+        return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch">' + cells.join('') + '</div>';
+      })() +
       '<button onclick="predFullAnalysis(\'' + res.sym + '\')" style="width:100%;margin-top:14px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">🔬 التحليل الكامل (بيانات السوق + الأهداف)</button>' +
       '<div style="display:flex;gap:8px;margin-top:8px">' +
         '<button onclick="predAddWatch(\'' + res.sym + '\')" style="flex:1;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">👁️ إضافة للمراقبة</button>' +
@@ -10902,15 +10923,15 @@ document.addEventListener('keydown', e => {
       let _riskChip = '';
       const _gapEn = (p.entry > 0 && _cur > 0) ? ((_cur - p.entry) / p.entry) * 100 : null;
       if (_rk && _rk.belowStop)
-        _riskChip = '<span style="background:#7f1d1d;color:#fecaca;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800" title="السعر كسر نقطة إبطال إليوت — التحليل ثبت خطؤه قبل الدخول">🛑 السعر تحت الوقف — الخطة باطلة</span>';
+        _riskChip = '<span style="background:#7f1d1d;color:#fecaca;border-radius:10px;padding:5px 10px;font-size:clamp(11px,3vw,11.5px);font-weight:800;max-width:100%;white-space:normal;line-height:1.6;display:inline-block;box-sizing:border-box" title="السعر كسر نقطة إبطال إليوت — التحليل ثبت خطؤه قبل الدخول">🛑 السعر تحت الوقف — الخطة باطلة</span>';
       /* 🚫 فات الدخول: كان ينقص بطاقة القنّاص رغم وجوده في نافذة إليوت.
          سهم يبعد +25% عن دخوله كان يُعرض بلا أي تحذير — وهذا أخطر ما يُخفى. */
       else if (_gapEn != null && _gapEn > 8)
-        _riskChip = '<span style="background:#7c2d12;color:#fed7aa;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800" title="مطاردة السعر تُبعد وقفك وتُقرّب هدفك — الفرصة فاتت">🚫 فات الدخول · السعر +' + _gapEn.toFixed(1) + '% فوق ' + p.entry + ' — لا تطارد</span>';
+        _riskChip = '<span style="background:#7c2d12;color:#fed7aa;border-radius:10px;padding:5px 10px;font-size:clamp(11px,3vw,11.5px);font-weight:800;max-width:100%;white-space:normal;line-height:1.6;display:inline-block;box-sizing:border-box" title="مطاردة السعر تُبعد وقفك وتُقرّب هدفك — الفرصة فاتت">🚫 فات الدخول · السعر +' + _gapEn.toFixed(1) + '% فوق ' + p.entry + ' — لا تطارد</span>';
       else if (_rrTight)
-        _riskChip = '<span style="background:#7c2d12;color:#fed7aa;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800" title="مسافة أقصر من مدى السهم اليومي — تذبذب عادي يضربها">🚨 الوقف ملتصق ' + _rk.riskPct + '% (الأدنى ' + _rk.minPct + '%)</span>';
+        _riskChip = '<span style="background:#7c2d12;color:#fed7aa;border-radius:10px;padding:5px 10px;font-size:clamp(11px,3vw,11.5px);font-weight:800;max-width:100%;white-space:normal;line-height:1.6;display:inline-block;box-sizing:border-box" title="مسافة أقصر من مدى السهم اليومي — تذبذب عادي يضربها">🚨 الوقف ملتصق ' + _rk.riskPct + '% (الأدنى ' + _rk.minPct + '%)</span>';
       else if (_rk && _rk.pending)
-        _riskChip = '<span style="background:#1e3a5f;color:#93c5fd;border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:800" title="الخطة تبدأ عند اختراق الدخول — الشراء قبله مضاربة على المجهول">⏳ بانتظار اختراق ' + p.entry + '</span>';
+        _riskChip = '<span style="background:#1e3a5f;color:#93c5fd;border-radius:10px;padding:5px 10px;font-size:clamp(11px,3vw,11.5px);font-weight:800;max-width:100%;white-space:normal;line-height:1.6;display:inline-block;box-sizing:border-box" title="الخطة تبدأ عند اختراق الدخول — الشراء قبله مضاربة على المجهول">⏳ بانتظار اختراق ' + p.entry + '</span>';
       const _pctTxt = v => (_cur ? ((v - _cur) / _cur * 100 >= 0 ? '+' : '') + ((v - _cur) / _cur * 100).toFixed(1) + '%' : '');
       const _tgtBox = (lbl, v) => '<div style="background:var(--surf);border-radius:10px;padding:9px 6px"><div style="font-size:11px;color:var(--txt-m);margin-bottom:2px">' + lbl + '</div><div style="font-size:16px;font-weight:900;color:#38bdf8">' + v + '</div><div style="font-size:10px;color:#38bdf8">' + _pctTxt(v) + '</div></div>';
       return '<div onclick="predOpen(\'' + r.sym + '\')" style="cursor:pointer;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">' +
@@ -10928,7 +10949,22 @@ document.addEventListener('keydown', e => {
         })() +
         (function () {
           let b = _riskChip;   /* 🛡️ تحذير المخاطرة أولاً — قبل أي بشارة فنّية */
-          const chip = (bg, bd, fg, txt) => '<span style="background:' + bg + ';border:1px solid ' + bd + ';color:' + fg + ';border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;white-space:nowrap">' + txt + '</span>';
+          /* 📱 الشارة تلتفّ ولا تخرج:
+             كان `white-space:nowrap` يمنع الالتفاف، فتمتدّ الشارات الطويلة
+             (كشارة متوسط المشترين) خارج إطار البطاقة على الجوال.
+             والآن: التفاف طبيعي + حدّ أقصى للعرض + كسر الكلمات الطويلة.
+             وحين يوجد شرحٌ بعد «—» نُخفيه في تلميح على الشاشات الضيّقة
+             فتبقى المعلومة الأساسية ظاهرة والشرح بلمسة. */
+          const _narrow = (typeof window !== 'undefined' && window.innerWidth && window.innerWidth < 430);
+          const chip = (bg, bd, fg, txt) => {
+            let head = txt, tip = '';
+            const i = String(txt).indexOf(' — ');
+            if (_narrow && i > 0) { head = txt.slice(0, i); tip = String(txt).slice(i + 3).replace(/"/g, '&quot;'); }
+            return '<span' + (tip ? ' title="' + tip + '"' : '') + ' style="background:' + bg + ';border:1px solid ' + bd
+              + ';color:' + fg + ';border-radius:14px;padding:5px 11px;font-size:clamp(11px,3vw,12px);font-weight:700;'
+              + 'white-space:normal;line-height:1.6;max-width:100%;word-break:break-word;display:inline-block">'
+              + head + (tip ? ' <span style="opacity:.65">ⓘ</span>' : '') + '</span>';
+          };
           if (r.bars && r.bars < 240) b += chip('rgba(251,146,60,.15)', 'rgba(251,146,60,.5)', '#fb923c', '🌱 سهم حديث · ' + r.bars + ' شمعة — تاريخ غير كافٍ، إشارات أقل موثوقية');
           /* 🧭 حكم الأطر: هل اليومي يعمل مع الأسبوعي أم ضدّه؟ */
           (function () {
@@ -10992,7 +11028,7 @@ document.addEventListener('keydown', e => {
             else if (bn > 25) b += chip('rgba(148,163,184,.12)', 'rgba(148,163,184,.35)', '#94a3b8', '🕐 نافذة بعيدة ~' + bn + ' يوم');
             else b += chip('rgba(148,163,184,.12)', 'rgba(148,163,184,.35)', '#94a3b8', '🕐 نافذة سابقة — راقب انعكاساً');
           }
-          return b ? '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">' + b + '</div>' : '';
+          return b ? '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;min-width:0;overflow:hidden">' + b + '</div>' : '';
         })() +
         _wrapIfLocked('sniper',
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;margin-bottom:8px">' +

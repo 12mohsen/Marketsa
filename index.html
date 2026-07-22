@@ -2070,8 +2070,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-22-v234';
-console.log('%c[تداول بلس] البناء: 2026-07-22-v234 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-22-v236';
+console.log('%c[تداول بلس] البناء: 2026-07-22-v236 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -9354,7 +9354,11 @@ document.addEventListener('keydown', e => {
         if (doneN)
           html += '<span title="تنبؤات سُجّلت بعد إصلاح حساب المهلة — هذه وحدها تقيس النظام الحالي">✅ <b>بعد الإصلاح:</b> '
             + '<b style="color:' + clr(eN.rate) + '">' + eN.rate + '%</b> <span style="color:var(--txt-m);font-size:10px">(' + eN.success + '/' + doneN + ')</span>'
-            + (doneN < 20 ? ' <span style="color:#fbbf24;font-size:10px">— عيّنة صغيرة، لا تحكم بعد</span>' : '') + '</span>';
+            /* ⏳ المعلّقة ضرورية للقراءة الصحيحة: المكتملة بعد إصلاحٍ حديث هي **أقصر المهل**
+               (أصعبها بلوغاً)، والطويلة ما زالت مفتوحة. إخفاؤها يجعل الرقم يبدو حكماً نهائياً وهو ليس كذلك. */
+            + (eN.pending ? '<span style="color:#7dd3fc;font-size:10px" title="لم تنضج بعد — مهلتها لم تنتهِ"> · ⏳ ' + eN.pending + ' معلّقة</span>' : '')
+            + (doneN < 20 ? ' <span style="color:#fbbf24;font-size:10px">— عيّنة صغيرة، لا تحكم بعد</span>'
+               : eN.pending > doneN ? ' <span style="color:#fbbf24;font-size:10px">— المكتمل أقصر المهل فقط، انتظر نضج الباقي</span>' : '') + '</span>';
         else
           html += '<span style="color:#fbbf24">⏳ <b>بعد الإصلاح:</b> لا حالات مكتملة بعد — تتراكم مع الأيام</span>';
         if (doneO)
@@ -9921,7 +9925,29 @@ document.addEventListener('keydown', e => {
   async function radarUploadShared() {
     if (!sb || !(typeof isAdmin === 'function' && isAdmin()) || !PRED_RESULTS.length) return;
     try {
-      await sb.from('radar_results').upsert({ id: 1, data: PRED_RESULTS, scanned_at: new Date().toISOString() });
+      /* ══════════════════════════════════════════════════════════════
+         🏷️ ختم الحكم الذهبي عند المصدر — إنهاءً لتناقض التلجرام نهائياً
+         كان منطق «الذهبية» مكتوباً مرّتين: هنا وفي دالة track-trades.
+         وكلّما صحّحنا شرطاً في التطبيق (حارس الوقف · حدّ السيولة ·
+         لا مطاردة · العدّ السليم) بقي الخادم على القديم، فأرسل للقناة
+         فرصاً يرفضها التطبيق — والمستخدم يرى رسالة ولا يجد سهماً.
+         الحلّ ليس «تذكّر أن تنشر»، بل **إزالة الازدواج**:
+         التطبيق يحكم ويختم كل سهم بـ golden، والخادم ينقل الختم فقط.
+         فيستحيل الاختلاف مهما تغيّرت الشروط لاحقاً.
+         ══════════════════════════════════════════════════════════════ */
+      const stamped = PRED_RESULTS.map(r => {
+        let g = false;
+        try { g = !!_snGolden(r); } catch (e) {}
+        return Object.assign({}, r, { golden: g });
+      });
+      const nG = stamped.filter(r => r.golden).length;
+      await sb.from('radar_results').upsert({
+        id: 1, data: stamped,
+        scanned_at: new Date().toISOString(),
+        golden_n: nG,                       // للتشخيص السريع من القاعدة
+        logic_v: (window.APP_BUILD || ''),  // أي إصدار أصدر هذا الحكم
+      });
+      console.log('[radar] رُفعت ' + stamped.length + ' نتيجة · ذهبية: ' + nG + ' · ' + (window.APP_BUILD || ''));
     } catch (e) { console.warn('[radar] رفع النتائج المشتركة تعذّر:', e && e.message); }
   }
   /* 🌐 يقرأ النتائج المشتركة (الموحّدة للجميع) ويعرضها — يُرجع true إن نجح */

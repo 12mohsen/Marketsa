@@ -2143,8 +2143,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v270';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v270 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-23-v271';
+console.log('%c[تداول بلس] البناء: 2026-07-23-v271 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -11041,7 +11041,9 @@ document.addEventListener('keydown', e => {
     svg.appendChild(pTag);
     /* صندوق البيانات فوق الشارت (HTML مطلق) */
     let tip = host.querySelector('.termTip');
-    if (!tip) { tip = document.createElement('div'); tip.className = 'termTip'; tip.style.cssText = 'position:absolute;pointer-events:none;background:rgba(15,23,42,.96);border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;font-size:11px;line-height:1.7;color:var(--txt);white-space:nowrap;z-index:5;display:none;box-shadow:0 4px 14px rgba(0,0,0,.5)'; host.style.position = 'relative'; host.appendChild(tip); }
+    /* 📌 صندوق البيانات = شريط ثابت أعلى الشارت (لا يتبع الإصبع)، فلا يحجب الشمعة
+       التي تلمسها. سطر واحد مضغوط يعمل على الجوال والحاسوب سواءً. */
+    if (!tip) { tip = document.createElement('div'); tip.className = 'termTip'; tip.style.cssText = 'position:absolute;top:0;left:0;right:0;pointer-events:none;background:rgba(15,23,42,.94);border-bottom:1px solid var(--bdr);border-radius:8px 8px 0 0;padding:6px 10px;font-size:11px;line-height:1.5;color:var(--txt);z-index:5;display:none;text-align:center;backdrop-filter:blur(2px)'; host.style.position = 'relative'; host.appendChild(tip); }
     const move = (clientX, clientY) => {
       const rect = svg.getBoundingClientRect();
       const xView = ((clientX - rect.left) / rect.width) * g.W;   // إحداثي داخل viewBox
@@ -11061,15 +11063,12 @@ document.addEventListener('keydown', e => {
       const c = seg[idx], o = +c.o || +c.c, h = +c.h || +c.c, lo = +c.l || +c.c, cl = +c.c, v = +c.v || 0;
       const up = cl >= o, col = up ? '#22c55e' : '#ef4444';
       const dt = c.date || c.d || c.t || '';
-      tip.innerHTML = (dt ? '<b>' + String(dt).slice(0, 10) + '</b><br>' : '')
-        + 'افتتاح <b>' + o.toFixed(2) + '</b> · أعلى <b style="color:#22c55e">' + h.toFixed(2) + '</b><br>'
-        + 'أدنى <b style="color:#ef4444">' + lo.toFixed(2) + '</b> · إغلاق <b style="color:' + col + '">' + cl.toFixed(2) + '</b>'
-        + (v ? '<br>حجم <b>' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'م' : Math.round(v / 1000) + 'ألف') + '</b>' : '');
-      tip.style.display = 'block';
-      /* موضع الصندوق: بيكسل حقيقي داخل host */
-      const pxPix = (cx / g.W) * rect.width;
-      tip.style.left = Math.min(rect.width - tip.offsetWidth - 6, Math.max(6, pxPix - tip.offsetWidth / 2)) + 'px';
-      tip.style.top = '6px';
+      const vTxt = v ? (v >= 1e6 ? (v / 1e6).toFixed(1) + 'م' : Math.round(v / 1000) + 'ألف') : '';
+      /* سطر واحد مضغوط: تاريخ · افتتاح · أعلى · أدنى · إغلاق · حجم */
+      tip.innerHTML = (dt ? '<b style="color:#94a3b8">' + String(dt).slice(0, 10) + '</b> · ' : '')
+        + 'ف <b>' + o.toFixed(2) + '</b> · أ <b style="color:#22c55e">' + h.toFixed(2) + '</b> · د <b style="color:#ef4444">' + lo.toFixed(2) + '</b> · إ <b style="color:' + col + '">' + cl.toFixed(2) + '</b>'
+        + (vTxt ? ' · ح <b>' + vTxt + '</b>' : '');
+      tip.style.display = 'block';   // شريط ثابت أعلى الشارت — لا يتبع الإصبع
     };
     const hideAll = () => { vline.setAttribute('opacity', '0'); hline.setAttribute('opacity', '0'); pTagBg.setAttribute('opacity', '0'); pTag.setAttribute('opacity', '0'); tip.style.display = 'none'; };
     svg.addEventListener('mousemove', e => move(e.clientX, e.clientY));

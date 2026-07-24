@@ -1299,6 +1299,9 @@ canvas#mdChart{display:block;width:100% !important}
 /* 🖥️ اللوحة الموحّدة: على الجوال تُكدَّس القائمة فوق الشارت والتفاصيل */
 /* على الشاشات المتوسطة: الشارت فوق التحليل بدل جنبه */
 @media (max-width:1150px){ #termMid{grid-template-columns:1fr !important} }
+/* شريط فلاتر اللوحة: تمرير أفقي أنيق بلا شريط تمرير ظاهر */
+#termFilterBar::-webkit-scrollbar{height:0}
+#termFilterBar{scrollbar-width:none}
 /* على الجوال: كل شيء يُكدَّس والقائمة أقصر */
 @media (max-width:760px){ #termGrid{grid-template-columns:1fr !important} #termGrid > div:first-child{max-height:30vh !important} }
 </style>
@@ -1731,12 +1734,15 @@ canvas#mdChart{display:block;width:100% !important}
 <div class="section-panel" id="panel-terminal">
   <!-- 🖥️ لوحة ملء الشاشة: رأس ثابت بزرّ رجوع + بحث، ثم الشبكة -->
   <div id="termFull" style="position:fixed;inset:0;z-index:800;background:var(--bg,#0b1120);display:none;flex-direction:column;padding:0">
-    <div style="flex:none;display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bdr);background:var(--surf)">
-      <button onclick="termExit()" style="flex:none;display:flex;align-items:center;gap:6px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">↩️ رجوع للأقسام</button>
-      <div style="flex:none;font-size:16px;font-weight:900;white-space:nowrap">🖥️ اللوحة الموحّدة</div>
-      <input id="termSearch" oninput="termFilter(this.value)" placeholder="🔍 ابحث عن سهم…" style="flex:1;min-width:0;max-width:360px;padding:9px 13px;border-radius:9px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box">
-      <!-- 🎯 فلاتر الفرص: تفلتر القائمة الجانبية بنقرة -->
-      <div id="termFilterBar" style="flex:none;display:flex;gap:6px;flex-wrap:wrap"></div>
+    <!-- 🖥️ الرأس: يلتفّ في أسطر على الجوال فلا يُطرد البحث أو الأزرار خارج الشاشة -->
+    <div style="flex:none;padding:10px 12px;border-bottom:1px solid var(--bdr);background:var(--surf)">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+        <button onclick="termExit()" style="flex:none;display:flex;align-items:center;gap:6px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">↩️ رجوع</button>
+        <div style="flex:none;font-size:15px;font-weight:900;white-space:nowrap">🖥️ اللوحة الموحّدة</div>
+        <input id="termSearch" oninput="termFilter(this.value)" placeholder="🔍 ابحث عن سهم…" style="flex:1;min-width:120px;padding:9px 13px;border-radius:9px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <!-- 🎯 الفلاتر في سطر مستقلّ قابل للتمرير أفقياً -->
+      <div id="termFilterBar" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch"></div>
     </div>
     <div style="flex:1;min-height:0;overflow:auto;padding:14px">
     <div id="termGrid" style="display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:14px;align-items:start">
@@ -2137,8 +2143,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v269';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v269 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-23-v270';
+console.log('%c[تداول بلس] البناء: 2026-07-23-v270 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -10843,7 +10849,7 @@ document.addEventListener('keydown', e => {
     const btn = (k, rgb, txt, n, always) => {
       if (!n && !always) return '';
       const on = TERM_FILT === k, dim = (!n && always);
-      return '<button onclick="termSetFilt(\'' + k + '\')" ' + (dim ? 'disabled ' : '') + 'style="cursor:' + (dim ? 'default' : 'pointer') + ';opacity:' + (dim ? '0.4' : '1') + ';background:' + (on ? 'rgba(' + rgb + ',.35)' : 'rgba(' + rgb + ',.13)') + ';border:' + (on ? '2px' : '1px') + ' solid rgba(' + rgb + ',' + (on ? '.9' : '.4') + ');color:' + (on ? '#fff' : 'rgb(' + rgb + ')') + ';border-radius:16px;padding:5px 11px;font-size:11.5px;font-weight:800;font-family:inherit;white-space:nowrap">' + txt + ' ' + n + (on ? ' ✕' : '') + '</button>';
+      return '<button onclick="termSetFilt(\'' + k + '\')" ' + (dim ? 'disabled ' : '') + 'style="flex:0 0 auto;cursor:' + (dim ? 'default' : 'pointer') + ';opacity:' + (dim ? '0.4' : '1') + ';background:' + (on ? 'rgba(' + rgb + ',.35)' : 'rgba(' + rgb + ',.13)') + ';border:' + (on ? '2px' : '1px') + ' solid rgba(' + rgb + ',' + (on ? '.9' : '.4') + ');color:' + (on ? '#fff' : 'rgb(' + rgb + ')') + ';border-radius:16px;padding:5px 11px;font-size:11.5px;font-weight:800;font-family:inherit;white-space:nowrap">' + txt + ' ' + n + (on ? ' ✕' : '') + '</button>';
     };
     bar.innerHTML =
       btn('ready', '250,204,21', '🎯 جاهز', c.ready) +

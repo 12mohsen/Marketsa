@@ -2143,8 +2143,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v272';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v272 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-23-v273';
+console.log('%c[تداول بلس] البناء: 2026-07-23-v273 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -11041,9 +11041,9 @@ document.addEventListener('keydown', e => {
     svg.appendChild(pTag);
     /* صندوق البيانات فوق الشارت (HTML مطلق) */
     let tip = host.querySelector('.termTip');
-    /* 📌 صندوق البيانات = شريط ثابت أعلى الشارت (لا يتبع الإصبع)، فلا يحجب الشمعة
-       التي تلمسها. سطر واحد مضغوط يعمل على الجوال والحاسوب سواءً. */
-    if (!tip) { tip = document.createElement('div'); tip.className = 'termTip'; tip.style.cssText = 'position:absolute;top:0;left:0;right:0;pointer-events:none;background:rgba(15,23,42,.94);border-bottom:1px solid var(--bdr);border-radius:8px 8px 0 0;padding:6px 10px;font-size:11px;line-height:1.5;color:var(--txt);z-index:5;display:none;text-align:center;backdrop-filter:blur(2px)'; host.style.position = 'relative'; host.appendChild(tip); }
+    /* 📌 شريط البيانات يتنحّى عن إصبعك: تلمس أعلى الشارت فينزل الشريط أسفله،
+       وتلمس أسفله فيصعد فوقه — فلا يحجب الشمعة أبداً. */
+    if (!tip) { tip = document.createElement('div'); tip.className = 'termTip'; tip.style.cssText = 'position:absolute;left:0;right:0;pointer-events:none;background:rgba(15,23,42,.94);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;font-size:11px;line-height:1.5;color:var(--txt);z-index:5;display:none;text-align:center;backdrop-filter:blur(2px)'; host.style.position = 'relative'; host.appendChild(tip); }
     const move = (clientX, clientY) => {
       const rect = svg.getBoundingClientRect();
       const xView = ((clientX - rect.left) / rect.width) * g.W;   // إحداثي داخل viewBox
@@ -11068,7 +11068,11 @@ document.addEventListener('keydown', e => {
       tip.innerHTML = (dt ? '<b style="color:#94a3b8">' + String(dt).slice(0, 10) + '</b> · ' : '')
         + 'ف <b>' + o.toFixed(2) + '</b> · أ <b style="color:#22c55e">' + h.toFixed(2) + '</b> · د <b style="color:#ef4444">' + lo.toFixed(2) + '</b> · إ <b style="color:' + col + '">' + cl.toFixed(2) + '</b>'
         + (vTxt ? ' · ح <b>' + vTxt + '</b>' : '');
-      tip.style.display = 'block';   // شريط ثابت أعلى الشارت — لا يتبع الإصبع
+      tip.style.display = 'block';
+      /* 🔀 الشريط يتنحّى: إصبعك في النصف الأعلى ⇒ الشريط أسفل · في النصف الأسفل ⇒ فوق */
+      const touchTop = (clientY != null) ? ((clientY - rect.top) < rect.height / 2) : false;
+      if (touchTop) { tip.style.bottom = '6px'; tip.style.top = 'auto'; }
+      else { tip.style.top = '6px'; tip.style.bottom = 'auto'; }
     };
     const hideAll = () => { vline.setAttribute('opacity', '0'); hline.setAttribute('opacity', '0'); pTagBg.setAttribute('opacity', '0'); pTag.setAttribute('opacity', '0'); tip.style.display = 'none'; };
     svg.addEventListener('mousemove', e => move(e.clientX, e.clientY));

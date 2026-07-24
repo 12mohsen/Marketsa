@@ -1296,6 +1296,11 @@ canvas#mdChart{display:block;width:100% !important}
   text-align:center;
 }
 
+/* 🖥️ اللوحة الموحّدة: على الجوال تُكدَّس القائمة فوق الشارت والتفاصيل */
+/* على الشاشات المتوسطة: الشارت فوق التحليل بدل جنبه */
+@media (max-width:1150px){ #termMid{grid-template-columns:1fr !important} }
+/* على الجوال: كل شيء يُكدَّس والقائمة أقصر */
+@media (max-width:760px){ #termGrid{grid-template-columns:1fr !important} #termGrid > div:first-child{max-height:30vh !important} }
 </style>
 </head>
 <body>
@@ -1367,6 +1372,9 @@ canvas#mdChart{display:block;width:100% !important}
     </button>
     <button class="nav-btn" data-tab="sniper" onclick="switchTab('sniper',this)">
       <span class="nav-ico">🎯</span> قنّاص الفرص
+    </button>
+    <button class="nav-btn" data-tab="terminal" onclick="switchTab('terminal',this)">
+      <span class="nav-ico">🖥️</span> اللوحة الموحّدة
     </button>
     <button class="nav-btn" data-tab="admin" id="navAdminBtn" style="display:none" onclick="switchTab('admin',this)">
       <span class="nav-ico">⚙️</span> الأدمن
@@ -1717,6 +1725,53 @@ canvas#mdChart{display:block;width:100% !important}
 <!-- ⚙️ قسم الأدمن المستقل -->
 <div class="section-panel" id="panel-admin">
   <div id="adminSectionWrap" style="max-width:1200px;margin:0 auto;padding:0 12px 40px"></div>
+</div>
+
+<!-- 🖥️ اللوحة الموحّدة -->
+<div class="section-panel" id="panel-terminal">
+  <!-- 🖥️ لوحة ملء الشاشة: رأس ثابت بزرّ رجوع + بحث، ثم الشبكة -->
+  <div id="termFull" style="position:fixed;inset:0;z-index:800;background:var(--bg,#0b1120);display:none;flex-direction:column;padding:0">
+    <div style="flex:none;display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bdr);background:var(--surf)">
+      <button onclick="termExit()" style="flex:none;display:flex;align-items:center;gap:6px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">↩️ رجوع للأقسام</button>
+      <div style="flex:none;font-size:16px;font-weight:900;white-space:nowrap">🖥️ اللوحة الموحّدة</div>
+      <input id="termSearch" oninput="termFilter(this.value)" placeholder="🔍 ابحث عن سهم…" style="flex:1;min-width:0;max-width:360px;padding:9px 13px;border-radius:9px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box">
+      <!-- 🎯 فلاتر الفرص: تفلتر القائمة الجانبية بنقرة -->
+      <div id="termFilterBar" style="flex:none;display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <div style="flex:1;min-height:0;overflow:auto;padding:14px">
+    <div id="termGrid" style="display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:14px;align-items:start">
+      <!-- قائمة الأسهم -->
+      <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:8px;max-height:78vh;overflow:auto">
+        <div id="termList"></div>
+      </div>
+      <!-- الوسط: شارت + تحليل جنباً إلى جنب (بلا نزول) -->
+      <div id="termMid" style="min-width:0;display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:start">
+        <!-- 📈 الشارت -->
+        <div id="termChartWrap" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <div style="display:flex;gap:5px;background:var(--surf);border-radius:9px;padding:3px">
+              <button data-tf="D" onclick="termSetTF('D')" style="border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--g-mid),var(--g-accent));color:#fff">📅 يومي</button>
+              <button data-tf="W" onclick="termSetTF('W')" style="border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:var(--txt-m)">🗓️ أسبوعي</button>
+              <button data-tf="M" onclick="termSetTF('M')" style="border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:var(--txt-m)">📆 شهري</button>
+            </div>
+            <button id="termTVBtn" onclick="termOpenTV()" style="background:var(--surf);border:1px solid var(--bdr);color:#38bdf8;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📊 TradingView ↗</button>
+          </div>
+          <div id="termStats" style="margin-bottom:8px"></div>
+          <div id="termChart" style="width:100%;border-radius:10px;overflow:hidden"></div>
+          <div style="font-size:10.5px;color:var(--txt-m);margin-top:5px">🕯️ MA20 (أزرق) · MA50 (برتقالي) · حجم — من بياناتك.</div>
+        </div>
+        <!-- تفاصيل التحليل -->
+        <div id="termDetail" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:16px;min-height:220px">
+          <div style="text-align:center;color:var(--txt-m);padding:60px 20px;line-height:2">
+            <div style="font-size:44px;margin-bottom:10px">👈</div>
+            <div style="font-size:15px;font-weight:700">اختر سهماً من القائمة</div>
+            <div style="font-size:12.5px;margin-top:6px">يظهر الشارت وكل تحليله معاً</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
 </div>
 
 <!-- تحليل السوق -->
@@ -2082,8 +2137,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v250';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v250 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-23-v269';
+console.log('%c[تداول بلس] البناء: 2026-07-23-v269 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -4904,6 +4959,7 @@ const ADMIN_TAB_DEFS = [
   { k: 'returns',   t: '📈 العوائد' },
   { k: 'all',       t: '🔮 رادار' },
   { k: 'sniper',    t: '🎯 قنّاص الفرص' },
+  { k: 'terminal',  t: '🖥️ اللوحة الموحّدة' },
   { k: 'analysis',  t: '⚡ تحليل السوق' },
 ];
 /* 💳 أقسام الاشتراك: الأقسام الخمسة + المنبثقات + الحساب كله */
@@ -9606,11 +9662,12 @@ document.addEventListener('keydown', e => {
     } catch (e) { return false; }
   }
 
-  async function predFetchCandles(sym) {
-    if (PRED_CACHE[sym]) return PRED_CACHE[sym];
-    /* 📈 جرّب القاعدة أولاً (خزّنها الأدمن) — بشرط أن تكون حديثة، وإلا اجلب طازجاً من المصدر */
+  async function predFetchCandles(sym, forceFresh) {
+    if (PRED_CACHE[sym] && !forceFresh) return PRED_CACHE[sym];
+    /* 📈 جرّب القاعدة أولاً (خزّنها الأدمن) — بشرط أن تكون حديثة، وإلا اجلب طازجاً من المصدر.
+       forceFresh يتخطّى القاعدة كلياً — يستعمله الشارت عند اكتشاف تجزئة غير معدّلة. */
     try {
-      const dbc = await histDbLoad(sym, 25);
+      const dbc = forceFresh ? null : await histDbLoad(sym, 25);
       if (dbc && dbc.length >= 25 && _predDbFresh(dbc)) {
         /* 🗓️ الأطر الأعلى تُحسب من **التاريخ الكامل قبل الاقتصاص**:
            الكاش يحتفظ بـ260 شمعة (سنة) وهي تكفي التحليل اليومي، لكنها
@@ -10759,6 +10816,462 @@ document.addEventListener('keydown', e => {
       (stale ? ' — <span style="color:#fbbf24">سيُحدَّث تلقائياً عند الفتح</span>' : '');
   }
 
+  /* ══════════════════════════════════════════════════════════════════
+     🖥️ اللوحة الموحّدة — كل ما بنيناه في شاشة واحدة
+     لا تُعيد حساب شيء: تقرأ نتائج المسح (PRED_RESULTS) وتعرضها مجمّعةً.
+     الهدف: إنهاء التنقّل بين ستة أقسام. تختار سهماً فترى حكمه كاملاً.
+     ══════════════════════════════════════════════════════════════════ */
+  let TERM_SEARCH = '', TERM_SEL = '', TERM_FILT = '';   // TERM_FILT: '' | ready | now | wait | gone | tight | base:day/wk/mo/wkmo/all/any
+  window.termFilter = function (v) { TERM_SEARCH = v || ''; termRenderList(); };
+  window.termSetFilt = function (k) { TERM_FILT = (TERM_FILT === k) ? '' : k; termRenderList(); };
+  /* 🎯 شريط فلاتر: الفرص + القاعدة على الأطر — يُحسب على كل النتائج ويفلتر الجانبية */
+  function _termRenderFilterBar(all) {
+    const bar = document.getElementById('termFilterBar'); if (!bar) return;
+    const c = { ready: 0, now: 0, wait: 0, gone: 0, tight: 0 };
+    const bc = { 'base:day': 0, 'base:wk': 0, 'base:mo': 0, 'base:wkmo': 0, 'base:all': 0, 'base:any': 0 };
+    all.forEach(r => {
+      if (r.elPlan && r.elPlan.rr) c.ready++;
+      const k = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
+      if (k && c[k] != null) c[k]++;
+      /* 🧱 القاعدة على الأطر (نفس منطق القنّاص) */
+      if (typeof _snBaseFrames === 'function') {
+        const f = _snBaseFrames(r);
+        if (f) { if (f.day) bc['base:day']++; if (f.wk) bc['base:wk']++; if (f.mo) bc['base:mo']++; if (f.wk && f.mo) bc['base:wkmo']++; if (f.day && f.wk && f.mo) bc['base:all']++; if (f.n > 0) bc['base:any']++; }
+      }
+    });
+    /* الأزرار العادية تختفي عند الصفر · «always» تبقى ظاهرة باهتة (يطلبها المستخدم) */
+    const btn = (k, rgb, txt, n, always) => {
+      if (!n && !always) return '';
+      const on = TERM_FILT === k, dim = (!n && always);
+      return '<button onclick="termSetFilt(\'' + k + '\')" ' + (dim ? 'disabled ' : '') + 'style="cursor:' + (dim ? 'default' : 'pointer') + ';opacity:' + (dim ? '0.4' : '1') + ';background:' + (on ? 'rgba(' + rgb + ',.35)' : 'rgba(' + rgb + ',.13)') + ';border:' + (on ? '2px' : '1px') + ' solid rgba(' + rgb + ',' + (on ? '.9' : '.4') + ');color:' + (on ? '#fff' : 'rgb(' + rgb + ')') + ';border-radius:16px;padding:5px 11px;font-size:11.5px;font-weight:800;font-family:inherit;white-space:nowrap">' + txt + ' ' + n + (on ? ' ✕' : '') + '</button>';
+    };
+    bar.innerHTML =
+      btn('ready', '250,204,21', '🎯 جاهز', c.ready) +
+      btn('now', '34,197,94', '✅ عند الدخول', c.now) +
+      btn('wait', '56,189,248', '⏳ بانتظار', c.wait) +
+      btn('gone', '251,146,60', '🚫 فات', c.gone) +
+      btn('tight', '248,113,113', '🚨 ملتصق', c.tight) +
+      /* 🧱 فلاتر القاعدة على الأطر — بلون كهرماني مميّز */
+      btn('base:day', '245,158,11', '🧱📅 قاعدة يومي', bc['base:day']) +
+      btn('base:wk', '245,158,11', '🧱🗓️ أسبوعي', bc['base:wk']) +
+      btn('base:mo', '245,158,11', '🧱📆 شهري', bc['base:mo']) +
+      btn('base:wkmo', '245,158,11', '🧱 أسبوعي+شهري', bc['base:wkmo']) +
+      btn('base:all', '245,158,11', '🧱 الثلاثة معاً', bc['base:all'], true);   // يظهر دائماً
+  }
+  function termRenderList() {
+    const wrap = document.getElementById('termList'); if (!wrap) return;
+    const all = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).slice();
+    _termRenderFilterBar(all);   // 🎯 حدّث أعداد الفلاتر دائماً (على الكل)
+    let list = all;
+    if (!list.length) {
+      wrap.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:30px 12px;line-height:1.9;font-size:13px">لا بيانات بعد — افتح <b>رادار</b> واضغط <b>إعادة المسح</b> مرة، ثم عُد هنا.</div>';
+      return;
+    }
+    if (TERM_SEARCH) {
+      const q = _arNorm(TERM_SEARCH);
+      list = list.filter(r => _arNorm(r.sym).includes(q) || _arNorm(r.name).includes(q));
+    }
+    /* 🎯 فلتر الفرص أو القاعدة المختار */
+    if (TERM_FILT === 'ready') list = list.filter(r => r.elPlan && r.elPlan.rr);
+    else if (TERM_FILT.indexOf('base:') === 0) {
+      const mode = TERM_FILT.slice(5);   // day/wk/mo/wkmo/all/any
+      list = list.filter(r => (typeof _snBaseMatch === 'function') ? !!_snBaseMatch(r, mode) : false);
+    }
+    else if (TERM_FILT) list = list.filter(r => ((typeof _snExecKey === 'function') ? _snExecKey(r) : null) === TERM_FILT);
+    /* ترتيب: من له خطة قنّاص جاهزة أولاً، ثم الأعلى احتمالاً */
+    list.sort((a, b) =>
+      ((b.elPlan && b.elPlan.rr ? 1 : 0) - (a.elPlan && a.elPlan.rr ? 1 : 0)) ||
+      (b.probability || 0) - (a.probability || 0));
+    if (!list.length) { wrap.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:24px;font-size:13px">لا نتائج لبحثك</div>'; return; }
+    wrap.innerHTML = list.slice(0, 120).map(r => {
+      const sel = r.sym === TERM_SEL;
+      /* نقطة إشارة سريعة: أخضر = فوق الأطر وخطة جاهزة · أصفر = مرشّح · رمادي = لا */
+      let dot = '#64748b';
+      if (r.mtf && (r.mtf.w === 'صاعد')) dot = '#4ade80';
+      else if (r.elPlan && r.elPlan.rr) dot = '#fbbf24';
+      const dir = r.direction === 'up' ? '#4ade80' : r.direction === 'down' ? '#f87171' : '#94a3b8';
+      return '<div onclick="termSelect(\'' + r.sym + '\')" style="cursor:pointer;display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;margin-bottom:3px;'
+        + (sel ? 'background:rgba(56,189,248,.16);border:1px solid rgba(56,189,248,.5)' : 'border:1px solid transparent') + '">'
+        + '<span style="width:9px;height:9px;border-radius:50%;background:' + dot + ';flex:none"></span>'
+        + '<span style="flex:1;min-width:0;overflow:hidden"><span style="font-weight:800;font-size:13.5px">' + (r.name || r.sym) + '</span>'
+        + '<span style="color:var(--txt-m);font-size:11px;margin-inline-start:5px">' + r.sym + '</span></span>'
+        + '<span style="font-weight:900;font-size:13px;color:' + dir + '">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</span>'
+        + '</div>';
+    }).join('');
+  }
+  /* ══════════════════════════════════════════════════════════════════
+     📈 شارت شموع من بيانات تطبيقك — لا من TradingView
+     السبب: TradingView المجاني لا يوفّر بيانات تداول (يحتاج اشتراكاً)،
+     فأغلب أسهمك السعودية لا تُرسم فيه. أمّا بياناتك (270 سهماً · 5 سنوات)
+     فتُرسم كلها بلا استثناء ومتّسقة مع تحليلك. ومن أراد أدوات TradingView
+     الاحترافية للسهم المتاح، يفتحها بزرّ اختياري.
+     ══════════════════════════════════════════════════════════════════ */
+  const _termCandleCache = {};
+  let TERM_TF = 'D';              // إطار الشارت: D يومي · W أسبوعي · M شهري
+  let _termDaily = null;          // آخر شموع يومية مجلوبة (لإعادة التجميع بلا جلب)
+  window.termSetTF = function (tf) {
+    TERM_TF = tf;
+    document.querySelectorAll('[data-tf]').forEach(el => {
+      const on = el.getAttribute('data-tf') === tf;
+      el.style.background = on ? 'linear-gradient(135deg,var(--g-mid),var(--g-accent))' : 'transparent';
+      el.style.color = on ? '#fff' : 'var(--txt-m)';
+    });
+    /* أعِد الرسم من نفس الشموع اليومية — بلا جلب جديد (نُبقي شريط التحذير) */
+    const host = document.getElementById('termChartInner') || document.getElementById('termChart');
+    if (host && _termDaily && _termDaily.length) { _termDrawTF(host, _termDaily); }
+  };
+  /* 🔨 تجميع خفيف للعرض (بلا حدّ أدنى صارم كـ_aggBars المخصّص للتحليل):
+     يجمّع كل n شمعة يومية إلى واحدة — o أول الفترة · c آخرها · h/l القصوى · v المجموع */
+  function _termAgg(daily, n) {
+    const out = [];
+    for (let end = daily.length; end > 0; end -= n) {
+      const s = daily.slice(Math.max(0, end - n), end);
+      if (!s.length) continue;
+      const hs = s.map(x => +x.h || +x.c), ls = s.map(x => +x.l || +x.c);
+      out.unshift({ o: +s[0].o || +s[0].c, c: +s[s.length - 1].c, h: Math.max.apply(null, hs), l: Math.min.apply(null, ls), v: s.reduce((a, x) => a + (+x.v || 0), 0), d: s[s.length - 1].d || s[s.length - 1].t });
+    }
+    return out;
+  }
+  /* يجمّع اليومي إلى الإطار المطلوب ثم يرسم */
+  function _termDrawTF(host, daily) {
+    let cds = daily;
+    if (TERM_TF === 'W') cds = _termAgg(daily, 5);
+    else if (TERM_TF === 'M') cds = _termAgg(daily, 21);
+    if (!cds || cds.length < 6) cds = daily;
+    host.innerHTML = _termCandleSVG(cds, TERM_SEL);
+    try { _termBindHover(host, cds); } catch (e) {}
+  }
+  async function _termLoadChart(sym, livePrice) {
+    const wrap = document.getElementById('termChartWrap'), host = document.getElementById('termChart');
+    if (!wrap || !host) return;
+    wrap.style.display = 'block';
+    host.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:80px 20px">⏳ جارٍ رسم الشارت من بياناتك…</div>';
+    let cds = _termCandleCache[sym];
+    if (!cds) {
+      /* 🔑 نفس مصدر التحليل الكامل: predFetchCandles يجلب طازجاً من ياهو
+         (معدّلاً للتجزئة) حين تكون القاعدة قديمة — فيتطابق مع السعر الحيّ.
+         كان الشارت يقرأ historical_prices الخام فيُظهر أرقاماً قبل التجزئة. */
+      try {
+        if (typeof predFetchCandles === 'function') cds = await predFetchCandles(sym);
+        else if (typeof histDbLoad === 'function') cds = await histDbLoad(sym, 30);
+      } catch (e) {}
+      if (cds && cds.length) _termCandleCache[sym] = cds;
+    }
+    if (TERM_SEL !== sym) return;   // تغيّر الاختيار أثناء الجلب
+    if (!cds || cds.length < 20) { host.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:50px 20px;font-size:13px">لا تكفي بيانات هذا السهم لرسم شارت — لكن كل التحليل تحت يعمل.</div>'; return; }
+    /* 🔄 إن خالف آخر سعر السعرَ الحيّ كثيراً، فالقاعدة تحمل أسعاراً قبل التجزئة
+       رغم أن تاريخها حديث. نُجبر جلباً طازجاً من ياهو (معدّلاً) مرة واحدة. */
+    if (livePrice > 0 && Math.abs(livePrice - (+cds[cds.length - 1].c)) / livePrice > 0.08) {
+      try {
+        const fresh = await predFetchCandles(sym, true);
+        if (TERM_SEL !== sym) return;
+        if (fresh && fresh.length >= 20 && Math.abs(livePrice - (+fresh[fresh.length - 1].c)) / livePrice <= 0.08) {
+          cds = fresh; _termCandleCache[sym] = fresh;
+        }
+      } catch (e) {}
+    }
+    let warnHtml = '';
+    const histLast = +cds[cds.length - 1].c;
+    if (livePrice > 0 && histLast > 0) {
+      const gap = Math.abs(livePrice - histLast) / livePrice;
+      if (gap > 0.08) {
+        warnHtml = '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:8px;padding:8px 11px;margin-bottom:8px;font-size:11px;color:#fcd34d;font-weight:700;line-height:1.7">'
+          + 'ℹ️ آخر شمعة في الشارت <b>' + histLast.toFixed(2) + '</b> · السعر الحيّ <b>' + livePrice.toFixed(2) + '</b> — الشارت يومي (متأخّر)، اعتمد الحيّ للتنفيذ.</div>';
+      }
+    }
+    _termDaily = cds;   // احفظ اليومي لإعادة التجميع عند تبديل الإطار
+    try { _termRenderStats(cds); } catch (e) {}   // 📊 بطاقات المعلومات فوق الشارت
+    host.innerHTML = warnHtml + '<div id="termChartInner"></div>';
+    _termDrawTF(document.getElementById('termChartInner') || host, cds);
+  }
+  /* 📊 بطاقات: أعلى/أدنى إغلاق · تغيّر 30 يوماً · أعلى/أدنى · مدى 52 أسبوعاً */
+  function _termRenderStats(daily) {
+    const box = document.getElementById('termStats'); if (!box || !daily || !daily.length) return;
+    const C = daily.map(c => +c.c).filter(v => v > 0);
+    const Hs = daily.map(c => +c.h || +c.c).filter(v => v > 0);
+    const Ls = daily.map(c => +c.l || +c.c).filter(v => v > 0);
+    if (!C.length) { box.innerHTML = ''; return; }
+    const last = C[C.length - 1];
+    /* آخر 30 يوم تداول */
+    const w30 = C.slice(-30), c30 = w30[0];
+    const chg30 = (c30 > 0) ? ((last - c30) / c30) * 100 : null;
+    const hiClose30 = Math.max.apply(null, w30), loClose30 = Math.min.apply(null, w30);
+    /* 52 أسبوع = آخر ~252 يوم تداول */
+    const y = daily.slice(-252);
+    const hi52 = Math.max.apply(null, y.map(c => +c.h || +c.c));
+    const lo52 = Math.min.apply(null, y.map(c => +c.l || +c.c));
+    const card = (lbl, val, clr) => '<div style="flex:1;min-width:0;background:var(--surf);border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;text-align:center">'
+      + '<div style="font-size:9.5px;color:var(--txt-m);white-space:nowrap">' + lbl + '</div>'
+      + '<div style="font-size:13px;font-weight:900;color:' + (clr || 'var(--txt)') + ';white-space:nowrap">' + val + '</div></div>';
+    box.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      + card('📈 أعلى إغلاق (30ي)', hiClose30.toFixed(2), '#4ade80')
+      + card('📉 أدنى إغلاق (30ي)', loClose30.toFixed(2), '#f87171')
+      + card('🔄 تغيّر 30 يوم', (chg30 != null ? (chg30 >= 0 ? '+' : '') + chg30.toFixed(2) + '%' : '—'), chg30 == null ? 'var(--txt)' : chg30 >= 0 ? '#4ade80' : '#f87171')
+      + card('🏔️ أعلى/أدنى 52 أسبوع', hi52.toFixed(2) + ' / ' + lo52.toFixed(2), '#38bdf8')
+      + '</div>';
+  }
+  /* 🖱️ تتبّع الفأرة: خطّ عمودي + صندوق يعرض O/H/L/C وتاريخ الشمعة تحت المؤشّر */
+  const _TERM_GEOM = {};   // يُملأ من _termCandleSVG ليعرف مواضع الشموع
+  function _termBindHover(host, cds) {
+    const svg = host.querySelector('svg'); if (!svg) return;
+    const g = _TERM_GEOM;
+    const take = g.take, seg = cds.slice(-take);
+    /* عناصر التتبّع تُضاف داخل الـSVG — صليب متقاطع (crosshair) كالاحترافي */
+    const NS = 'http://www.w3.org/2000/svg';
+    const vline = document.createElementNS(NS, 'line');   // العمودي (على الشمعة)
+    vline.setAttribute('stroke', '#cbd5e1'); vline.setAttribute('stroke-width', '0.8');
+    vline.setAttribute('stroke-dasharray', '3 3'); vline.setAttribute('opacity', '0'); vline.setAttribute('y1', '2'); vline.setAttribute('y2', String(g.chH + 4));
+    svg.appendChild(vline);
+    const hline = document.createElementNS(NS, 'line');   // الأفقي (على السعر)
+    hline.setAttribute('stroke', '#cbd5e1'); hline.setAttribute('stroke-width', '0.8');
+    hline.setAttribute('stroke-dasharray', '3 3'); hline.setAttribute('opacity', '0'); hline.setAttribute('x1', String(g.L0)); hline.setAttribute('x2', String(g.W - g.R0));
+    svg.appendChild(hline);
+    /* وسم السعر على المحور اليمين — يتبع الخطّ الأفقي */
+    const pTagBg = document.createElementNS(NS, 'rect');
+    pTagBg.setAttribute('x', String(g.W - g.R0)); pTagBg.setAttribute('width', String(g.R0 - 2)); pTagBg.setAttribute('height', '15'); pTagBg.setAttribute('rx', '3'); pTagBg.setAttribute('fill', '#334155'); pTagBg.setAttribute('opacity', '0');
+    svg.appendChild(pTagBg);
+    const pTag = document.createElementNS(NS, 'text');
+    pTag.setAttribute('x', String(g.W - g.R0 + (g.R0 - 2) / 2)); pTag.setAttribute('font-size', '10.5'); pTag.setAttribute('font-weight', '800'); pTag.setAttribute('fill', '#fff'); pTag.setAttribute('text-anchor', 'middle'); pTag.setAttribute('opacity', '0');
+    svg.appendChild(pTag);
+    /* صندوق البيانات فوق الشارت (HTML مطلق) */
+    let tip = host.querySelector('.termTip');
+    if (!tip) { tip = document.createElement('div'); tip.className = 'termTip'; tip.style.cssText = 'position:absolute;pointer-events:none;background:rgba(15,23,42,.96);border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;font-size:11px;line-height:1.7;color:var(--txt);white-space:nowrap;z-index:5;display:none;box-shadow:0 4px 14px rgba(0,0,0,.5)'; host.style.position = 'relative'; host.appendChild(tip); }
+    const move = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect();
+      const xView = ((clientX - rect.left) / rect.width) * g.W;   // إحداثي داخل viewBox
+      let idx = Math.floor((xView - g.L0) / g.cw);
+      idx = Math.max(0, Math.min(take - 1, idx));
+      const cx = g.L0 + idx * g.cw + g.cw / 2;
+      vline.setAttribute('x1', cx.toFixed(1)); vline.setAttribute('x2', cx.toFixed(1)); vline.setAttribute('opacity', '0.8');
+      /* ➕ الخطّ الأفقي + سعر المحور عند موضع الفأرة العمودي */
+      if (clientY != null && g.lo != null) {
+        let yView = ((clientY - rect.top) / rect.height) * g.HT;
+        yView = Math.max(4, Math.min(4 + g.chH, yView));            // احصره في منطقة السعر
+        const priceAt = g.lo + (g.hi - g.lo) * (1 - (yView - 4) / g.chH);
+        hline.setAttribute('y1', yView.toFixed(1)); hline.setAttribute('y2', yView.toFixed(1)); hline.setAttribute('opacity', '0.8');
+        pTagBg.setAttribute('y', (yView - 7.5).toFixed(1)); pTagBg.setAttribute('opacity', '1');
+        pTag.setAttribute('y', (yView + 3.5).toFixed(1)); pTag.textContent = priceAt.toFixed(2); pTag.setAttribute('opacity', '1');
+      }
+      const c = seg[idx], o = +c.o || +c.c, h = +c.h || +c.c, lo = +c.l || +c.c, cl = +c.c, v = +c.v || 0;
+      const up = cl >= o, col = up ? '#22c55e' : '#ef4444';
+      const dt = c.date || c.d || c.t || '';
+      tip.innerHTML = (dt ? '<b>' + String(dt).slice(0, 10) + '</b><br>' : '')
+        + 'افتتاح <b>' + o.toFixed(2) + '</b> · أعلى <b style="color:#22c55e">' + h.toFixed(2) + '</b><br>'
+        + 'أدنى <b style="color:#ef4444">' + lo.toFixed(2) + '</b> · إغلاق <b style="color:' + col + '">' + cl.toFixed(2) + '</b>'
+        + (v ? '<br>حجم <b>' + (v >= 1e6 ? (v / 1e6).toFixed(1) + 'م' : Math.round(v / 1000) + 'ألف') + '</b>' : '');
+      tip.style.display = 'block';
+      /* موضع الصندوق: بيكسل حقيقي داخل host */
+      const pxPix = (cx / g.W) * rect.width;
+      tip.style.left = Math.min(rect.width - tip.offsetWidth - 6, Math.max(6, pxPix - tip.offsetWidth / 2)) + 'px';
+      tip.style.top = '6px';
+    };
+    const hideAll = () => { vline.setAttribute('opacity', '0'); hline.setAttribute('opacity', '0'); pTagBg.setAttribute('opacity', '0'); pTag.setAttribute('opacity', '0'); tip.style.display = 'none'; };
+    svg.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    svg.addEventListener('mouseleave', hideAll);
+    svg.addEventListener('touchstart', e => { if (e.touches[0]) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+    svg.addEventListener('touchmove', e => { if (e.touches[0]) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+    svg.addEventListener('touchend', hideAll);
+  }
+  /* 🕯️ رسم شموع يابانية (SVG) + حجم + متوسطان متحرّكان — من بياناتك مباشرة */
+  function _termCandleSVG(cds, sym) {
+    const n = cds.length, take = Math.min(n, 180), seg = cds.slice(-take);
+    const O = seg.map(c => +c.o || +c.c), H = seg.map(c => +c.h || +c.c), L = seg.map(c => +c.l || +c.c), C = seg.map(c => +c.c), V = seg.map(c => +c.v || 0);
+    const mn = Math.min.apply(null, L), mx = Math.max.apply(null, H);
+    const pad = (mx - mn) * 0.06 || 1, lo = mn - pad, hi = mx + pad;
+    const W = 900, HT = 380, volH = 70, chH = HT - volH - 8, L0 = 6, R0 = 58;
+    const pw = W - L0 - R0, cw = pw / take;
+    /* 📐 احفظ الهندسة ليقرأها متتبّع الفأرة (نفس القيم بالضبط) */
+    _TERM_GEOM.W = W; _TERM_GEOM.HT = HT; _TERM_GEOM.chH = chH; _TERM_GEOM.L0 = L0; _TERM_GEOM.R0 = R0; _TERM_GEOM.cw = cw; _TERM_GEOM.take = take;
+    _TERM_GEOM.lo = lo; _TERM_GEOM.hi = hi;   // 🎯 لتحويل موضع الفأرة العمودي إلى سعر (الصليب الأفقي)
+    const Y = p => 4 + chH * (1 - (p - lo) / (hi - lo));
+    const vMax = Math.max.apply(null, V) || 1;
+    const VY = v => HT - (v / vMax) * volH;
+    const ma = (arr, k, i) => { if (i < k - 1) return null; let s = 0; for (let j = i - k + 1; j <= i; j++) s += arr[j]; return s / k; };
+    let bars = '', vol = '', ma20 = '', ma50 = '';
+    for (let i = 0; i < take; i++) {
+      const x = L0 + i * cw + cw / 2, up = C[i] >= O[i], col = up ? '#22c55e' : '#ef4444';
+      const wick = Math.max(0.6, cw * 0.12), body = Math.max(1, cw * 0.62);
+      bars += '<line x1="' + x.toFixed(1) + '" y1="' + Y(H[i]).toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + Y(L[i]).toFixed(1) + '" stroke="' + col + '" stroke-width="' + wick.toFixed(1) + '"/>';
+      const yO = Y(O[i]), yC = Y(C[i]), top = Math.min(yO, yC), hgt = Math.max(1, Math.abs(yC - yO));
+      bars += '<rect x="' + (x - body / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + body.toFixed(1) + '" height="' + hgt.toFixed(1) + '" fill="' + col + '"/>';
+      vol += '<rect x="' + (x - body / 2).toFixed(1) + '" y="' + VY(V[i]).toFixed(1) + '" width="' + body.toFixed(1) + '" height="' + (HT - VY(V[i])).toFixed(1) + '" fill="' + col + '" opacity="0.35"/>';
+      const m20 = ma(C, 20, i), m50 = ma(C, 50, i);
+      if (m20 != null) ma20 += (ma20 ? ' L' : 'M') + x.toFixed(1) + ' ' + Y(m20).toFixed(1);
+      if (m50 != null) ma50 += (ma50 ? ' L' : 'M') + x.toFixed(1) + ' ' + Y(m50).toFixed(1);
+    }
+    /* شبكة أسعار على اليسار */
+    let grid = '';
+    for (let g = 0; g <= 4; g++) { const p = lo + (hi - lo) * g / 4, y = Y(p); grid += '<line x1="' + L0 + '" y1="' + y.toFixed(1) + '" x2="' + (W - R0) + '" y2="' + y.toFixed(1) + '" stroke="rgba(148,163,184,.12)"/><text x="' + (W - R0 + 4) + '" y="' + (y + 3).toFixed(1) + '" font-size="10" fill="#94a3b8">' + p.toFixed(2) + '</text>'; }
+    const last = C[C.length - 1], lastUp = C[C.length - 1] >= C[C.length - 2], lastCol = lastUp ? '#22c55e' : '#ef4444';
+    const lastY = Y(last);
+    grid += '<line x1="' + L0 + '" y1="' + lastY.toFixed(1) + '" x2="' + (W - R0) + '" y2="' + lastY.toFixed(1) + '" stroke="' + lastCol + '" stroke-width="1" stroke-dasharray="4 3" opacity="0.85"/>';
+    /* 🏷️ وسم السعر الحالي على اليمين — كان الخطّ بلا رقم */
+    grid += '<rect x="' + (W - R0) + '" y="' + (lastY - 8).toFixed(1) + '" width="' + (R0 - 2) + '" height="16" rx="3" fill="' + lastCol + '"/>'
+      + '<text x="' + (W - R0 + (R0 - 2) / 2) + '" y="' + (lastY + 3.5).toFixed(1) + '" font-size="10.5" font-weight="800" fill="#0b1220" text-anchor="middle">' + last.toFixed(2) + '</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + HT + '" width="100%" style="display:block;direction:ltr">'
+      + grid + vol
+      + '<path d="' + ma50 + '" fill="none" stroke="#f59e0b" stroke-width="1.3" opacity="0.85"/>'
+      + '<path d="' + ma20 + '" fill="none" stroke="#38bdf8" stroke-width="1.3" opacity="0.9"/>'
+      + bars
+      + '<text x="' + L0 + '" y="12" font-size="10.5" font-weight="700" fill="#38bdf8">MA20</text>'
+      + '<text x="' + (L0 + 42) + '" y="12" font-size="10.5" font-weight="700" fill="#f59e0b">MA50</text>'
+      + '<text x="' + (W - R0) + '" y="' + (HT - volH - 2).toFixed(1) + '" font-size="9" fill="#94a3b8" text-anchor="end">الحجم</text>'
+      + '</svg>';
+  }
+  /* 🔗 فتح TradingView في تبويب خارجي (اختياري — للأسهم المتاحة فيه).
+     يقرأ الرمز المختار من المتغيّر الداخلي، فلا يعتمد على نطاق HTML. */
+  window.termOpenTV = function (sym) {
+    const s = sym || TERM_SEL;
+    if (!s) return;
+    try { window.open('https://www.tradingview.com/chart/?symbol=TADAWUL%3A' + encodeURIComponent(s), '_blank'); } catch (e) {}
+  };
+  window.termSelect = function (sym) {
+    TERM_SEL = sym;
+    termRenderList();
+    const box = document.getElementById('termDetail'); if (!box) return;
+    const r = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).find(x => x && x.sym === sym);
+    try { _termLoadChart(sym, r ? +r.price : 0); } catch (e) {}   // 🛡️ مرّر السعر الحيّ للمقارنة
+    if (!r) { box.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:40px">تعذّر إيجاد بيانات السهم</div>'; return; }
+    const dirTxt = r.direction === 'up' ? '<span style="color:#4ade80">📈 صاعد</span>' : r.direction === 'down' ? '<span style="color:#f87171">📉 هابط</span>' : '<span style="color:#94a3b8">➡️ محايد</span>';
+    const sec = (title, body) => body ? '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:11px;padding:13px;margin-bottom:11px"><div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:7px">' + title + '</div>' + body + '</div>' : '';
+    let html = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;flex-wrap:wrap">'
+      + '<div><div style="font-size:20px;font-weight:900">' + (r.name || r.sym) + '</div><div style="font-size:12.5px;color:var(--txt-m)">' + r.sym + ' · ' + dirTxt + '</div></div>'
+      + '<div style="text-align:left"><div style="font-size:24px;font-weight:900">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</div><div style="font-size:11px;color:var(--txt-m)">السعر</div></div></div>';
+
+    /* 🧭 حكم الأطر */
+    if (r.mtf && typeof _mtfVerdict === 'function') {
+      const v = _mtfVerdict(r.elDir || (r.direction === 'up' ? 'up' : 'down'), r.mtf);
+      if (v) html += '<div style="background:rgba(' + v.rgb + ',.1);border:1px solid rgba(' + v.rgb + ',.45);border-radius:11px;padding:12px;margin-bottom:11px">'
+        + '<div style="font-size:14.5px;font-weight:900;color:' + v.c + '">' + v.ico + ' ' + v.t + '</div>'
+        + '<div style="font-size:12px;color:var(--txt-m);margin-top:3px">🗓️ أسبوعي <b>' + r.mtf.w + '</b>' + (r.mtf.m ? ' · 📆 شهري <b>' + r.mtf.m + '</b>' : '') + '</div>'
+        + '<div style="font-size:12px;margin-top:4px">' + v.s + '</div></div>';
+    }
+
+    /* 🎯 حالة القنّاص + الخطة */
+    if (r.elPlan && r.elPlan.rr) {
+      const p = r.elPlan, k = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
+      const kMap = { now: ['#4ade80', '✅ عند الدخول الآن'], wait: ['#7dd3fc', '⏳ بانتظار الوصول'], gone: ['#fb923c', '🚫 فات الدخول'], tight: ['#fca5a5', '🚨 وقف ملتصق'] };
+      const km = kMap[k] || ['#94a3b8', '—'];
+      /* 🔒 قفل الأهداف: يتبع تحكّم الأدمن لقسم اللوحة (مفتوح/مقفل/تلقائي حسب الاشتراك) */
+      const locked = (typeof _targetsLocked === 'function') ? _targetsLocked('terminal') : false;
+      const plan = locked
+        ? '<div style="position:relative"><div style="filter:blur(6px);pointer-events:none;user-select:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center">'
+          + '<div style="background:var(--surf-alt);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--txt-m)">🎯 دخول</div><div style="font-size:15px;font-weight:900">••.••</div></div>'
+          + '<div style="background:var(--surf-alt);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--txt-m)">🛑 وقف</div><div style="font-size:15px;font-weight:900">••.••</div></div>'
+          + '<div style="background:var(--surf-alt);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--txt-m)">🏁 هدف</div><div style="font-size:15px;font-weight:900">••.••</div></div></div>'
+          + '<div onclick="' + ((typeof sbUser !== 'undefined' && sbUser) ? "(typeof showSupportNotice==='function'&&showSupportNotice())" : "(typeof authOpenModal==='function'&&authOpenModal())") + '" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer"><span style="background:rgba(17,24,39,.9);color:#fcd34d;border:1px solid rgba(245,158,11,.5);border-radius:12px;padding:8px 16px;font-size:12px;font-weight:800">🔒 الأهداف للمشتركين</span></div></div>'
+        : '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center">'
+          + '<div style="background:var(--surf-alt);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--txt-m)">🎯 دخول</div><div style="font-size:15px;font-weight:900;color:#4ade80">' + p.entry + '</div></div>'
+          + '<div style="background:var(--surf-alt);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--txt-m)">🛑 وقف</div><div style="font-size:15px;font-weight:900;color:#f87171">' + p.stop + '</div></div>'
+          + '<div style="background:var(--surf-alt);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--txt-m)">🏁 هدف</div><div style="font-size:15px;font-weight:900;color:#38bdf8">' + p.target + '</div></div></div>';
+      html += sec('🎯 خطة القنّاص',
+        '<div style="font-size:13px;font-weight:800;color:' + km[0] + ';margin-bottom:8px">' + km[1] + '</div>'
+        + plan
+        + '<div style="text-align:center;font-size:11px;color:var(--txt-m);margin-top:7px">⚖️ ع/م ≈ <b style="color:' + (p.rr >= 2 ? '#4ade80' : '#fbbf24') + '">' + p.rr + '</b> · 🧩 توافق ' + ((typeof _snConflCount === 'function') ? _snConflCount(r) : '?') + '/5</div>');
+    } else {
+      html += sec('🎯 القنّاص', '<div style="font-size:12.5px;color:var(--txt-m)">لا خطة دخول جاهزة — لم يكوّن إليوت إعداداً على هذا السهم بعد.</div>');
+    }
+
+    /* 🔮 الرادار */
+    const prob = r.probability;
+    if (prob != null) {
+      const pc = prob >= 75 ? '#dc2626' : prob >= 55 ? '#f4a20a' : '#16a34a';
+      html += sec('🔮 الرادار (احتمال الانفجار)',
+        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+        + '<div style="font-size:24px;font-weight:900;color:' + pc + '">' + prob + '%</div>'
+        + '<div style="font-size:12px;color:var(--txt-m)">التوقيت: <b>' + (r.timing ? r.timing.text : '—') + '</b>'
+        + (r.confirmed ? ' · <b style="color:#22c55e">🔥 مؤكّد</b>' : '')
+        + (r.rsi != null ? ' · RSI <b>' + r.rsi + '</b>' : '') + '</div></div>');
+    }
+
+    /* ⚖️ متوسط المشترين + سيولة */
+    let extra = '';
+    if (typeof _snVwap === 'function') { const vw = _snVwap(r); if (vw) extra += '<div style="font-size:12px;margin-bottom:4px">⚖️ متوسط المشترين <b>' + vw.vwap + '</b> — السعر ' + (vw.above ? '<span style="color:#4ade80">فوقه (+' + vw.pct + '%)</span>' : '<span style="color:#fbbf24">تحته (' + vw.pct + '%)</span>') + '</div>'; }
+    if (r.liq20 != null) extra += '<div style="font-size:12px">💧 سيولة يومية ≈ <b>' + Math.round(r.liq20 / 1000) + ' ألف</b> ريال</div>';
+    if (extra) html += sec('📊 السيولة والمشترون', extra);
+
+    /* زرّ التحليل الكامل */
+    html += '<button onclick="predOpen(\'' + r.sym + '\')" style="width:100%;margin-top:4px;background:linear-gradient(135deg,var(--g-mid),var(--g-accent));border:none;color:#fff;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">🔬 التحليل الكامل + الشارت</button>';
+    box.innerHTML = html;
+  };
+  /* ══════════════════════════════════════════════════════════════════
+     🔐 حارس صلاحيات اللوحة الموحّدة — كباقي الأقسام لكن للطبقة الملء
+     القسم مسجّل في ADMIN_TAB_DEFS فيسري عليه كل تحكّم الأدمن تلقائياً:
+     الإظهار/الإخفاء (للمسجّلين والزوار) · الضبابي · المنبثقات · قفل
+     الأهداف · الاشتراك. لكن اللوحة تُعرض كطبقة ملء الشاشة (fixed) لا
+     داخل بطاقة القسم، فنطبّق الإخفاء والتظليل هنا صراحةً.
+     👑 الأدمن مستثنى دائماً. */
+  function _termAccess() {
+    if (typeof isAdmin === 'function' && isAdmin()) return { ok: true };
+    const s = (typeof appSettings !== 'undefined' && appSettings) ? appSettings : {};
+    const guest = !(typeof sbUser !== 'undefined' && sbUser);
+    const gm = (s.guestTabMode || {});
+    /* 🚫 مخفي؟ */
+    const hidden = guest
+      ? (gm.terminal === 'hide' || (s.guestHiddenTabs || []).indexOf('terminal') >= 0)
+      : ((s.hiddenTabs || []).indexOf('terminal') >= 0 || ((userRestrictions && userRestrictions.hidden_tabs) || []).indexOf('terminal') >= 0);
+    if (hidden) return { ok: false, hidden: true };
+    /* 🌫️ ضبابي؟ */
+    const blur = guest ? (gm.terminal === 'blur') : !!(typeof _secFlags === 'function' && _secFlags(userRestrictions, 'terminal').blur);
+    return { ok: true, blur: blur, guest: guest };
+  }
+  async function termRender() {
+    /* 🔐 تحقّق الصلاحية أولاً */
+    const acc = _termAccess();
+    if (!acc.ok && acc.hidden) {
+      const f0 = document.getElementById('termFull'); if (f0) f0.style.display = 'none';
+      if (typeof showToast === 'function') showToast('⛔ هذا القسم غير متاح لك حالياً');
+      const homeBtn = document.querySelector('.nav-btn[data-tab="home"]');
+      if (homeBtn) try { switchTab('home', homeBtn); } catch (e) {}
+      return;
+    }
+    /* 🖥️ اللوحة ملء الشاشة: أظهرها فوق كل شيء */
+    const f = document.getElementById('termFull'); if (f) f.style.display = 'flex';
+    /* 🌫️ تطبيق التظليل على المحتوى (لا الرأس) + شارة اشتراك */
+    _termApplyBlur(!!acc.blur, acc.guest);
+    /* 🔄 تحميل ذاتي: اللوحة لا تشترط زيارة رادار أولاً — تجلب المحفوظ ثم المشترك */
+    try {
+      if ((!Array.isArray(PRED_RESULTS) || !PRED_RESULTS.length) && typeof predLoadCache === 'function') predLoadCache();
+      termRenderList();   // اعرض ما توفّر فوراً
+      /* إن ما زالت فارغة، اجلب النتائج المشتركة الموحّدة (يرفعها الأدمن) */
+      if ((!Array.isArray(PRED_RESULTS) || !PRED_RESULTS.length) && typeof radarLoadShared === 'function') {
+        const wrap = document.getElementById('termList');
+        if (wrap) wrap.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:30px 12px;font-size:13px">⏳ جارٍ جلب أحدث تحليل…</div>';
+        try { await radarLoadShared(); } catch (e) {}
+      } else if (typeof radarSyncIfNewer === 'function') {
+        radarSyncIfNewer().then(ok => { if (ok) { try { termRenderList(); if (TERM_SEL) window.termSelect(TERM_SEL); } catch (e) {} } });
+      }
+    } catch (e) {}
+    termRenderList();
+    if (TERM_SEL) window.termSelect(TERM_SEL);
+  }
+  /* 🌫️ تطبيق التظليل على محتوى اللوحة (لا رأسها) + شارة دعوة للاشتراك/التسجيل */
+  function _termApplyBlur(on, guest) {
+    const body = document.querySelector('#termFull > div:last-child');   // منطقة المحتوى المتمرّرة
+    let tag = document.getElementById('termBlurTag');
+    if (body) {
+      body.style.filter = on ? 'blur(6px)' : '';
+      body.style.pointerEvents = on ? 'none' : '';
+      body.style.userSelect = on ? 'none' : '';
+    }
+    if (on) {
+      if (!tag) {
+        tag = document.createElement('div');
+        tag.id = 'termBlurTag';
+        tag.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:850;text-align:center';
+        const f = document.getElementById('termFull'); if (f) f.appendChild(tag);
+      }
+      tag.innerHTML = '<div onclick="' + (guest ? "(typeof authOpenModal==='function'&&authOpenModal())" : "(typeof showSupportNotice==='function'&&showSupportNotice())") + '" style="cursor:pointer;background:rgba(17,24,39,.95);color:#fcd34d;border:1px solid rgba(245,158,11,.55);border-radius:16px;padding:16px 26px;font-size:14px;font-weight:800;box-shadow:0 8px 28px rgba(0,0,0,.5)">🔒 ' + (guest ? 'سجّل مجاناً لعرض اللوحة الموحّدة' : 'اشترك لعرض اللوحة الموحّدة كاملة') + '</div>';
+      tag.style.display = 'block';
+    } else if (tag) { tag.style.display = 'none'; }
+  }
+  /* ↩️ رجوع للأقسام: أخفِ اللوحة وارجع للرئيسية */
+  window.termExit = function () {
+    const f = document.getElementById('termFull'); if (f) f.style.display = 'none';
+    const homeBtn = document.querySelector('.nav-btn[data-tab="home"]');
+    if (homeBtn) try { switchTab('home', homeBtn); } catch (e) {}
+  };
+
   /* 🎯 قنّاص الفرص: قائمة الأسهم ذات خطة دخول إليوت جاهزة، مرتّبة بالأقوى */
   async function sniperRender() {
     const wrap = document.getElementById('sniperList');
@@ -11161,6 +11674,9 @@ document.addEventListener('keydown', e => {
     _autoUpgradeScan();
   }
   window.sniperRender = sniperRender;
+  /* 🖥️ اللوحة الموحّدة: يجب تصديرها لـwindow — switchTab في النطاق العام
+     لا يرى دوال الـIIFE. هذا سبب عدم ظهورها رغم تفعيل الزرّ. */
+  window.termRender = termRender;
   /* 🔮 إعادة مسح من داخل القنّاص (للأدمن): يعيد الحساب بأحدث بناء ثم يحدّث القائمة */
   window.sniperRescan = async function (btn) {
     if (!(typeof isAdmin === 'function' && isAdmin())) return;
@@ -11554,6 +12070,8 @@ function switchTab(tab, btn) {
   if (tab === 'analysis') { marketAnalysisFilter('all'); updateHistCacheStatus(); }
   if (tab === 'all') predInit();
   if (tab === 'sniper' && typeof sniperRender === 'function') sniperRender();
+  if (tab === 'terminal' && typeof window.termRender === 'function') { try { window.termRender(); } catch (e) {} }
+  else { const _tf = document.getElementById('termFull'); if (_tf) _tf.style.display = 'none'; }   // 🖥️ أخفِ اللوحة خارج قسمها
   if (tab === 'admin' && typeof renderAdminSection === 'function') renderAdminSection();
   if (tab === 'admin' && typeof tgAdminInit === 'function') tgAdminInit();
   if (typeof _adminHiddenNotice === 'function') _adminHiddenNotice(tab);   // 🚫 تنبيه الأدمن إن كان القسم محجوباً

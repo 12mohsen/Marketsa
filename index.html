@@ -2143,8 +2143,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v271';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v271 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-23-v272';
+console.log('%c[تداول بلس] البناء: 2026-07-23-v272 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -11073,13 +11073,22 @@ document.addEventListener('keydown', e => {
     const hideAll = () => { vline.setAttribute('opacity', '0'); hline.setAttribute('opacity', '0'); pTagBg.setAttribute('opacity', '0'); pTag.setAttribute('opacity', '0'); tip.style.display = 'none'; };
     svg.addEventListener('mousemove', e => move(e.clientX, e.clientY));
     svg.addEventListener('mouseleave', hideAll);
-    svg.addEventListener('touchstart', e => { if (e.touches[0]) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-    svg.addEventListener('touchmove', e => { if (e.touches[0]) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+    /* 📱 الجوال: نمنع تمرير الصفحة أثناء لمس الشارت (touch-action:none + preventDefault)
+       فيصير سحب الإصبع لتحديد الشموع لا لتحريك الصفحة — هذا كان العائق الحقيقي.
+       passive:false ضروري ليعمل preventDefault. */
+    try { svg.style.touchAction = 'none'; } catch (e) {}
+    svg.addEventListener('touchstart', e => { if (e.touches[0]) { e.preventDefault(); move(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: false });
+    svg.addEventListener('touchmove', e => { if (e.touches[0]) { e.preventDefault(); move(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: false });
     svg.addEventListener('touchend', hideAll);
+    svg.addEventListener('touchcancel', hideAll);
   }
   /* 🕯️ رسم شموع يابانية (SVG) + حجم + متوسطان متحرّكان — من بياناتك مباشرة */
   function _termCandleSVG(cds, sym) {
-    const n = cds.length, take = Math.min(n, 180), seg = cds.slice(-take);
+    /* 📱 شموع أقلّ على الجوال = كل شمعة أعرض = يمكن لمسها بدقّة.
+       كان 180 شمعة على شاشة 360px = 2px لكلّ واحدة (تعذّر التحديد). */
+    const _narrow = (typeof window !== 'undefined' && window.innerWidth && window.innerWidth < 760);
+    const maxBars = _narrow ? 70 : 180;
+    const n = cds.length, take = Math.min(n, maxBars), seg = cds.slice(-take);
     const O = seg.map(c => +c.o || +c.c), H = seg.map(c => +c.h || +c.c), L = seg.map(c => +c.l || +c.c), C = seg.map(c => +c.c), V = seg.map(c => +c.v || 0);
     const mn = Math.min.apply(null, L), mx = Math.max.apply(null, H);
     const pad = (mx - mn) * 0.06 || 1, lo = mn - pad, hi = mx + pad;

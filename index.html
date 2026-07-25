@@ -4,6 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مراقبة السوق السعودي | تداول بلس</title>
+<!-- 📱 PWA: تثبيت على الجوال + عمل دون اتصال + أيقونة -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0b1120">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="تداول بلس">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.svg">
+<!-- ⚡ تسريع تحميل الخطوط والمكتبات (preconnect لا يحجب الرسم) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<script>
+/* ⚙️ تسجيل Service Worker — يفعّل التثبيت والعمل دون اتصال (بلا مخاطرة: الشبكة أولاً للتطبيق) */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js').catch(function (e) { console.warn('[sw] تعذّر التسجيل:', e && e.message); });
+  });
+}
+/* 🚨 رصد الأخطاء في الإنتاج — صندوق أسود: يحفظ آخر 20 خطأ محلياً ليطّلع عليها الأدمن.
+   بلا هذا، لو انكسر شيء عند مستخدم لا تعرف أبداً. */
+(function () {
+  function logErr(kind, msg, src, line, col) {
+    try {
+      var arr = JSON.parse(localStorage.getItem('appErrors') || '[]');
+      arr.push({ t: new Date().toISOString(), kind: kind, msg: String(msg || '').slice(0, 300), src: String(src || '').slice(0, 120), line: line || 0, col: col || 0, build: (window.APP_BUILD || '') });
+      if (arr.length > 20) arr = arr.slice(-20);
+      localStorage.setItem('appErrors', JSON.stringify(arr));
+    } catch (_) {}
+  }
+  window.addEventListener('error', function (e) { logErr('error', e.message, e.filename, e.lineno, e.colno); });
+  window.addEventListener('unhandledrejection', function (e) { logErr('promise', (e.reason && (e.reason.message || e.reason)) || 'rejection'); });
+  /* الأدمن يستعرضها بكتابة appErrors() في الكونسول */
+  window.appErrors = function () { try { return JSON.parse(localStorage.getItem('appErrors') || '[]'); } catch (_) { return []; } };
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -2143,8 +2180,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v277';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v277 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-23-v279';
+console.log('%c[تداول بلس] البناء: 2026-07-23-v279 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2810,6 +2847,22 @@ async function authSignOut() {
 ═════════════════════════════════════ */
 /* إيميلات الأدمن (بأحرف صغيرة) — الأول رئيسي والثاني احتياطي */
 const ADMIN_EMAILS = ['abd1234ify@gmail.com', 'market13s@hotmail.com'];
+
+/* ══════════════════════════════════════════════════════════════════
+   🛡️ esc() — تهريب المخرجات ضد XSS (حماية جلستك الأدمنية أساساً)
+   أي نصّ قادم من المستخدم (اسم · إيميل · رسالة) يُمرَّر خلالها قبل
+   وضعه في innerHTML، فيتحوّل <img onerror=...> إلى نصّ لا كود.
+   كان التهريب يدوياً ومتقطّعاً — الآن دالة واحدة تُستعمل في كل مكان. */
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.esc = esc;
 /* 📌 إيميلات تُثبَّت في مقدّمة قائمة المستخدمين (بالترتيب). عدّلها كما تشاء. */
 const PRIORITY_EMAILS = ['abd1234ify@gmail.com','abd12345ify@gmail.com','market13s@hotmail.com','abdmohsen94@gmail.com','almkhzomi1@gmail.com'];
 /* بريد استقبال طلبات الدعم (FormSubmit — يجب أن يكون مفعّلاً لديهم) */
@@ -4271,15 +4324,15 @@ function adminRenderPayments() {
         <span style="font-size:12.5px;font-weight:800;color:var(--txt)">💰 ${p.total || 0} ر.س ${_payStatusBadge(st)} ${isNew ? '<span class="pay-newb" style="background:#f59e0b;color:#1a1a1a;border-radius:20px;padding:1px 8px;font-size:9.5px;font-weight:800">🆕 جديدة</span>' : ''}</span>
         <span style="font-size:10px;color:var(--txt-m)">${when}</span>
       </div>
-      <div style="font-size:11px;color:var(--txt);margin-top:4px">👤 ${p.sender_name || '—'} <span style="color:var(--txt-m);direction:ltr">(${p.email || ''})</span></div>
+      <div style="font-size:11px;color:var(--txt);margin-top:4px">👤 ${esc(p.sender_name) || '—'} <span style="color:var(--txt-m);direction:ltr">(${esc(p.email)})</span></div>
       ${p.message ? `<div style="font-size:11px;color:#fff;font-weight:600;margin-top:6px;line-height:1.7;
            background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;
-           word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(p.message).replace(/</g,'&lt;')}</div>`
-        : `${svcText ? `<div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">🧾 ${svcText}</div>` : ''}
-           <div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">🏦 ${p.bank_name || '—'}${p.bank_iban ? ` · <span style="direction:ltr">${p.bank_iban}</span>` : ''}</div>`}
+           word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${esc(p.message)}</div>`
+        : `${svcText ? `<div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">🧾 ${esc(svcText)}</div>` : ''}
+           <div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">🏦 ${esc(p.bank_name) || '—'}${p.bank_iban ? ` · <span style="direction:ltr">${esc(p.bank_iban)}</span>` : ''}</div>`}
       ${p._reply ? `<div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:9px;padding:8px 10px;margin-top:6px">
         <div style="font-size:10px;color:#4ade80;font-weight:700;margin-bottom:3px">↩️ رد الدعم:</div>
-        <div style="font-size:11px;color:var(--txt);line-height:1.7;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(p._reply).replace(/</g,'&lt;')}</div>
+        <div style="font-size:11px;color:var(--txt);line-height:1.7;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${esc(p._reply)}</div>
       </div>` : ''}
       ${canManage ? `<div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
         <button onclick="_payConfirmAction(${p.id},'confirmed')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✅ تأكيد</button>
@@ -4613,8 +4666,8 @@ async function adminLoadSupport() {
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div style="min-width:0">
             <div style="font-size:11px;direction:ltr;text-align:left;color:var(--txt);
-                        overflow:hidden;text-overflow:ellipsis">${r.email}</div>
-            <div style="font-size:10px;color:#a78bfa">${isReg ? '👤 مسجّل' : '👁️ زائر'} · ${r.req_type} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</div>
+                        overflow:hidden;text-overflow:ellipsis">${esc(r.email)}</div>
+            <div style="font-size:10px;color:#a78bfa">${isReg ? '👤 مسجّل' : '👁️ زائر'} · ${esc(r.req_type)} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</div>
           </div>
           <div style="display:flex;gap:5px;flex-shrink:0">
             <button onclick="adminCopyEmail('${r.email}')" title="نسخ الإيميل"

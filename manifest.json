@@ -1,0 +1,16 @@
+{
+  "name": "تداول بلس — مراقبة السوق السعودي",
+  "short_name": "تداول بلس",
+  "description": "تحليل الأسهم السعودية: قنّاص الفرص · الرادار · اللوحة الموحّدة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/?src=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

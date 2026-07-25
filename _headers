@@ -11,3 +11,10 @@
   Cache-Control: no-cache, must-revalidate
   Pragma: no-cache
   Expires: 0
+
+# ⚙️ Service Worker والمانيفست: لا كاش — ليصل أي تحديث فوراً
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+
+/manifest.json
+  Cache-Control: no-cache, must-revalidate

@@ -2183,8 +2183,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-25-v283';
-console.log('%c[تداول بلس] البناء: 2026-07-25-v283 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-25-v284';
+console.log('%c[تداول بلس] البناء: 2026-07-25-v284 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -4151,8 +4151,12 @@ function renderAdminSection() {
             <option value="popupsOn">🪟 السماح بالنوافذ المنبثقة</option>
             <option value="block">⛔ إيقاف الحساب</option>
             <option value="unblock">▶️ إلغاء الإيقاف</option>
+            <option value="subPaid">💳 تفعيل الاشتراك الكامل (دائم)</option>
+            <option value="trialDays">🎁 تجربة مجانية (أيام محدّدة)</option>
             <option value="subFree">🆓 إلغاء كل الاشتراكات (مجاني)</option>
           </select>
+          <input id="admBulkDays" type="number" min="1" max="365" value="7" title="عدد أيام التجربة المجانية (يُستعمل مع «🎁 تجربة مجانية»)"
+            style="width:70px;padding:8px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;font-family:inherit;text-align:center" placeholder="أيام">
           <button onclick="adminBulkApply()" style="padding:8px 14px;border-radius:8px;border:none;
             background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#1a1a1a;
             font-size:11.5px;font-weight:800;cursor:pointer">تطبيق على المحدد</button>
@@ -5742,6 +5746,14 @@ async function adminBulkApply(allMode) {
   const preset = document.getElementById('admBulkPreset').value;
   if (preset === 'custom') { adminEditUser(allMode ? '__all__' : '__bulk__'); return; }
 
+  /* 🎁 تجربة مجانية: اقرأ عدد الأيام (يُطبَّق كاشتراك مدفوع ينتهي بعد X يوم،
+     ثم يعود المستخدم تلقائياً إلى «يحتاج اشتراك»). */
+  let _trialDays = 0;
+  if (preset === 'trialDays') {
+    _trialDays = parseInt((document.getElementById('admBulkDays') || {}).value || '0', 10);
+    if (!(_trialDays > 0)) { showToast('⚠️ أدخل عدد أيام التجربة (1 فأكثر) في خانة الأيام'); return; }
+  }
+
   const allTabs = ADMIN_TAB_DEFS.map(t => t.k);
   const now = new Date().toISOString();
   const rows = emails.map(email => {
@@ -5761,19 +5773,26 @@ async function adminBulkApply(allMode) {
       popupsOff:   { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: true,           blur_view: keep.blur_view },
       popupsOn:    { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: false,          blur_view: false },
       subFree:     { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: keep.no_popups, blur_view: keep.blur_view },
+      subPaid:     { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: keep.no_popups, blur_view: keep.blur_view },
+      trialDays:   { hidden_tabs: keep.hidden_tabs,                  blocked: keep.blocked, no_popups: keep.no_popups, blur_view: keep.blur_view },
     }[preset];
     const row = { email, hidden_tabs: P.hidden_tabs, blocked: P.blocked,
              no_popups: P.no_popups, blur_view: P.blur_view, updated_at: now,
              show_pred_stats: !!(_admRestr[email] && _admRestr[email].show_pred_stats),
              see_backtest: !!(_admRestr[email] && _admRestr[email].see_backtest) };
     if (preset === 'subFree') { row.subs = {}; row.sub_plan = 'free'; row.sub_start = null; }
+    /* 💳 اشتراك دائم: مدفوع بلا مدّة (days=0 = لا ينتهي) */
+    if (preset === 'subPaid') { row.subs = {}; row.sub_plan = 'paid'; row.sub_price = 0; row.sub_days = 0; row.sub_start = now; }
+    /* 🎁 تجربة مجانية X يوم: مدفوع ينتهي بعد X، فيعود «يحتاج اشتراك» تلقائياً */
+    if (preset === 'trialDays') { row.subs = {}; row.sub_plan = 'paid'; row.sub_price = 0; row.sub_days = _trialDays; row.sub_start = now; }
     return row;
   });
 
   const { error } = await sb.from('user_restrictions').upsert(rows);
   if (error) { _admErr(error, 'فشل التطبيق الجماعي'); return; }
   rows.forEach(r => { _admRestr[r.email] = r; });
-  const _presetTxt = document.getElementById('admBulkPreset').selectedOptions[0].text;
+  let _presetTxt = document.getElementById('admBulkPreset').selectedOptions[0].text;
+  if (preset === 'trialDays') _presetTxt = '🎁 تجربة مجانية ' + _trialDays + ' يوم';
   logAdminAction('bulk_apply', emails.length + ' مستخدم' + (allMode ? ' (الكل)' : ''), _presetTxt);
   showToast(`✅ طُبّق «${_presetTxt}» على ${emails.length} مستخدم${allMode ? ' (الكل عدا المستثنين 🛡️)' : ''}`);
   adminLoadUsers();

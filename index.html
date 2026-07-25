@@ -2143,8 +2143,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v275';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v275 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-23-v277';
+console.log('%c[تداول بلس] البناء: 2026-07-23-v277 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -15945,7 +15945,30 @@ function showSupportNotice() {
   d.id = 'supportNotice';
   d.style.cssText = 'position:fixed;inset:0;z-index:988;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px';
   d.onclick = (e) => { if (e.target === d) d.remove(); };
-  d.innerHTML = `
+  /* ══════════════════════════════════════════════════════════════════
+     👋 الزائر ≠ المشترك المنتهي — رسالة كلٍّ تناسب حاله
+     الزائر لم يُجرّب بعد، فلا نطالبه بالمال — بل ندعوه للتجربة الحيّة
+     المجانية. طلب المال قبل التذوّق يُنفّر. أمّا المسجّل المنتهي فنعرض
+     له التجديد لأنه جرّب وعرف القيمة.
+     ══════════════════════════════════════════════════════════════════ */
+  const isGuest = !(typeof sbUser !== 'undefined' && sbUser);
+  d.innerHTML = isGuest ? `
+    <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:20px;
+                max-width:370px;width:100%;padding:30px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">👋</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:10px">جرّبها مجاناً — أنت على بُعد خطوة</div>
+      <div style="font-size:13.5px;color:var(--txt-m);line-height:2;margin-bottom:20px">
+        أنشئ حسابك المجاني في ثوانٍ، وافتح التحليل الكامل والأهداف —
+        <b style="color:var(--txt)">بلا أي رسوم، جرّبها بنفسك أولاً</b>.
+      </div>
+      <button onclick="document.getElementById('supportNotice').remove();if(typeof authOpenModal==='function'){authOpenModal();if(typeof authSwitchTab==='function')authSwitchTab('signup');}"
+        style="width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;
+               font-weight:800;font-size:15px;color:#fff;margin-bottom:10px;
+               background:linear-gradient(135deg,#166534 0%,#22c55e 100%)">✨ أنشئ حسابك المجاني</button>
+      <button onclick="document.getElementById('supportNotice').remove();if(typeof authOpenModal==='function'){authOpenModal();if(typeof authSwitchTab==='function')authSwitchTab('login');}"
+        style="width:100%;padding:11px;border-radius:12px;border:1px solid var(--bdr);cursor:pointer;
+               font-weight:700;font-size:13px;color:var(--txt-m);background:transparent">لديّ حساب — تسجيل الدخول</button>
+    </div>` : `
     <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:20px;
                 max-width:360px;width:100%;padding:30px;text-align:center">
       <div style="font-size:48px;margin-bottom:10px">🔒</div>

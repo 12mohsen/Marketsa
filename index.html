@@ -11,7 +11,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="تداول بلس">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
+<!-- 🍎 iOS يتجاهل SVG في apple-touch-icon — نستعمل PNG ليظهر أيقونة صحيحة على الآيفون -->
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <!-- ⚡ تسريع تحميل الخطوط والمكتبات (preconnect لا يحجب الرسم) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2180,8 +2181,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-23-v279';
-console.log('%c[تداول بلس] البناء: 2026-07-23-v279 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-25-v280';
+console.log('%c[تداول بلس] البناء: 2026-07-25-v280 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -5263,7 +5264,7 @@ function adminRenderUsers(query) {
                         overflow:hidden;text-overflow:ellipsis">
               <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
                     background:${_isOnline(u.last_seen) ? '#22c55e' : 'rgba(255,255,255,.2)'};
-                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${u.email}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !ADMIN_EMAILS.includes((u.email || '').toLowerCase())) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${expiredBadge}${consentBadge}</div>
+                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${esc(u.email)}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !ADMIN_EMAILS.includes((u.email || '').toLowerCase())) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${expiredBadge}${consentBadge}</div>
             <div style="font-size:10px;color:${r.blocked ? '#f87171' : (subExpired ? '#fca5a5' : 'var(--txt-m)')}">${status}</div>
             <div style="font-size:9.5px;color:${_isOnline(u.last_seen) ? '#4ade80' : 'var(--txt-m)'}">${_lastSeenText(u.last_seen)}</div>
             ${u.created_at ? `<div style="font-size:9px;color:var(--txt-m)">📅 سجّل: ${new Date(u.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { year:'numeric', month:'short', day:'numeric' })} · ${_accountAge(u.created_at)}</div>` : ''}

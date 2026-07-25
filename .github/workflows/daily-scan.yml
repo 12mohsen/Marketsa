@@ -1,0 +1,39 @@
+# ══════════════════════════════════════════════════════════════════
+# 🤖 المسح التلقائي اليومي — تداول بلس
+# يفتح markets-a.com بحساب الروبوت ويشغّل المسح، فيتحدّث التحليل للجميع
+# بلا أن تفتح التطبيق بنفسك. يعمل مجاناً على خوادم GitHub.
+# ══════════════════════════════════════════════════════════════════
+name: المسح التلقائي اليومي
+
+on:
+  schedule:
+    # 12:30 UTC = 3:30 عصراً بتوقيت الرياض · الأحد–الخميس (أسبوع تداول السعودية)
+    - cron: '30 12 * * 0-4'
+  workflow_dispatch:   # زرّ يدوي للتشغيل الفوري من صفحة Actions (للتجربة)
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: جلب الملفات
+        uses: actions/checkout@v4
+
+      - name: تجهيز Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: تثبيت Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: تشغيل الروبوت
+        env:
+          BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
+          BOT_PASS:  ${{ secrets.BOT_PASS }}
+          TG_TOKEN:  ${{ secrets.TG_TOKEN }}
+          TG_CHAT:   ${{ secrets.TG_CHAT }}
+        run: node robot/scan.js

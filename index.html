@@ -42,9 +42,11 @@ if ('serviceWorker' in navigator) {
   window.appErrors = function () { try { return JSON.parse(localStorage.getItem('appErrors') || '[]'); } catch (_) { return []; } };
 })();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<!-- ⚡ defer آمن على الثلاث: أوّل استعمال لكلٍّ داخل دالة (بعد التحميل).
+     supabase-js لا يُؤجَّل — يُستدعى createClient أثناء التحليل. -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
@@ -2181,8 +2183,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-25-v280';
-console.log('%c[تداول بلس] البناء: 2026-07-25-v280 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-25-v281';
+console.log('%c[تداول بلس] البناء: 2026-07-25-v281 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2849,11 +2851,19 @@ async function authSignOut() {
 /* إيميلات الأدمن (بأحرف صغيرة) — الأول رئيسي والثاني احتياطي */
 const ADMIN_EMAILS = ['abd1234ify@gmail.com', 'market13s@hotmail.com'];
 
+/* 🔗 بروكسي Cloudflare الخاص (موثوق، غير مشترك) — مُعرّف مبكّراً ليسبق كل استعمال */
+const PRIVATE_PROXY = 'https://tadawul-proxy.abdmohsen94.workers.dev/?url=';
+
 /* ══════════════════════════════════════════════════════════════════
    🛡️ esc() — تهريب المخرجات ضد XSS (حماية جلستك الأدمنية أساساً)
    أي نصّ قادم من المستخدم (اسم · إيميل · رسالة) يُمرَّر خلالها قبل
    وضعه في innerHTML، فيتحوّل <img onerror=...> إلى نصّ لا كود.
    كان التهريب يدوياً ومتقطّعاً — الآن دالة واحدة تُستعمل في كل مكان. */
+/* 📉 عدّاد الأخطاء الصامتة — نبضٌ بلا إثقال (اقتراح المدقّق، بلا مخاطرة)
+   بعض catch تصمت عمداً (سهم فشل جلبه لا يوقف المسح). لكن ارتفاعها المفاجئ
+   إشارة. نزيدها بسطر واحد في المسارات الحسّاسة، وتظهر في «فحص السلامة». */
+window._silentFails = 0;
+
 function esc(s) {
   if (s == null) return '';
   return String(s)
@@ -6717,9 +6727,8 @@ function setLoading(msg) {
    نستخدم fetch() بدل PapaParse.download
    لنتحكم بالـ timeout ونتجنب أخطاء XHR.
 ───────────────────────────────────── */
-/* رابط الـ Cloudflare Worker الخاص بعبدالمحسن — بروكسي مخصص وموثوق،
-   أفضل من البروكسيات المجانية العامة لأنه غير مشترك مع آلاف التطبيقات الأخرى */
-const PRIVATE_PROXY = 'https://tadawul-proxy.abdmohsen94.workers.dev/?url=';
+/* PRIVATE_PROXY نُقل إلى أعلى الملف (قرب ADMIN_EMAILS) ليكون معرّفاً قبل أي استعمال،
+   فيزول حارس typeof الزائف. انظر التعريف هناك. */
 
 const PROXY_LIST = [
   // proxy 0: البروكسي الخاص — أولوية قصوى
@@ -9868,7 +9877,7 @@ document.addEventListener('keydown', e => {
               PRED_RESULTS.push(a); ok++;
             }
           }
-        } catch (e) { /* تخطَّ السهم الفاشل */ }
+        } catch (e) { try { window._silentFails++; } catch (_) {} /* تخطَّ السهم الفاشل — يُعدّ بصمت */ }
         done++; predSetProgress(done, total, ok);
       }
     }
@@ -10744,7 +10753,9 @@ document.addEventListener('keydown', e => {
     };
     box.style.display = 'block';
     box.innerHTML =
-      '<div style="font-size:14.5px;font-weight:800;color:#c084fc;margin-bottom:4px">🩺 فحص سلامة التحليل — ' + N + ' سهماً</div>'
+      '<div style="font-size:14.5px;font-weight:800;color:#c084fc;margin-bottom:4px">🩺 فحص سلامة التحليل — ' + N + ' سهماً'
+        + ((window._silentFails > 0) ? ' <span style="font-size:11px;color:' + (window._silentFails > 15 ? '#f87171' : 'var(--txt-m)') + '" title="أسهم فشل جلبها/حسابها وتُخطّيت بصمت — ارتفاعها المفاجئ يعني خللاً في الجلب">· 📉 تخطٍّ صامت: ' + window._silentFails + '</span>' : '')
+        + '</div>'
       + '<div style="font-size:11.5px;color:var(--txt-m);line-height:1.75;margin-bottom:8px">يفحص كل الأسهم دفعة واحدة بدل تصفّحها سهماً سهماً. النِّسب المرتفعة تعني خللاً <b>في المحرّك</b> لا في السوق.</div>'
       + row('✅', 'عدّ سليم بلا عيوب', cnt.clean, LIM.clean, true, [], 'الأساس الصحّي — كلّما زاد كان المحرّك أصدق')
       + row('🔮', 'عدٌّ شبه خيالي (≤2 نقطة فعلية)', cnt.thin, LIM.thin, false, ex.thin, 'الموجات إسقاط لا تاريخ — ارتفاعه يعني أن اختيار المحور يفضّل محاور فارغة')

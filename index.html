@@ -2183,8 +2183,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-25-v281';
-console.log('%c[تداول بلس] البناء: 2026-07-25-v281 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-25-v283';
+console.log('%c[تداول بلس] البناء: 2026-07-25-v283 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2849,7 +2849,7 @@ async function authSignOut() {
    وتسري على كل المستخدمين عند فتح التطبيق
 ═════════════════════════════════════ */
 /* إيميلات الأدمن (بأحرف صغيرة) — الأول رئيسي والثاني احتياطي */
-const ADMIN_EMAILS = ['abd1234ify@gmail.com', 'market13s@hotmail.com'];
+const ADMIN_EMAILS = ['abd1234ify@gmail.com', 'market13s@hotmail.com', 'z0ttee0@gmail.com'];
 
 /* 🔗 بروكسي Cloudflare الخاص (موثوق، غير مشترك) — مُعرّف مبكّراً ليسبق كل استعمال */
 const PRIVATE_PROXY = 'https://tadawul-proxy.abdmohsen94.workers.dev/?url=';
@@ -12125,6 +12125,9 @@ document.addEventListener('keydown', e => {
     }
   };
   window.predScanAll = predScanAll;
+  /* 🤖 مؤشّرات للروبوت: هل المسح جارٍ؟ · كم سهماً نتج؟ */
+  window.predIsScanning = function () { return PRED_SCANNING; };
+  window.predCount = function () { return Array.isArray(PRED_RESULTS) ? PRED_RESULTS.length : 0; };
   window.predSetFilter = predSetFilter;
   window.predToggleUserStats = predToggleUserStats;
   window.predRefreshStatsVisibility = predUpdateStatsChips;   // 🔒 ليطبّق إخفاء/إظهار الإحصائيات فوراً عند مزامنة الإعدادات

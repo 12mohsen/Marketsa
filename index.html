@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-26-v298';
-console.log('%c[تداول بلس] البناء: 2026-07-26-v298 — 🔇 صندوق أسود لا يُغرقه ضجيجه: تجميع الخطأ المتكرّر بعدّاد · فصل أخطاء الشبكة عن أخطاء الكود · السعة 40 وتُحذف أخطاء الشبكة أولاً · appErrors(true) لأخطاء الكود وحدها · إسكات الرفض غير المُلتقَط من النداءات المُطلَقة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-26-v299';
+console.log('%c[تداول بلس] البناء: 2026-07-26-v299 — ⚡ فحص الأساس باستعلام واحد (latest_closes) بدل 269 استعلاماً ثقيلاً · يعمل تلقائياً بعد كل مسح ويُنبّه الأدمن · لا يُعلن سلامة من فحص ناقص · يرفض العمل أثناء المزامنة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -5727,19 +5727,42 @@ async function adminBasisScan() {
   const box = document.getElementById('basisScanBox');
   const btn = document.getElementById('basisScanBtn');
   const fix = document.getElementById('basisFixBtn');
+  if (_histSyncing) { showToast('⏳ المزامنة جارية — انتظر انتهاءها ثم افحص (المزامنة نفسها تُصلح الانحراف)'); return; }
   if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ الفحص...'; }
   _basisBad = [];
   const list = rows.filter(r => r.sym && +r.price > 0);
-  let done = 0, checked = 0, noData = 0;
+  let checked = 0, noData = 0;
+  /* ⚡ استعلام واحد لكل الرموز بدل 269 استعلاماً يُحمّل كلٌّ منها التاريخ كاملاً.
+     العلّة المرصودة: الفحص توقّف عند 11 رمزاً ثم أعلن «كل شيء سليم» — وهو
+     لم يبدأ. إعلانُ سلامةٍ من فحصٍ لم يكتمل أسوأ من عدم الفحص. */
+  if (box) box.textContent = '⏳ جلب آخر إغلاق لكل الرموز...';
+  let latest = null;
+  try {
+    const { data, error } = await sb.rpc('latest_closes');
+    if (!error && Array.isArray(data)) {
+      latest = {};
+      data.forEach(x => { if (x && x.symbol && +x.c > 0) latest[x.symbol] = { c: +x.c, d: x.d }; });
+    }
+  } catch (e) {}
+  if (!latest) {
+    if (box) box.innerHTML = '<div style="color:#fca5a5;font-weight:800">⚠️ نفّذ <b>latest_closes.sql</b> في Supabase أولاً</div>'
+      + '<div style="color:var(--txt-m)">بلا هذه الدالة يحتاج الفحص 269 استعلاماً ثقيلاً — وقد يتوقّف قبل أن يكتمل فيُعلن سلامةً كاذبة.</div>';
+    if (btn) { btn.disabled = false; btn.textContent = '🛡️ فحص تطابق الأساس (كشف الرموز المنحرفة)'; }
+    return;
+  }
+  Object.keys(latest).forEach(s => { _BASIS_LAST[s] = latest[s]; });
   for (const r of list) {
-    try {
-      if (!_BASIS_LAST[r.sym]) { await histDbLoad(r.sym, 2); }   // يملأ _BASIS_LAST
-      const b = _basisCheck(r.sym, r.price);
-      if (!b) noData++;
-      else { checked++; if (!b.ok) _basisBad.push({ sym: r.sym, name: r.name || r.sym, b: b }); }
-    } catch (e) { noData++; }
-    done++;
-    if (box && done % 10 === 0) box.textContent = `⏳ ${done}/${list.length} · منحرف: ${_basisBad.length}`;
+    const b = _basisCheck(r.sym, r.price);
+    if (!b) noData++;
+    else { checked++; if (!b.ok) _basisBad.push({ sym: r.sym, name: r.name || r.sym, b: b }); }
+  }
+  /* 🚫 لا نُعلن سلامة من عيّنة ناقصة */
+  if (checked < list.length * 0.8) {
+    if (box) box.innerHTML = '<div style="color:#fbbf24;font-weight:800">⚠️ فحص ناقص: ' + checked + ' من ' + list.length + ' رمزاً</div>'
+      + '<div style="color:var(--txt-m)">' + noData + ' رمزاً بلا تاريخ مخزَّن. اضغط «📥 جلب/تحديث البيانات التاريخية» أولاً، ثم أعِد الفحص. '
+      + '<b>لا نُعلن سلامةً من فحصٍ ناقص.</b></div>';
+    if (btn) { btn.disabled = false; btn.textContent = '🛡️ فحص تطابق الأساس (كشف الرموز المنحرفة)'; }
+    return;
   }
   _basisBad.sort((x, y) => y.b.diffPct - x.b.diffPct);
   if (box) {
@@ -10121,6 +10144,30 @@ document.addEventListener('keydown', e => {
     predRender();
     predUpdateStamp();
     predRecordSnapshot().then(() => predLoadOutcomes()).then(() => predRender());
+    /* 🛡️ فحص تطابق الأساس تلقائياً بعد كل مسح — استعلام واحد خفيف.
+       الحماية الفردية تعمل عند فتح أي سهم، لكن **معرفة الحجم** كانت
+       تنتظر ضغطة يدوية قد لا تحدث. الآن يُنبَّه الأدمن من نفسه. */
+    try { if (typeof _basisAutoCheck === 'function') _basisAutoCheck(); } catch (e) {}
+  }
+
+  /* يملأ _BASIS_LAST من استعلام واحد ويُنبّه إن وُجد انحراف — بلا واجهة ثقيلة */
+  async function _basisAutoCheck() {
+    try {
+      if (!sb || !Array.isArray(rows) || !rows.length) return;
+      const { data, error } = await sb.rpc('latest_closes');
+      if (error || !Array.isArray(data)) return;                 // الدالة غير منفَّذة بعد — لا نُزعج
+      data.forEach(x => { if (x && x.symbol && +x.c > 0) _BASIS_LAST[x.symbol] = { c: +x.c, d: x.d }; });
+      let bad = 0, seen = 0;
+      rows.forEach(r => {
+        if (!r.sym || !(+r.price > 0)) return;
+        const b = _basisCheck(r.sym, r.price);
+        if (b) { seen++; if (!b.ok) bad++; }
+      });
+      if (bad > 0 && typeof isAdmin === 'function' && isAdmin()) {
+        showToast('⚠️ ' + bad + ' رمزاً مختلّ الأساس من ' + seen + ' — التحليل موقوف عليها. افتح الأدمن ← «🔧 إعادة مزامنة الرموز المنحرفة»');
+      }
+      console.log('[basis] ' + (bad ? '⚠️ ' + bad + ' منحرف' : '✅ متطابق') + ' من ' + seen + ' رمز');
+    } catch (e) {}
   }
 
   const dirChip = d =>

@@ -29,18 +29,48 @@ if ('serviceWorker' in navigator) {
 /* 🚨 رصد الأخطاء في الإنتاج — صندوق أسود: يحفظ آخر 20 خطأ محلياً ليطّلع عليها الأدمن.
    بلا هذا، لو انكسر شيء عند مستخدم لا تعرف أبداً. */
 (function () {
+  /* 🔇 ضجيج الشبكة يُطوى ولا يُغرِق الصندوق.
+     العلّة المرصودة: 20 خانة امتلأت كلها بـ«Failed to fetch» خلال ست دقائق
+     (فشل بروكسي عابر، والاحتياط نجح والتطبيق عمل). فلو انكسر شيء حقيقي
+     بعدها لطُرد من الصندوق قبل أن تراه — أداةُ الرصد عمياءُ بضجيجها.
+     العلاج: تجميع المتكرّر في صفّ واحد بعدّاد، وفصل أخطاء الشبكة عن
+     أخطاء الكود، وسعة أكبر. فتبقى الخانات لما يستحقّها. */
+  var CAP = 40;
+  function _isNet(m) { return /Failed to fetch|NetworkError|Load failed|ERR_|timeout|aborted|AbortError/i.test(m || ''); }
   function logErr(kind, msg, src, line, col) {
     try {
       var arr = JSON.parse(localStorage.getItem('appErrors') || '[]');
-      arr.push({ t: new Date().toISOString(), kind: kind, msg: String(msg || '').slice(0, 300), src: String(src || '').slice(0, 120), line: line || 0, col: col || 0, build: (window.APP_BUILD || '') });
-      if (arr.length > 20) arr = arr.slice(-20);
+      var m = String(msg || '').slice(0, 300);
+      var s = String(src || '').slice(0, 120);
+      var net = _isNet(m);
+      /* 🔁 نفس الخطأ من نفس الموضع ⇒ عدّاد لا صفّ جديد */
+      for (var i = arr.length - 1; i >= 0; i--) {
+        if (arr[i].msg === m && arr[i].src === s && arr[i].line === (line || 0)) {
+          arr[i].n = (arr[i].n || 1) + 1;
+          arr[i].last = new Date().toISOString();
+          localStorage.setItem('appErrors', JSON.stringify(arr));
+          return;
+        }
+      }
+      arr.push({ t: new Date().toISOString(), kind: kind, net: net, n: 1, msg: m, src: s, line: line || 0, col: col || 0, build: (window.APP_BUILD || '') });
+      /* عند الامتلاء: يُحذف أقدم **خطأ شبكة** أولاً — فأخطاء الكود أثمن */
+      while (arr.length > CAP) {
+        var k = arr.findIndex(function (x) { return x.net; });
+        arr.splice(k >= 0 ? k : 0, 1);
+      }
       localStorage.setItem('appErrors', JSON.stringify(arr));
     } catch (_) {}
   }
   window.addEventListener('error', function (e) { logErr('error', e.message, e.filename, e.lineno, e.colno); });
   window.addEventListener('unhandledrejection', function (e) { logErr('promise', (e.reason && (e.reason.message || e.reason)) || 'rejection'); });
-  /* الأدمن يستعرضها بكتابة appErrors() في الكونسول */
-  window.appErrors = function () { try { return JSON.parse(localStorage.getItem('appErrors') || '[]'); } catch (_) { return []; } };
+  /* الأدمن يستعرضها بكتابة appErrors() — وappErrors(true) لأخطاء الكود وحدها */
+  window.appErrors = function (codeOnly) {
+    try {
+      var a = JSON.parse(localStorage.getItem('appErrors') || '[]');
+      return codeOnly ? a.filter(function (x) { return !x.net; }) : a;
+    } catch (_) { return []; }
+  };
+  window.appErrorsClear = function () { try { localStorage.removeItem('appErrors'); return '✅ مُسح'; } catch (_) { return '—'; } };
 })();
 </script>
 <!-- ⚡ defer آمن على الثلاث: أوّل استعمال لكلٍّ داخل دالة (بعد التحميل).
@@ -2184,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-26-v296';
-console.log('%c[تداول بلس] البناء: 2026-07-26-v296 — 🛡️ حارس تطابق الأساس: السعر المتداول مقابل التاريخ المخزَّن، بعتبة حدّ التذبذب ±10% لا برقم مخترع · لا خطة ولا أهداف ولا ع/م عند اختلاف السُلّمين · أداة أدمن تكشف الرموز المنحرفة وتُعيد مزامنة 5 سنوات لها وحدها', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-26-v298';
+console.log('%c[تداول بلس] البناء: 2026-07-26-v298 — 🔇 صندوق أسود لا يُغرقه ضجيجه: تجميع الخطأ المتكرّر بعدّاد · فصل أخطاء الشبكة عن أخطاء الكود · السعة 40 وتُحذف أخطاء الشبكة أولاً · appErrors(true) لأخطاء الكود وحدها · إسكات الرفض غير المُلتقَط من النداءات المُطلَقة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -7240,7 +7270,7 @@ function loadCSV() {
       .then(data => {
         if (!data || data.length < 2) { fallbackLegacy('تعذّر تحميل الشيت'); return; }
         onResult(data);              // اعرض بيانات الشيت (الأساسيات) فوراً
-        sahmkOverlayLivePrices();    // ثم غطِّ الأسعار الحية بصمت
+        sahmkOverlayLivePrices().catch(function(){});    // ثم غطِّ الأسعار الحية بصمت (رفضها لا يُسقط شيئاً)
       })
       .catch(onFail);
   } else if (USE_SAHMK_API) {
@@ -10084,7 +10114,7 @@ document.addEventListener('keydown', e => {
     /* 🔁 سجّل لقطة اليوم ثم ألصق نسبة التطابق بكل سهم (قبل الرفع ليراها الجميع) */
     try { _snHistRecord(PRED_RESULTS); _snHistApply(PRED_RESULTS); } catch (e) {}
     predSaveCache();
-    radarUploadShared();   // 🌐 وحّد النتائج لكل المستخدمين (الأدمن فقط)
+    Promise.resolve(radarUploadShared()).catch(function(){});   // 🌐 وحّد النتائج لكل المستخدمين (الأدمن فقط)
     try { tgNotifyGolden(); } catch (e) {}   // 🔔 تنبيه تلجرام عند وجود فرصة ذهبية (أدمن)
     if (btn) { btn.disabled = false; btn.textContent = '🔮 إعادة المسح'; }
     predShowProgress(false);
@@ -10748,9 +10778,19 @@ document.addEventListener('keydown', e => {
     const gr = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null;
     if (gr && gr.verdict === 'غالٍ') return false;                   // جراهام غير غالٍ
     const st = r.elPlan.stop, tg = r.elPlan.target, en = r.elPlan.entry;
-    /* 🚫 لا مطاردة: إن صعد السعر أكثر من 8% فوق الدخول المخطّط فالفرصة فاتت
-       (يصبح الوقف بعيداً جداً والهدف الأول قريباً — اختلال حقيقي) */
-    if (en > 0 && r.price > en * 1.08) return false;
+    /* ══════════════════════════════════════════════════════════════
+       🚫 لا مطاردة — **من نفس مصدر الشارة، لا بعتبة ثانية**
+       العلّة التي عالجها هذا السطر (وهي من صنعي حين شدّدتُ الشارة ولم
+       أشدّد البوابة معها): كانت الشارة تقول «⏳ بانتظار تراجع» عند +1.5%
+       بينما البوابة تسمح حتى +8% — فيحجز التطبيقُ السهمَ على الشاشة
+       **ويبثّه تلجرام «اكتملت الشروط»**. وهي البوابة الوحيدة التي تخرج
+       للناس، فكان التناقض يقع حيث لا يُغتفر.
+       دراية ريت: السعر +5.5% فوق الدخول — بين العتبتين تماماً.
+       الآن مصدر واحد: ما لا يُعرض «عند الدخول» لا يُبثّ ذهبياً. */
+    const _ek = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
+    if (_ek !== 'now') return false;
+    /* ⛔ ولا ذهبية على سهم اختلف فيه أساسا السعر — أرقامه من سُلّمين */
+    try { const _b = (typeof _basisCheck === 'function') ? _basisCheck(r.sym, r.price) : null; if (_b && !_b.ok) return false; } catch (_) {}
     /* 🛡️ حارس مسافة الوقف: وقف أقرب من مدى يوم كامل = خروج بالضجيج لا بالخطأ */
     const rk = _snRisk(r);
     if (!rk || rk.belowStop || rk.tight) return false;
@@ -12149,11 +12189,24 @@ document.addEventListener('keydown', e => {
     if (!gold.length) return;
     const key = new Date().toISOString().slice(0, 10) + ':' + gold.map(r => r.sym).sort().join(',');
     if (localStorage.getItem('tg_last_golden') === key) return;    // لا تُكرّر نفس المجموعة في اليوم
+    /* 📣 الرسالة تحمل **حالة التنفيذ وع/م عند السعر الحالي** — لا رقم دخول مجرّداً.
+       كانت تعرض «دخول 5.26» بجانب سعر 5.55 بلا كلمة انتظار، فمن يشتري الآن
+       يحصل على ع/م 1.5 لا 4.3. الرقم بلا حالته إغراء لا معلومة. */
     const lines = gold.slice(0, 12).map((r, i) => {
       const p = r.elPlan;
+      const gap = (+p.entry > 0) ? ((r.price - p.entry) / p.entry) * 100 : 0;
+      const rrNow = (r.price > p.stop) ? ((p.target - r.price) / (r.price - p.stop)) : null;
+      const rrEn  = (+p.entry > p.stop) ? ((p.target - p.entry) / (p.entry - p.stop)) : null;
+      let state = '';
+      if (gap > 1.5)      state = '\n   ⏳ <b>انتظر تراجعاً إلى ' + p.entry + '</b> — السعر الآن أعلى منه بـ' + gap.toFixed(1) + '%';
+      else if (gap < -2)  state = '\n   ⏳ <b>لم يبلغ الدخول بعد</b> — راقب وصوله إلى ' + p.entry;
+      else                state = '\n   ✅ <b>السعر عند منطقة الدخول</b> — انتظر شمعة ارتداد مؤكِّدة';
+      const rrTxt = (rrNow != null && rrEn != null)
+        ? '\n   ⚖️ ع/م ' + rrEn.toFixed(1) + ' عند الدخول · <b>' + rrNow.toFixed(1) + ' لو اشتريت الآن</b>' : '';
+      const capTxt = p.cappedAtHigh ? '\n   🏁 الهدف مقصوص عند القمة السنوية' : '';
       return (i + 1) + '. <b>' + (r.name || r.sym) + '</b> (' + r.sym + ') — ' + r.price.toFixed(2) + ' ر.س\n' +
-        '   🎯 دخول ' + p.entry + ' · 🛑 وقف ' + p.stop + ' · 🏁 هدف ' + p.target;
-    }).join('\n');
+        '   🎯 دخول ' + p.entry + ' · 🛑 وقف ' + p.stop + ' · 🏁 هدف ' + p.target + state + rrTxt + capTxt;
+    }).join('\n\n');
     const msg = '💎 <b>فرص ذهبية — تداول بلس</b>\nاكتملت الشروط في ' + gold.length + ' سهم:\n\n' + lines +
       '\n\n⚠️ تعليمي لا نصيحة استثمارية — التزم وقف الخسارة.';
     /* 💎 الفرص الذهبية تذهب لقناتها المخصّصة إن ضُبطت، وإلا للمعرّف الأساسي */
@@ -14240,6 +14293,11 @@ function elliottCompute(series, curPrice) {
   })).filter(p => p.c && p.c > 0);
   if (pts.length < 20) return null;
   pts.sort((a, b) => (a.t < b.t ? -1 : 1));
+  /* 🏁 أعلى إغلاق خلال آخر ~52 أسبوعاً — مرجع سقف هدف الخطة أدناه */
+  const _yrHi = (function () {
+    try { const w = pts.slice(-Math.min(252, pts.length)).map(p => p.c); return w.length ? Math.max.apply(null, w) : 0; }
+    catch (e) { return 0; }
+  })();
   const win = pts.slice(-Math.min(160, pts.length));
   const vals = win.map(p => p.c);
   /* زجزاج: يكتشف نقاط الانعطاف بعتبة نسبية لالتقاط «الساق النشطة» الحالية بدل أكبر تأرجح مطلق */
@@ -14396,6 +14454,20 @@ function elliottCompute(series, curPrice) {
   if (up) {
     if (legs <= 2 && w3 > w2 && w2 > P0) _plan = { phase: 'الموجة 2 → 3', entry: w2, stop: P0, target: w3 };
     else if ((nowWave === '3' || nowWave === '4') && w5 > w4 && w4 > P1) _plan = { phase: 'الموجة 4 → 5', entry: w4, stop: P1, target: w5 };
+    /* ══════════════════════════════════════════════════════════════
+       🏁 سقف هدف الخطة عند القمة السنوية — الحارس الغائب
+       كل ما حصّنّاه (خفض الهبوط · سقف المقاومة) كان داخل _smartTargets،
+       أي على **الأرقام الثانوية**. أمّا هذه الخطة فتخرج من إليوت مباشرة
+       (target = الموجة الاندفاعية) بلا سقف — **وهي التي تُبثّ لتلجرام**.
+       دراية ريت: قمة سنوية 5.75 وهدف 6.38 (+11% فوقها) على سهم يقول
+       حكم أطره «نطاق عرضي — ولا تتوقّع امتداداً».
+       والسقف مشروط لا مطلق (درس اكتشاف السعر): يُطبَّق فقط حين يكون
+       السعر بعيداً عن قمّته (>3%) — أمّا الملاصق لها فهو في اكتشاف سعر
+       حقيقي ولا يُقصّ. */
+    if (_plan && _yrHi > 0 && curPrice > 0 && (_yrHi - curPrice) / curPrice > 0.03 && _plan.target > _yrHi) {
+      _plan.target = _yrHi;
+      _plan.cappedAtHigh = true;
+    }
     if (_plan) {
       const rr = (_plan.target > _plan.entry && _plan.entry > _plan.stop) ? +((_plan.target - _plan.entry) / (_plan.entry - _plan.stop)).toFixed(1) : null;
       if (rr && rr > 0) { _plan.rr = rr; _plan.entry = rnd(_plan.entry); _plan.stop = rnd(_plan.stop); _plan.target = rnd(_plan.target); }

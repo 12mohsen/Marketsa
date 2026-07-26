@@ -2183,8 +2183,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-25-v284';
-console.log('%c[تداول بلس] البناء: 2026-07-25-v284 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-25-v285';
+console.log('%c[تداول بلس] البناء: 2026-07-25-v285 — 🔥 مؤكِّدات البداية في الرادار (تعالج «الثبات» 59% من الفشل): دفقة حجم ×1.5 · اختراق فعلي لنطاق الانضغاط · حدّ سيولة — مع فلتر «🔥 مؤكّد» وإشارة «دخول مؤكّد»', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -14600,13 +14600,14 @@ function marketStockAnalysis(sym, name) {
       const _pr = (typeof PRED_RESULTS !== 'undefined' && Array.isArray(PRED_RESULTS)) ? PRED_RESULTS.find(x => x && x.sym === sym) : null;
       if (_pr && _pr.mtf) _mt = _pr.mtf;
     } catch (e) {}
-    if (!_mt && typeof _mtfRead === 'function' && _ser && _ser.length >= 130) _mt = _mtfRead(_ser, price);
+    /* لا نحسب من _ser القصير هنا — نتركه للمُحمِّل اللاحق (بمصدر معدّل للتجزئة)
+       ليطابق اللوحة. نعرض فورًا فقط إن كان الحكم مخزّنًا. */
     if (_mt) {
       let _dDir = 'up';
       try {
         const _pr2 = (typeof PRED_RESULTS !== 'undefined' && Array.isArray(PRED_RESULTS)) ? PRED_RESULTS.find(x => x && x.sym === sym) : null;
         if (_pr2 && _pr2.elDir) _dDir = _pr2.elDir;
-        else if (_ser) { const _ed = elliottCompute(_ser, price); if (_ed) _dDir = _ed.dir; }
+        else if (_pr2 && _pr2.direction) _dDir = _pr2.direction === 'up' ? 'up' : 'down';
       } catch (e) {}
       _mtfBox = _mtfHTML(_dDir, _mt);
     }
@@ -14688,12 +14689,22 @@ function marketStockAnalysis(sym, name) {
   `;
 
   document.body.appendChild(overlay);
-  /* 🗓️ تعبئة حكم الأطر لاحقاً من التاريخ الكامل — بلا انتظار مسح */
+  /* 🗓️ تعبئة حكم الأطر — يجب أن يطابق اللوحة الموحّدة تمامًا.
+     ⚠️ الخلل السابق: كنّا نُعيد الحساب من histDbLoad الخام (أسعار قبل
+     التجزئة أحياناً)، فيختلف الاتجاه عن اللوحة التي تستعمل الحكم المخزّن.
+     الإصلاح: نُفضّل الحكم المخزّن من المسح (نفس مصدر اللوحة). وإن غاب،
+     نجلب طازجًا معدّلًا للتجزئة (predFetchCandles) لا الخام. */
   (async function () {
     try {
       const slot = document.getElementById(_mtfSlotId);
-      if (!slot || typeof histDbLoad !== 'function' || typeof _mtfRead !== 'function') return;
-      const full = await histDbLoad(sym, 25);
+      if (!slot || typeof _mtfRead !== 'function') return;
+      const _pr = (typeof PRED_RESULTS !== 'undefined' && Array.isArray(PRED_RESULTS)) ? PRED_RESULTS.find(x => x && x.sym === sym) : null;
+      /* ① الأولوية القصوى: الحكم المخزّن (يطابق اللوحة) */
+      if (_pr && _pr.mtf) { slot.innerHTML = _mtfHTML(_pr.elDir || (_pr.direction === 'up' ? 'up' : 'down'), _pr.mtf); return; }
+      /* ② لا حكم مخزّن → اجلب طازجًا معدّلًا للتجزئة (لا الخام) */
+      let full = null;
+      try { if (typeof predFetchCandles === 'function') full = await predFetchCandles(sym); } catch (e) {}
+      if ((!full || full.length < 130) && typeof histDbLoad === 'function') full = await histDbLoad(sym, 25);
       if (!full || full.length < 130) return;
       const mt = _mtfRead(full, price);
       if (!mt || !mt.w) return;

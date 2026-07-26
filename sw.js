@@ -6,7 +6,7 @@
      • مكتبات CDN (ثابتة): الكاش أولاً — أسرع بلا مخاطرة (نسخ مثبّتة).
      • بيانات ياهو/Supabase: لا نتدخّل — تمرّ مباشرة (يجب أن تكون حيّة).
    ══════════════════════════════════════════════════════════════════ */
-const CACHE = 'tadawul-plus-v1';
+const CACHE = 'tadawul-plus-v2';   /* 🔄 رُفع الرقم لإسقاط الكاش القديم (كان يعرض بوابة اشتراك قديمة) */
 const CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',

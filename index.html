@@ -2184,8 +2184,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-26-v293';
-console.log('%c[تداول بلس] البناء: 2026-07-26-v293 — 🛡️ المصداقية قبل الأرقام: بوابة ثقة إليوت تحكم الخطة لا التقاطع وحده (وتُعلن سبب الحجب) · حارس الوقف يقيس من الدخول المخطَّط لا السعر وحده (نهاية ع/م المنتفخ) · شارة الدخول تُطابق نصّ التحليل الكامل · حكم الأطر لا يُعرض من مسح قديم · لا دخولٌ مقترح أعلى من السوق', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-26-v296';
+console.log('%c[تداول بلس] البناء: 2026-07-26-v296 — 🛡️ حارس تطابق الأساس: السعر المتداول مقابل التاريخ المخزَّن، بعتبة حدّ التذبذب ±10% لا برقم مخترع · لا خطة ولا أهداف ولا ع/م عند اختلاف السُلّمين · أداة أدمن تكشف الرموز المنحرفة وتُعيد مزامنة 5 سنوات لها وحدها', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -3484,7 +3484,11 @@ function applyAppSettings() {
     const p = document.getElementById(id);
     if (!p) return;
     const _guestBlur = _isGuest && _gMode[t.k] === 'blur';   // 🌫️ تظليل خاص بالزوار
-    const doBlur = !(typeof isAdmin === 'function' && isAdmin()) && (_secFlags(userRestrictions, t.k).blur || _guestBlur);
+    /* 💳 الاشتراك المنتهي يُظلّل الأقسام لا يطرد المستخدم (اتفاقنا: لا نغلق المنصّة).
+       الرئيسية تبقى واضحة دائمًا ليتنقّل، والأقسام المدفوعة تُظلَّل مع دعوة للتجديد. */
+    const _acctExpired = !!sbUser && !(typeof isAdmin === 'function' && isAdmin())
+      && (typeof _subInfo === 'function') && _subInfo(userRestrictions, 'account').expired && t.k !== 'home';
+    const doBlur = !(typeof isAdmin === 'function' && isAdmin()) && (_secFlags(userRestrictions, t.k).blur || _guestBlur || _acctExpired);
     p.style.filter = doBlur ? 'blur(6px)' : '';
     p.style.userSelect = doBlur ? 'none' : '';
     p.style.pointerEvents = doBlur ? 'none' : '';
@@ -3580,35 +3584,31 @@ function _updateGate() {
       </div>`;
     return;
   }
+  /* 💳 الاشتراك المنتهي: لا بوابة تحجب المنصّة (اتفاقنا: لا نطرد المستخدم).
+     يبقى داخل التطبيق، الرئيسية واضحة، والأقسام المدفوعة مظلَّلة (يتكفّل بها
+     حلقة التظليل أعلاه عبر _acctExpired)، مع شريط علويّ يدعوه للتجديد.
+     كان يظهر غطاءٌ كامل يجعله يشعر أنه طُرد — وهذا خطأ صحّحناه. */
   if (needExpired) {
-    if (!gate) {
-      gate = document.createElement('div');
-      gate.id = 'adminGate';
-      gate.style.cssText = 'position:fixed;inset:0;z-index:985;background:rgba(5,8,14,.97);' +
-        'display:flex;align-items:center;justify-content:center;padding:20px;text-align:center';
-      document.body.appendChild(gate);
+    if (gate) gate.style.display = 'none';   // أزل أي غطاء قديم
+    let bar = document.getElementById('expiredBar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'expiredBar';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:970;background:linear-gradient(135deg,#7c2d12,#b45309);' +
+        'color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;' +
+        'font-size:12.5px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.4)';
+      document.body.appendChild(bar);
     }
     const _accSi = _subInfo(userRestrictions, 'account');
-    const showPay = _accSi.showPay;
     const price = _accSi.price;
-    gate.style.display = 'flex';
-    gate.innerHTML = `
-      <div style="max-width:340px">
-        <div style="font-size:52px;margin-bottom:12px">⏳</div>
-        <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">انتهى اشتراكك</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:20px;line-height:1.9">
-          انقضت مدة اشتراكك (${_accSi.days || 0} يوم)${price ? ` — قيمة التجديد ${price} ر.س` : ''}<br>جدّد اشتراكك للعودة إلى المنصة</div>
-        ${showPay ? `<button onclick="openPayModal('account')"
-          style="width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:14.5px;color:#fff;
-          background:linear-gradient(135deg,#166534 0%,#22c55e 100%);margin-bottom:10px">💳 دفع / تجديد الاشتراك</button>` : ''}
-        <button onclick="showSupportForm()" style="width:100%;padding:12px;border-radius:11px;cursor:pointer;
-          border:1.5px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);
-          color:#93c5fd;font-weight:700;font-size:13px;margin-bottom:10px">📨 تواصل مع الدعم</button>
-        <button onclick="authSignOut()" style="width:100%;padding:12px;border-radius:11px;cursor:pointer;
-          border:1.5px solid rgba(248,113,113,.5);background:rgba(248,113,113,.1);
-          color:#fca5a5;font-weight:700;font-size:13px">🚪 تسجيل الخروج</button>
-      </div>`;
-    return;
+    bar.style.display = 'flex';
+    try { document.body.style.paddingTop = (bar.offsetHeight || 40) + 'px'; } catch (e) {}
+    bar.innerHTML = '⏳ انتهى اشتراكك — الأقسام المدفوعة مظلَّلة.' +
+      (_accSi.showPay ? ' <button onclick="openPayModal(\'account\')" style="background:#fff;color:#b45309;border:none;border-radius:8px;padding:5px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">💳 جدّد الاشتراك</button>' : '') +
+      ' <button onclick="showSupportForm()" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📨 الدعم</button>';
+    /* لا return — نترك التطبيق يعمل، ولا نحجبه */
+  } else {
+    const _eb = document.getElementById('expiredBar'); if (_eb) { _eb.style.display = 'none'; try { document.body.style.paddingTop = ''; } catch (e) {} }
   }
   if (needMaint || needLogin) {
     if (!gate) {
@@ -4122,6 +4122,14 @@ function renderAdminSection() {
         <button id="histSyncBtn" onclick="adminSyncHistorical()" style="width:100%;padding:12px;border-radius:11px;
           border:none;cursor:pointer;font-weight:800;font-size:13px;color:#fff;
           background:linear-gradient(135deg,#6d28d9,#8b5cf6)">📥 جلب/تحديث البيانات التاريخية (5 سنوات)</button>
+        <!-- 🛡️ فحص تطابق الأساس: يكشف الرموز التي يختلف فيها السعر الحيّ عن التاريخ المخزَّن -->
+        <div id="basisScanBox" style="font-size:11.5px;color:var(--txt-m);margin-top:10px;line-height:1.8"></div>
+        <button id="basisScanBtn" onclick="adminBasisScan()" style="width:100%;margin-top:8px;padding:11px;border-radius:11px;
+          border:1px solid rgba(248,113,113,.45);cursor:pointer;font-weight:800;font-size:12.5px;color:#fca5a5;
+          font-family:inherit;background:rgba(248,113,113,.12)">🛡️ فحص تطابق الأساس (كشف الرموز المنحرفة)</button>
+        <button id="basisFixBtn" onclick="adminBasisFix()" style="display:none;width:100%;margin-top:6px;padding:11px;border-radius:11px;
+          border:none;cursor:pointer;font-weight:800;font-size:12.5px;color:#fff;font-family:inherit;
+          background:linear-gradient(135deg,#b45309,#f59e0b)">🔧 إعادة مزامنة الرموز المنحرفة وحدها</button>
       </div>` : ''}
       </div>
 
@@ -5348,8 +5356,79 @@ async function histDbLoad(sym, minBars) {
       .select('d,o,h,l,c,v').eq('symbol', sym)
       .order('d', { ascending: true });
     if (error || !data || data.length < (minBars || 25)) return null;
-    return data.map(r => ({ o:+r.o, h:+r.h, l:+r.l, c:+r.c, v:+r.v || 0, d:r.d }));
+    const out = data.map(r => ({ o:+r.o, h:+r.h, l:+r.l, c:+r.c, v:+r.v || 0, d:r.d }));
+    try { const L = out[out.length - 1]; if (L && L.c > 0) _BASIS_LAST[sym] = { c: L.c, d: L.d }; } catch (_) {}
+    return out;
   } catch (e) { return null; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   🛡️ حارس تطابق الأساس — أخطر خلل كُشف في هذا المشروع
+
+   العلّة: `entry_price` والسعر المعروض يأتيان من مصدر حيّ، بينما الشارت
+   والمؤشرات والمقاومات تُحسب من `historical_prices`. وقياسنا أثبت أن
+   المصدرين يختلفان في **24 رمزاً** بنسب 7%–67%:
+       6004: يراه المستخدم 117.7  ·  أساس الشارت 88.65
+       2001: يراه المستخدم 13.06  ·  أساس الشارت 39.88
+   فالمستخدم يرى خطةً عند سعرٍ مرسومةً على شارتٍ بسُلّم آخر — تحليلٌ
+   غير متماسك، ولا تكشفه العين لأن كل شاشة متّسقة مع نفسها.
+
+   والعتبة ليست رقماً مخترعاً: حدّ التذبذب اليومي في تداول **±10%**.
+   فأيّ فارق يتجاوز ما تسمح به الجلسات المنقضية **لا يمكن أن يكون
+   حركة سوق** — هو اختلاف أساس بالضرورة الرياضية لا بالظنّ.
+   ══════════════════════════════════════════════════════════════════════ */
+const TADAWUL_DAILY_LIMIT = 0.10;      // حدّ التذبذب اليومي ±10%
+const _BASIS_LAST = {};                // sym → { c, d } آخر إغلاق مخزَّن
+
+function _basisCheck(sym, livePrice) {
+  try {
+    const px = +livePrice;
+    if (!(px > 0) || !sym) return null;
+    let last = _BASIS_LAST[sym];
+    if (!last) {                        // احتياط: من كاش الشموع إن توفّر
+      const b = (typeof PRED_CACHE !== 'undefined' && PRED_CACHE[sym]) ? PRED_CACHE[sym] : null;
+      if (b && b.length) { const L = b[b.length - 1]; if (L) last = { c: +(L.c != null ? L.c : L.close), d: L.d }; }
+    }
+    if (!last || !(last.c > 0)) return null;
+    /* كم جلسة تداول مضت منذ آخر شمعة مخزَّنة؟ (تقريب: 5 جلسات لكل 7 أيام) */
+    let sessions = 1;
+    try {
+      const ld = new Date(last.d);
+      if (!isNaN(ld.getTime())) {
+        const days = Math.max(0, Math.round((Date.now() - ld.getTime()) / 86400000));
+        sessions = Math.max(1, Math.min(8, Math.ceil((days * 5) / 7)));
+      }
+    } catch (_) {}
+    /* أقصى حركة يسمح بها النظام عبر تلك الجلسات + هامش 2% للتقريب والتوزيعات */
+    const allowed = Math.pow(1 + TADAWUL_DAILY_LIMIT, sessions) - 1 + 0.02;
+    const diff = Math.abs(px - last.c) / last.c;
+    return {
+      live: +px.toFixed(2),
+      stored: +last.c.toFixed(2),
+      lastDate: last.d,
+      sessions: sessions,
+      diffPct: +(diff * 100).toFixed(1),
+      allowedPct: +(allowed * 100).toFixed(1),
+      ratio: +(px / last.c).toFixed(2),
+      ok: diff <= allowed,
+    };
+  } catch (e) { return null; }
+}
+
+/* 🚫 لافتة الإيقاف — تُعرض مكان الخطة والأهداف، ولا تُعرض معها أرقام.
+   صمتٌ صادق خير من خطة مبنيّة على سُلّمين. */
+function _basisBlockHTML(b) {
+  if (!b || b.ok) return '';
+  return '<div style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.5);border-radius:11px;padding:12px;margin-bottom:11px;line-height:1.85">'
+    + '<div style="font-size:14px;font-weight:900;color:#fca5a5">⛔ التحليل موقوف — مصدرا السعر غير متوافقين</div>'
+    + '<div style="font-size:12px;color:var(--txt);margin-top:6px">السعر المتداول <b>' + b.live + '</b> · آخر إغلاق مخزَّن <b>' + b.stored + '</b>'
+    + ' (' + b.lastDate + ') — فارق <b style="color:#fca5a5">' + b.diffPct + '%</b>.</div>'
+    + '<div style="font-size:11.5px;color:var(--txt-m);margin-top:6px">حدّ التذبذب اليومي ±10%، فأقصى فارق ممكن خلال '
+    + b.sessions + ' جلسة هو <b>' + b.allowedPct + '%</b>. وما فوقه <b>ليس حركة سوق</b> بل اختلاف أساس '
+    + '(تجزئة أو زيادة رأس مال لم تُحدَّث). ' + (b.ratio ? 'النسبة بين المصدرين ≈ <b>' + b.ratio + '</b>. ' : '')
+    + '</div>'
+    + '<div style="font-size:12px;color:#fed7aa;margin-top:7px"><b>حجبنا الخطة والأهداف وع/م عمداً</b> — حسابها من سعرٍ ورسمها على شارتٍ بسُلّم مختلف '
+    + 'يُنتج أرقاماً تبدو دقيقة وهي بلا معنى. تُستأنف تلقائياً فور إعادة مزامنة تاريخ هذا السهم.</div></div>';
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -5603,6 +5682,83 @@ async function adminSyncHistorical() {
   logAdminAction('hist_sync', `${okSyms} رمز`, `${okRows} صف مخزّن${failed ? ` · ${failed} فشل` : ''}`);
   showToast(`✅ خُزّنت البيانات التاريخية: ${okSyms} رمز`);
   histLoadStats();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   🛡️ فحص تطابق الأساس + إصلاحه — أداة الأدمن
+   يقارن السعر المتداول لكل رمز بآخر إغلاق مخزَّن. وما يتجاوز حدّ
+   التذبذب المسموح عبر الجلسات المنقضية = اختلاف أساس لا حركة سوق.
+   ثم يُعيد مزامنة 5 سنوات **للمنحرفة وحدها** — لا 270 رمزاً.
+   ══════════════════════════════════════════════════════════════════════ */
+let _basisBad = [];
+async function adminBasisScan() {
+  if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
+  if (!Array.isArray(rows) || !rows.length) { showToast('⚠️ حمّل بيانات السوق أولاً — افتح «🔮 رادار» ثم عُد'); return; }
+  const box = document.getElementById('basisScanBox');
+  const btn = document.getElementById('basisScanBtn');
+  const fix = document.getElementById('basisFixBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ الفحص...'; }
+  _basisBad = [];
+  const list = rows.filter(r => r.sym && +r.price > 0);
+  let done = 0, checked = 0, noData = 0;
+  for (const r of list) {
+    try {
+      if (!_BASIS_LAST[r.sym]) { await histDbLoad(r.sym, 2); }   // يملأ _BASIS_LAST
+      const b = _basisCheck(r.sym, r.price);
+      if (!b) noData++;
+      else { checked++; if (!b.ok) _basisBad.push({ sym: r.sym, name: r.name || r.sym, b: b }); }
+    } catch (e) { noData++; }
+    done++;
+    if (box && done % 10 === 0) box.textContent = `⏳ ${done}/${list.length} · منحرف: ${_basisBad.length}`;
+  }
+  _basisBad.sort((x, y) => y.b.diffPct - x.b.diffPct);
+  if (box) {
+    box.innerHTML = _basisBad.length
+      ? '<div style="color:#fca5a5;font-weight:800;margin-bottom:5px">🚨 ' + _basisBad.length + ' رمزاً مختلّ الأساس من ' + checked + ' مفحوص'
+        + (noData ? ' · ' + noData + ' بلا تاريخ' : '') + '</div>'
+        + _basisBad.slice(0, 12).map(x => '<div style="direction:rtl">• <b>' + esc(x.sym) + '</b> ' + esc(x.name)
+          + ' — متداول <b>' + x.b.live + '</b> · مخزَّن <b>' + x.b.stored + '</b> · فارق <b style="color:#fca5a5">' + x.b.diffPct + '%</b></div>').join('')
+        + (_basisBad.length > 12 ? '<div style="color:var(--txt-m)">… و' + (_basisBad.length - 12) + ' غيرها</div>' : '')
+        + '<div style="color:#fed7aa;margin-top:6px">التحليل موقوف تلقائياً على هذه الرموز حتى تُصلَح.</div>'
+      : '<div style="color:#4ade80;font-weight:800">✅ كل الرموز متطابقة الأساس (' + checked + ' مفحوص'
+        + (noData ? ' · ' + noData + ' بلا تاريخ' : '') + ')</div>';
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🛡️ فحص تطابق الأساس (كشف الرموز المنحرفة)'; }
+  if (fix) fix.style.display = _basisBad.length ? 'block' : 'none';
+  logAdminAction('basis_scan', _basisBad.length + ' منحرف', checked + ' مفحوص');
+}
+
+async function adminBasisFix() {
+  if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
+  if (!_basisBad.length) { showToast('لا رموز منحرفة — شغّل الفحص أولاً'); return; }
+  if (_histSyncing) { showToast('⏳ مزامنة جارية بالفعل'); return; }
+  _histSyncing = true;
+  const box = document.getElementById('basisScanBox');
+  const fix = document.getElementById('basisFixBtn');
+  if (fix) { fix.disabled = true; fix.textContent = '⏳ جارٍ إعادة المزامنة...'; }
+  let ok = 0, fail = 0, n = 0;
+  for (const x of _basisBad) {
+    try {
+      const cs = await histFetchYahoo5y(x.sym);          // 5 سنوات كاملة — لا شهر واحد
+      if (cs && cs.length) {
+        for (let i = 0; i < cs.length; i += 500) {
+          const { error } = await sb.from('historical_prices').upsert(cs.slice(i, i + 500), { onConflict: 'symbol,d' });
+          if (error) throw error;
+        }
+        delete _BASIS_LAST[x.sym];
+        try { if (typeof PRED_CACHE !== 'undefined') delete PRED_CACHE[x.sym]; } catch (_) {}
+        ok++;
+      } else fail++;
+    } catch (e) { fail++; console.warn('[basis-fix]', x.sym, e && e.message); }
+    n++;
+    if (box) box.textContent = `⏳ ${n}/${_basisBad.length} · نجح ${ok}${fail ? ` · فشل ${fail}` : ''}`;
+  }
+  _histSyncing = false;
+  if (fix) { fix.disabled = false; fix.textContent = '🔧 إعادة مزامنة الرموز المنحرفة وحدها'; }
+  if (box) box.innerHTML = '<div style="color:#4ade80;font-weight:800">✅ أُعيدت مزامنة ' + ok + ' رمز'
+    + (fail ? ' · فشل ' + fail : '') + ' — أعِد الفحص للتأكّد.</div>';
+  logAdminAction('basis_fix', ok + ' رمز', fail ? fail + ' فشل' : 'بلا فشل');
+  showToast('✅ أُعيدت مزامنة ' + ok + ' رمز — أعِد الفحص');
 }
 
 /* 🕒 ساعة الأسعار المتأخرة: الوقت الحالي ناقص مدة التأخير (~15 دقيقة) بتوقيت الرياض */
@@ -9403,10 +9559,27 @@ document.addEventListener('keydown', e => {
            يبقى فحص السلامة وصفاً للبنية لا دليلاً على الجدوى. */
         el_clean:   (r.elDiag ? !(r.elDiag.brk || r.elDiag.stale || r.elDiag.thin) : null),
         el_fit:     (r.elDiag && r.elDiag.fit != null ? r.elDiag.fit : null),
+        /* ══════════════════════════════════════════════════════════════
+           🕰️ ختم الحقبة — الدرس المستفاد من «المتنبّئ 3%»
+           كل حارس نضيفه لحماية المال يغيّر الأرقام التي نقيس بها. فحماية
+           الهبوط (v293) تخفض الهدف للنصف ⇒ ع/م ينقسم ⇒ صفوف ما قبلها
+           وما بعدها **لا تُقارَن**. وبلا هذا الختم يقيس استعلامُ المعايرة
+           «متى غيّرنا الكود» لا «هل نفع الحارس». فصلنا الحقبتين هناك،
+           ونفصلهما هنا — فلا نُحاكَم بمقياس تغيّر تحتنا.
+           ══════════════════════════════════════════════════════════════ */
+        build: (typeof window !== 'undefined' && window.APP_BUILD) ? window.APP_BUILD : null,
+        /* 🗓️ الاتجاه الأسبوعي وقت الإشارة — العمود الذي بلا تسجيله لا يمكن
+           **إثبات** الفرضية التي بُنيت عليها حماية الهبوط أصلاً:
+           «الارتداد ضدّ الاتجاه أضعف». نحن نصدّقها اليوم بلا رقم — وهذا
+           العمود هو الذي يجعلها بعد أسابيع حقيقةً مقاسة أو ظنّاً مردوداً. */
+        wk_trend:   (r.mtf && r.mtf.w) ? r.mtf.w : null,
+        /* ⚖️ ع/م الخطة كما عُرض — ليُقارَن أثر الخفض على النتيجة الفعلية */
+        plan_rr:    (r.elPlan && r.elPlan.rr != null) ? r.elPlan.rr : null,
       }));
     if (!rows.length) return;
     /* الأعمدة الاختيارية: إن لم تُضَف بعد في القاعدة نُسقطها ولا نُعطّل التسجيل */
-    const OPT = ['confl', 'above_vwap', 'vwap_pct', 'trig_vol', 'confirmed', 'liq20', 'el_clean', 'el_fit'];
+    const OPT = ['confl', 'above_vwap', 'vwap_pct', 'trig_vol', 'confirmed', 'liq20', 'el_clean', 'el_fit',
+                 'build', 'wk_trend', 'plan_rr'];
     try { await sb.from('predictions').upsert(rows, { onConflict: 'symbol,pred_date' }); }
     catch (e) {
       try {
@@ -11354,8 +11527,15 @@ document.addEventListener('keydown', e => {
         + '<b>فحجبناه بدل أن نعرضه بثوب اليوم.</b> اضغط «إعادة المسح» في قسم الرادار ليُحسب من بيانات الجلسة الأخيرة.</div></div>';
     }
 
-    /* 🎯 حالة القنّاص + الخطة */
-    if (r.elPlan && r.elPlan.rr) {
+    /* ══════════════════════════════════════════════════════════════
+       ⛔ حارس تطابق الأساس — يسبق كل شيء
+       إن اختلف السعر المتداول عن الأساس المخزَّن بما يفوق حدّ التذبذب،
+       فالخطة والأهداف وع/م أرقامٌ محسوبة من سُلّمين مختلفين. نُعلنها
+       ونحجبها — ولا نعرض رقماً واحداً بجانبها. */
+    const _bas = (typeof _basisCheck === 'function') ? _basisCheck(r.sym, r.price) : null;
+    if (_bas && !_bas.ok) {
+      html += _basisBlockHTML(_bas);
+    } else if (r.elPlan && r.elPlan.rr) {
       const p = r.elPlan, k = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
       const kMap = { now: ['#4ade80', '✅ عند الدخول الآن'], wait: ['#7dd3fc', '⏳ بانتظار الوصول'], gone: ['#fb923c', '🚫 فات الدخول'], tight: ['#fca5a5', '🚨 وقف ملتصق'] };
       const km = kMap[k] || ['#94a3b8', '—'];
@@ -12393,13 +12573,24 @@ function _smartTargets(price, hi, lo, ser, trend) {
      ⚠️ الصاعد لا يُمَسّ — درس «اكتشاف السعر»: القصّ في الصاعد أنتج
      +0.06% مقابل وقف -5%. فالشرط على 'down' حصريًّا. */
   let ceilDown = false;
-  if (trend === 'down' && !discovery) {
-    /* ① خفض التفاؤل للنصف (ارتداد مضادّ أضعف) */
-    t1 = p + (t1 - p) * 0.5;
-    t2 = p + (t2 - p) * 0.5;
+  if (trend === 'down') {
+    /* 🕳️ سدّ ثغرة «اكتشاف السعر» في الهبوط:
+       كان الشرط `!discovery` يُلغي الحماية كلياً حين يكون السعر ضمن 3%
+       من قمته السنوية. لكن سهماً **هابطاً أسبوعياً وهو قرب قمته** ليس في
+       اكتشاف سعر — هو في قمة يُحتمل أنها بداية الانعكاس. فكان يُمنح
+       أهدافاً فوق القمة (+9%) بلا أي خفض، وهي أخطر حالة لا أأمنها:
+       تفاؤلٌ كامل على سهم انقلب اتجاهه للتوّ.
+       فالحماية تعمل الآن في الحالتين — لكن بشدّة متدرّجة:
+         • الوضع العادي: خفض للنصف (0.5)
+         • حالة الاكتشاف: خفض أخفّ (0.75) احتراماً لدرس «اكتشاف السعر»
+           فلا نقصّ قمةً حقيقية إلى هللتين، ولا نتركها بلا حارس. */
+    const damp = discovery ? 0.75 : 0.5;
+    t1 = p + (t1 - p) * damp;
+    t2 = p + (t2 - p) * damp;
     ceilDown = true;
-    /* ② سقف المقاومة إن توفّرت البنية */
-    if (st && st.res > p) {
+    /* ② سقف المقاومة إن توفّرت البنية — ولا يُطبَّق في اكتشاف السعر
+       (لا مقاومة تاريخية فوق سعرٍ لم يبلغه السهم من قبل) */
+    if (!discovery && st && st.res > p) {
       if (t2 > st.res) t2 = st.res;
       if (t1 > st.res) t1 = p + (st.res - p) * 0.5;
     }
@@ -12427,7 +12618,7 @@ function _smartTargets(price, hi, lo, ser, trend) {
      إلى المقاومة) ينقض القصّ. نُعيد فرضه: في الهبوط لا يتجاوز الهدف المقاومة،
      ولا يعود البنيوي بالتفاؤل الذي خفّضناه. (كشفه المدقّق: اختبار الدالة كاملةً
      لا الكتلة معزولةً — node --check لا يرى ترتيب التنفيذ.) */
-  if (ceilDown && st && st.res > p) {
+  if (ceilDown && !discovery && st && st.res > p) {
     if (t1 > st.res) t1 = st.res;
     if (t2 > st.res) t2 = st.res;
     if (t2 <= t1) { t1 = +(p + (st.res - p) * 0.5).toFixed(2); t2 = st.res; }
@@ -14710,13 +14901,16 @@ function marketStockAnalysis(sym, name) {
     const _prT = (typeof PRED_RESULTS !== 'undefined' && Array.isArray(PRED_RESULTS)) ? PRED_RESULTS.find(x => x && x.sym === sym) : null;
     if (_prT && _prT.mtf && _prT.mtf.w) _trendDir = (_prT.mtf.w === 'هابط') ? 'down' : (_prT.mtf.w === 'صاعد' ? 'up' : null);
   } catch (e) {}
-  const _tg = _smartTargets(price, high, low, _ser, _trendDir);
+  /* ⛔ حارس تطابق الأساس: لا أهداف من سُلّمين مختلفين */
+  const _basTe = (typeof _basisCheck === 'function') ? _basisCheck(sym, price) : null;
+  const _basBad = !!(_basTe && !_basTe.ok);
+  const _tg = _basBad ? null : _smartTargets(price, high, low, _ser, _trendDir);
   let target1 = _tg ? _tg.t1 : null;
   let target2 = _tg ? _tg.t2 : null;
   let stopLoss = _tg ? _tg.sl : null;
   const _pct = v => (v > 0 ? '+' : '') + v + '%';
 
-  const _maTgtHTML = target1 ? `
+  const _maTgtHTML = _basBad ? (typeof _basisBlockHTML === 'function' ? _basisBlockHTML(_basTe) : '') : target1 ? `
       <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div style="font-size:12px;color:#4ade80;font-weight:600">🎯 الأهداف السعرية</div>
@@ -14740,7 +14934,7 @@ function marketStockAnalysis(sym, name) {
         ${_tg && _tg.structured && _tg.struct ? '<div style="font-size:10.5px;color:#7dd3fc;background:rgba(56,189,248,.09);border:1px solid rgba(56,189,248,.32);border-radius:8px;padding:8px 10px;margin-top:9px;line-height:1.8">🏗️ <b>مستويات من بنية الشارت لا من نسبة عامة:</b> الوقف تحت دعم النطاق <b>' + _tg.struct.sup + '</b> والهدف عند مقاومته <b>' + _tg.struct.res + '</b> — مستويان يراهما السوق فعلاً، لا رقمان محسوبان.</div>' : ''}
         ${_tg && _tg.discovery ? '<div style="font-size:10.5px;color:#facc15;text-align:center;margin-top:8px;line-height:1.7">🚀 السعر عند قمّته السنوية — <b>منطقة اكتشاف سعر</b> بلا مقاومة تاريخية فوقه. الأهداف امتداد مقيس (فرصة أكبر ومخاطرة أكبر).</div>' : ''}
         ${_tg && _tg.capped ? '<div style="font-size:10px;color:var(--txt-m);text-align:center;margin-top:8px;line-height:1.7">🔵 الهدف الثاني مقيّد عند القمة السنوية (مقاومة قوية)</div>' : ''}
-        ${_tg && _tg.ceilDown ? '<div style="font-size:10.5px;color:#fca5a5;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:8px;padding:7px 10px;margin-top:8px;line-height:1.75">🔻 <b>أهداف محافِظة — الاتجاه الأسبوعي هابط.</b> خفّضنا التفاؤل لأن الارتداد ضدّ الاتجاه أضعف' + (_tg.struct ? ' وقصصنا عند المقاومة القريبة' : '') + '. حمايةً لمالك: لا نَعِدك بصعودٍ لا يحدث في سهم يصنع قممًا أدنى.</div>' : ''}
+        ${_tg && _tg.ceilDown ? '<div style="font-size:10.5px;color:#fca5a5;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:8px;padding:7px 10px;margin-top:8px;line-height:1.75">🔻 <b>أهداف محافِظة — الاتجاه الأسبوعي هابط.</b> ' + (_tg.discovery ? 'السعر قرب قمته السنوية لكن الأسبوعي هابط — وهذه <b>قمةٌ قد تكون بداية انعكاس لا انطلاقة</b>، فخفّضنا التفاؤل بقدرٍ أخفّ ولم نُلغِ حارسه' : 'خفّضنا التفاؤل للنصف لأن الارتداد ضدّ الاتجاه أضعف' + (_tg.struct ? ' وقصصنا عند المقاومة القريبة' : '')) + '. حمايةً لمالك: لا نَعِدك بصعودٍ لا يحدث في سهم يصنع قممًا أدنى.</div>' : ''}
       </div>` : '';
   /* 🧭 حكم الأطر الزمنية — يُعرض **قبل** الأهداف لأنه يحدّد هل الشراء وارد أصلاً */
   let _mtfBox = '';

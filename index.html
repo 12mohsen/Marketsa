@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v312';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v312 — 💰 سهمك يملأ الفجوة وحدها لا يُكرّر ما يعطيه الشيت مجاناً (271 رمزاً = 5–6 طلبات × 20 نافذة = ~120/يوم والحصّة 100) · وميزانية يومية 80 طلباً لا تُتجاوَز، وعند بلوغها يُعاد كاشٌ أقدم بدل انقطاع · sahmkQuota() لمعرفة المتبقّي', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v313';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v313 — 🕰️ كل استجابة من سهمك تُختم بلحظة جلبها وتُعرض تحت السعر الرسمي: يشرح لماذا 45.10 تختلف عن 45.14 — عيّنتان في لحظتين لا تناقض · وإن تجاوز عمرها 15 دقيقة يُعلَن بلون تحذيري · مع ميزانية 80 طلباً وسهمك يملأ الفجوة وحدها', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -7154,6 +7154,20 @@ const SAHMK_DAILY_BUDGET = 80;
 function _sahmkDayKey() {
   return 'sahmk_n_' + new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
 }
+/* 🕰️ وسم لحظة الجلب — الرقم بلا لحظته ناقص.
+   يشرح للمستخدم لماذا يختلف «السعر الرسمي» عن السعر الحالي: عيّنتان
+   في لحظتين، لا تناقض. وإن كانت العيّنة قديمة يُعلَن عمرها صراحةً. */
+function _sahmkStamp(o) {
+  try {
+    const t = o && (o._at || (o.__src && o.__src._at));
+    if (!t) return '';
+    const min = Math.round((Date.now() - t) / 60000);
+    const txt = min < 1 ? 'الآن' : ('قبل ' + min + ' دقيقة');
+    const warn = min >= 15;
+    return '<div style="font-size:10.5px;color:' + (warn ? '#fbbf24' : 'var(--txt-m)') + ';margin:-4px 0 8px">'
+      + '🕰️ عيّنة سهمك ' + txt + (warn ? ' — قد تكون أقدم من السعر أعلاه' : '') + '</div>';
+  } catch (e) { return ''; }
+}
 function sahmkQuota() {
   let n = 0;
   try { n = +localStorage.getItem(_sahmkDayKey()) || 0; } catch (_) {}
@@ -7167,7 +7181,15 @@ async function sahmkApi(path, params = {}) {
   const qs  = new URLSearchParams(params).toString();
   const url = SAHMK_WORKER_BASE + path + (qs ? '?' + qs : '');
   const c = _sahmkMem.get(url);
-  if (c && Date.now() - c.t < _SAHMK_TTL) return c.d;
+  /* 🕰️ نختم كل استجابة بلحظة جلبها الحقيقية.
+     العلّة: الكاش يصمد 15 دقيقة، فيرى المستخدم «السعر الرسمي 45.10»
+     بينما السعر الحالي 45.14 — ويظنّه تناقضاً وهو **عيّنتان في لحظتين**.
+     ولمّا كان تدفّق السيولة يبقى على حاله ساعاتٍ، بدا مجمّداً بلا سبب.
+     الرقم بلا لحظته ناقص — فنُرفقها به. */
+  if (c && Date.now() - c.t < _SAHMK_TTL) {
+    try { if (c.d && typeof c.d === 'object') c.d._at = c.t; } catch (_) {}
+    return c.d;
+  }
 
   /* 🛑 لا نتجاوز الميزانية — والكاش القديم خيرٌ من انقطاع الخدمة */
   const q = sahmkQuota();
@@ -7187,8 +7209,10 @@ async function sahmkApi(path, params = {}) {
     const msg  = (d && d.error && d.error.message) || 'خطأ غير معروف';
     throw new Error('sahmk ' + code + ': ' + msg);
   }
-  _sahmkMem.set(url, { t: Date.now(), d });
+  const _now = Date.now();
+  _sahmkMem.set(url, { t: _now, d });
   _sahmkPersist();
+  try { if (d && typeof d === 'object') d._at = _now; } catch (_) {}
   return d;
 }
 
@@ -17208,7 +17232,7 @@ switchTab = function (tab, btn) {
       html += '<div style="font-weight:700;margin-bottom:8px;color:#4ade80">🏛️ السعر الرسمي (سهمك): ' +
         Number(q.price).toFixed(2) + ' ر.س' +
         (chg != null ? ' · <span style="color:' + (chg >= 0 ? '#16a34a' : '#dc2626') + '">' + (chg >= 0 ? '+' : '') + chg + '%</span>' : '') +
-        (q.is_delayed ? ' · مؤخّر' : ' · لحظي') + '</div>';
+        (q.is_delayed ? ' · مؤخّر' : ' · لحظي') + '</div>' + _sahmkStamp(q);
     }
     const L = q && q.liquidity;
     if (L && (L.net_value != null || L.inflow_value != null)) {

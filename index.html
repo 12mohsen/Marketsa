@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v315';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v315 — 🎯 خطط القنّاص تُحاسَب أخيراً: كل خطة تُسجَّل بسياقها (الشارة · الذهبية · التوافق · الاتجاه · ثقة إليوت · سقف الهدف · ختم الحقبة) وتُحسم من تاريخك المخزَّن بأسبقية اللمس — والوقف يسبق عند التعادل · وفحص الأساس لا يعدّ المشتقّ مقارَناً', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v316';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v316 — 🕰️ «آخر تحديث» يقول الحقيقة: كانت الحمولة بلا updated_at فيأخذ العمود قيمته عند أوّل إدراج فقط، وتُعيد المزامنة عشر مرّات فلا يتغيّر الرقم — كان يصف لحظة إدراج أحدث شمعة لا لحظة آخر مزامنة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -5682,6 +5682,7 @@ async function divScanAll(btn) {
 
 /* جلب 5 سنوات يومي من المصدر (نفس بروكسيات التطبيق) بصيغة صفوف للتخزين */
 async function histFetchYahoo5y(sym) {
+  const _syncStamp = new Date().toISOString();   // 🕰️ طابع هذه المزامنة
   const ticker = (sym === 'TASI') ? '^TASI.SR' : sym + '.SR';
   const directUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=5y';
   const proxies = [
@@ -5702,7 +5703,13 @@ async function histFetchYahoo5y(sym) {
       for (let i = 0; i < r.timestamp.length; i++) {
         if (q.close[i] == null) continue;
         const d = new Date(r.timestamp[i] * 1000).toISOString().slice(0, 10);
-        out.push({ symbol: sym, d, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+        /* 🕰️ الطابع الزمني يُكتب صراحةً مع كل مزامنة.
+           العلّة: الحمولة كانت {symbol,d,o,h,l,c,v} بلا `updated_at`، فيأخذ
+           العمود قيمته عند **أوّل إدراج فقط**. وعند إعادة المزامنة يقع
+           ON CONFLICT فتُحدَّث الأسعار ويبقى الطابع على حاله.
+           فكان «آخر تحديث» يصف لحظة إدراج أحدث شمعة لأوّل مرّة، لا لحظة
+           آخر مزامنة — وتُعيد المزامنة عشر مرّات فلا يتغيّر الرقم. */
+        out.push({ symbol: sym, d, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0, updated_at: _syncStamp });
       }
       if (out.length) return out;
     } catch (e) { /* جرّب البروكسي التالي */ }

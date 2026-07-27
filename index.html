@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v309';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v309 — 🔢 إصلاح الفاصلة العشرية يُعيد مصدر السوق الحيّ للعمل (كان 87,22 يُقرأ 8722 فيُرفض كل سعر) · 🏷️ ووسم يميّز السعر الحيّ (جوجل · 15د) من إغلاق آخر جلسة (احتياطي ياهو) — فلا يظهر سعر الأمس بثوب اللحظة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v310';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v310 — 🕰️ كسر كاش رابط الشيت: كان الرابط ثابتاً فتُخزّنه جوجل والمتصفّح دقائق ويعود السعر القديم بعد كل تحديث (الشيت 48.3 والتطبيق 47.72 لنفس الحقل) · وforceFresh() في الكونسول تمسح كل الكاش وتُعيد التحميل', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -2224,6 +2224,33 @@ const CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/' +
   '2PACX-1vQ5uiE3ga1ZaZ194DL_zgJEcSYXriiwNjjV-9kMJEfZv31ryMszIl6QE1dNgRJNzYwA0cglMtd2_WgF' +
   '/pub?output=csv';
+
+/* ══════════════════════════════════════════════════════════════════════
+   🕰️ كسر كاش رابط الشيت — علّة «السعر لا يتغيّر مهما حدّثت الصفحة»
+   كان الرابط ثابتاً بلا مُعامل، فتُخزّنه شبكة جوجل والمتصفّح دقائق،
+   ويُعطى التطبيقُ النسخةَ القديمة عند كل طلب. والدليل الذي كشفه:
+   الشيت يقول أعلى 52 أسبوع 48.3 والتطبيق يعرض 47.72 — رقمان لمصدر واحد.
+   نضيف طابعاً زمنياً بدلوٍ من 30 ثانية: طازج بما يكفي لبيانات متأخّرة
+   ربع ساعة، ولا يُثقل المصدر بطلب لكل نقرة. */
+function csvUrlFresh() {
+  return CSV_URL + '&_=' + Math.floor(Date.now() / 30000);
+}
+
+/* 🧹 مخرج يدوي: يمسح كل الكاش المحلّي ويُعيد التحميل من المصدر.
+   اكتب في الكونسول: forceFresh()   — أو استعملها عند أي شكّ في قِدَم البيانات. */
+window.forceFresh = function () {
+  let n = 0;
+  try {
+    Object.keys(localStorage).forEach(function (k) {
+      if (/^(hist|pred|radar|market|div|analysis)/i.test(k)) { localStorage.removeItem(k); n++; }
+    });
+  } catch (_) {}
+  try { if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations()
+        .then(function (rs) { rs.forEach(function (r) { r.update(); }); }); } catch (_) {}
+  console.log('[fresh] 🧹 مُسح ' + n + ' مفتاح كاش — يُعاد التحميل الآن');
+  setTimeout(function () { location.reload(); }, 400);
+  return 'جارٍ التحديث…';
+};
 
 /* ════════════════════════════════════════════════════════════════
    إعدادات مصدر البيانات — نظام التبديل الذكي (Feature Flag)
@@ -7050,7 +7077,7 @@ async function tryAllSources() {
   if (!IS_FILE) {
     try {
       setLoading('جارٍ تحميل البيانات مباشرة...');
-      const text = await fetchCSV(CSV_URL);
+      const text = await fetchCSV(csvUrlFresh());
       const data = await parseCSVText(text);
       if (data && data.length > 5) return data;
     } catch(e) {
@@ -7060,7 +7087,7 @@ async function tryAllSources() {
 
   // 2. Proxy chain
   for (let i = 0; i < PROXY_LIST.length; i++) {
-    const proxyUrl = PROXY_LIST[i](CSV_URL);
+    const proxyUrl = PROXY_LIST[i](csvUrlFresh());
     const label    = `جارٍ المحاولة ${i + 1} / ${PROXY_LIST.length}...`;
     setLoading(label);
     try {

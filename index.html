@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v311';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v311 — 🔢 الجذر: كانت أرقام السوق تُخزَّن نصوصاً خاماً ويُعتمد على التحويل الضمني +r.price — يعمل مع النقطة (45.26) ويفشل مع الفاصلة (45,26 ⇒ NaN) فيظنّ السدّ السعر مفقوداً. الآن تُحوَّل بـtoNum عند التحليل مرّة واحدة · مع كسر كاش الشيت وforceFresh()', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v312';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v312 — 💰 سهمك يملأ الفجوة وحدها لا يُكرّر ما يعطيه الشيت مجاناً (271 رمزاً = 5–6 طلبات × 20 نافذة = ~120/يوم والحصّة 100) · وميزانية يومية 80 طلباً لا تُتجاوَز، وعند بلوغها يُعاد كاشٌ أقدم بدل انقطاع · sahmkQuota() لمعرفة المتبقّي', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -7145,11 +7145,37 @@ function _sahmkPersist() {
 }
 
 // نداء عام لأي نقطة عبر الوسيط، مع معالجة الأخطاء وكاش الذاكرة
+/* ══════════════════════════════════════════════════════════════════════
+   🧮 ميزانية سهمك اليومية — حارس لا يُتجاوَز
+   الحصّة المجانية 100 طلب/يوم. نُبقي هامشاً (80) لطلبات الأدمن اليدوية
+   والتشخيص، فلا نصل للحائط أبداً ولا نُفاجَأ بانقطاع أثناء الجلسة.
+   العدّاد يومي بتوقيت الرياض ويُحفظ محلياً، ويُقرأ بـsahmkQuota(). */
+const SAHMK_DAILY_BUDGET = 80;
+function _sahmkDayKey() {
+  return 'sahmk_n_' + new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
+}
+function sahmkQuota() {
+  let n = 0;
+  try { n = +localStorage.getItem(_sahmkDayKey()) || 0; } catch (_) {}
+  return { used: n, budget: SAHMK_DAILY_BUDGET, left: Math.max(0, SAHMK_DAILY_BUDGET - n) };
+}
+function _sahmkCount() {
+  try { const k = _sahmkDayKey(); localStorage.setItem(k, String((+localStorage.getItem(k) || 0) + 1)); } catch (_) {}
+}
+
 async function sahmkApi(path, params = {}) {
   const qs  = new URLSearchParams(params).toString();
   const url = SAHMK_WORKER_BASE + path + (qs ? '?' + qs : '');
   const c = _sahmkMem.get(url);
   if (c && Date.now() - c.t < _SAHMK_TTL) return c.d;
+
+  /* 🛑 لا نتجاوز الميزانية — والكاش القديم خيرٌ من انقطاع الخدمة */
+  const q = sahmkQuota();
+  if (q.left <= 0) {
+    if (c) { console.warn('[sahmk] ⚠️ بلغت ميزانية اليوم (' + q.used + ') — أُعيد كاشاً أقدم'); return c.d; }
+    throw new Error('sahmk: بلغت ميزانية اليوم (' + q.used + '/' + q.budget + ')');
+  }
+  _sahmkCount();
 
   const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
   let d;
@@ -7288,7 +7314,23 @@ async function sahmkOverlayLivePrices() {
       }
     } catch (e) { /* تجاهل المؤشر */ }
 
-    const symbols = [...new Set(rows.map(r => r.sym).filter(Boolean))];
+    /* ══════════════════════════════════════════════════════════════
+       💰 سهمك يملأ الفجوة وحدها — لا يُكرّر ما يعطيه الشيت مجاناً
+       الحساب: 271 رمزاً ÷ 50 = 5–6 طلبات لكل تحديث. وبكاش 15 دقيقة
+       على مدى خمس ساعات تداول = 20 نافذة ⇒ **~120 طلباً يومياً**،
+       والحصّة المجانية 100. أي أن جلسة كاملة واحدة تحرقها.
+       وبعد إصلاح قراءة الشيت (v311) صار جوجل يعطي 271 سعراً في **طلب
+       واحد مجاني**. فلا معنى لأن يدفع سهمك ثمن ما هو متاح بلا ثمن.
+       نقصره على ما لا يغطّيه جوجل: صناديق الريت وما فقد سعره —
+       ~19 رمزاً = **طلب واحد** بدل خمسة. */
+    const _gap = rows.filter(r => r && r.sym && (!(+r.price > 0) || r._derived));
+    const _useGapOnly = _gap.length > 0 && _gap.length <= rows.length * 0.5;
+    const symbols = _useGapOnly
+      ? [...new Set(_gap.map(r => r.sym))]
+      : [...new Set(rows.map(r => r.sym).filter(Boolean))];
+    if (_useGapOnly) console.log('[sahmk] 💰 طلب الفجوة وحدها: ' + symbols.length
+      + ' رمز (' + Math.ceil(symbols.length / SAHMK_BATCH) + ' طلب) بدل '
+      + Math.ceil(rows.length / SAHMK_BATCH) + ' طلبات');
     let patched = 0;
     for (let i = 0; i < symbols.length; i += SAHMK_BATCH) {
       const chunk = symbols.slice(i, i + SAHMK_BATCH);

@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v306';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v306 — 🏁 إغلاق سباق زمني ضاعف النتائج: كان المسح يُفرّغ PRED_RESULTS ثم ينتظر، فيكتمل تحميل النتائج المشتركة أثناء الانتظار (269) وتُكتب نتائج المسح فوقها (269) ⇒ 538 تُرفع للجميع. التفريغ الآن بعد آخر انتظار وقبل أول كتابة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v309';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v309 — 🔢 إصلاح الفاصلة العشرية يُعيد مصدر السوق الحيّ للعمل (كان 87,22 يُقرأ 8722 فيُرفض كل سعر) · 🏷️ ووسم يميّز السعر الحيّ (جوجل · 15د) من إغلاق آخر جلسة (احتياطي ياهو) — فلا يظهر سعر الأمس بثوب اللحظة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -6529,26 +6529,32 @@ function toNum(v) {
   // convert Arabic-Indic digits & decimal sign
   let s = String(v)
     .replace(/[٠١٢٣٤٥٦٧٨٩]/g, d => d.charCodeAt(0) - 0x0660)
-    .replace(/٫/g, '.')     // فاصلة عشرية عربية
-    .replace(/٬/g, '')      // فاصل آلاف عربي
-    .replace(/,/g, '')      // فاصل آلاف لاتيني
-    .replace(/[^\d.\-]/g, '');
+    .replace(/٫/g, ',')      // فاصلة عشرية عربية → فاصلة
+    .replace(/٬/g, ',')      // فاصل آلاف عربي → فاصلة
+    .replace(/[^\d.,\-]/g, '');
   /* ══════════════════════════════════════════════════════════════
-     🔢 النقاط المتعدّدة فواصل آلاف لا نقاط عشرية
-     لغة ملف السوق تُصدّر الأرقام الكبيرة بنقاط:
-        القيمة السوقية  30.435.645.345   ⇒ كان parseFloat يقرؤها 30.435
-        حجم التداول     1.039.731.00     ⇒ كان يقرؤها 1.039
-     أي أن ثلاثين ملياراً كانت تصير ثلاثين، وحجم مليون يصير واحداً.
-     وحجم التداول يدخل في حدّ السيولة ووصف «حجم منخفض/عالي» — فالخلل
-     يمسّ قرارات لا أرقام عرض فقط.
-     القاعدة: نقطة واحدة = عشرية (السعر 21.08 يبقى كما هو).
-              نقاط أكثر = فواصل آلاف، إلا أن تكون المجموعة الأخيرة
-              أقلّ من ثلاث خانات فهي الكسر العشري. */
-  const parts = s.split('.');
-  if (parts.length > 2) {
-    const last = parts[parts.length - 1];
-    s = (last.length === 3) ? parts.join('')
-                            : parts.slice(0, -1).join('') + '.' + last;
+     🔢 أيّ الفاصلَين عشريّ؟ يُحسم بالموضع لا بالافتراض
+
+     ملف السوق يُصدَّر بلغة تجعل **الفاصلة عشرية**:
+         السعر  87,22   ·  التغيّر  -1,61   ·  أدنى 52أ  72,15
+     وكان toNum يحذف الفواصل بوصفها فواصل آلاف ⇒ 87,22 تصير **8722**.
+     أي أن كل سعر يُقرأ **مئة ضعف**، فيُرفض لخروجه عن كل نطاق معقول —
+     ولهذا وصل التطبيق سعرين اثنين فقط من الشيت، وحمله السدّ من
+     التاريخ المخزَّن طوال اليوم.
+
+     وفي نفس الملف تظهر النقطة فاصلَ آلاف: 30.435.645.345
+     فلا يصحّ افتراض أحدهما. القاعدة الصحيحة تُقرأ من الموضع:
+       • فاصل **واحد** ⇒ عشري دائماً (21.08 · 87,22 · 10775.5498046875)
+       • فواصل متعدّدة ⇒ الأخير عشري إن تبعته 1–2 خانة، وإلا فكلها آلاف
+     وما عدا الفاصل العشري يُحذف. */
+  const li = Math.max(s.lastIndexOf('.'), s.lastIndexOf(','));
+  if (li > -1) {
+    const tail = s.slice(li + 1);
+    const seps = (s.match(/[.,]/g) || []).length;
+    const decimal = (seps === 1) || /^\d{1,2}$/.test(tail);
+    s = decimal
+      ? s.slice(0, li).replace(/[.,]/g, '') + '.' + tail
+      : s.replace(/[.,]/g, '');
   }
   const n = parseFloat(s);
   return isNaN(n) ? null : n;
@@ -10462,7 +10468,18 @@ document.addEventListener('keydown', e => {
          التطبيق يحكم ويختم كل سهم بـ golden، والخادم ينقل الختم فقط.
          فيستحيل الاختلاف مهما تغيّرت الشروط لاحقاً.
          ══════════════════════════════════════════════════════════════ */
-      const stamped = PRED_RESULTS.map(r => {
+      /* 🛡️ شبكة أمان أخيرة: لا يُرفع رمز مرّتين مهما حدث قبلها.
+         حتى لو تسلّل سباق جديد يوماً، لن يصل للمستخدمين مكرَّراً. */
+      const _seenUp = new Set();
+      const _uniq = PRED_RESULTS.filter(r => {
+        const k = r && r.sym ? String(r.sym).trim() : '';
+        if (!k || _seenUp.has(k)) return false;
+        _seenUp.add(k); return true;
+      });
+      if (_uniq.length !== PRED_RESULTS.length) {
+        console.warn('[radar] ⚠️ حُذف ' + (PRED_RESULTS.length - _uniq.length) + ' صفّاً مكرّراً قبل الرفع');
+      }
+      const stamped = _uniq.map(r => {
         let g = false;
         try { g = !!_snGolden(r); } catch (e) {}
         return Object.assign({}, r, { golden: g });
@@ -10480,9 +10497,18 @@ document.addEventListener('keydown', e => {
   /* 🌐 يقرأ النتائج المشتركة (الموحّدة للجميع) ويعرضها — يُرجع true إن نجح */
   async function radarLoadShared() {
     if (!sb) return false;
+    /* ══════════════════════════════════════════════════════════════
+       🚧 لا تدهس مسحاً جارياً — جذر علّة «538/528 نتيجة»
+       هذه الدالة تُسند إلى PRED_RESULTS إسناداً مطلقاً. وإن اكتملت
+       أثناء مسح جارٍ، حلّت 269 نتيجة مشتركة محلّ ما كتبه المسح، ثم
+       تابعت عمّال المسح الكتابة فوقها ⇒ كل سهم مرّتين، و**528 نتيجة
+       تُرفع لكل المستخدمين**. ونقلُ التفريغ وحده لم يكفِ لأن الإسناد
+       يقع بعده أيضاً. الحلّ عند المصدر: صاحب المسح أولى بنتائجه. */
+    if (PRED_SCANNING) { console.info('[radar] ⏸️ تُخطّي التحميل المشترك — مسح جارٍ'); return false; }
     try {
       const { data, error } = await sb.from('radar_results').select('data, scanned_at').eq('id', 1).maybeSingle();
       if (error || !data || !Array.isArray(data.data) || !data.data.length) return false;
+      if (PRED_SCANNING) return false;      // 🚧 قد يكون المسح بدأ أثناء الجلب
       PRED_RESULTS = data.data;
       PRED_LAST_TS = data.scanned_at ? new Date(data.scanned_at).getTime() : Date.now();
       try { predSaveCache(); } catch (e) {}
@@ -11686,7 +11712,14 @@ document.addEventListener('keydown', e => {
     const sec = (title, body) => body ? '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:11px;padding:13px;margin-bottom:11px"><div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:7px">' + title + '</div>' + body + '</div>' : '';
     let html = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;flex-wrap:wrap">'
       + '<div><div style="font-size:20px;font-weight:900">' + (r.name || r.sym) + '</div><div style="font-size:12.5px;color:var(--txt-m)">' + r.sym + ' · ' + dirTxt + '</div></div>'
-      + '<div style="text-align:left"><div style="font-size:24px;font-weight:900">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</div><div style="font-size:11px;color:var(--txt-m)">السعر</div></div></div>';
+      /* 🏷️ مصدر السعر يُعلَن: جوجل فاينانس حيّ (تأخير 15د) هو الأساس،
+         والتاريخ المخزَّن احتياطٌ يعطي **إغلاق آخر جلسة** لا سعراً حيّاً.
+         صناديق الريت تبقى على الاحتياطي دائماً (جوجل لا يدعمها) — فلولا
+         هذا الوسم لظهر إغلاق الأمس بثوب سعر اللحظة. */
+      + '<div style="text-align:left"><div style="font-size:24px;font-weight:900">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</div>'
+      + '<div style="font-size:11px;color:' + (r._derived ? '#fbbf24' : 'var(--txt-m)') + '" title="'
+      + (r._derived ? 'مصدر السوق الحيّ لا يغطّي هذا الرمز — الرقم إغلاق آخر جلسة من تاريخك المخزَّن' : 'من مصدر السوق الحيّ (تأخير ~15 دقيقة)') + '">'
+      + (r._derived ? '🕰️ إغلاق آخر جلسة' : 'السعر') + '</div></div></div>';
 
     /* ═══ 🧭 النتيجة الختامية — أوّل ما يراه المستخدم: كلمة واحدة + سبب ═══ */
     (function () {

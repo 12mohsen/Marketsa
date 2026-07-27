@@ -2221,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v320';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v320 — 📐 معدّل الندرة المتوقَّع في خريطة الأسباب: حاصل ضرب نسب الشروط يُخبر أن صفر اليوم هو الرقم المتوقَّع لا خللاً — فمن يرى صفراً ثلاثة أيام لا يظنّ العطل · ويُقال بصدق إن التقدير حدٌّ أدنى لأن الشروط متلازمة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v323';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v323 — 🔒 لا زرّ إلى شاشة مظلّلة أو مقفلة: زرّ اللوحة يختفي أيضاً عند التضبيب أو قفل الاشتراك لا عند الإخفاء وحده — القيمة تُبنى بالنُدرة لا بإغراءٍ مكسور', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -10688,6 +10688,8 @@ document.addEventListener('keydown', e => {
         '<td style="padding:9px 6px;text-align:center;font-weight:700;font-size:11.5px">' + tgt + '</td>' +
         '<td style="padding:9px 6px;text-align:center;font-size:11px;white-space:nowrap">' + timeBadge + r.timing.text + '</td>' +
         '<td style="padding:9px 6px;text-align:center;white-space:nowrap">' +
+          /* 🖥️ قفزة للّوحة الموحّدة — يظهر فقط لمن يملك صلاحية القسم */
+          ((typeof termJumpBtn === 'function') ? termJumpBtn(r.sym) : '') +
           '<button onclick="event.stopPropagation();predAddWatch(\'' + r.sym + '\')" title="إضافة للمراقبة" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:13px;margin-inline-start:3px">👁️</button>' +
           '<button onclick="event.stopPropagation();predAddPortfolio(\'' + r.sym + '\')" title="إضافة للمحفظة" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:13px">📈</button>' +
         '</td>' +
@@ -12056,6 +12058,54 @@ document.addEventListener('keydown', e => {
     if (!s) return;
     try { window.open('https://www.tradingview.com/chart/?symbol=TADAWUL%3A' + encodeURIComponent(s), '_blank'); } catch (e) {}
   };
+  /* ══════════════════════════════════════════════════════════════════
+     🖥️ زرّ «افتح في اللوحة الموحّدة» — من الرادار والقنّاص إلى الشارت
+     يقفز بالسهم نفسه إلى اللوحة فيراه المستخدم بشارته وخطّته المرسومة
+     بدل أن يبحث عنه يدوياً في قائمة 269 سهماً.
+     🔐 والصلاحية ليست جديدة: يستعمل `_termAccess()` نفسه الذي يحكم
+     القسم — فإن أخفى الأدمن اللوحة عن مستخدم أو عن الزوار، اختفى الزرّ
+     معها تلقائياً. لا نظام صلاحيات ثانٍ يُنسى تحديثه. */
+  window.termCanOpen = function () {
+    try {
+      const a = _termAccess();
+      if (!a || !a.ok) return false;          // مخفيّ تماماً
+      /* ══════════════════════════════════════════════════════════════
+         🔒 ولا زرّ إلى شاشة مظلّلة أو مقفلة
+         القسم قد يكون **ظاهراً لكن مضبّباً** أو **مقفولاً بالاشتراك** —
+         وزرٌّ يقود إليه حينها يُفسد قيمته: يَعِد المستخدم بشيء ثم يُريه
+         ضبابة. والقيمة تُبنى بالنُدرة لا بالإغراء المكسور.
+         فمن يستحقّ الزرّ هو من سيرى الشاشة **كاملةً** لا مغشّاة. */
+      if (a.blur) return false;                                        // 🌫️ مظلّل
+      if (typeof _targetsLocked === 'function' && _targetsLocked('terminal')) return false;  // 🔒 مقفل
+      return true;
+    } catch (e) { return false; }
+  };
+  /* زرّ جاهز — يُستدعى من صفوف الرادار وبطاقات القنّاص */
+  window.termJumpBtn = function (sym, size) {
+    if (!sym || !window.termCanOpen()) return '';
+    const big = size === 'lg';
+    return '<button onclick="event.stopPropagation();termJump(\'' + String(sym).replace(/'/g, '') + '\')" '
+      + 'title="افتح في اللوحة الموحّدة — الشارت مع الخطة مرسومة عليه" '
+      + 'style="cursor:pointer;font-family:inherit;border:1px solid rgba(56,189,248,.45);'
+      + 'background:rgba(56,189,248,.12);color:#7dd3fc;border-radius:' + (big ? '10px' : '8px') + ';'
+      + 'padding:' + (big ? '7px 13px' : '4px 9px') + ';font-size:' + (big ? '12.5px' : '11px') + ';font-weight:800;white-space:nowrap">'
+      + '🖥️ ' + (big ? 'افتح في اللوحة الموحّدة' : 'اللوحة') + '</button>';
+  };
+  window.termJump = function (sym) {
+    try {
+      if (!window.termCanOpen()) return;
+      const btn = document.querySelector('.nav-btn[data-tab="terminal"]');
+      if (typeof switchTab === 'function') switchTab('terminal', btn);
+      setTimeout(function () {
+        try {
+          window.termSelect(sym);
+          const p = document.getElementById('panel-terminal');
+          if (p && p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) {}
+      }, 60);
+    } catch (e) {}
+  };
+
   window.termSelect = function (sym) {
     TERM_SEL = sym;
     termRenderList();
@@ -12431,7 +12481,10 @@ document.addEventListener('keydown', e => {
           { n: '⚖️ ع/م ≥ 1.5', f: r => { const p = r.elPlan, k = _snRisk(r); if (!k || k.belowStop) return false; const ref = k.pending ? +p.entry : r.price; const rr = (ref > p.stop) ? (p.target - ref) / (ref - p.stop) : null; return rr != null && rr >= 1.5; } },
         ];
         const condDefs = conds;
-        conds = conds.map(c => ({ n: c.n, pass: base.filter(c.f).length }));
+        /* ⚠️ يُحفظ وسم `info` عبر التحويل — كان يُسقَط هنا، فيرى حسابُ
+           معدّل الندرة 12 شرطاً بينما «الأقرب للاكتمال» يقيّم على 11.
+           رقمان لا يتّفقان في شاشة واحدة، والسبب حقلٌ ضاع في map. */
+        conds = conds.map(c => ({ n: c.n, info: !!c.info, pass: base.filter(c.f).length }));
         const total = base.length || 1;
         const minPass = Math.min.apply(null, conds.map(c => c.pass));
         const rowsD = conds.map(c => {
@@ -12577,7 +12630,10 @@ document.addEventListener('keydown', e => {
             '<div style="flex:none;width:34px;height:34px;border-radius:50%;background:var(--surf);border:2px solid ' + rankClr + ';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:' + rankClr + '">' + rank + '</div>' +
             '<div><div style="font-weight:800;font-size:18px">' + (r.name || r.sym) + '</div><div style="font-size:13px;color:var(--txt-m);margin-top:3px">' + r.sym + ' · ' + p.phase + (r.elConf != null ? ' · 🎯 ثقة <b style="color:' + confClr + '">' + r.elConf + '%</b>' : '') + '</div></div>' +
           '</div>' +
-          '<div style="text-align:left"><div style="font-size:22px;font-weight:900">' + r.price.toFixed(2) + '</div><div style="font-size:12px;color:var(--txt-m)">السعر الحالي</div></div>' +
+          '<div style="text-align:left"><div style="font-size:22px;font-weight:900">' + r.price.toFixed(2) + '</div><div style="font-size:12px;color:var(--txt-m)">السعر الحالي</div>' +
+            /* 🖥️ قفزة للّوحة الموحّدة — الخطة مرسومة على الشارت بدل قراءتها أرقاماً */
+            ((typeof termJumpBtn === 'function') ? '<div style="margin-top:6px">' + termJumpBtn(r.sym, 'lg') + '</div>' : '') +
+          '</div>' +
         '</div>' +
         (function () {
           const cN = _snCount(r), cClr = cN >= 4 ? '#4ade80' : cN >= 3 ? '#38bdf8' : '#94a3b8';

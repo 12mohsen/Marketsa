@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v302';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v302 — 🩹 سدّ فجوات شيت السوق من التاريخ المخزَّن (GOOGLEFINANCE لا يغطّي 19 صندوق ريت): السعر والتغيّر والحجم ونطاق 52 أسبوعاً تُشتقّ من historical_prices بلا طلب شبكة · ولا ذهبية بلا نطاق سنوي صالح — غياب التقييم لم يعد يمرّ كأنه تقييم حسن', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v303';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v303 — 🔍 حارس الأساس لا يقارن الرقم بنفسه: الرموز التي سُدّت فجوتها من التاريخ تُستبعد من المقارنة وتُعلَن صراحةً — كان السدّ يجعل «متطابق» حتميّة رياضية لا دليل سلامة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -10217,18 +10217,24 @@ document.addEventListener('keydown', e => {
       const { data, error } = await sb.rpc('latest_closes');
       if (error || !Array.isArray(data)) return;                 // الدالة غير منفَّذة بعد — لا نُزعج
       data.forEach(x => { if (x && x.symbol && +x.c > 0) _BASIS_LAST[x.symbol] = { c: +x.c, d: x.d }; });
-      let bad = 0, seen = 0, noHist = 0;
+      let bad = 0, seen = 0, noHist = 0, derived = 0;
       rows.forEach(r => {
         if (!r.sym || !(+r.price > 0)) return;
+        /* ⚠️ الرمز الذي سُدّت فجوته يحمل سعراً **مأخوذاً من التاريخ نفسه**،
+           فمقارنته بالتاريخ مقارنةُ الرقم بذاته — «متطابق» حتميّة لا دليل.
+           نستبعده ونُعلن عدده صراحةً بدل أن نعدّه نجاحاً. */
+        if (r._derived) { derived++; return; }
         const b = _basisCheck(r.sym, r.price);
         if (b) { seen++; if (!b.ok) bad++; } else noHist++;
       });
       if (bad > 0 && typeof isAdmin === 'function' && isAdmin()) {
         showToast('⚠️ ' + bad + ' رمزاً مختلّ الأساس من ' + seen + ' — التحليل موقوف عليها. افتح الأدمن ← «🔧 إعادة مزامنة الرموز المنحرفة»');
       }
-      console.log('[basis] ' + (bad ? '⚠️ ' + bad + ' منحرف' : '✅ متطابق')
-        + ' من ' + seen + ' رمز مفحوص · ' + priced + '/' + rows.length + ' لها سعر'
-        + (noHist ? ' · ' + noHist + ' بلا تاريخ مخزَّن' : ''));
+      console.log('[basis] ' + (seen === 0 ? '⏸️ لا رمز قابلاً للمقارنة'
+          : (bad ? '⚠️ ' + bad + ' منحرف' : '✅ متطابق') + ' من ' + seen + ' رمز مقارَن')
+        + (derived ? ' · ' + derived + ' مشتقّ من التاريخ (لا يُقارَن بذاته)' : '')
+        + (noHist ? ' · ' + noHist + ' بلا تاريخ' : '')
+        + ' · ' + priced + '/' + rows.length + ' لها سعر');
     } catch (e) {}
   }
 

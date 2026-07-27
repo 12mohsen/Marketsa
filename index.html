@@ -109,6 +109,13 @@ if ('serviceWorker' in navigator) {
   --r-s:       6px;
 }
 
+
+/* ✨ حياة الشارت — ظهور متدرّج بلا تكلفة أداء */
+.term-svg { animation: termFade .45s ease-out both; }
+.term-svg rect, .term-svg line, .term-svg path { transition: opacity .2s ease; }
+@keyframes termFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .term-svg { animation: none; } }
+
 /* ═══════════════════════════════════════
    Dark Mode Variables
 ═══════════════════════════════════════ */
@@ -2214,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v316';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v316 — 🕰️ «آخر تحديث» يقول الحقيقة: كانت الحمولة بلا updated_at فيأخذ العمود قيمته عند أوّل إدراج فقط، وتُعيد المزامنة عشر مرّات فلا يتغيّر الرقم — كان يصف لحظة إدراج أحدث شمعة لا لحظة آخر مزامنة', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v319';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v319 — 💸 ع/م صافياً بعد العمولة (0.31% ذهاباً وإياباً) في العرض وفي بوابة الذهبي: الرقم الخام يَعِد بما لا يُقبَض، وعلى الأسهم ضيّقة المدى يقلب الحكم · 📏 وحارس المدى السنوي الضيّق (<8%) يُعلن ما لا يراه الشارت', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -11132,6 +11139,33 @@ document.addEventListener('keydown', e => {
      ══════════════════════════════════════════════════════════════════ */
   /* 💧 حدّ السيولة: أقلّ من هذا فالخطة غير قابلة للتنفيذ أصلاً (ريال/يوم) */
   const SNIPER_MIN_LIQ = 300000;
+  /* ══════════════════════════════════════════════════════════════════
+     💸 تكلفة التنفيذ ذهاباً وإياباً — ع/م بلا عمولة رقمٌ لا يُنفَّذ
+     كان ع/م يُحسب من الأسعار الخام، والمستخدم يدفع عمولة شراء وبيع.
+     وعلى الأسهم واسعة المدى لا يُذكر الفرق؛ أمّا على الضيّقة فيقلب
+     الحكم: الإنماء ريت الفندقي مداه السنوي 5.4% وهدفه +3.3% ووقفه −2%
+     ⇒ ع/م 1.69 خاماً، وبعد التكلفة **1.4** — أي تحت عتبة الذهبية 1.5.
+     فالصفقة كانت تمرّ الشرط قبل التكلفة وتسقط بعدها.
+     🔧 عدّل الرقم حسب عمولة وسيطك (0.155% لكل جهة = 0.31% ذهاباً وإياباً). */
+  const TRADE_COST_PCT = 0.31;
+  /* ع/م الصافي: الهدف بعد خصم التكلفة ÷ الوقف بعد إضافتها */
+  function _rrNet(entry, stop, target) {
+    const e = +entry, s = +stop, t = +target;
+    if (!(e > 0) || !(s > 0) || !(t > 0) || !(e > s)) return null;
+    const gain = ((t - e) / e) * 100 - TRADE_COST_PCT;
+    const risk = ((e - s) / e) * 100 + TRADE_COST_PCT;
+    if (!(risk > 0)) return null;
+    return gain / risk;
+  }
+  /* 📏 مدى سنوي ضيّق: أهدافه صغيرة والعمولة تلتهم جزءاً معتبراً منها.
+     لا نحجب — بل نُعلن ما لا تراه العين في شارتٍ يبدو طبيعياً. */
+  const NARROW_RANGE_PCT = 8;
+  function _narrowRange(r) {
+    const hi = +r.high, lo = +r.low;
+    if (!(hi > 0) || !(lo > 0) || hi <= lo) return null;
+    const w = ((hi - lo) / lo) * 100;
+    return w < NARROW_RANGE_PCT ? +w.toFixed(1) : null;
+  }
   /* بيانات ناقصة ≠ سيولة سيّئة — لا نعاقب سهماً لا نملك حجمه */
   function _snIlliquid(r) { return r && r.liq20 != null && r.liq20 < SNIPER_MIN_LIQ; }
   /* 🔊 زناد مؤكَّد بالحجم: النمط تكوّن بحجم أعلى من معتاده = أيدٍ حقيقية */
@@ -11233,9 +11267,11 @@ document.addEventListener('keydown', e => {
     /* 🛡️ حارس مسافة الوقف: وقف أقرب من مدى يوم كامل = خروج بالضجيج لا بالخطأ */
     const rk = _snRisk(r);
     if (!rk || rk.belowStop || rk.tight) return false;
-    /* ⚖️ العائد/المخاطرة — من الدخول المخطّط إن لم يبلغه السعر بعد، ومن السعر الآن إن بلغه */
+    /* ⚖️ العائد/المخاطرة — من الدخول المخطّط إن لم يبلغه السعر بعد، ومن السعر الآن إن بلغه.
+       💸 **صافياً بعد التكلفة**: المستخدم يدفع عمولة شراء وبيع، فالحكم
+       يجب أن يكون على ما يصله لا على ما يظهر قبل الخصم. */
     const ref = rk.pending ? en : r.price;
-    const rrRef = (ref > st) ? (tg - ref) / (ref - st) : null;
+    const rrRef = _rrNet(ref, st, tg);
     if (rrRef == null || rrRef < 1.5) return false;
     return true;
   }
@@ -11877,11 +11913,19 @@ document.addEventListener('keydown', e => {
       const c = seg[idx], o = +c.o || +c.c, h = +c.h || +c.c, lo = +c.l || +c.c, cl = +c.c, v = +c.v || 0;
       const up = cl >= o, col = up ? '#22c55e' : '#ef4444';
       const dt = c.date || c.d || c.t || '';
-      const vTxt = v ? (v >= 1e6 ? (v / 1e6).toFixed(1) + 'م' : Math.round(v / 1000) + 'ألف') : '';
-      /* سطر واحد مضغوط: تاريخ · افتتاح · أعلى · أدنى · إغلاق · حجم */
+      /* 🔤 لاحقة الحجم إنجليزية أيضاً (K/M) — لاحقةٌ عربية داخل سطر LTR
+         تكسر اتجاه القراءة وتقفز لموضع غير موضعها. */
+      const vTxt = v ? (v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : Math.round(v / 1000) + 'K') : '';
+      /* سطر واحد مضغوط: تاريخ · O · H · L · C · V
+         🔤 الرموز إنجليزية (O/H/L/C/V) لا عربية (ف/أ/د/إ/ح):
+         الحرف العربي المفرد يلتصق بالرقم اللاتيني في التخطيط من اليمين
+         لليسار فيصعب تمييز أيّهما لأيّ، وO/H/L/C اصطلاح عالمي يعرفه كل
+         متداول. والسطر كلّه يُجبَر على الاتجاه LTR ليقرأ كما يُكتب. */
+      tip.style.direction = 'ltr';
+      tip.style.textAlign = 'center';
       tip.innerHTML = (dt ? '<b style="color:#94a3b8">' + String(dt).slice(0, 10) + '</b> · ' : '')
-        + 'ف <b>' + o.toFixed(2) + '</b> · أ <b style="color:#22c55e">' + h.toFixed(2) + '</b> · د <b style="color:#ef4444">' + lo.toFixed(2) + '</b> · إ <b style="color:' + col + '">' + cl.toFixed(2) + '</b>'
-        + (vTxt ? ' · ح <b>' + vTxt + '</b>' : '');
+        + 'O <b>' + o.toFixed(2) + '</b> · H <b style="color:#22c55e">' + h.toFixed(2) + '</b> · L <b style="color:#ef4444">' + lo.toFixed(2) + '</b> · C <b style="color:' + col + '">' + cl.toFixed(2) + '</b>'
+        + (vTxt ? ' · V <b>' + vTxt + '</b>' : '');
       tip.style.display = 'block';
       /* 🔀 الشريط يتنحّى: إصبعك في النصف الأعلى ⇒ الشريط أسفل · في النصف الأسفل ⇒ فوق */
       const touchTop = (clientY != null) ? ((clientY - rect.top) < rect.height / 2) : false;
@@ -11908,7 +11952,32 @@ document.addEventListener('keydown', e => {
     const maxBars = _narrow ? 70 : 180;
     const n = cds.length, take = Math.min(n, maxBars), seg = cds.slice(-take);
     const O = seg.map(c => +c.o || +c.c), H = seg.map(c => +c.h || +c.c), L = seg.map(c => +c.l || +c.c), C = seg.map(c => +c.c), V = seg.map(c => +c.v || 0);
-    const mn = Math.min.apply(null, L), mx = Math.max.apply(null, H);
+    /* ══════════════════════════════════════════════════════════════
+       🎯 الخطة تُرسم على الشارت لا تُقرأ بجانبه
+       كانت أرقام الدخول والوقف والهدف في بطاقة منفصلة، والشارت يعرض
+       الشموع وحدها — فيرى المستخدم الرقمين ولا يرى **العلاقة** بينهما:
+       كم يبعد الهدف؟ هل الوقف تحت دعم حقيقي؟ هل السعر فوق الدخول؟
+       نرسمها الآن مناطقَ ملوّنة: مساحة المخاطرة حمراء ومساحة العائد
+       خضراء — فيُرى ع/م **مساحةً** لا رقماً، ويُدرَك بالنظرة الأولى.
+       ونوسّع نطاق المحور ليسع الخطة، وإلا خرجت خارج الإطار فلا تظهر. */
+    let _pl = null, _vw = null;
+    try {
+      const _r = (typeof PRED_RESULTS !== 'undefined' && Array.isArray(PRED_RESULTS))
+        ? PRED_RESULTS.find(x => x && x.sym === sym) : null;
+      if (_r) {
+        const p = _r.elPlan;
+        if (p && +p.entry > 0 && +p.stop > 0 && +p.target > 0) {
+          _pl = { entry: +p.entry, stop: +p.stop, target: +p.target };
+        }
+        if (_r.vwapA && +_r.vwapA.vwap > 0) _vw = +_r.vwapA.vwap;
+      }
+    } catch (e) {}
+    const mn0 = Math.min.apply(null, L), mx0 = Math.max.apply(null, H);
+    let mn = mn0, mx = mx0;
+    if (_pl) {                       // وسّع النطاق ليسع الخطة كاملةً
+      mn = Math.min(mn, _pl.stop); mx = Math.max(mx, _pl.target);
+    }
+    if (_vw) { mn = Math.min(mn, _vw); mx = Math.max(mx, _vw); }
     const pad = (mx - mn) * 0.06 || 1, lo = mn - pad, hi = mx + pad;
     const W = 900, HT = 380, volH = 70, chH = HT - volH - 8, L0 = 6, R0 = 72;   /* R0 أوسع لوسم سعر أكبر */
     const pw = W - L0 - R0, cw = pw / take;
@@ -11940,8 +12009,38 @@ document.addEventListener('keydown', e => {
     /* 🏷️ وسم السعر الحالي على اليمين — أكبر وأوضح (كان صغيراً يصعب قراءته) */
     grid += '<rect x="' + (W - R0) + '" y="' + (lastY - 12).toFixed(1) + '" width="' + (R0 - 2) + '" height="24" rx="4" fill="' + lastCol + '"/>'
       + '<text x="' + (W - R0 + (R0 - 2) / 2) + '" y="' + (lastY + 5.5).toFixed(1) + '" font-size="16" font-weight="900" fill="#0b1220" text-anchor="middle">' + last.toFixed(2) + '</text>';
-    return '<svg viewBox="0 0 ' + W + ' ' + HT + '" width="100%" style="display:block;direction:ltr">'
-      + grid + vol
+    /* 🎯 مناطق الخطة — تُرسم خلف الشموع فلا تحجبها */
+    let plan = '';
+    if (_pl) {
+      const yE = Y(_pl.entry), yS = Y(_pl.stop), yT = Y(_pl.target);
+      const xR = W - R0;
+      /* 🟥 مساحة المخاطرة (دخول ← وقف) · 🟩 مساحة العائد (دخول ← هدف)
+         ارتفاع كل مستطيل يمثّل المسافة السعرية، فيُرى ع/م نسبةَ مساحتين. */
+      plan += '<rect x="' + L0 + '" y="' + Math.min(yE, yS).toFixed(1) + '" width="' + (xR - L0).toFixed(1)
+            + '" height="' + Math.abs(yS - yE).toFixed(1) + '" fill="#ef4444" opacity="0.07"/>';
+      plan += '<rect x="' + L0 + '" y="' + Math.min(yE, yT).toFixed(1) + '" width="' + (xR - L0).toFixed(1)
+            + '" height="' + Math.abs(yT - yE).toFixed(1) + '" fill="#22c55e" opacity="0.07"/>';
+      const lvl = (y, col, txt, val) =>
+        '<line x1="' + L0 + '" y1="' + y.toFixed(1) + '" x2="' + xR + '" y2="' + y.toFixed(1)
+        + '" stroke="' + col + '" stroke-width="1.2" stroke-dasharray="7 4" opacity="0.85"/>'
+        + '<rect x="' + (L0 + 2) + '" y="' + (y - 9).toFixed(1) + '" width="86" height="18" rx="4" fill="' + col + '" opacity="0.92"/>'
+        + '<text x="' + (L0 + 45) + '" y="' + (y + 4).toFixed(1) + '" font-size="11" font-weight="800" fill="#0b1220" text-anchor="middle">'
+        + txt + ' ' + val.toFixed(2) + '</text>';
+      plan += lvl(yT, '#38bdf8', 'هدف', _pl.target);
+      plan += lvl(yE, '#22c55e', 'دخول', _pl.entry);
+      plan += lvl(yS, '#ef4444', 'وقف', _pl.stop);
+    }
+    /* ⚖️ متوسط ما دفعه المشترون — خطّ واحد يفسّر «العرض المعلّق» بصرياً */
+    if (_vw) {
+      const yV = Y(_vw);
+      plan += '<line x1="' + L0 + '" y1="' + yV.toFixed(1) + '" x2="' + (W - R0) + '" y2="' + yV.toFixed(1)
+            + '" stroke="#a78bfa" stroke-width="1.1" stroke-dasharray="2 5" opacity="0.8"/>'
+            + '<text x="' + (W - R0 - 4) + '" y="' + (yV - 4).toFixed(1) + '" font-size="10" font-weight="700" fill="#a78bfa" text-anchor="end">متوسط المشترين ' + _vw.toFixed(2) + '</text>';
+    }
+    /* ✨ ظهور متدرّج: الشبكة والمناطق أولاً ثم الشموع — إحساسٌ بالحياة
+       بلا أي تكلفة أداء (CSS خالص، لا JS ولا إعادة رسم). */
+    return '<svg viewBox="0 0 ' + W + ' ' + HT + '" width="100%" style="display:block;direction:ltr" class="term-svg">'
+      + grid + plan + vol
       + '<path d="' + ma50 + '" fill="none" stroke="#f59e0b" stroke-width="1.3" opacity="0.85"/>'
       + '<path d="' + ma20 + '" fill="none" stroke="#38bdf8" stroke-width="1.3" opacity="0.9"/>'
       + bars
@@ -12041,12 +12140,15 @@ document.addEventListener('keydown', e => {
          وعلّم المستخدم أن الصبر للدخول يضاعف ع/م. وإن كان السعر فوق الدخول ادعُه
          للانتظار لا «عند الدخول الآن» (حارس لا مطاردة). */
       const _en = +p.entry, _st = +p.stop, _tg = +p.target, _px = +r.price;
-      const _rrEntry = (_en > _st) ? (_tg - _en) / (_en - _st) : null;   // لو اشتريت عند الدخول
-      const _rrNow = (_px > _st) ? (_tg - _px) / (_px - _st) : null;      // لو اشتريت الآن
+      /* 💸 ع/م المعروض **صافٍ بعد العمولة** — هو ما يصل المستخدم فعلاً.
+         الرقم الخام يَعِد بما لا يُقبَض، وعلى الأسهم ضيّقة المدى يقلب الحكم. */
+      const _rrEntry = _rrNet(_en, _st, _tg);   // لو اشتريت عند الدخول (صافياً)
+      const _rrNow   = _rrNet(_px, _st, _tg);   // لو اشتريت الآن (صافياً)
       const _gapPct = (_en > 0) ? ((_px - _en) / _en) * 100 : 0;
       let _kmText = km[1], _kmColor = km[0];
       if (_gapPct > 2 && _gapPct <= 8) { _kmText = '⏳ بانتظار تراجع للدخول (السعر +' + _gapPct.toFixed(1) + '% فوقه)'; _kmColor = '#7dd3fc'; }
-      let _rrLine = '⚖️ ع/م ≈ <b style="color:' + (_rrEntry >= 2 ? '#4ade80' : '#fbbf24') + '">' + (_rrEntry != null ? _rrEntry.toFixed(1) : p.rr) + '</b> عند الدخول';
+      let _rrLine = '⚖️ ع/م ≈ <b style="color:' + (_rrEntry >= 2 ? '#4ade80' : '#fbbf24') + '">' + (_rrEntry != null ? _rrEntry.toFixed(1) : p.rr) + '</b> عند الدخول'
+        + '<span style="font-size:9.5px;color:var(--txt-m)" title="محسوب بعد خصم عمولة الشراء والبيع (' + TRADE_COST_PCT + '%) — الرقم الخام يَعِد بما لا يُقبَض"> (صافٍ)</span>';
       if (_rrNow != null && _rrEntry != null && Math.abs(_rrEntry - _rrNow) >= 0.3) {
         _rrLine += ' · <b style="color:#fbbf24">' + _rrNow.toFixed(1) + '</b> لو اشتريت الآن';
         if (_rrNow < _rrEntry) _rrLine += '<div style="color:#7dd3fc;font-size:10.5px;margin-top:3px">💡 صبرك حتى ' + _en + ' يرفع ع/م من ' + _rrNow.toFixed(1) + ' إلى ' + _rrEntry.toFixed(1) + '</div>';
@@ -12054,7 +12156,19 @@ document.addEventListener('keydown', e => {
       html += sec('🎯 خطة القنّاص',
         '<div style="font-size:13px;font-weight:800;color:' + _kmColor + ';margin-bottom:8px">' + _kmText + '</div>'
         + plan
-        + '<div style="text-align:center;font-size:11px;color:var(--txt-m);margin-top:7px">' + _rrLine + ' · 🧩 توافق ' + ((typeof _snConflCount === 'function') ? _snConflCount(r) : '?') + '/5</div>');
+        + '<div style="text-align:center;font-size:11px;color:var(--txt-m);margin-top:7px">' + _rrLine + ' · 🧩 توافق ' + ((typeof _snConflCount === 'function') ? _snConflCount(r) : '?') + '/5</div>'
+        /* 📏 مدى سنوي ضيّق — لا يُحجب بل يُعلَن: الشارت يبدو طبيعياً
+           لأنه ممدود على ارتفاع الإطار، ولا شيء فيه يُنبئ أن السهم
+           لم يتحرّك إلا 5% في سنة كاملة. */
+        + (function () {
+            const nw = (typeof _narrowRange === 'function') ? _narrowRange(r) : null;
+            if (!nw) return '';
+            const tgtPct = (_en > 0) ? ((_tg - _en) / _en) * 100 : 0;
+            return '<div style="margin-top:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:9px;padding:8px 10px;font-size:11px;color:#fcd34d;line-height:1.7">'
+              + '📏 <b>مدى سنوي ضيّق (' + nw + '%)</b> — لم يتحرّك السهم إلا هذا القدر في سنة كاملة. '
+              + 'الهدف هنا <b>' + tgtPct.toFixed(1) + '%</b> والعمولة تلتهم <b>' + TRADE_COST_PCT + '%</b> منه. '
+              + 'الأهداف الصغيرة تحتمل خطأً أقلّ.</div>';
+          })());
     } else {
       html += sec('🎯 القنّاص', '<div style="font-size:12.5px;color:var(--txt-m)">لا خطة دخول جاهزة — لم يكوّن إليوت إعداداً على هذا السهم بعد.</div>');
     }

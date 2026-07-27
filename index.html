@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v310';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v310 — 🕰️ كسر كاش رابط الشيت: كان الرابط ثابتاً فتُخزّنه جوجل والمتصفّح دقائق ويعود السعر القديم بعد كل تحديث (الشيت 48.3 والتطبيق 47.72 لنفس الحقل) · وforceFresh() في الكونسول تمسح كل الكاش وتُعيد التحميل', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v311';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v311 — 🔢 الجذر: كانت أرقام السوق تُخزَّن نصوصاً خاماً ويُعتمد على التحويل الضمني +r.price — يعمل مع النقطة (45.26) ويفشل مع الفاصلة (45,26 ⇒ NaN) فيظنّ السدّ السعر مفقوداً. الآن تُحوَّل بـtoNum عند التحليل مرّة واحدة · مع كسر كاش الشيت وforceFresh()', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -6947,14 +6947,25 @@ function processData(data) {
     const obj = {
       name, sym,
       sector: g(row, 'SECTOR'),
-      price:  g(row, 'PRICE'),
-      pe:     g(row, 'PE'),
-      eps:    g(row, 'EPS'),
-      high:   g(row, 'HIGH'),
-      low:    g(row, 'LOW'),
-      vol:    g(row, 'VOL'),
-      div:    g(row, 'DIV'),
-      mktcap: g(row, 'MKTCAP'),
+      /* ══════════════════════════════════════════════════════════════
+         🔢 تُحوَّل الأرقام هنا مرّة واحدة — لا تُخزَّن نصوصاً خاماً
+         العلّة التي عالجها هذا: كانت هذه الحقول تُخزَّن كما وردت من CSV
+         (`price: "45,26"` · `eps: "2,19"`)، ويعتمد باقي الكود على
+         التحويل الضمني `+r.price`. وهو يعمل مع النقطة العشرية:
+              +"45.26" = 45.26
+         ويفشل مع الفاصلة التي يُصدّرها ملفك:
+              +"45,26" = NaN
+         فيظنّ السدّ أن السعر مفقود ويملؤه من التاريخ، ويصير جراهام
+         يقرأ ربحية نصّية، وحدّ السيولة يقرأ حجماً NaN.
+         `toNum` كان سليماً — لكنه لم يكن يُستدعى عند التحليل أصلاً. */
+      price:  toNum(g(row, 'PRICE')),
+      pe:     toNum(g(row, 'PE')),
+      eps:    toNum(g(row, 'EPS')),
+      high:   toNum(g(row, 'HIGH')),
+      low:    toNum(g(row, 'LOW')),
+      vol:    toNum(g(row, 'VOL')),
+      div:    toNum(g(row, 'DIV')),
+      mktcap: toNum(g(row, 'MKTCAP')),
       chg:    COL.CHG    >= 0 ? toNum(g(row, 'CHG'))    : null,
       chgAbs: COL.CHGABS >= 0 ? toNum(g(row, 'CHGABS')) : null,
       // pre-parsed numerics for stats

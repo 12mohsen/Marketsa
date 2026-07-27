@@ -2221,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v327';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v327 — 🛑 الحارس لا يعمل بلا غذائه: كان غياب مؤشرات المدى الطويل يُسقط حارسَي فخّ القيمة فيُعلَن «منطقة تجميع» على سهم منهار — الآن يُعلن «تقييم بلا سياق» · 📐 وتحفّظ على القيمة العادلة حين تعلو قمة السنة (صافولا: 48.75 مقابل قمة 30.30)', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v332';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v332 — ⛔ الشريحة لا تُنفَّذ تحت نقطة المراجعة: كان سلّم التجميع يُحسب من السعر وحده، فتقع الشريحة الثالثة تحت النقطة التي أعلنّا عندها سقوط الفرضية (زجاج: شريحة 30.72 ومراجعة 32.98) — أي «اشترِ ثلثك الأخير» بعد الانهيار. تُعلَّق الآن ويُعلَن شرطها', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -11695,6 +11695,30 @@ document.addEventListener('keydown', e => {
       const on = TERM_FILT === k, dim = (!n && always);
       return '<button onclick="termSetFilt(\'' + k + '\')" ' + (dim ? 'disabled ' : '') + 'style="flex:0 0 auto;cursor:' + (dim ? 'default' : 'pointer') + ';opacity:' + (dim ? '0.4' : '1') + ';background:' + (on ? 'rgba(' + rgb + ',.35)' : 'rgba(' + rgb + ',.13)') + ';border:' + (on ? '2px' : '1px') + ' solid rgba(' + rgb + ',' + (on ? '.9' : '.4') + ');color:' + (on ? '#fff' : 'rgb(' + rgb + ')') + ';border-radius:16px;padding:5px 11px;font-size:11.5px;font-weight:800;font-family:inherit;white-space:nowrap">' + txt + ' ' + n + (on ? ' ✕' : '') + '</button>';
     };
+    /* ══════════════════════════════════════════════════════════════
+       🏛️ في وضع الاستثمار: شارات مختلفة لسؤال مختلف
+       فلاتر المضاربة (جاهز · عند الدخول · ملتصق) لا تعني شيئاً للمستثمر،
+       وفلاتر الاستثمار لا تعني شيئاً للمضارب. فيتبدّل الشريط مع النظرة
+       بدل أن يُكدّس الاثنين فيربك القارئ.
+       🔎 وهذا يختصر البحث: بدل فتح 269 سهماً واحداً واحداً، ينقر على
+       «💎 منطقة تجميع» فيرى المؤهَّلة وحدها. */
+    if (TERM_MODE === 'invest') {
+      const ic = { accum: 0, trap: 0, high: 0, rich: 0, noeps: 0, noctx: 0 };
+      all.forEach(r => {
+        try {
+          const v = investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null));
+          if (v && ic[v.k] !== undefined) ic[v.k]++;
+        } catch (e) {}
+      });
+      bar.innerHTML =
+        btn('inv:accum', '74,222,128', '💎 منطقة تجميع', ic.accum, true) +
+        btn('inv:trap', '251,191,36', '⚠️ رخيص بلا أرض', ic.trap) +
+        btn('inv:high', '251,191,36', '⚠️ قرب قمة 5 سنوات', ic.high) +
+        btn('inv:rich', '248,113,113', '🔺 غالٍ', ic.rich) +
+        btn('inv:noctx', '148,163,184', '⚠️ بلا سياق', ic.noctx) +
+        btn('inv:noeps', '148,163,184', '🚫 بلا أرباح', ic.noeps);
+      return;
+    }
     bar.innerHTML =
       btn('ready', '250,204,21', '🎯 جاهز', c.ready) +
       btn('now', '34,197,94', '✅ عند الدخول', c.now) +
@@ -11722,7 +11746,17 @@ document.addEventListener('keydown', e => {
       list = list.filter(r => _arNorm(r.sym).includes(q) || _arNorm(r.name).includes(q));
     }
     /* 🎯 فلتر الفرص أو القاعدة المختار */
-    if (TERM_FILT === 'ready') list = list.filter(r => r.elPlan && r.elPlan.rr);
+    /* 🏛️ فلاتر الاستثمار — تُفرز بحكم investView لا بشارة التنفيذ */
+    if (TERM_FILT.indexOf('inv:') === 0) {
+      const want = TERM_FILT.slice(4);
+      list = list.filter(r => {
+        try {
+          const v = investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null));
+          return !!(v && v.k === want);
+        } catch (e) { return false; }
+      });
+    }
+    else if (TERM_FILT === 'ready') list = list.filter(r => r.elPlan && r.elPlan.rr);
     else if (TERM_FILT.indexOf('base:') === 0) {
       const mode = TERM_FILT.slice(5);   // day/wk/mo/wkmo/all/any
       list = list.filter(r => (typeof _snBaseMatch === 'function') ? !!_snBaseMatch(r, mode) : false);
@@ -12112,6 +12146,10 @@ document.addEventListener('keydown', e => {
   window.termSetMode = function (m) {
     TERM_MODE = (m === 'invest') ? 'invest' : 'swing';
     try { localStorage.setItem('term_mode', TERM_MODE); } catch (_) {}
+    /* 🧹 فلترٌ من النظرة الأخرى يُصفّي القائمة بمعيارٍ اختفى شريطه —
+       فتبدو فارغة بلا سبب ظاهر. نمسحه عند التبديل. */
+    if ((TERM_MODE === 'invest') !== (TERM_FILT.indexOf('inv:') === 0)) TERM_FILT = '';
+    try { termRenderList(); } catch (_) {}
     if (TERM_SEL) window.termSelect(TERM_SEL);
   };
   try { const _m0 = localStorage.getItem('term_mode'); if (_m0 === 'invest' || _m0 === 'swing') TERM_MODE = _m0; } catch (_) {}
@@ -12154,7 +12192,20 @@ document.addEventListener('keydown', e => {
 
     /* ═══ 🏛️ الوضع الاستثماري: يحلّ محلّ لوحة المضاربة كاملةً ═══ */
     if (TERM_MODE === 'invest') {
-      const iv = (typeof investView === 'function') ? investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null)) : null;
+      /* ══════════════════════════════════════════════════════════════
+         ⏳ مؤشرات المدى الطويل تُحمَّل عند الحاجة — لا عند المسح وحده
+         العلّة المرصودة: الجدول ممتلئ (270 رمزاً بموقع واتجاه)، لكن
+         `predLoadIndicators()` تعمل مع المسح أو فتح الرادار. ومن يفتح
+         اللوحة مباشرةً على نتائج مشتركة يجدها فارغة — فيُعلن الحكم
+         «بلا سياق» ظنّاً أن البيانات مفقودة وهي موجودة ولم تُطلَب.
+         **فرقٌ بين «لا يوجد» و«لم أسأل بعد» — والثاني ليس عذراً.** */
+      let _lt = (typeof _symInd !== 'undefined') ? _symInd[r.sym] : null;
+      if (!_lt && typeof predLoadIndicators === 'function' && typeof _symIndLoaded !== 'undefined' && !_symIndLoaded) {
+        predLoadIndicators().then(function () {
+          if (TERM_SEL === sym && TERM_MODE === 'invest') window.termSelect(sym);
+        }).catch(function () {});
+      }
+      const iv = (typeof investView === 'function') ? investView(r, _lt) : null;
       if (!iv) {
         html += sec('🏛️ النظرة الاستثمارية', '<div style="font-size:12.5px;color:var(--txt-m)">تعذّر التقييم — بيانات الربحية غير متوفّرة لهذا الرمز.</div>');
       } else {
@@ -12192,10 +12243,17 @@ document.addEventListener('keydown', e => {
           html += sec('🧱 شرائح التجميع — لا دفعة واحدة',
             '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;text-align:center">'
             + iv.tranches.map(function (t) {
-                return '<div style="background:var(--surf-alt);border-radius:9px;padding:9px"><div style="font-size:10.5px;color:var(--txt-m)">' + t.w + '</div><div style="font-size:16px;font-weight:900;color:#4ade80">' + t.p + '</div></div>';
+                return t.below
+                  ? '<div style="background:var(--surf-alt);border-radius:9px;padding:9px;opacity:.55;border:1px dashed rgba(248,113,113,.5)"><div style="font-size:10.5px;color:#fca5a5">' + t.w + '</div><div style="font-size:16px;font-weight:900;color:#fca5a5;text-decoration:line-through">' + t.p + '</div></div>'
+                  : '<div style="background:var(--surf-alt);border-radius:9px;padding:9px"><div style="font-size:10.5px;color:var(--txt-m)">' + t.w + '</div><div style="font-size:16px;font-weight:900;color:#4ade80">' + t.p + '</div></div>';
               }).join('')
             + '</div>'
             + '<div style="font-size:11px;color:var(--txt-m);margin-top:8px;line-height:1.8">التقسيط هو أداة حفظ رأس المال الحقيقية: يخفض متوسط تكلفتك إن هبط، ولا يُفوّتك إن صعد.</div>'
+            + (iv.tranches.some(function (t) { return t.below; })
+                ? '<div style="margin-top:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:9px;padding:8px 10px;font-size:11.5px;color:#fca5a5;line-height:1.8">'
+                  + '⛔ <b>شريحة معلَّقة:</b> سعرها يقع <b>تحت نقطة المراجعة (' + iv.review + ')</b> — أي بعد النقطة التي تسقط عندها الفرضية. '
+                  + 'وشراءٌ بعد سقوط الفرضية <b>ليس تقسيطاً بل توسيطاً في منهار</b>. لا تُنفَّذ إلا إن صمدت النقطة وعاد السهم فوقها.<\/div>'
+                : '')
             + (iv.review ? '<div style="margin-top:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:9px;padding:8px 10px;font-size:11.5px;color:#fca5a5;line-height:1.8">🛑 <b>نقطة المراجعة: ' + iv.review + '</b> — ليست وقفاً يومياً يضربه الضجيج، بل حدٌّ إن كُسر <b>سقطت الفرضية</b> وتُقرأ الشركة من أوّلها.</div>' : ''));
         }
 
@@ -12350,6 +12408,9 @@ document.addEventListener('keydown', e => {
     return { ok: true, blur: blur, guest: guest };
   }
   async function termRender() {
+    /* ⏳ حمّل مؤشرات المدى الطويل مرّة عند فتح اللوحة — فتكون جاهزة
+       قبل أوّل ضغطة على «🏛️ استثمار» لا بعدها. */
+    try { if (typeof predLoadIndicators === 'function' && typeof _symIndLoaded !== 'undefined' && !_symIndLoaded) predLoadIndicators().catch(function () {}); } catch (e) {}
     /* 🔐 تحقّق الصلاحية أولاً */
     const acc = _termAccess();
     if (!acc.ok && acc.hidden) {
@@ -14890,8 +14951,26 @@ function investView(r, ltInd) {
     const pos5 = (ltInd && ltInd.pos_5y != null) ? +ltInd.pos_5y : null;
     const trend = (ltInd && ltInd.trend) ? ltInd.trend : null;
     const base = !!(ltInd && ltInd.base_flag);
-    const divY = toNum(r.div);
-    const hi52 = toNum(r.high), lo52 = toNum(r.low);
+    /* ══════════════════════════════════════════════════════════════
+       🔗 نتائج المسح لا تحمل كل شيء — نُكمل من صفّ السوق
+       `PRED_RESULTS` تُبنى من `predAnalyze` وتحمل sym·name·eps فقط.
+       فكانت `high`/`low`/`div` غير معرَّفة هنا، فسقط تحفّظ القيمة
+       العادلة ونقطة المراجعة معاً، وقيل «لا توزيعات مسجّلة» عن سهم
+       قد يكون موزِّعاً. الحقل الغائب لا يعني القيمة الغائبة —
+       يعني أنّنا نظرنا في المكان الخطأ. */
+    const _mk = (function () {
+      try {
+        if (r.high != null && r.low != null) return r;
+        if (typeof rows !== 'undefined' && Array.isArray(rows)) {
+          const f = rows.find(function (x) { return x && x.sym === r.sym; });
+          if (f) return f;
+        }
+      } catch (e) {}
+      return r;
+    })();
+    const divY = toNum(r.div != null ? r.div : _mk.div);
+    const hi52 = toNum(r.high != null ? r.high : _mk.high);
+    const lo52 = toNum(r.low  != null ? r.low  : _mk.low);
 
     /* لا أرباح ⇒ لا تقييم. والصمت هنا أصدق من رقمٍ مخترع. */
     if (!g) {
@@ -14933,6 +15012,23 @@ function investView(r, ltInd) {
       k = 'trap'; ico = '⚠️'; c = '#fbbf24';
       t = 'رخيص لكنه ما زال يهبط — انتظر قاعدة';
       s = 'هامش الأمان <b>' + g.mos + '%</b>، لكن الاتجاه طويل المدى هابط ولم تتكوّن <b>قاعدة تراكم</b> بعد. والسهم المنهار يصير أرخص كل يوم — <b>الرخص وحده ليس أرضاً</b>. انتظر توقّف صنع القيعان الأدنى.';
+    } else if (trend === 'down' && base && !(pos5 != null && pos5 <= 50)) {
+      /* 🪤 الحارس الأول — مكمّلٌ رصدَه المستخدم على «قو للإتصالات»:
+         كانت القاعدة تُلغي الاتجاه الهابط **أينما تكوّنت**. لكن قاعدةً
+         عند 66% من نطاق خمس سنوات في اتجاه هابط ليست قاع تجميع — هي
+         استراحة في منتصف هبوط، وتحتها ثلثا النطاق فراغ.
+         فالقاعدة تُعتدّ **قاعاً** إن تكوّنت في النصف الأدنى، وإلا فهي
+         محطّة لا أرض. */
+      k = 'trap'; ico = '⚠️'; c = '#fbbf24';
+      t = (pos5 != null) ? 'قاعدة في منتصف هبوط — ليست قاعاً'
+                         : 'قاعدة داخل هبوط بموقعٍ مجهول';
+      s = (pos5 != null
+            ? 'الاتجاه طويل المدى هابط، و<b>القاعدة تكوّنت عند ' + Math.round(pos5) + '%</b> من نطاق خمس سنوات — أي في نصفه الأعلى. '
+              + 'وقاعدةٌ فوق المنتصف داخل هبوط <b>استراحةٌ لا قاع</b>، وتحتها مساحة واسعة. '
+            : 'الاتجاه طويل المدى هابط، وتكوّنت قاعدة — لكن <b>موقعها من نطاق خمس سنوات غير معروف</b>. '
+              + 'وقيمة القاعدة كلّها في موقعها: قاعٌ في الأسفل أرض، وقاعدةٌ في الأعلى استراحة. '
+              + 'ولا نُعلن تجميعاً على موقعٍ مجهول. ')
+        + 'هامش الأمان <b>' + g.mos + '%</b> لا يحميك من نطاقٍ فارغ تحتك. انتظر قاعدةً أدنى أو انقلاب الاتجاه.';
     } else if (pos5 != null && pos5 >= 80) {
       /* 🪤 الحارس الثاني — رخيص بالمكرّر لكن السعر عند قمّته */
       k = 'high'; ico = '⚠️'; c = '#fbbf24';
@@ -14949,14 +15045,29 @@ function investView(r, ltInd) {
     /* 🧱 شرائح التجميع — لا دخول دفعة واحدة.
        التقسيط هو أداة حفظ رأس المال الحقيقية في الاستثمار: يخفض متوسط
        تكلفتك إن هبط، ولا يُفوّتك إن صعد. ولا وقف ضيّق — بل نقطة مراجعة. */
+    /* 🛑 نقطة المراجعة: كسر قاع 52 أسبوعاً يعني أن الفرضية سقطت — لا وقف
+       يومي يضربه الضجيج، بل حدٌّ تُعاد عنده قراءة السهم من أوّله. */
+    const review = (lo52 > 0) ? +(lo52 * 0.97).toFixed(2) : null;
+
     const tr = (k === 'accum') ? [
       { n: 'الأولى', p: +price.toFixed(2), w: '⅓ الآن' },
       { n: 'الثانية', p: +(price * 0.93).toFixed(2), w: '⅓ عند −7%' },
       { n: 'الثالثة', p: +(price * 0.85).toFixed(2), w: '⅓ عند −15%' },
     ] : null;
-    /* 🛑 نقطة المراجعة: كسر قاع 52 أسبوعاً يعني أن الفرضية سقطت — لا وقف
-       يومي يضربه الضجيج، بل حدٌّ تُعاد عنده قراءة السهم من أوّله. */
-    const review = (lo52 > 0) ? +(lo52 * 0.97).toFixed(2) : null;
+
+    /* ══════════════════════════════════════════════════════════════
+       ⛔ الشريحة لا تُنفَّذ تحت نقطة المراجعة — تناقضٌ رصده المستخدم
+       على «زجاج»: السعر 36.14 والقاع 34.00، فالشريحة الثالثة (−15%)
+       تقع عند 30.72 بينما نقطة المراجعة 32.98.
+       أي أنّ السلّم كان يقول «اشترِ ثلثك الأخير» **بعد** النقطة التي
+       أعلنّا عندها سقوط الفرضية. وهذا بعينه هو التوسيط في منهار.
+       ولا نرفع الشريحة إلى فوق النقطة — فذلك اختلاق مستوى. بل نُعلّقها
+       ونقول شرطها صراحةً: صمود نقطة المراجعة. */
+    if (tr && review != null) {
+      tr.forEach(function (x) {
+        if (x.p <= review) { x.below = true; x.w = '⅓ معلَّقة'; }
+      });
+    }
 
     return { ok: true, k, ico, c, t, s, g, pos5, trend, base, divY, tranches: tr, review, price, hi52, lo52, fairFar: _fairFarAbove };
   } catch (e) { return null; }

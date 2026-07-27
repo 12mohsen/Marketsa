@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v313';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v313 — 🕰️ كل استجابة من سهمك تُختم بلحظة جلبها وتُعرض تحت السعر الرسمي: يشرح لماذا 45.10 تختلف عن 45.14 — عيّنتان في لحظتين لا تناقض · وإن تجاوز عمرها 15 دقيقة يُعلَن بلون تحذيري · مع ميزانية 80 طلباً وسهمك يملأ الفجوة وحدها', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v314';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v314 — 📡 بثّ أسعار سهمك: الأدمن يجلب مرّة والجميع يقرأ من القاعدة (إكمالٌ لنمط radar_results و dividends_shared). كان كل متصفّح يطلب بنفسه والمفتاح مشترك ⇒ ثلاثة مستخدمين يحرقون الحصّة. الآن ~40 طلباً/يوم مهما كثر المستخدمون', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -7325,8 +7325,83 @@ async function sahmkLoadMarket() {
 /* ═══ الوضع الهجين: تغطية أسعار الشيت بأسعار sahmk الحية ═══
    الأساسيات (P/E, EPS, القيمة السوقية, القطاع, التوزيعات, أعلى/أدنى 52 أسبوع)
    تبقى من الشيت؛ نُحدّث فقط: السعر، نسبة التغير، مقدار التغير، الحجم. */
+/* ══════════════════════════════════════════════════════════════════════
+   💰 بثّ أسعار سهمك — جلبة واحدة تخدم كل المستخدمين
+   إكمالٌ لنمطك القائم: عندك radar_results و analysis_daily و
+   dividends_shared تعمل بهذا الأسلوب — وسهمك وحده كان خارجه، فكل
+   متصفّح يطلب بنفسه. والمفتاح مشترك عبر الـWorker، فالحصّة تُقسَّم على
+   المستخدمين: واحد ≈40 طلباً، وثلاثة ≈120 ⇒ تنفد المئة في يوم.
+   الآن: الأدمن يجلب ويرفع · والجميع يقرأ من القاعدة (مجاناً وبلا حدّ).
+   ══════════════════════════════════════════════════════════════════════ */
+const SAHMK_SHARED_TTL = 15 * 60 * 1000;      // طزاجة البثّ = نفس تأخير المصدر
+
+async function sahmkUploadShared(payload) {
+  if (typeof sb === 'undefined' || !sb) return;
+  if (!(typeof isAdmin === 'function' && isAdmin())) return;
+  try {
+    await sb.from('sahmk_shared').upsert({
+      id: 1, data: payload,
+      fetched_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    console.info('[sahmk] ✓ رُفعت الأسعار للجميع (' + ((payload.quotes || []).length) + ' سهم)');
+  } catch (e) { console.warn('[sahmk] رفع الأسعار تعذّر:', e && e.message); }
+}
+
+/* يُرجع البثّ إن كان طازجاً، أو null إن غاب أو قدُم */
+async function sahmkLoadShared() {
+  if (typeof sb === 'undefined' || !sb) return null;
+  try {
+    const { data, error } = await sb.from('sahmk_shared').select('data, fetched_at').eq('id', 1).maybeSingle();
+    if (error || !data || !data.data) return null;
+    const age = Date.now() - new Date(data.fetched_at).getTime();
+    if (!(age >= 0) || age > SAHMK_SHARED_TTL) {
+      console.info('[sahmk] ⏳ البثّ المشترك قديم (' + Math.round(age / 60000) + ' دقيقة)');
+      return null;
+    }
+    const d = data.data;
+    try { d._at = new Date(data.fetched_at).getTime(); } catch (_) {}
+    console.info('[sahmk] ✓ أسعار مشتركة موحّدة: ' + ((d.quotes || []).length)
+      + ' سهم · عمرها ' + Math.round(age / 60000) + ' دقيقة · بلا استهلاك حصّة');
+    return d;
+  } catch (e) { return null; }
+}
+
+/* يطبّق حزمة الأسعار على rows — يُستعمل مع البثّ ومع الجلب المباشر */
+function _sahmkApplyQuotes(quotes) {
+  let patched = 0;
+  (quotes || []).forEach(function (q) {
+    if (!q || !q.symbol) return;
+    const row = rows.find(function (x) { return x.sym === q.symbol; });
+    if (!row) return;
+    const px = toNum(q.price);
+    if (px > 0) { row.price = px; row._derived = false; patched++; }
+    if (q.change_percent != null) row.chg = toNum(q.change_percent);
+    if (q.change != null) row.chgAbs = toNum(q.change);
+    if (q.volume != null) { const v = toNum(q.volume); if (v > 0) row.vol = v; }
+  });
+  return patched;
+}
+
 async function sahmkOverlayLivePrices() {
   if (!Array.isArray(rows) || !rows.length) return;
+  /* 👥 غير الأدمن: اقرأ البثّ ولا تستهلك حصّة. وإن غاب أو قدُم، لا تجلب
+     بنفسك — فمئة مستخدم تجلب معاً تحرق المئة في دقائق. الانتظار للبثّ
+     التالي أسلم من إسقاط الخدمة على الجميع. */
+  const _isAdm = (typeof isAdmin === 'function' && isAdmin());
+  if (!_isAdm) {
+    const shared = await sahmkLoadShared();
+    if (shared) {
+      const n = _sahmkApplyQuotes(shared.quotes);
+      if (shared.tasi && typeof tasiObj !== 'undefined' && tasiObj) {
+        if (shared.tasi.chg != null) tasiObj.chg = shared.tasi.chg;
+        if (shared.tasi.chgAbs != null) tasiObj.chgAbs = shared.tasi.chgAbs;
+      }
+      console.info('[sahmk] 👥 طُبّق البثّ على ' + n + ' سهم');
+      try { if (typeof renderAll === 'function') renderAll(); } catch (_) {}
+    }
+    return;
+  }
   try {
     // المؤشر من ملخص السوق
     try {
@@ -7356,21 +7431,25 @@ async function sahmkOverlayLivePrices() {
       + ' رمز (' + Math.ceil(symbols.length / SAHMK_BATCH) + ' طلب) بدل '
       + Math.ceil(rows.length / SAHMK_BATCH) + ' طلبات');
     let patched = 0;
+    const _allQuotes = [];          // 📤 يُجمع للبثّ بعد الجلب
     for (let i = 0; i < symbols.length; i += SAHMK_BATCH) {
       const chunk = symbols.slice(i, i + SAHMK_BATCH);
       if (!chunk.length) continue;
       let r;
       try { r = await sahmkApi('quotes', { symbols: chunk.join(',') }); }
       catch (e) { continue; }
-      (r.quotes || []).forEach(q => {
-        const row = rows.find(x => x.sym === q.symbol);
-        if (!row) return;
-        if (q.price != null)          row.price  = String(q.price);
-        if (q.change_percent != null) row.chg    = q.change_percent;
-        if (q.change != null)         row.chgAbs = q.change;
-        if (q.volume != null)         row.vol    = String(q.volume);
-        patched++;
-      });
+      /* ⚠️ كان هنا `row.price = String(q.price)` — تخزينٌ نصّي يُعيد نفس
+         العلّة التي عالجناها في processData. الآن عبر _sahmkApplyQuotes
+         الذي يمرّ بـtoNum ويُسقط وسم «مشتقّ» لأن السعر صار حيّاً. */
+      (r.quotes || []).forEach(function (q) { if (q && q.symbol) _allQuotes.push(q); });
+      patched += _sahmkApplyQuotes(r.quotes);
+    }
+    /* 📡 الأدمن يبثّ ما جلبه — فلا يطلبه أحدٌ غيره */
+    if (_allQuotes.length) {
+      const _tasi = (typeof tasiObj !== 'undefined' && tasiObj)
+        ? { chg: tasiObj.chg, chgAbs: tasiObj.chgAbs } : null;
+      sahmkUploadShared({ quotes: _allQuotes, tasi: _tasi, n: _allQuotes.length })
+        .catch(function () {});
     }
     if (patched) {
       if (typeof buildSectors === 'function')  buildSectors();

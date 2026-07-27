@@ -2221,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v319';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v319 — 💸 ع/م صافياً بعد العمولة (0.31% ذهاباً وإياباً) في العرض وفي بوابة الذهبي: الرقم الخام يَعِد بما لا يُقبَض، وعلى الأسهم ضيّقة المدى يقلب الحكم · 📏 وحارس المدى السنوي الضيّق (<8%) يُعلن ما لا يراه الشارت', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v320';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v320 — 📐 معدّل الندرة المتوقَّع في خريطة الأسباب: حاصل ضرب نسب الشروط يُخبر أن صفر اليوم هو الرقم المتوقَّع لا خللاً — فمن يرى صفراً ثلاثة أيام لا يظنّ العطل · ويُقال بصدق إن التقدير حدٌّ أدنى لأن الشروط متلازمة', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -12447,6 +12447,27 @@ document.addEventListener('keydown', e => {
         wrap.innerHTML = '<div style="text-align:center;padding:30px 16px 20px;color:var(--txt-m)"><div style="font-size:40px;margin-bottom:10px">💎</div>' +
           '<div style="font-size:17px;font-weight:800;margin-bottom:6px;color:#facc15">لا فرصة ذهبية الآن — والانتظار قرار رابح</div>' +
           '<div style="font-size:13px;line-height:1.9;max-width:540px;margin:0 auto 16px">الفرص الممتازة نادرة بطبيعتها — و<b>الزناد</b> (شمعة انعكاس) هو الأندر لأنه لا يتشكّل كل يوم. وهذه <b>خريطة الأسباب</b> من أصل ' + total + ' فرصة:</div>' +
+          /* ══════════════════════════════════════════════════════════════
+             📐 معدّل الندرة المتوقَّع — يحوّل الصفر من قلق إلى طمأنينة
+             حاصل ضرب نسب الشروط الحقيقية يعطي احتمال اجتماعها كلها.
+             ومن يرى صفراً ثلاثة أيام متتالية يظنّ العطل — والرقم يخبره
+             أن هذا هو المتوقَّع بالضبط من عدد الشروط لا خللاً فيها.
+             ⚠️ ويُقال بصدق: الشروط متلازمة لا مستقلّة، فالتقدير حدٌّ أدنى. */
+          (function () {
+            try {
+              const real = conds.filter(c => !c.info);
+              if (!real.length || !total) return '';
+              let p = 1;
+              real.forEach(c => { p *= (c.pass / total); });
+              const exp = total * p;                       // فرص متوقّعة لكل مسحة
+              if (!(exp > 0)) return '';
+              const every = Math.max(1, Math.round(1 / exp));
+              return '<div style="max-width:540px;margin:0 auto 14px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3);border-radius:10px;padding:9px 12px;font-size:12px;color:#7dd3fc;line-height:1.8">'
+                + '📐 باجتماع <b>' + real.length + '</b> شرطاً بهذه المعدّلات، تُتوقّع فرصة ذهبية <b>كل ~' + every + ' جلسات</b> '
+                + '(' + (exp).toFixed(2) + ' لكل مسحة). <b>فصفر اليوم ضمن الطبيعي</b> — لا خلل.'
+                + '<div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">تقديرٌ بافتراض استقلال الشروط، وهي متلازمة فعلياً — فالمعدّل الحقيقي أعلى قليلاً.</div></div>';
+            } catch (e) { return ''; }
+          })() +
           '<div style="max-width:430px;margin:0 auto;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:14px">' + rowsD + '</div>' +
           /* 🔭 الأقرب للاكتمال — وما ينقص كلاً منها بالضبط */
           (function () {

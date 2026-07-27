@@ -2221,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v323';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v323 — 🔒 لا زرّ إلى شاشة مظلّلة أو مقفلة: زرّ اللوحة يختفي أيضاً عند التضبيب أو قفل الاشتراك لا عند الإخفاء وحده — القيمة تُبنى بالنُدرة لا بإغراءٍ مكسور', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v327';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v327 — 🛑 الحارس لا يعمل بلا غذائه: كان غياب مؤشرات المدى الطويل يُسقط حارسَي فخّ القيمة فيُعلَن «منطقة تجميع» على سهم منهار — الآن يُعلن «تقييم بلا سياق» · 📐 وتحفّظ على القيمة العادلة حين تعلو قمة السنة (صافولا: 48.75 مقابل قمة 30.30)', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -11670,7 +11670,8 @@ document.addEventListener('keydown', e => {
      لا تُعيد حساب شيء: تقرأ نتائج المسح (PRED_RESULTS) وتعرضها مجمّعةً.
      الهدف: إنهاء التنقّل بين ستة أقسام. تختار سهماً فترى حكمه كاملاً.
      ══════════════════════════════════════════════════════════════════ */
-  let TERM_SEARCH = '', TERM_SEL = '', TERM_FILT = '';   // TERM_FILT: '' | ready | now | wait | gone | tight | base:day/wk/mo/wkmo/all/any
+  let TERM_SEARCH = '', TERM_SEL = '', TERM_FILT = '';
+  let TERM_MODE = 'swing';   // 🏛️ 'swing' مضاربة · 'invest' استثمار   // TERM_FILT: '' | ready | now | wait | gone | tight | base:day/wk/mo/wkmo/all/any
   window.termFilter = function (v) { TERM_SEARCH = v || ''; termRenderList(); };
   window.termSetFilt = function (k) { TERM_FILT = (TERM_FILT === k) ? '' : k; termRenderList(); };
   /* 🎯 شريط فلاتر: الفرص + القاعدة على الأطر — يُحسب على كل النتائج ويفلتر الجانبية */
@@ -12106,6 +12107,15 @@ document.addEventListener('keydown', e => {
     } catch (e) {}
   };
 
+  /* 🔀 تبديل النظرة (مضاربة ⇄ استثمار) — يُعيد رسم التفاصيل ويحفظ الاختيار.
+     ⚠️ كان الزرّ يُنادي هذه الدالة قبل تعريفها، فيرمي ReferenceError. */
+  window.termSetMode = function (m) {
+    TERM_MODE = (m === 'invest') ? 'invest' : 'swing';
+    try { localStorage.setItem('term_mode', TERM_MODE); } catch (_) {}
+    if (TERM_SEL) window.termSelect(TERM_SEL);
+  };
+  try { const _m0 = localStorage.getItem('term_mode'); if (_m0 === 'invest' || _m0 === 'swing') TERM_MODE = _m0; } catch (_) {}
+
   window.termSelect = function (sym) {
     TERM_SEL = sym;
     termRenderList();
@@ -12125,6 +12135,79 @@ document.addEventListener('keydown', e => {
       + '<div style="font-size:11px;color:' + (r._derived ? '#fbbf24' : 'var(--txt-m)') + '" title="'
       + (r._derived ? 'مصدر السوق الحيّ لا يغطّي هذا الرمز — الرقم إغلاق آخر جلسة من تاريخك المخزَّن' : 'من مصدر السوق الحيّ (تأخير ~15 دقيقة)') + '">'
       + (r._derived ? '🕰️ إغلاق آخر جلسة' : 'السعر') + '</div></div></div>';
+
+    /* ══════════════════════════════════════════════════════════════
+       ⚡/🏛️ مفتاح النظرة — سؤالان مختلفان لا وجهان لسؤال واحد
+       المضارب يسأل «متى أدخل وأين وقفي؟» والمستثمر يسأل «هل هو رخيص
+       بما يكفي ليحميني خطئي؟». وكان التطبيق يجيب الأول ويصمت عن الثاني،
+       فيبدو كأنه يقول «لا تشترِ» وهو لا يعني ذلك للمستثمر أصلاً. */
+    const _mBtn = (m, ico, lbl, tip) =>
+      '<button onclick="termSetMode(\'' + m + '\')" title="' + tip + '" style="flex:1;cursor:pointer;font-family:inherit;'
+      + 'border:1px solid ' + (TERM_MODE === m ? 'rgba(56,189,248,.6)' : 'var(--bdr)') + ';'
+      + 'background:' + (TERM_MODE === m ? 'rgba(56,189,248,.16)' : 'transparent') + ';'
+      + 'color:' + (TERM_MODE === m ? '#7dd3fc' : 'var(--txt-m)') + ';border-radius:9px;padding:7px 10px;'
+      + 'font-size:12px;font-weight:800">' + ico + ' ' + lbl + '</button>';
+    html += '<div style="display:flex;gap:6px;margin-bottom:12px">'
+      + _mBtn('swing', '⚡', 'مضاربة', 'خطة دخول ووقف وهدف — أفق أيام إلى أسابيع')
+      + _mBtn('invest', '🏛️', 'استثمار', 'تقييم وهامش أمان وشرائح تجميع — أفق أشهر إلى سنوات')
+      + '</div>';
+
+    /* ═══ 🏛️ الوضع الاستثماري: يحلّ محلّ لوحة المضاربة كاملةً ═══ */
+    if (TERM_MODE === 'invest') {
+      const iv = (typeof investView === 'function') ? investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null)) : null;
+      if (!iv) {
+        html += sec('🏛️ النظرة الاستثمارية', '<div style="font-size:12.5px;color:var(--txt-m)">تعذّر التقييم — بيانات الربحية غير متوفّرة لهذا الرمز.</div>');
+      } else {
+        html += '<div style="background:rgba(' + (iv.k === 'accum' ? '74,222,128' : iv.k === 'rich' ? '248,113,113' : '251,191,36')
+          + ',.1);border:1px solid rgba(' + (iv.k === 'accum' ? '74,222,128' : iv.k === 'rich' ? '248,113,113' : '251,191,36')
+          + ',.45);border-radius:12px;padding:13px;margin-bottom:11px">'
+          + '<div style="font-size:15px;font-weight:900;color:' + iv.c + '">' + iv.ico + ' ' + iv.t + '</div>'
+          + '<div style="font-size:12.5px;margin-top:6px;line-height:1.85">' + iv.s + '</div></div>';
+
+        if (iv.g) {
+          const mosClr = iv.g.mos >= 30 ? '#4ade80' : iv.g.mos >= 0 ? '#38bdf8' : '#f87171';
+          html += sec('💰 التقييم — هامش الأمان',
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;text-align:center">'
+            + '<div style="background:var(--surf-alt);border-radius:9px;padding:9px"><div style="font-size:10.5px;color:var(--txt-m)">السعر</div><div style="font-size:16px;font-weight:900">' + iv.price.toFixed(2) + '</div></div>'
+            + '<div style="background:var(--surf-alt);border-radius:9px;padding:9px"><div style="font-size:10.5px;color:var(--txt-m)">القيمة العادلة</div><div style="font-size:16px;font-weight:900;color:#38bdf8">' + iv.g.fair + '</div></div>'
+            + '<div style="background:var(--surf-alt);border-radius:9px;padding:9px"><div style="font-size:10.5px;color:var(--txt-m)">هامش الأمان</div><div style="font-size:16px;font-weight:900;color:' + mosClr + '">' + iv.g.mos + '%</div></div></div>'
+            + '<div style="font-size:10.5px;color:var(--txt-m);margin-top:7px;line-height:1.7">القيمة العادلة = ربحية السهم × 15 · والشراء المتحفّظ دون <b>' + iv.g.conservative + '</b>. '
+            + '<b>هامش الأمان هو ما يحميك حين تُخطئ</b> — لا ما يربحك حين تُصيب.</div>'
+            /* 📐 مضاعف جراهام افتراضٌ عامّ لا وعدٌ من السوق */
+            + (iv.fairFar ? '<div style="margin-top:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:9px;padding:8px 10px;font-size:11px;color:#fcd34d;line-height:1.8">'
+                + '📐 <b>تحفّظ على القيمة العادلة:</b> ' + iv.g.fair + ' تعلو قمة السنة (' + iv.hi52 + ') بـ<b>' + iv.fairFar + '%</b> — '
+                + 'أي أن السهم <b>لم يبلغها قطّ خلال سنة</b>. مضاعف جراهام (×15) افتراضٌ عامّ، والسوق قد يكون له سببٌ في تسعير هذا السهم أدنى منه باستمرار. '
+                + 'فاقرأ هامش الأمان بتحفّظ.</div>' : ''));
+        }
+
+        html += sec('📍 الموقع طويل المدى',
+          '<div style="font-size:12.5px;line-height:2">'
+          + (iv.pos5 != null ? '📍 الموقع ضمن نطاق 5 سنوات: <b style="color:' + (iv.pos5 >= 80 ? '#f87171' : iv.pos5 <= 30 ? '#4ade80' : 'var(--txt)') + '">' + Math.round(iv.pos5) + '%</b><br>' : '')
+          + (iv.trend ? '📊 الاتجاه العام: <b>' + (iv.trend === 'up' ? '📈 صاعد' : iv.trend === 'down' ? '📉 هابط' : '➡️ عرضي') + '</b><br>' : '')
+          + (iv.base ? '🧱 <b style="color:#fbbf24">قاعدة تراكم متكوّنة</b><br>' : '')
+          + (iv.divY > 0 ? '💵 عائد التوزيع: <b style="color:#4ade80">' + iv.divY.toFixed(2) + '%</b> — يدفع لك أثناء الانتظار' : '💵 لا توزيعات مسجّلة — لا عائد أثناء الانتظار')
+          + '</div>');
+
+        if (iv.tranches) {
+          html += sec('🧱 شرائح التجميع — لا دفعة واحدة',
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;text-align:center">'
+            + iv.tranches.map(function (t) {
+                return '<div style="background:var(--surf-alt);border-radius:9px;padding:9px"><div style="font-size:10.5px;color:var(--txt-m)">' + t.w + '</div><div style="font-size:16px;font-weight:900;color:#4ade80">' + t.p + '</div></div>';
+              }).join('')
+            + '</div>'
+            + '<div style="font-size:11px;color:var(--txt-m);margin-top:8px;line-height:1.8">التقسيط هو أداة حفظ رأس المال الحقيقية: يخفض متوسط تكلفتك إن هبط، ولا يُفوّتك إن صعد.</div>'
+            + (iv.review ? '<div style="margin-top:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:9px;padding:8px 10px;font-size:11.5px;color:#fca5a5;line-height:1.8">🛑 <b>نقطة المراجعة: ' + iv.review + '</b> — ليست وقفاً يومياً يضربه الضجيج، بل حدٌّ إن كُسر <b>سقطت الفرضية</b> وتُقرأ الشركة من أوّلها.</div>' : ''));
+        }
+
+        html += '<div style="font-size:10.5px;color:var(--txt-m);line-height:1.8;padding:9px 11px;background:var(--surf-alt);border-radius:9px;border:1px dashed var(--bdr)">'
+          + '⚖️ <b>حدود هذه النظرة:</b> تقوم على التقييم والعائد والموقع فقط. '
+          + '<b>لا نملك</b> نموّ الأرباح ولا الدَّين ولا التدفّق النقدي ولا مقارنة القطاع — وهي أركان لا يكتمل تحليل شركة بدونها. '
+          + 'فاعتبرها <b>فرزاً أوّلياً</b> لا حكماً نهائياً، وتعليمية لا نصيحة استثمارية.</div>';
+      }
+      const box2 = document.getElementById('termDetail');
+      if (box2) box2.innerHTML = html;
+      return;
+    }
 
     /* ═══ 🧭 النتيجة الختامية — أوّل ما يراه المستخدم: كلمة واحدة + سبب ═══ */
     (function () {
@@ -13352,11 +13435,22 @@ function techEvalCompute(r) {
   }
 
   let volRating = '';
-  if (vol !== null) {
-    if (vol > 10000000) volRating = 'عالي جداً';
-    else if (vol > 5000000) volRating = 'عالي';
-    else if (vol > 2000000) volRating = 'متوسط';
+  /* ══════════════════════════════════════════════════════════════
+     💧 حجم التداول يُقاس بـ**قيمته بالريال** لا بعدد الأسهم
+     العلّة: كانت العتبات على عدد الأسهم، فانقلب الوصف على الأسهم الغالية:
+        صافولا 1.9M سهم × 26.50 = **50.4M ريال**  ⇒ كان يُسمّى «منخفض»
+        سهم بـ2 ريال × 6M سهم    = **12.0M ريال**  ⇒ وكان يُسمّى «عالي»
+     أي أن السهم الأنشط سيولةً يُوصَف بالأقلّ. وعدد الأسهم بلا سعرها
+     لا يقول شيئاً عن السيولة — والقيمة هي ما يُنفَّذ به فعلاً. */
+  const _volSAR = (vol !== null && vol !== undefined && +price > 0) ? vol * (+price) : null;
+  if (_volSAR !== null) {
+    if (_volSAR >= 50e6) volRating = 'عالي جداً';
+    else if (_volSAR >= 20e6) volRating = 'عالي';
+    else if (_volSAR >= 5e6)  volRating = 'متوسط';
     else volRating = 'منخفض';
+  } else if (vol !== null && vol !== undefined) {
+    /* بلا سعر لا يمكن التقييم بالقيمة — نرجع لعدد الأسهم ونظلّ صادقين */
+    volRating = vol > 10000000 ? 'عالي جداً' : vol > 5000000 ? 'عالي' : vol > 2000000 ? 'متوسط' : 'منخفض';
   }
 
   let peRating = '';
@@ -14772,6 +14866,102 @@ function grahamValue(eps, price) {
   else                   { verdict = 'غالٍ'; color = '#f87171'; }
   return { conservative: conservative, fair: fair, mos: mos, verdict: verdict, color: color };
 }
+/* ══════════════════════════════════════════════════════════════════════
+   🏛️ النظرة الاستثمارية — حفظ رأس المال أولاً
+   سؤال المضارب: «متى أدخل وأين وقفي؟» · وسؤال المستثمر: «هل هو رخيص
+   بما يكفي ليحميني خطئي؟». سؤالان مختلفان وإجابتان صحيحتان معاً —
+   وصافولا خير مثال: القنّاص يقول «تجنّب» ومكرّرها 8.16.
+
+   والمقياس هنا **هامش الأمان** — وهو لم يُختَر لأنه متاح، بل لأن جراهام
+   اخترعه لهذا الغرض بعينه: لا تشترِ بقيمته بل بأقلّ منها بكثير، فيحميك
+   الفارق حين تخطئ. وهذا تعريف حفظ رأس المال لا تفسيره.
+
+   ⚠️ لكن الرخص وحده **فخّ**: السهم المنهار يصير أرخص كل يوم وهو يهلك.
+   فحارسان يمنعان فخّ القيمة:
+     ① رخيص + اتجاه هابط + بلا قاعدة تراكم ⇒ لا تجميع، انتظر استقراراً
+     ② رخيص بالمكرّر + قرب قمة 5 سنوات      ⇒ الخصم ليس في السعر
+   ══════════════════════════════════════════════════════════════════════ */
+function investView(r, ltInd) {
+  try {
+    if (!r) return null;
+    const price = toNum(r.price);
+    if (!(price > 0)) return null;
+    const g = grahamValue(r.eps, price);
+    const pos5 = (ltInd && ltInd.pos_5y != null) ? +ltInd.pos_5y : null;
+    const trend = (ltInd && ltInd.trend) ? ltInd.trend : null;
+    const base = !!(ltInd && ltInd.base_flag);
+    const divY = toNum(r.div);
+    const hi52 = toNum(r.high), lo52 = toNum(r.low);
+
+    /* لا أرباح ⇒ لا تقييم. والصمت هنا أصدق من رقمٍ مخترع. */
+    if (!g) {
+      return { ok: false, k: 'noeps', ico: '🚫', c: '#94a3b8',
+        t: 'لا يمكن تقييمه استثمارياً',
+        s: 'لا ربحية سهم موجبة (EPS) — ومقياس القيمة يقوم عليها. الشركات الخاسرة تُقيَّم بأدوات أخرى لا نملكها هنا.',
+        g: null, pos5: pos5, trend: trend, base: base, divY: divY };
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       🛑 الحارس لا يعمل بلا غذائه — وصمته كان يُقرأ موافقةً
+       الحارسان أدناه يعتمدان على `symbol_indicators` (الاتجاه · الموقع ·
+       القاعدة). فإن غابت، يمرّان بلا إطلاق ويسقط الحكم إلى «منطقة تجميع»
+       على سهم قد يكون منهاراً. رُصد على صافولا: هبطت 10.29% في 30 يوماً
+       وإليوت يقول مسارها هابط، ومع ذلك أُعلنت منطقة تجميع — لأن المؤشرات
+       الطويلة غائبة. **غياب الدليل ليس دليل غياب الخطر.** */
+    const _ltMissing = (pos5 == null && !trend);
+    if (_ltMissing && g.verdict !== 'غالٍ') {
+      return { ok: false, k: 'noctx', ico: '⚠️', c: '#fbbf24',
+        t: 'تقييمٌ بلا سياق — لا نُعلن منطقة تجميع',
+        s: 'هامش الأمان <b>' + g.mos + '%</b> مقابل القيمة العادلة <b>' + g.fair + '</b>، لكن <b>مؤشرات المدى الطويل غير متوفّرة</b> لهذا الرمز (الاتجاه · الموقع من 5 سنوات · قاعدة التراكم). '
+           + 'والرخص وحده لا يكفي: السهم المنهار يصير أرخص كل يوم. <b>فلا نُعلن تجميعاً على بياناتٍ ناقصة</b> — شغّل «مؤشرات المدى الطويل» ثم عُد.',
+        g: g, pos5: pos5, trend: trend, base: base, divY: divY, price: price, hi52: hi52, lo52: lo52 };
+    }
+
+    /* 📐 مراجعة واقعية للقيمة العادلة: مضاعف جراهام (×15) افتراضٌ عامّ،
+       وقد يعطي قيمةً لم يبلغها السهم قطّ. صافولا: عادلة 48.75 وقمة السنة
+       30.30 — أي هدفٌ يعلو أعلى ما بلغه بـ61%. نُعلن ذلك ولا نتركه يُوهم. */
+    const _fairFarAbove = (hi52 > 0 && g.fair > hi52 * 1.25)
+      ? +(((g.fair - hi52) / hi52) * 100).toFixed(0) : null;
+
+    let k, ico, c, t, s;
+    if (g.verdict === 'غالٍ') {
+      k = 'rich'; ico = '🔺'; c = '#f87171';
+      t = 'غالٍ مقابل أرباحه — لا تجميع الآن';
+      s = 'السعر <b>' + price.toFixed(2) + '</b> فوق القيمة العادلة <b>' + g.fair + '</b>. الشراء هنا يعني الدفع مقدّماً مقابل نموّ لم يقع بعد — وهو أوّل ما يُخسِر رأس المال.';
+    } else if (trend === 'down' && !base) {
+      /* 🪤 الحارس الأول — فخّ القيمة */
+      k = 'trap'; ico = '⚠️'; c = '#fbbf24';
+      t = 'رخيص لكنه ما زال يهبط — انتظر قاعدة';
+      s = 'هامش الأمان <b>' + g.mos + '%</b>، لكن الاتجاه طويل المدى هابط ولم تتكوّن <b>قاعدة تراكم</b> بعد. والسهم المنهار يصير أرخص كل يوم — <b>الرخص وحده ليس أرضاً</b>. انتظر توقّف صنع القيعان الأدنى.';
+    } else if (pos5 != null && pos5 >= 80) {
+      /* 🪤 الحارس الثاني — رخيص بالمكرّر لكن السعر عند قمّته */
+      k = 'high'; ico = '⚠️'; c = '#fbbf24';
+      t = 'رخيص بالمكرّر — لكنه قرب قمة 5 سنوات';
+      s = 'الموقع <b>' + Math.round(pos5) + '%</b> من نطاق خمس سنوات. المكرّر منخفض، لكن <b>الخصم ليس في السعر</b> — وهو الذي يحميك. انتظر تصحيحاً يجمع الأمرين.';
+    } else {
+      k = 'accum'; ico = '💎'; c = '#4ade80';
+      t = 'منطقة تجميع — بهامش أمان';
+      s = 'السعر <b>' + price.toFixed(2) + '</b> دون القيمة العادلة <b>' + g.fair + '</b> بهامش <b>' + g.mos + '%</b>'
+        + (base ? ' · و<b>قاعدة تراكم</b> متكوّنة' : '')
+        + (divY > 0 ? ' · وعائد توزيع <b>' + divY.toFixed(2) + '%</b> يدفع لك أثناء الانتظار' : '') + '.';
+    }
+
+    /* 🧱 شرائح التجميع — لا دخول دفعة واحدة.
+       التقسيط هو أداة حفظ رأس المال الحقيقية في الاستثمار: يخفض متوسط
+       تكلفتك إن هبط، ولا يُفوّتك إن صعد. ولا وقف ضيّق — بل نقطة مراجعة. */
+    const tr = (k === 'accum') ? [
+      { n: 'الأولى', p: +price.toFixed(2), w: '⅓ الآن' },
+      { n: 'الثانية', p: +(price * 0.93).toFixed(2), w: '⅓ عند −7%' },
+      { n: 'الثالثة', p: +(price * 0.85).toFixed(2), w: '⅓ عند −15%' },
+    ] : null;
+    /* 🛑 نقطة المراجعة: كسر قاع 52 أسبوعاً يعني أن الفرضية سقطت — لا وقف
+       يومي يضربه الضجيج، بل حدٌّ تُعاد عنده قراءة السهم من أوّله. */
+    const review = (lo52 > 0) ? +(lo52 * 0.97).toFixed(2) : null;
+
+    return { ok: true, k, ico, c, t, s, g, pos5, trend, base, divY, tranches: tr, review, price, hi52, lo52, fairFar: _fairFarAbove };
+  } catch (e) { return null; }
+}
+
 /* 🎯 معايرة نِسب إليوت من تاريخ السهم نفسه (بدل النِّسب النظرية الثابتة التي تُبالغ).
    يقيس متوسط ارتداد/امتداد كل موجة عبر دورات السهم السابقة → نِسب واقعية لهذا السهم. */
 function _elliottCalibrate(piv) {
@@ -15590,10 +15780,23 @@ function marketStockAnalysis(sym, name) {
 
   // تقييم حجم التداول
   let volRating = '';
-  if (vol > 10000000) volRating = 'عالي جداً';
-  else if (vol > 5000000) volRating = 'عالي';
-  else if (vol > 2000000) volRating = 'متوسط';
-  else volRating = 'منخفض';
+  /* ══════════════════════════════════════════════════════════════
+     💧 حجم التداول يُقاس بـ**قيمته بالريال** لا بعدد الأسهم
+     العلّة: كانت العتبات على عدد الأسهم، فانقلب الوصف على الأسهم الغالية:
+        صافولا 1.9M سهم × 26.50 = **50.4M ريال**  ⇒ كان يُسمّى «منخفض»
+        سهم بـ2 ريال × 6M سهم    = **12.0M ريال**  ⇒ وكان يُسمّى «عالي»
+     أي أن السهم الأنشط سيولةً يُوصَف بالأقلّ. وعدد الأسهم بلا سعرها
+     لا يقول شيئاً عن السيولة — والقيمة هي ما يُنفَّذ به فعلاً. */
+  const _volSAR = (vol !== null && vol !== undefined && +price > 0) ? vol * (+price) : null;
+  if (_volSAR !== null) {
+    if (_volSAR >= 50e6) volRating = 'عالي جداً';
+    else if (_volSAR >= 20e6) volRating = 'عالي';
+    else if (_volSAR >= 5e6)  volRating = 'متوسط';
+    else volRating = 'منخفض';
+  } else if (vol !== null && vol !== undefined) {
+    /* بلا سعر لا يمكن التقييم بالقيمة — نرجع لعدد الأسهم ونظلّ صادقين */
+    volRating = vol > 10000000 ? 'عالي جداً' : vol > 5000000 ? 'عالي' : vol > 2000000 ? 'متوسط' : 'منخفض';
+  }
 
   // تقييم P/E
   let peRating = '';

@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v314';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v314 — 📡 بثّ أسعار سهمك: الأدمن يجلب مرّة والجميع يقرأ من القاعدة (إكمالٌ لنمط radar_results و dividends_shared). كان كل متصفّح يطلب بنفسه والمفتاح مشترك ⇒ ثلاثة مستخدمين يحرقون الحصّة. الآن ~40 طلباً/يوم مهما كثر المستخدمون', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v315';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v315 — 🎯 خطط القنّاص تُحاسَب أخيراً: كل خطة تُسجَّل بسياقها (الشارة · الذهبية · التوافق · الاتجاه · ثقة إليوت · سقف الهدف · ختم الحقبة) وتُحسم من تاريخك المخزَّن بأسبقية اللمس — والوقف يسبق عند التعادل · وفحص الأساس لا يعدّ المشتقّ مقارَناً', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -5770,7 +5770,7 @@ async function adminBasisScan() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ الفحص...'; }
   _basisBad = [];
   const list = rows.filter(r => r.sym && +r.price > 0);
-  let checked = 0, noData = 0;
+  let checked = 0, noData = 0, derivedN = 0;
   /* ⚡ استعلام واحد لكل الرموز بدل 269 استعلاماً يُحمّل كلٌّ منها التاريخ كاملاً.
      العلّة المرصودة: الفحص توقّف عند 11 رمزاً ثم أعلن «كل شيء سليم» — وهو
      لم يبدأ. إعلانُ سلامةٍ من فحصٍ لم يكتمل أسوأ من عدم الفحص. */
@@ -5791,6 +5791,11 @@ async function adminBasisScan() {
   }
   Object.keys(latest).forEach(s => { _BASIS_LAST[s] = latest[s]; });
   for (const r of list) {
+    /* ⚠️ الرمز المشتقّ سعرُه مأخوذ من التاريخ نفسه — فمقارنته بالتاريخ
+       مقارنةُ الرقم بذاته، و«متطابق» فيه حتميّة لا دليل. نستبعده ونُعلن
+       عدده، فلا يتضخّم العدّ المعلَن فوق الفحص الفعلي. (كان يقول «269
+       مفحوص» والحقيقة ~249 مقارَناً و20 تحصيلَ حاصل.) */
+    if (r._derived) { derivedN++; continue; }
     const b = _basisCheck(r.sym, r.price);
     if (!b) noData++;
     else { checked++; if (!b.ok) _basisBad.push({ sym: r.sym, name: r.name || r.sym, b: b }); }
@@ -5812,12 +5817,13 @@ async function adminBasisScan() {
           + ' — متداول <b>' + x.b.live + '</b> · مخزَّن <b>' + x.b.stored + '</b> · فارق <b style="color:#fca5a5">' + x.b.diffPct + '%</b></div>').join('')
         + (_basisBad.length > 12 ? '<div style="color:var(--txt-m)">… و' + (_basisBad.length - 12) + ' غيرها</div>' : '')
         + '<div style="color:#fed7aa;margin-top:6px">التحليل موقوف تلقائياً على هذه الرموز حتى تُصلَح.</div>'
-      : '<div style="color:#4ade80;font-weight:800">✅ كل الرموز متطابقة الأساس (' + checked + ' مفحوص'
+      : '<div style="color:#4ade80;font-weight:800">✅ كل الرموز متطابقة الأساس (' + checked + ' مقارَن'
+        + (derivedN ? ' · ' + derivedN + ' مشتقّ لا يُقارَن' : '')
         + (noData ? ' · ' + noData + ' بلا تاريخ' : '') + ')</div>';
   }
   if (btn) { btn.disabled = false; btn.textContent = '🛡️ فحص تطابق الأساس (كشف الرموز المنحرفة)'; }
   if (fix) fix.style.display = _basisBad.length ? 'block' : 'none';
-  logAdminAction('basis_scan', _basisBad.length + ' منحرف', checked + ' مفحوص');
+  logAdminAction('basis_scan', _basisBad.length + ' منحرف', checked + ' مقارَن' + (derivedN ? ' · ' + derivedN + ' مشتقّ' : ''));
 }
 
 async function adminBasisFix() {
@@ -9809,6 +9815,65 @@ document.addEventListener('keydown', e => {
       || !!(appSettings && appSettings.showPredStats)
       || !!(userRestrictions && userRestrictions.show_pred_stats);
   }
+  /* ══════════════════════════════════════════════════════════════════
+     🎯 تسجيل خطط القنّاص — سدّ آخر فجوة معرفية في المشروع
+     المتنبّئ يُسجَّل ويُحاسَب في `predictions`، أمّا خطط القنّاص وإليوت
+     — وهي التي تعرض أضخم الأرقام وتُبثّ لتلجرام — فتُعرَض وتختفي بلا
+     أثر. فأكثر أقسامك جرأةً في الأرقام كان **أقلّها دليلاً**.
+     وكل ما حصّنّاه اليوم (بوابة الثقة · حارس الوقف · سقف الهدف · بوابة
+     الذهبي) تحسينات نثق بها **بالمنطق لا بالرقم**. هذا التسجيل يحوّلها
+     إلى قابلة للقياس — ويجعل «إن تبيّن أن ميزةً لا تتفوّق نقبل النتيجة»
+     شرطاً قابلاً للتنفيذ لا نيّةً حسنة.
+     ══════════════════════════════════════════════════════════════════ */
+  async function planRecordSnapshot() {
+    if (!sb || !(typeof isAdmin === 'function' && isAdmin())) return;
+    if (!Array.isArray(PRED_RESULTS) || !PRED_RESULTS.length) return;
+    const kd = new Date(Date.now() + 3 * 3600000);
+    const planDate = kd.toISOString().slice(0, 10);
+    const rows_ = [];
+    PRED_RESULTS.forEach(r => {
+      const p = r && r.elPlan;
+      if (!p || !(+p.entry > 0) || !(+p.stop > 0) || !(+p.target > 0)) return;
+      const px = +r.price;
+      if (!(px > 0)) return;
+      const rrEn = (+p.entry > +p.stop) ? (+p.target - +p.entry) / (+p.entry - +p.stop) : null;
+      const rrNow = (px > +p.stop) ? (+p.target - px) / (px - +p.stop) : null;
+      let vw = null;
+      try { const v = (typeof _snVwap === 'function') ? _snVwap(r) : null; vw = v ? v.above : null; } catch (e) {}
+      rows_.push({
+        symbol: r.sym, name: r.name || r.sym, plan_date: planDate,
+        entry: +p.entry, stop: +p.stop, target: +p.target,
+        price_at_issue: +px.toFixed(2),
+        phase: p.phase || null,
+        rr_entry: rrEn != null ? +rrEn.toFixed(2) : null,
+        rr_now:   rrNow != null ? +rrNow.toFixed(2) : null,
+        exec_key: (typeof _snExecKey === 'function') ? _snExecKey(r) : null,
+        golden:   (typeof _snGolden === 'function') ? !!_snGolden(r) : null,
+        confl:    (typeof _snConflCount === 'function') ? _snConflCount(r) : null,
+        wk_trend: (r.mtf && r.mtf.w) ? r.mtf.w : null,
+        el_conf:  (r.elConf != null) ? Math.round(r.elConf) : null,
+        liq20:    (r.liq20 != null) ? r.liq20 : null,
+        above_vwap: vw,
+        capped_at_high: (p.cappedAtHigh != null) ? !!p.cappedAtHigh : null,
+        build: (typeof window !== 'undefined' && window.APP_BUILD) ? window.APP_BUILD : null,
+      });
+    });
+    if (!rows_.length) { console.info('[plan] لا خطط لتسجيلها اليوم'); return; }
+    try {
+      await sb.from('plan_outcomes').upsert(rows_, { onConflict: 'symbol,plan_date' });
+      console.info('[plan] 🎯 سُجّلت ' + rows_.length + ' خطة للمحاسبة'
+        + ' · ذهبية: ' + rows_.filter(x => x.golden).length);
+      /* ⚖️ ثم نحسم ما نضج من الخطط السابقة — بلا خادم، من تاريخك المخزَّن */
+      try {
+        const { data } = await sb.rpc('resolve_plan_outcomes', { max_bars: 30 });
+        const d = Array.isArray(data) ? data[0] : data;
+        if (d) console.info('[plan] ⚖️ حُسمت ' + (d['محسومة'] ?? 0) + ' خطة · معلّقة: ' + (d['ما زالت معلّقة'] ?? 0));
+      } catch (e) {}
+    } catch (e) {
+      console.warn('[plan] تعذّر التسجيل — نفّذ plan_outcomes.sql أولاً:', e && e.message);
+    }
+  }
+
   async function predRecordSnapshot() {
     if (!sb || !(typeof isAdmin === 'function' && isAdmin())) return;
     if (!Array.isArray(PRED_RESULTS) || !PRED_RESULTS.length) return;
@@ -10378,6 +10443,7 @@ document.addEventListener('keydown', e => {
     predRender();
     predUpdateStamp();
     predRecordSnapshot().then(() => predLoadOutcomes()).then(() => predRender());
+    planRecordSnapshot().catch(function () {});   // 🎯 محاسبة خطط القنّاص
     /* 🛡️ فحص تطابق الأساس تلقائياً بعد كل مسح — استعلام واحد خفيف.
        الحماية الفردية تعمل عند فتح أي سهم، لكن **معرفة الحجم** كانت
        تنتظر ضغطة يدوية قد لا تحدث. الآن يُنبَّه الأدمن من نفسه. */

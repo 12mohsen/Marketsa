@@ -2214,8 +2214,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-26-v300';
-console.log('%c[تداول بلس] البناء: 2026-07-26-v300 — 📅 حارس الأساس يعدّ جلسات تداول السعودية الفعلية (الأحد–الخميس) لا أياماً تقويمية: كان خميس→أحد يُحسب 3 جلسات فيسمح بـ35% بدل 12% — ثلاثة أضعاف تساهل كل صباح أحد', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v302';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v302 — 🩹 سدّ فجوات شيت السوق من التاريخ المخزَّن (GOOGLEFINANCE لا يغطّي 19 صندوق ريت): السعر والتغيّر والحجم ونطاق 52 أسبوعاً تُشتقّ من historical_prices بلا طلب شبكة · ولا ذهبية بلا نطاق سنوي صالح — غياب التقييم لم يعد يمرّ كأنه تقييم حسن', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -10093,6 +10093,7 @@ document.addEventListener('keydown', e => {
       if (typeof showToast === 'function') showToast('⚠️ حمّل بيانات السوق أولاً'); return;
     }
     PRED_SCANNING = true; PRED_RESULTS = [];
+    await _backfillMarketRows();      // 🩹 سدّ فجوات شيت السوق من التاريخ المخزَّن
     await predLoadIndicators();
     /* 🛡️ قائمة فريدة بالرمز — تمنع تكرار السهم إن ورد أكثر من مرة في بيانات السوق */
     const _seenSym = new Set();
@@ -10162,23 +10163,72 @@ document.addEventListener('keydown', e => {
     try { if (typeof _basisAutoCheck === 'function') _basisAutoCheck(); } catch (e) {}
   }
 
-  /* يملأ _BASIS_LAST من استعلام واحد ويُنبّه إن وُجد انحراف — بلا واجهة ثقيلة */
-  async function _basisAutoCheck() {
+  /* ══════════════════════════════════════════════════════════════════
+     🩹 سدّ فجوات شيت السوق من التاريخ المخزَّن
+     العلّة: GOOGLEFINANCE لا يغطّي صناديق الريت السعودية (4330–4350)،
+     فتظهر 19 صندوقاً في الشيت بـ«-»: بلا سعر ولا نطاق سنوي ولا حجم.
+     ومع ذلك أنتج التطبيق خطة كاملة لـ«دراية ريت» وبثّها ذهبيةً لتلجرام،
+     وكل حقول تحليلها فارغة. الغياب مرّ كأنه لا مانع.
+     والعلاج بلا مصدر جديد: `historical_prices` فيه 271 رمزاً × 5 سنوات.
+     نملأ الناقص منه **ولا نلمس الموجود**، ونضع وسم `_derived` ليُعلَن
+     للمستخدم أن الرقم مشتقّ لا منقول. */
+  async function _backfillMarketRows() {
     try {
       if (!sb || !Array.isArray(rows) || !rows.length) return;
+      const { data, error } = await sb.rpc('symbol_stats');
+      if (error || !Array.isArray(data)) return;      // الدالة غير منفَّذة — نمضي بلا سدّ
+      const m = {};
+      data.forEach(x => { if (x && x.symbol) m[x.symbol] = x; });
+      let filled = 0, stillEmpty = 0;
+      rows.forEach(r => {
+        if (!r || !r.sym) return;
+        const s = m[r.sym];
+        const noPrice = !(+r.price > 0);
+        if (!s) { if (noPrice) stillEmpty++; return; }
+        let did = false;
+        if (noPrice && +s.last_close > 0) { r.price = +s.last_close; did = true; }
+        if (!(+r.high > 0) && +s.hi52 > 0)  { r.high = +s.hi52; did = true; }
+        if (!(+r.low  > 0) && +s.lo52 > 0)  { r.low  = +s.lo52; did = true; }
+        if ((r.vol == null || +r.vol === 0) && +s.last_vol > 0) { r.vol = +s.last_vol; did = true; }
+        if ((r.chg == null || r.chg === '' || r.chg === '-') && s.chg_pct != null) { r.chg = +s.chg_pct; did = true; }
+        if (did) { r._derived = true; filled++; }
+        if (!(+r.price > 0)) stillEmpty++;
+      });
+      console.log('[fill] 🩹 سُدّت فجوات ' + filled + ' رمز من التاريخ المخزَّن'
+        + (stillEmpty ? ' · ' + stillEmpty + ' ما زال بلا سعر (يُستبعد من الخطط)' : ''));
+    } catch (e) {}
+  }
+
+  /* يملأ _BASIS_LAST من استعلام واحد ويُنبّه إن وُجد انحراف — بلا واجهة ثقيلة.
+     ⏳ وينتظر امتلاء الأسعار أولاً: أسعار `rows` تصل على دفعات (الشيت ثم
+     تغطية sahmk الحيّة)، وكان الفحص يسبقها فيرى 12 رمزاً من 291 ثم يُعلن
+     «✅ متطابق» — إعلانُ سلامةٍ من عيّنة 4%. الآن يتحيّن حتى تكتمل، وإن
+     لم تكتمل يقول ذلك صراحةً ولا يدّعي فحصاً لم يقع. */
+  async function _basisAutoCheck(tries) {
+    tries = tries || 0;
+    try {
+      if (!sb || !Array.isArray(rows) || !rows.length) return;
+      const priced = rows.filter(r => r && r.sym && +r.price > 0).length;
+      if (priced < rows.length * 0.5) {
+        if (tries < 8) { setTimeout(function () { _basisAutoCheck(tries + 1); }, 2500); return; }
+        console.log('[basis] ⏳ تُخطّي الفحص: الأسعار لم تكتمل (' + priced + '/' + rows.length + ')');
+        return;
+      }
       const { data, error } = await sb.rpc('latest_closes');
       if (error || !Array.isArray(data)) return;                 // الدالة غير منفَّذة بعد — لا نُزعج
       data.forEach(x => { if (x && x.symbol && +x.c > 0) _BASIS_LAST[x.symbol] = { c: +x.c, d: x.d }; });
-      let bad = 0, seen = 0;
+      let bad = 0, seen = 0, noHist = 0;
       rows.forEach(r => {
         if (!r.sym || !(+r.price > 0)) return;
         const b = _basisCheck(r.sym, r.price);
-        if (b) { seen++; if (!b.ok) bad++; }
+        if (b) { seen++; if (!b.ok) bad++; } else noHist++;
       });
       if (bad > 0 && typeof isAdmin === 'function' && isAdmin()) {
         showToast('⚠️ ' + bad + ' رمزاً مختلّ الأساس من ' + seen + ' — التحليل موقوف عليها. افتح الأدمن ← «🔧 إعادة مزامنة الرموز المنحرفة»');
       }
-      console.log('[basis] ' + (bad ? '⚠️ ' + bad + ' منحرف' : '✅ متطابق') + ' من ' + seen + ' رمز');
+      console.log('[basis] ' + (bad ? '⚠️ ' + bad + ' منحرف' : '✅ متطابق')
+        + ' من ' + seen + ' رمز مفحوص · ' + priced + '/' + rows.length + ' لها سعر'
+        + (noHist ? ' · ' + noHist + ' بلا تاريخ مخزَّن' : ''));
     } catch (e) {}
   }
 
@@ -10834,6 +10884,14 @@ document.addEventListener('keydown', e => {
     if (r.elZone && r.elZone.inSupply) return false;                 // ليس قرب منطقة عرض
     if (!(r.elCircle && r.elCircle.bias === 'صاعد')) return false;   // 📊 انحياز صاعد
     if (!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5)) return false;   // 🕐 نافذة نشطة/قريبة (دقّتها تقريبية ≈ شهر)
+    /* ══════════════════════════════════════════════════════════════
+       🚫 لا ذهبية بلا بيانات سوق — الغياب ليس موافقة
+       دراية ريت (4339): شيت السوق لا يغطّي صناديق الريت، فكانت كل
+       حقوله فارغة (سعر — · 52أ —/— · حجم — · P/E —)، ومع ذلك بُثّ
+       ذهبياً. وشرط جراهام أدناه مرّ لأن `gr` كان null — أي أن **غياب
+       التقييم عُومل معاملة التقييم الحسن**.
+       الآن: نطاق سنوي صالح شرطٌ للذهبية، وغياب جراهام لا يُمرَّر. */
+    if (!(+r.high > 0) || !(+r.low > 0) || +r.high <= +r.low) return false;
     const gr = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null;
     if (gr && gr.verdict === 'غالٍ') return false;                   // جراهام غير غالٍ
     const st = r.elPlan.stop, tg = r.elPlan.target, en = r.elPlan.entry;

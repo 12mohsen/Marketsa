@@ -46,20 +46,33 @@ async function tg(msg) {
     await page.waitForTimeout(4000);
     await page.evaluate(async () => { if (window.predScanAll) await window.predScanAll(); });
 
-    // 5) احتياط: تأكّد أن المسح انتهى فعلاً (حتى 6 دقائق)
+    /* 5) احتياط: تأكّد أن المسح انتهى فعلاً (حتى 6 دقائق)
+       ⚠️ كان هنا `.catch(() => {})` — ابتلاعٌ صامت للمهلة. فلو تجاوز
+       المسح ستّ دقائق ولم يكتمل، يمضي الروبوت ويُرسل «✅ تمّ — 269 سهم»
+       وهو رقم المسح **السابق** المحفوظ. أي إعلان نجاحٍ عن عملٍ لم يتمّ،
+       والمستخدمون على تحليل الأمس ولا أحد يعلم.
+       وهذا سادسُ فشلٍ صامت نكسره في هذا المشروع. */
+    let timedOut = false;
     await page.waitForFunction(
       () => (typeof window.predIsScanning !== 'function') || !window.predIsScanning(),
       { timeout: 360000, polling: 3000 }
-    ).catch(() => {});
+    ).catch(() => { timedOut = true; });
+    if (timedOut) throw new Error('تجاوز المسح ستّ دقائق ولم يكتمل — لم تُرفع نتائج جديدة.');
     await page.waitForTimeout(10000);   // اترك الرفع للقاعدة يكتمل
 
     // 6) أعد مسح القنّاص (يحسب المزايا بأحدث بناء)
     await page.evaluate(() => { if (window.sniperRescan) window.sniperRescan(); });
     await page.waitForTimeout(8000);
 
-    // 7) تحقّق أن النتائج رُفعت فعلاً
+    /* 7) تحقّق أن النتائج رُفعت فعلاً
+       ⚠️ ورقمٌ صفرٌ أو ضئيل ليس نجاحاً: السوق السعودي ~269 رمزاً، فإن
+       عاد العدّ دون المئتين فقد سقط شطرٌ من المسح. لا نُعلن «محدّث
+       للجميع» عن نصف مسح. */
     const n = await page.evaluate(() => (typeof window.predCount === 'function' ? window.predCount() : 0));
-    await tg('✅ المسح التلقائي تمّ — ' + (n || '؟') + ' سهم · التحليل محدّث للجميع.');
+    if (!n || n < 200) {
+      throw new Error('النتائج ناقصة: ' + (n || 0) + ' سهم فقط (المتوقّع ~269).');
+    }
+    await tg('✅ المسح التلقائي تمّ — ' + n + ' سهم · التحليل محدّث للجميع.');
     console.log('done · results:', n);
   } catch (e) {
     const msg = (e && e.message) || String(e);

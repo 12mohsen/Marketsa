@@ -2221,11 +2221,12 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-28-v341';
-console.log('%c[تداول بلس] البناء: 2026-07-28-v341 — 🔇 كُسر الفشل الصامت الخامس (دفعة سهمك) · 🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-28-v342';
+console.log('%c[تداول بلس] البناء: 2026-07-28-v342 — 🎁 حصاد السعر الرسمي بلا طلب إضافي (الحصّة المجانية كما كانت) · 🔇 كُسر الفشل الصامت الخامس ·🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
 /* 📜 تفصيل ما تغيّر في كل بناء: اكتب في الكونسول  buildLog()  */
 window.buildLog = function () {
   const L = [
+    ['v342', '🎁 السعر الرسمي يُحصد إلى الجدول عند فتح السهم — صفر طلب إضافي · وUSE_SAHMK_API يبقى مُطفأً فالحصّة المجانية كما كانت'],
     ['v341', '🔇 دفعة أسعار سهمك كانت تُتخطّى بـcatch{continue} بلا كلمة، فتبقى الريت «—» بلا سبب · وأُضيف sahmkReset()'],
     ['v340', '🛡️ فشل symbol_stats صار يُعلَن · حارس قِدَم يُنبّه إن تجاوز المشتقّ 5 أيام · تاريخ الإغلاق يُكتب تحت السعر'],
     ['v339', '🖌️ صناديق الريت عادت للجدول: السدّ كان يملأ rows بلا إعادة رسم — والجدول رُسم متزامناً قبل عودة الـRPC'],
@@ -12372,9 +12373,12 @@ document.addEventListener('keydown', e => {
       + '<div style="text-align:left"><div style="font-size:24px;font-weight:900">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</div>'
       + '<div style="font-size:11px;color:' + (r._derived ? '#fbbf24' : 'var(--txt-m)') + '" title="'
       + (r._derived ? ('مصدر السوق الحيّ لا يغطّي هذا الرمز — الرقم إغلاق آخر جلسة من تاريخك المخزَّن'
-          + (r._derivedAt ? ' بتاريخ ' + r._derivedAt : '')) : 'من مصدر السوق الحيّ (تأخير ~15 دقيقة)') + '">'
+          + (r._derivedAt ? ' بتاريخ ' + r._derivedAt : ''))
+        : r._official ? 'سعر رسميّ من سهمك — حُصد عند فتحك هذا السهم بلا طلب إضافي'
+        : 'من مصدر السوق الحيّ (تأخير ~15 دقيقة)') + '">'
       /* 🕰️ والتاريخ يُكتب لا يُخبّأ في تلميح: رقمٌ بلا زمنٍ يُقرأ سعرَ اليوم */
-      + (r._derived ? ('🕰️ إغلاق ' + (r._derivedAt || 'آخر جلسة')) : 'السعر') + '</div></div></div>';
+      + (r._derived ? ('🕰️ إغلاق ' + (r._derivedAt || 'آخر جلسة'))
+         : r._official ? '🏛️ السعر الرسمي' : 'السعر') + '</div></div></div>';
 
     /* ══════════════════════════════════════════════════════════════
        ⚡/🏛️ مفتاح النظرة — سؤالان مختلفان لا وجهان لسؤال واحد
@@ -18208,6 +18212,34 @@ switchTab = function (tab, btn) {
     el.style.display = 'none';
     if (liq) liq.style.display = 'none';
     api('quote/' + encodeURIComponent(sym) + '/').then(q => {
+      /* ══════════════════════════════════════════════════════════════
+         🎁 حصادٌ بلا ثمن — الطلب مدفوعٌ سلفاً فلا نرمِ ثمرته
+         هذا الطلب يقع **أصلاً** كلّما فتح المستخدم سهماً (ميزة مجانية
+         قائمة). وكنّا نعرض رقمه ثم نتركه يذهب، والجدول يبقى على إغلاق
+         أمس المشتقّ من التاريخ.
+         فنكتبه في `rows`: صفر طلبٍ إضافيّ، وسعرٌ رسميّ حيّ يبقى بعد
+         إغلاق النافذة. وهذا يخدم صناديق الريت خاصّةً — فهي التي لا
+         يغطّيها الشيت، ويكفي فتحُها مرّة ليثبت سعرها.
+         ▸ ولا نُشغّل USE_SAHMK_API: الحصّة المجانية تبقى كما كانت. */
+      try {
+        if (q && q.price != null && typeof rows !== 'undefined' && Array.isArray(rows)) {
+          const _row = rows.find(function (x) { return x && String(x.sym) === String(sym); });
+          if (_row) {
+            const _p = (typeof toNum === 'function') ? toNum(q.price) : +q.price;
+            if (_p > 0) {
+              _row.price = _p;
+              if (q.change_percent != null) _row.chg = +q.change_percent;
+              if (q.volume != null && +q.volume > 0) _row.vol = +q.volume;
+              _row._derived = false;          // صار حيّاً رسميّاً — لا مشتقّاً
+              _row._derivedAt = null;
+              _row._official = true;          // 🏛️ وسمٌ يميّزه عن سعر الشيت
+              try { if (typeof window.render === 'function') window.render(); } catch (_) {}
+              try { if (typeof window.updateStats === 'function') window.updateStats(); } catch (_) {}
+              console.info('[sahmk free] 🎁 حُصد سعر ' + sym + ' الرسمي إلى الجدول بلا طلب إضافي');
+            }
+          }
+        }
+      } catch (_) {}
       if (q && q.price != null) {
         const chg = q.change_percent;
         el.innerHTML = '🏛️ السعر الرسمي (سهمك): <b>' + Number(q.price).toFixed(2) + ' ر.س</b>' +

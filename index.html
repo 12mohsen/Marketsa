@@ -2221,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v334';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v334 — ⛔ أرقام الخطة المُعلَّقة تُخفَت وتُؤطَّر بالأحمر ويُذكر سبب التعليق (المواساة 4002: العنوان «تجنّب» وتحته دخول أخضر وع/م 11.2) · 🏔️ مدى 52 أسبوعاً يُشتقّ من الشموع إن غاب عن صفّ السوق: كان شريط الإحصاءات يعرض 20.45/30.30 لصافولا بينما النظرة الاستثمارية تصمت عن نقطة المراجعة وعن تحفّظ القيمة العادلة (+61% فوق قمة السنة) — لأن للشريط مصدرين ولها مصدرٌ واحد. الصمت كان يُقرأ سلامةً', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v335';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v335 — 🟡 «عند الدخول الآن» تُسمّى موضعاً لا إذناً حين يخالفها الحكم (4349: العنوان انتظر والشارة ✅ خضراء) · 🏔️ سلسلة مدى 52 أسبوعاً موحّدة للجميع فعاد تحذير المدى الضيّق (4349: 5.4% سنوياً كان صامتاً) · ⛔ أرقام الخطة المُعلَّقة تُخفَت وتُؤطَّر بالأحمر ويُذكر سبب التعليق (المواساة 4002: العنوان «تجنّب» وتحته دخول أخضر وع/م 11.2) · 🏔️ مدى 52 أسبوعاً يُشتقّ من الشموع إن غاب عن صفّ السوق: كان شريط الإحصاءات يعرض 20.45/30.30 لصافولا بينما النظرة الاستثمارية تصمت عن نقطة المراجعة وعن تحفّظ القيمة العادلة (+61% فوق قمة السنة) — لأن للشريط مصدرين ولها مصدرٌ واحد. الصمت كان يُقرأ سلامةً', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -11162,8 +11162,13 @@ document.addEventListener('keydown', e => {
   /* 📏 مدى سنوي ضيّق: أهدافه صغيرة والعمولة تلتهم جزءاً معتبراً منها.
      لا نحجب — بل نُعلن ما لا تراه العين في شارتٍ يبدو طبيعياً. */
   const NARROW_RANGE_PCT = 8;
-  function _narrowRange(r) {
-    const hi = +r.high, lo = +r.low;
+  function _narrowRange(r, daily) {
+    /* 🏔️ عبر السلسلة الموحّدة — لا من الصفّ وحده. رُصد على «الإتماء ريت
+       الفندق 4349»: مداه السنوي 5.4% (7.95/8.38) والتحذير صامت، لأن
+       `high`/`low` غير موجودَين في نتائج المسح. والصمت هنا خطر: الهدف
+       +3.3% والعمولة 0.31% — أي أنها تلتهم عُشر المكسب. */
+    const _hl = (typeof _hiLo52 === 'function') ? _hiLo52(r, daily) : { hi: +r.high, lo: +r.low };
+    const hi = _hl.hi, lo = _hl.lo;
     if (!(hi > 0) || !(lo > 0) || hi <= lo) return null;
     const w = ((hi - lo) / lo) * 100;
     return w < NARROW_RANGE_PCT ? +w.toFixed(1) : null;
@@ -12355,6 +12360,14 @@ document.addEventListener('keydown', e => {
       const _Vp = (typeof _termVerdict === 'function') ? _termVerdict(r) : null;
       const _planHeld = !!(_Vp && _Vp.k === 'avoid');
       if (_planHeld) { _kmText = '⛔ الخطة مُعلَّقة — الحكم: تجنّب'; _kmColor = '#f87171'; }
+      /* ══════════════════════════════════════════════════════════════
+         🟡 «عند الدخول الآن» **موضعٌ لا إذن** — سؤال المستخدم على 4349
+         العنوان يقول 🟡 انتظر (الزناد بحجم ضعيف · ع/م 1.3)، والشارة
+         تحته ✅ خضراء تقول «عند الدخول الآن». والصحّ أن الشارة تجيب
+         «أين السعر من الخطة؟» لا «هل أدخل؟» — لكن ✅ الخضراء تُقرأ إذناً.
+         فنُسمّيها بما هي عليه حين يخالفها الحكم، ونُبقي اللون كهرمانياً. */
+      const _planWait = !!(_Vp && _Vp.k === 'wait' && k === 'now');
+      if (_planWait) { _kmText = '🟡 السعر في نطاق الدخول — لكن الحكم: انتظر'; _kmColor = '#fbbf24'; }
       /* 🎨 والأرقام تتبع الحكم أيضاً — لا العنوان وحده.
          الأخضر يقرأه العين قبل النصّ: صندوق «دخول 60.54» بأخضر ناصع
          يقول «ادخل» مهما كُتب فوقه. فنُخفت الشبكة ونؤطّرها بالأحمر
@@ -12376,13 +12389,19 @@ document.addEventListener('keydown', e => {
               + '⛔ <b>لماذا مُعلَّقة:</b> ' + ((_Vp && _Vp.why) ? _Vp.why : 'مانعٌ قاطع في الحكم') + '. '
               + 'الأرقام معروضة <b>لتعرف أين ستقف إن انقلب الحال</b> — لا لتُنفَّذ اليوم. '
               + 'وع/م المرتفع لا يُلغي المانع: <b>نسبةٌ ممتازة على صفقةٍ خاسرة الاحتمال تبقى خاسرة</b>.<\/div>'
+            : _planWait
+            ? '<div style="margin-top:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:9px;padding:8px 10px;font-size:11.5px;color:#fcd34d;line-height:1.8">'
+              + '🟡 <b>ما ينقصها:</b> ' + ((_Vp && _Vp.why) ? _Vp.why : 'مأخذٌ في الحكم') + '. '
+              + '<b>«عند الدخول الآن» تقول أين السعر من الخطة، لا أنّ الدخول مُجاز</b> — والفرق بينهما محفظة. '
+              + 'انتظر زوال المأخذ؛ فالخطة لا تهرب، وإن هربت جاءت غيرها.<\/div>'
             : '')
         + '<div style="text-align:center;font-size:11px;color:var(--txt-m);margin-top:7px">' + _rrLine + ' · 🧩 توافق ' + ((typeof _snConflCount === 'function') ? _snConflCount(r) : '?') + '/5</div>'
         /* 📏 مدى سنوي ضيّق — لا يُحجب بل يُعلَن: الشارت يبدو طبيعياً
            لأنه ممدود على ارتفاع الإطار، ولا شيء فيه يُنبئ أن السهم
            لم يتحرّك إلا 5% في سنة كاملة. */
         + (function () {
-            const nw = (typeof _narrowRange === 'function') ? _narrowRange(r) : null;
+            const nw = (typeof _narrowRange === 'function')
+              ? _narrowRange(r, (typeof _termDaily !== 'undefined' ? _termDaily : null)) : null;
             if (!nw) return '';
             const tgtPct = (_en > 0) ? ((_tg - _en) / _en) * 100 : 0;
             return '<div style="margin-top:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:9px;padding:8px 10px;font-size:11px;color:#fcd34d;line-height:1.7">'
@@ -14972,6 +14991,41 @@ function grahamValue(eps, price) {
      ① رخيص + اتجاه هابط + بلا قاعدة تراكم ⇒ لا تجميع، انتظر استقراراً
      ② رخيص بالمكرّر + قرب قمة 5 سنوات      ⇒ الخصم ليس في السعر
    ══════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   🏔️ مدى 52 أسبوعاً — مصدرٌ واحد لكل من يحتاجه
+   العلّة المتكرّرة: `PRED_RESULTS` تُبنى من `predAnalyze` ولا تحمل
+   `high`/`low`. فكل من قرأهما من الصفّ مباشرةً صمت صمتاً كاذباً:
+     · `investView` ⇒ لا نقطة مراجعة ولا تحفّظ على القيمة العادلة (صافولا)
+     · `_narrowRange` ⇒ لا تحذير مدى ضيّق (الإتماء ريت الفندق: 5.4% سنوياً)
+   وشريط الإحصاءات فوق الشارت وحده كان يعرضهما — لأن عنده مصدرَين.
+   فنجعل السلسلة واحدة للجميع: الصفّ ⇐ صفّ السوق ⇐ الشموع.
+   ══════════════════════════════════════════════════════════════════════ */
+function _hiLo52(r, daily) {
+  const out = { hi: NaN, lo: NaN };
+  try {
+    if (!r) return out;
+    let hi = toNum(r.high), lo = toNum(r.low);
+    if (!(hi > 0) || !(lo > 0)) {
+      if (typeof rows !== 'undefined' && Array.isArray(rows)) {
+        const f = rows.find(function (x) { return x && x.sym === r.sym; });
+        if (f) {
+          const _h = toNum(f.week_high != null ? f.week_high : f.high);
+          const _l = toNum(f.week_low  != null ? f.week_low  : f.low);
+          if (_h > 0 && _l > 0) { hi = _h; lo = _l; }
+        }
+      }
+    }
+    if ((!(hi > 0) || !(lo > 0)) && Array.isArray(daily) && daily.length) {
+      const y = daily.slice(-252);
+      const H = y.map(function (c) { return +c.h || +c.c; }).filter(function (v) { return v > 0; });
+      const L = y.map(function (c) { return +c.l || +c.c; }).filter(function (v) { return v > 0; });
+      if (H.length && L.length) { hi = Math.max.apply(null, H); lo = Math.min.apply(null, L); }
+    }
+    out.hi = hi; out.lo = lo;
+  } catch (e) {}
+  return out;
+}
+
 function investView(r, ltInd, daily) {
   try {
     if (!r) return null;
@@ -14999,30 +15053,12 @@ function investView(r, ltInd, daily) {
       return r;
     })();
     const divY = toNum(r.div != null ? r.div : _mk.div);
-    let hi52 = toNum(r.high != null ? r.high : _mk.high);
-    let lo52 = toNum(r.low  != null ? r.low  : _mk.low);
-
-    /* ══════════════════════════════════════════════════════════════
-       🏔️ مدى 52 أسبوعاً — من الشموع إن غاب عن صفّ السوق
-       رُصد على «صافولا»: شريط الإحصاءات فوق الشارت يعرض 20.45/30.30،
-       والنظرة الاستثمارية لا تعرض نقطة المراجعة ولا تحفّظ القيمة
-       العادلة — لأن الشريط عنده **مصدران** (صفّ السوق ثم الشموع)
-       وهذه الدالة عندها مصدرٌ واحد. فسقط الاثنان صامتَين.
-       وسقوطهما ليس تجميلاً: هامش أمان 86% يُعرض بلا التحفّظ الذي
-       يقول إن القيمة العادلة تعلو قمة السنة — وهو الوهم بعينه. */
-    if (!(hi52 > 0) || !(lo52 > 0)) {
-      try {
-        if (Array.isArray(daily) && daily.length) {
-          const y = daily.slice(-252);
-          const H = y.map(function (c) { return +c.h || +c.c; }).filter(function (v) { return v > 0; });
-          const L = y.map(function (c) { return +c.l || +c.c; }).filter(function (v) { return v > 0; });
-          if (H.length && L.length) {
-            hi52 = Math.max.apply(null, H);
-            lo52 = Math.min.apply(null, L);
-          }
-        }
-      } catch (e) {}
-    }
+    /* 🏔️ عبر السلسلة الموحّدة: الصفّ ⇐ صفّ السوق ⇐ الشموع.
+       رُصد على «صافولا»: الشريط فوق الشارت يعرض 20.45/30.30 وهذه النظرة
+       تصمت عن نقطة المراجعة وعن تحفّظ القيمة العادلة (+61% فوق قمة
+       السنة) — لأن للشريط مصدرَين ولها مصدرٌ واحد. والصمت يُقرأ سلامةً. */
+    const _hl52 = _hiLo52({ sym: r.sym, high: (r.high != null ? r.high : _mk.high), low: (r.low != null ? r.low : _mk.low) }, daily);
+    const hi52 = _hl52.hi, lo52 = _hl52.lo;
 
     /* لا أرباح ⇒ لا تقييم. والصمت هنا أصدق من رقمٍ مخترع. */
     if (!g) {

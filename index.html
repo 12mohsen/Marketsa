@@ -2221,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v335';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v335 — 🟡 «عند الدخول الآن» تُسمّى موضعاً لا إذناً حين يخالفها الحكم (4349: العنوان انتظر والشارة ✅ خضراء) · 🏔️ سلسلة مدى 52 أسبوعاً موحّدة للجميع فعاد تحذير المدى الضيّق (4349: 5.4% سنوياً كان صامتاً) · ⛔ أرقام الخطة المُعلَّقة تُخفَت وتُؤطَّر بالأحمر ويُذكر سبب التعليق (المواساة 4002: العنوان «تجنّب» وتحته دخول أخضر وع/م 11.2) · 🏔️ مدى 52 أسبوعاً يُشتقّ من الشموع إن غاب عن صفّ السوق: كان شريط الإحصاءات يعرض 20.45/30.30 لصافولا بينما النظرة الاستثمارية تصمت عن نقطة المراجعة وعن تحفّظ القيمة العادلة (+61% فوق قمة السنة) — لأن للشريط مصدرين ولها مصدرٌ واحد. الصمت كان يُقرأ سلامةً', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-28-v336';
+console.log('%c[تداول بلس] البناء: 2026-07-28-v336 — 📐 الوعد إلى جانب الواقع: قياس 140 إشارة كشف أن الهدف المعروض 8.96% صعوداً ووسيط ما يبلغه السهم فعلاً 1.08% — فصار يُعرض بجانب كل هدف «وسيط ما يبلغه فعلاً» محسوباً من تاريخ السهم نفسه، مع تنبيه بالرقم إن فاق الهدفُ ضِعفه · 🟡 «عند الدخول الآن» تُسمّى موضعاً لا إذناً حين يخالفها الحكم (4349: العنوان انتظر والشارة ✅ خضراء) · 🏔️ سلسلة مدى 52 أسبوعاً موحّدة للجميع فعاد تحذير المدى الضيّق (4349: 5.4% سنوياً كان صامتاً) · ⛔ أرقام الخطة المُعلَّقة تُخفَت وتُؤطَّر بالأحمر ويُذكر سبب التعليق (المواساة 4002: العنوان «تجنّب» وتحته دخول أخضر وع/م 11.2) · 🏔️ مدى 52 أسبوعاً يُشتقّ من الشموع إن غاب عن صفّ السوق: كان شريط الإحصاءات يعرض 20.45/30.30 لصافولا بينما النظرة الاستثمارية تصمت عن نقطة المراجعة وعن تحفّظ القيمة العادلة (+61% فوق قمة السنة) — لأن للشريط مصدرين ولها مصدرٌ واحد. الصمت كان يُقرأ سلامةً', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -9749,6 +9749,43 @@ document.addEventListener('keydown', e => {
       daysToTarget = Math.min(30, Math.max(3, Math.ceil(Math.abs(targetPct) / dailyRealistic)));
     }
 
+    /* ══════════════════════════════════════════════════════════════════
+       📐 ما يبلغه هذا السهم **فعلاً** — لا ما نتمنّاه له
+       القياس على 140 إشارة كشف الفجوة: الهدف المعروض 8.96% صعوداً
+       و7.48% هبوطاً، ووسيط أقصى حركة فعلية 1.08% و2.82%. أي أن الوعد
+       يفوق المتاح بثمانية أضعاف صعوداً.
+       والسبب في `measured` أعلاه: نأخذ **مدى عشرين جلسة كاملاً** هدفاً،
+       كأن السهم سيقطع نطاقه كلّه من حيث هو الآن.
+       ولا نُعايِر المحرّك على ستة أيام في سوقٍ هابط — بل نعرض الحقيقة
+       إلى جانب الوعد، فيقرّر المستخدم وهو يرى الاثنين.
+       ▸ نقيسها من تاريخ السهم نفسه: نمشي على كل نقطة بداية سابقة،
+         ونأخذ أقصى حركة لصالح الاتجاه خلال نفس المهلة، ثم **الوسيط**
+         (لا المتوسط — فقفزةٌ شاذّة واحدة ترفعه وتكذب).
+       ══════════════════════════════════════════════════════════════════ */
+    let typicalMove = null;
+    try {
+      if (direction !== 'none' && daysToTarget > 0 && c.length >= daysToTarget + 40) {
+        const moves = [];
+        const from = Math.max(0, c.length - 260);
+        for (let i = from; i + daysToTarget < c.length; i++) {
+          const base = +c[i].c;
+          if (!(base > 0)) continue;
+          let best = 0;
+          for (let j = i + 1; j <= i + daysToTarget; j++) {
+            const hj = hasOHLC ? +c[j].h : +c[j].c;
+            const lj = hasOHLC ? +c[j].l : +c[j].c;
+            const mv = direction === 'up' ? (hj - base) / base : (base - lj) / base;
+            if (mv > best) best = mv;
+          }
+          moves.push(best * 100);
+        }
+        if (moves.length >= 20) {
+          moves.sort((a, b) => a - b);
+          typicalMove = +moves[Math.floor(moves.length / 2)].toFixed(2);
+        }
+      }
+    } catch (e) {}
+
     const timing =
       bwPct < 0.15 ? { level: 3, text: 'وشيك جداً (1–3 شموع)' } :
       bwPct < 0.30 ? { level: 2, text: 'قريب (خلال أيام)' } :
@@ -9793,6 +9830,7 @@ document.addEventListener('keydown', e => {
       probability, dirScore: dir, direction,
       target: target != null ? +target.toFixed(2) : null,
       targetPct: targetPct != null ? +targetPct.toFixed(2) : null,
+      typicalMove,          // 📐 وسيط ما يبلغه السهم فعلاً خلال نفس المهلة
       daysToTarget, dailyLimit, timing,
     };
   }
@@ -10861,6 +10899,11 @@ document.addEventListener('keydown', e => {
       (function () {
         cell('التوقيت المتوقع', res.timing.text);
         cell('الهدف', tgt);
+        /* 📐 الوعد إلى جانب الواقع — من تاريخ السهم نفسه، لا من نموذج */
+        cell('وسيط ما يبلغه فعلاً',
+          res.typicalMove != null
+            ? ('+' + res.typicalMove + '% خلال ' + res.daysToTarget + ' جلسة')
+            : '—');
         cell('شدة الضغط', Math.round(res.squeezeStrength * 100) + '%');
         cell('مدة الضغط', res.pressureDuration + ' شمعة');
         cell('ضغط TTM', res.ttm ? '✅ فعّال' : '—');
@@ -10881,6 +10924,24 @@ document.addEventListener('keydown', e => {
         '<button onclick="predAddWatch(\'' + res.sym + '\')" style="flex:1;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">👁️ إضافة للمراقبة</button>' +
         '<button onclick="predAddPortfolio(\'' + res.sym + '\')" style="flex:1;background:linear-gradient(135deg,var(--g-mid),var(--g-accent));border:none;color:#fff;border-radius:10px;padding:11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">📈 إضافة للمحفظة</button>' +
       '</div>' +
+      /* ══════════════════════════════════════════════════════════════
+         📐 حين يفوق الوعدُ الواقعَ — نقولها ولا نتركها تُوهم
+         قياس 140 إشارة: الهدف 8.96% صعوداً ووسيط المتاح 1.08%.
+         والهدف مبنيّ على **مدى عشرين جلسة كاملاً**، كأن السهم يقطع
+         نطاقه كلّه من موضعه. فإن فاق الهدفُ ضِعف ما يبلغه السهم عادةً،
+         أعلنّا الفارق بالرقم — لا بالتلميح. */
+      (function () {
+        if (res.typicalMove == null || res.targetPct == null) return '';
+        const need = Math.abs(res.targetPct);
+        if (!(res.typicalMove > 0) || need < res.typicalMove * 2) return '';
+        const x = (need / res.typicalMove).toFixed(1);
+        return '<div style="margin-top:10px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);'
+          + 'border-radius:10px;padding:9px 11px;font-size:11px;color:#fcd34d;line-height:1.85">'
+          + '📐 <b>الهدف أكبر من المعتاد بـ' + x + ' أضعاف.</b> يطلب <b>' + need.toFixed(2) + '%</b> خلال '
+          + res.daysToTarget + ' جلسة، ووسيط ما بلغه هذا السهم في مثلها تاريخياً <b>' + res.typicalMove + '%</b>. '
+          + 'والهدف محسوبٌ من <b>مدى عشرين جلسة كاملاً</b> — أي بافتراض أن يقطع نطاقه كلّه من موضعه. '
+          + '<b>اقرأه سقفاً بعيداً لا موعداً</b>، ولا تبنِ حجم صفقتك عليه.<\/div>';
+      })() +
       '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;padding:12px 4px 2px;line-height:1.7">⚠️ ترجيح فني احتمالي لأغراض تعليمية فقط وليس نصيحة استثمارية. الهدف مقيّد بحد التذبذب اليومي (±' + res.dailyLimit + '%).</div>' +
     '</div>';
     ov.style.display = 'flex';

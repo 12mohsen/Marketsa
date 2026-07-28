@@ -2221,8 +2221,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-27-v332';
-console.log('%c[تداول بلس] البناء: 2026-07-27-v332 — ⛔ الشريحة لا تُنفَّذ تحت نقطة المراجعة: كان سلّم التجميع يُحسب من السعر وحده، فتقع الشريحة الثالثة تحت النقطة التي أعلنّا عندها سقوط الفرضية (زجاج: شريحة 30.72 ومراجعة 32.98) — أي «اشترِ ثلثك الأخير» بعد الانهيار. تُعلَّق الآن ويُعلَن شرطها', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-27-v334';
+console.log('%c[تداول بلس] البناء: 2026-07-27-v334 — ⛔ أرقام الخطة المُعلَّقة تُخفَت وتُؤطَّر بالأحمر ويُذكر سبب التعليق (المواساة 4002: العنوان «تجنّب» وتحته دخول أخضر وع/م 11.2) · 🏔️ مدى 52 أسبوعاً يُشتقّ من الشموع إن غاب عن صفّ السوق: كان شريط الإحصاءات يعرض 20.45/30.30 لصافولا بينما النظرة الاستثمارية تصمت عن نقطة المراجعة وعن تحفّظ القيمة العادلة (+61% فوق قمة السنة) — لأن للشريط مصدرين ولها مصدرٌ واحد. الصمت كان يُقرأ سلامةً', 'color:#7c3aed;font-weight:bold;font-size:14px');
 
 /* ─────────────────────────────────────
    CONFIG
@@ -12205,7 +12205,10 @@ document.addEventListener('keydown', e => {
           if (TERM_SEL === sym && TERM_MODE === 'invest') window.termSelect(sym);
         }).catch(function () {});
       }
-      const iv = (typeof investView === 'function') ? investView(r, _lt) : null;
+      /* 🏔️ نمرّر الشموع اليومية ليُشتقّ منها مدى 52 أسبوعاً إن غاب عن صفّ
+         السوق — فتظهر نقطة المراجعة وتحفّظ القيمة العادلة بدل صمتهما. */
+      const iv = (typeof investView === 'function')
+        ? investView(r, _lt, (typeof _termDaily !== 'undefined' ? _termDaily : null)) : null;
       if (!iv) {
         html += sec('🏛️ النظرة الاستثمارية', '<div style="font-size:12.5px;color:var(--txt-m)">تعذّر التقييم — بيانات الربحية غير متوفّرة لهذا الرمز.</div>');
       } else {
@@ -12338,6 +12341,27 @@ document.addEventListener('keydown', e => {
       const _gapPct = (_en > 0) ? ((_px - _en) / _en) * 100 : 0;
       let _kmText = km[1], _kmColor = km[0];
       if (_gapPct > 2 && _gapPct <= 8) { _kmText = '⏳ بانتظار تراجع للدخول (السعر +' + _gapPct.toFixed(1) + '% فوقه)'; _kmColor = '#7dd3fc'; }
+
+      /* ══════════════════════════════════════════════════════════════
+         ⛔ الخطة تتبع الحكم — أخطر تناقضٍ رُصد في اللوحة
+         على «المواساة 4002»: العنوان يقول 🔴 <b>تجنّب</b> (ارتداد داخل
+         هبوط)، وثمانية أسطر تحته تقول ✅ <b>عند الدخول الآن</b> بأخضر،
+         ومعها دخول 60.54 ووقف 59.10 وهدف 79 وع/م 11.2.
+         والمستخدم يتبع **الأرقام** لا العنوان — فالحارس الذي بنيناه
+         كان يُعرض ثم يُلتفّ عليه في نفس الشاشة.
+         السبب: الحكم و«شارة التنفيذ» يُحسبان مستقلَّين، فيتناقضان.
+         الآن: إن كان الحكم «تجنّب» فالخطة **مُعلَّقة** — تُعرض للعلم
+         (لتعرف أين ستقف إن انقلب الحال) لا للتنفيذ. */
+      const _Vp = (typeof _termVerdict === 'function') ? _termVerdict(r) : null;
+      const _planHeld = !!(_Vp && _Vp.k === 'avoid');
+      if (_planHeld) { _kmText = '⛔ الخطة مُعلَّقة — الحكم: تجنّب'; _kmColor = '#f87171'; }
+      /* 🎨 والأرقام تتبع الحكم أيضاً — لا العنوان وحده.
+         الأخضر يقرأه العين قبل النصّ: صندوق «دخول 60.54» بأخضر ناصع
+         يقول «ادخل» مهما كُتب فوقه. فنُخفت الشبكة ونؤطّرها بالأحمر
+         المتقطّع — نفس معاملة الشريحة المعلَّقة في الاستثمار. */
+      const planBox = _planHeld
+        ? '<div style="opacity:.5;border:1px dashed rgba(248,113,113,.55);border-radius:10px;padding:6px">' + plan + '</div>'
+        : plan;
       let _rrLine = '⚖️ ع/م ≈ <b style="color:' + (_rrEntry >= 2 ? '#4ade80' : '#fbbf24') + '">' + (_rrEntry != null ? _rrEntry.toFixed(1) : p.rr) + '</b> عند الدخول'
         + '<span style="font-size:9.5px;color:var(--txt-m)" title="محسوب بعد خصم عمولة الشراء والبيع (' + TRADE_COST_PCT + '%) — الرقم الخام يَعِد بما لا يُقبَض"> (صافٍ)</span>';
       if (_rrNow != null && _rrEntry != null && Math.abs(_rrEntry - _rrNow) >= 0.3) {
@@ -12346,7 +12370,13 @@ document.addEventListener('keydown', e => {
       }
       html += sec('🎯 خطة القنّاص',
         '<div style="font-size:13px;font-weight:800;color:' + _kmColor + ';margin-bottom:8px">' + _kmText + '</div>'
-        + plan
+        + planBox
+        + (_planHeld
+            ? '<div style="margin-top:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:9px;padding:8px 10px;font-size:11.5px;color:#fca5a5;line-height:1.8">'
+              + '⛔ <b>لماذا مُعلَّقة:</b> ' + ((_Vp && _Vp.why) ? _Vp.why : 'مانعٌ قاطع في الحكم') + '. '
+              + 'الأرقام معروضة <b>لتعرف أين ستقف إن انقلب الحال</b> — لا لتُنفَّذ اليوم. '
+              + 'وع/م المرتفع لا يُلغي المانع: <b>نسبةٌ ممتازة على صفقةٍ خاسرة الاحتمال تبقى خاسرة</b>.<\/div>'
+            : '')
         + '<div style="text-align:center;font-size:11px;color:var(--txt-m);margin-top:7px">' + _rrLine + ' · 🧩 توافق ' + ((typeof _snConflCount === 'function') ? _snConflCount(r) : '?') + '/5</div>'
         /* 📏 مدى سنوي ضيّق — لا يُحجب بل يُعلَن: الشارت يبدو طبيعياً
            لأنه ممدود على ارتفاع الإطار، ولا شيء فيه يُنبئ أن السهم
@@ -14942,7 +14972,7 @@ function grahamValue(eps, price) {
      ① رخيص + اتجاه هابط + بلا قاعدة تراكم ⇒ لا تجميع، انتظر استقراراً
      ② رخيص بالمكرّر + قرب قمة 5 سنوات      ⇒ الخصم ليس في السعر
    ══════════════════════════════════════════════════════════════════════ */
-function investView(r, ltInd) {
+function investView(r, ltInd, daily) {
   try {
     if (!r) return null;
     const price = toNum(r.price);
@@ -14969,8 +14999,30 @@ function investView(r, ltInd) {
       return r;
     })();
     const divY = toNum(r.div != null ? r.div : _mk.div);
-    const hi52 = toNum(r.high != null ? r.high : _mk.high);
-    const lo52 = toNum(r.low  != null ? r.low  : _mk.low);
+    let hi52 = toNum(r.high != null ? r.high : _mk.high);
+    let lo52 = toNum(r.low  != null ? r.low  : _mk.low);
+
+    /* ══════════════════════════════════════════════════════════════
+       🏔️ مدى 52 أسبوعاً — من الشموع إن غاب عن صفّ السوق
+       رُصد على «صافولا»: شريط الإحصاءات فوق الشارت يعرض 20.45/30.30،
+       والنظرة الاستثمارية لا تعرض نقطة المراجعة ولا تحفّظ القيمة
+       العادلة — لأن الشريط عنده **مصدران** (صفّ السوق ثم الشموع)
+       وهذه الدالة عندها مصدرٌ واحد. فسقط الاثنان صامتَين.
+       وسقوطهما ليس تجميلاً: هامش أمان 86% يُعرض بلا التحفّظ الذي
+       يقول إن القيمة العادلة تعلو قمة السنة — وهو الوهم بعينه. */
+    if (!(hi52 > 0) || !(lo52 > 0)) {
+      try {
+        if (Array.isArray(daily) && daily.length) {
+          const y = daily.slice(-252);
+          const H = y.map(function (c) { return +c.h || +c.c; }).filter(function (v) { return v > 0; });
+          const L = y.map(function (c) { return +c.l || +c.c; }).filter(function (v) { return v > 0; });
+          if (H.length && L.length) {
+            hi52 = Math.max.apply(null, H);
+            lo52 = Math.min.apply(null, L);
+          }
+        }
+      } catch (e) {}
+    }
 
     /* لا أرباح ⇒ لا تقييم. والصمت هنا أصدق من رقمٍ مخترع. */
     if (!g) {

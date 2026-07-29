@@ -2221,11 +2221,13 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-28-v345';
-console.log('%c[تداول بلس] البناء: 2026-07-28-v345 — 🧊 كاش symbol_stats: التحديث التلقائي كل 60 ثانية كان يُطلق أثقل تجميعة في التطبيق (400 يوم × 300 ألف صفّ) ستّين مرّة في الساعة لكل تبويب — الآن 97% أقلّ · 📊 بثّ جدول السوق جاهزٌ ومفتاحه مطفأ (USE_MARKET_SHARED): يُكمل نمط البثّ الخماسي ويُنهي اعتماد كل مستخدم على شيت جوجل · 🧢 سقف الهدف عند ما يبلغه السهم فعلاً (مئين 75 من تاريخه): قياس 223 إشارة أثبت أن متوسط الأقصى 4.55% هابطاً و2.33% صاعداً مقابل هدفٍ 7.73% و8.72% — أي أن الخروج المثاليّ عند الذروة كان يُخطئ الهدف · 🎁 حصاد السعر الرسمي بلا طلب إضافي (الحصّة المجانية كما كانت) · 🔇 كُسر الفشل الصامت الخامس ·🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-28-v347';
+console.log('%c[تداول بلس] البناء: 2026-07-28-v347 — 🔄 اللوحة الموحّدة تتحدّث وحدها كل دقيقة: كانت تقرأ من PRED_RESULTS التي لا تتغيّر إلا بمسحٍ جديد، فيلزم إعادة تحميل الصفحة. الآن تُسكب الأسعار الطازجة وتُحدَّث في مكانها بلا قفز تمرير · 📈 خطّ «الآن» على الشارت: الشموع يومية فلا تتغيّر أثناء الجلسة، فكانت الترويسة تقول 51.30 والمحور 50.20 بلا تفسير (سابك) — الآن وسمان: «إغلاق» و«الآن» · 🧊 كاش symbol_stats: التحديث التلقائي كل 60 ثانية كان يُطلق أثقل تجميعة في التطبيق (400 يوم × 300 ألف صفّ) ستّين مرّة في الساعة لكل تبويب — الآن 97% أقلّ · 📊 بثّ جدول السوق جاهزٌ ومفتاحه مطفأ (USE_MARKET_SHARED): يُكمل نمط البثّ الخماسي ويُنهي اعتماد كل مستخدم على شيت جوجل · 🧢 سقف الهدف عند ما يبلغه السهم فعلاً (مئين 75 من تاريخه): قياس 223 إشارة أثبت أن متوسط الأقصى 4.55% هابطاً و2.33% صاعداً مقابل هدفٍ 7.73% و8.72% — أي أن الخروج المثاليّ عند الذروة كان يُخطئ الهدف · 🎁 حصاد السعر الرسمي بلا طلب إضافي (الحصّة المجانية كما كانت) · 🔇 كُسر الفشل الصامت الخامس ·🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
 /* 📜 تفصيل ما تغيّر في كل بناء: اكتب في الكونسول  buildLog()  */
 window.buildLog = function () {
   const L = [
+    ['v347', '🔄 اللوحة الموحّدة تتحدّث ذاتياً: مزامنة rows ← PRED_RESULTS ثم تحديث الترويسة والقائمة وخطّ «الآن» في مكانها'],
+    ['v346', '📈 السعر الحيّ يُرسم على محور الشارت موسوماً «الآن» بجانب «إغلاق» آخر شمعة — ويتحدّث كل دقيقة بلا أي جلب'],
     ['v345', '🧊 symbol_stats يُخزَّن 30 دقيقة — كان التحديث التلقائي (60ث) يُطلقه 300 مرّة في الجلسة لكل تبويب على معالج مشترَك'],
     ['v344', '📊 market_shared: الأدمن يبثّ جدول السوق والجميع يقرأ — مفتاحه مطفأ حتى ~500 مستخدم (مقايضة: +50KB لكل جلسة مقابل إنهاء تبعية جوجل)'],
     ['v343', '🧢 الهدف يُقصّ عند مئين 75 من تاريخ السهم نفسه — سقفٌ لا يرفع هدفاً أبداً، ومردودٌ بسطر إن كذّبته البيانات'],
@@ -7675,6 +7677,9 @@ function loadCSV() {
        ويعود العدّ إلى 12 و`_derived` إلى صفر. فمكانه الصحيح هنا —
        حيث تُبنى `rows` — لا في مستهلك واحد من مستهلكيها. */
     try { if (typeof window._backfillMarketRows === 'function') window._backfillMarketRows(); } catch (_) {}
+    /* 🔄 واللوحة الموحّدة تتحدّث هنا — بعد وصول البيانات يقيناً، لا بمهلةٍ
+       مخمَّنة. فتُحدَّث أسعارها في مكانها بلا إعادة فتحٍ ولا إعادة تحميل. */
+    try { if (typeof window.termLiveTick === 'function') window.termLiveTick(); } catch (_) {}
   };
 
   const onFail = (e) => {
@@ -12126,7 +12131,9 @@ document.addEventListener('keydown', e => {
         + '<span style="width:9px;height:9px;border-radius:50%;background:' + dot + ';flex:none"></span>'
         + '<span style="flex:1;min-width:0;overflow:hidden"><span style="font-weight:800;font-size:13.5px">' + (r.name || r.sym) + '</span>'
         + '<span style="color:var(--txt-m);font-size:11px;margin-inline-start:5px">' + r.sym + '</span></span>'
-        + '<span style="font-weight:900;font-size:13px;color:' + dir + '">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</span>'
+        /* 🏷️ وسمٌ يسمح بتحديث السعر في مكانه بلا إعادة رسم القائمة —
+           فلا يقفز التمرير تحت إصبع المستخدم كل دقيقة. */
+        + '<span data-lp="' + r.sym + '" style="font-weight:900;font-size:13px;color:' + dir + '">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</span>'
         + '</div>';
     }).join('');
   }
@@ -12140,6 +12147,12 @@ document.addEventListener('keydown', e => {
   const _termCandleCache = {};
   let TERM_TF = 'D';              // إطار الشارت: D يومي · W أسبوعي · M شهري
   let _termDaily = null;          // آخر شموع يومية مجلوبة (لإعادة التجميع بلا جلب)
+  /* 🔴 السعر الحيّ للسهم المفتوح — يُرسم على المحور بجانب إغلاق آخر شمعة.
+     العلّة المرصودة على «سابك»: الترويسة تقول 51.30 والوسم على المحور
+     يقول 50.20، فيبدوان متناقضَين. وهما صحيحان: الأول سعر اليوم الحيّ،
+     والثاني **إغلاق آخر شمعة يومية**. وحارس الفجوة لا يُنبّه إلا فوق 8%،
+     وهذه 2.1% — فلا تنبيه ولا تفسير. رقمان بلا شرحٍ يُقرآن تناقضاً. */
+  let _termLivePx = null;
   window.termSetTF = function (tf) {
     TERM_TF = tf;
     document.querySelectorAll('[data-tf]').forEach(el => {
@@ -12164,6 +12177,81 @@ document.addEventListener('keydown', e => {
     return out;
   }
   /* يجمّع اليومي إلى الإطار المطلوب ثم يرسم */
+  /* ══════════════════════════════════════════════════════════════════
+     🔄 النبضة الحيّة للّوحة — علّة «لازم أحدّث الصفحة»
+     `_autoPriceRefresh` يُحدّث `rows` كل دقيقة ويُعيد رسم **الرئيسية**
+     وحدها. واللوحة الموحّدة لا تقرأ من `rows` أصلاً — تقرأ من
+     `PRED_RESULTS`، وهي **لا تتغيّر إلا بمسحٍ جديد**. فيبقى سعرها على
+     حاله حتى تُعاد الصفحة أو يُعاد فتح السهم.
+     ▸ الحلّ: نسكب الأسعار الطازجة من `rows` إلى `PRED_RESULTS`، ثم
+       نُحدّث **في مكانه**: رقم الترويسة · أسعار القائمة · خطّ «الآن».
+       ولا نُعيد بناء الصفحة — فلا يقفز التمرير ولا تُغلق القوائم.
+     ══════════════════════════════════════════════════════════════════ */
+  function _syncLiveIntoResults() {
+    if (!Array.isArray(PRED_RESULTS) || typeof rows === 'undefined' || !Array.isArray(rows)) return 0;
+    const m = {};
+    rows.forEach(function (x) { if (x && x.sym) m[x.sym] = x; });
+    let n = 0;
+    PRED_RESULTS.forEach(function (p) {
+      if (!p || !p.sym) return;
+      const src = m[p.sym]; if (!src) return;
+      const px = (typeof toNum === 'function') ? toNum(src.price) : +src.price;
+      if (px > 0 && px !== +p.price) {
+        p.price = px;
+        if (src.chg != null && src.chg !== '' && src.chg !== '-') p.chg = +src.chg;
+        n++;
+      }
+    });
+    return n;
+  }
+
+  window.termLiveTick = function () {
+    try {
+      const panel = document.getElementById('panel-terminal');
+      if (!panel || panel.style.display === 'none') return;   // اللوحة مغلقة ⇒ لا عمل
+
+      const changed = _syncLiveIntoResults();
+
+      /* ① أسعار القائمة الجانبية — في مكانها، بلا إعادة رسم */
+      if (changed) {
+        try {
+          const map = {};
+          PRED_RESULTS.forEach(function (p) { if (p && p.sym) map[p.sym] = p; });
+          panel.querySelectorAll('[data-lp]').forEach(function (el) {
+            const p = map[el.getAttribute('data-lp')];
+            if (p && +p.price > 0) el.textContent = (+p.price).toFixed(2);
+          });
+        } catch (_) {}
+      }
+
+      if (!TERM_SEL) return;
+      const r = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).find(function (x) { return x && x.sym === TERM_SEL; });
+      const px = r ? +r.price : 0;
+      if (!(px > 0)) return;
+
+      /* ② رقم الترويسة */
+      const hp = document.getElementById('termHeadPrice');
+      if (hp) {
+        const txt = px.toFixed(2);
+        if (hp.textContent !== txt) {
+          hp.textContent = txt;
+          /* ومضةٌ خفيفة تُعلم المستخدم أن الرقم تحرّك الآن لا قبل ساعة */
+          try {
+            hp.style.transition = 'color .25s';
+            hp.style.color = '#fbbf24';
+            setTimeout(function () { hp.style.color = ''; }, 700);
+          } catch (_) {}
+        }
+      }
+
+      /* ③ خطّ «الآن» على الشارت — من الكاش، بلا أيّ جلب */
+      if (px !== _termLivePx && _termDaily && _termDaily.length) {
+        const host = document.getElementById('termChartInner');
+        if (host) { _termLivePx = px; _termDrawTF(host, _termDaily); }
+      }
+    } catch (e) {}
+  };
+
   function _termDrawTF(host, daily) {
     let cds = daily;
     if (TERM_TF === 'W') cds = _termAgg(daily, 5);
@@ -12211,6 +12299,7 @@ document.addEventListener('keydown', e => {
       }
     }
     _termDaily = cds;   // احفظ اليومي لإعادة التجميع عند تبديل الإطار
+    _termLivePx = (livePrice > 0) ? +livePrice : null;   // 🔴 للسعر الحيّ على المحور
     try { _termRenderStats(cds); } catch (e) {}   // 📊 بطاقات المعلومات فوق الشارت
     host.innerHTML = warnHtml + '<div id="termChartInner"></div>';
     _termDrawTF(document.getElementById('termChartInner') || host, cds);
@@ -12390,7 +12479,33 @@ document.addEventListener('keydown', e => {
     grid += '<line x1="' + L0 + '" y1="' + lastY.toFixed(1) + '" x2="' + (W - R0) + '" y2="' + lastY.toFixed(1) + '" stroke="' + lastCol + '" stroke-width="1" stroke-dasharray="4 3" opacity="0.85"/>';
     /* 🏷️ وسم السعر الحالي على اليمين — أكبر وأوضح (كان صغيراً يصعب قراءته) */
     grid += '<rect x="' + (W - R0) + '" y="' + (lastY - 12).toFixed(1) + '" width="' + (R0 - 2) + '" height="24" rx="4" fill="' + lastCol + '"/>'
-      + '<text x="' + (W - R0 + (R0 - 2) / 2) + '" y="' + (lastY + 5.5).toFixed(1) + '" font-size="16" font-weight="900" fill="#0b1220" text-anchor="middle">' + last.toFixed(2) + '</text>';
+      + '<text x="' + (W - R0 + (R0 - 2) / 2) + '" y="' + (lastY + 5.5).toFixed(1) + '" font-size="16" font-weight="900" fill="#0b1220" text-anchor="middle">' + last.toFixed(2) + '</text>'
+      /* 🏷️ وسمٌ يقول ما هو الرقم: «إغلاق» لا «السعر الآن» */
+      + '<text x="' + (W - R0 - 4) + '" y="' + (lastY + 4).toFixed(1) + '" font-size="9.5" font-weight="700" fill="' + lastCol + '" text-anchor="end">إغلاق</text>';
+
+    /* ══════════════════════════════════════════════════════════════════
+       🔴 السعر الحيّ على نفس المحور — فينتهي التناقض الظاهريّ
+       الشارت **يوميّ**: آخر شمعة هي إغلاق آخر جلسة، ولا تتحرّك أثناء
+       التداول. والترويسة تعرض السعر الحيّ (متأخّر ~15 دقيقة). فيرى
+       المستخدم رقمين مختلفين بلا تفسير — كما وقع على «سابك»: 51.30
+       في الأعلى و50.20 على المحور.
+       نرسم الحيّ خطّاً متقطّعاً كهرمانياً موسوماً بـ«الآن»، فيُقرأ
+       الفرق **مسافةً مفهومة** لا تناقضاً. ولا نرسمه إن كان ملتصقاً
+       بالإغلاق (فرق < 0.15%) كي لا يتراكب الوسمان.
+       ══════════════════════════════════════════════════════════════════ */
+    try {
+      const lp = (typeof _termLivePx === 'number' && _termLivePx > 0) ? _termLivePx : null;
+      if (lp && last > 0 && Math.abs(lp - last) / last > 0.0015 && lp >= lo && lp <= hi) {
+        const lyY = Y(lp);
+        grid += '<line x1="' + L0 + '" y1="' + lyY.toFixed(1) + '" x2="' + (W - R0) + '" y2="' + lyY.toFixed(1)
+          + '" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="2 4" opacity="0.95"/>'
+          + '<rect x="' + (W - R0) + '" y="' + (lyY - 11).toFixed(1) + '" width="' + (R0 - 2) + '" height="22" rx="4" fill="#fbbf24"/>'
+          + '<text x="' + (W - R0 + (R0 - 2) / 2) + '" y="' + (lyY + 5).toFixed(1)
+          + '" font-size="14.5" font-weight="900" fill="#0b1220" text-anchor="middle">' + lp.toFixed(2) + '</text>'
+          + '<text x="' + (W - R0 - 4) + '" y="' + (lyY + 4).toFixed(1)
+          + '" font-size="9.5" font-weight="700" fill="#fbbf24" text-anchor="end">الآن</text>';
+      }
+    } catch (e) {}
     /* 🎯 مناطق الخطة — تُرسم خلف الشموع فلا تحجبها */
     let plan = '';
     if (_pl) {
@@ -12514,7 +12629,7 @@ document.addEventListener('keydown', e => {
          والتاريخ المخزَّن احتياطٌ يعطي **إغلاق آخر جلسة** لا سعراً حيّاً.
          صناديق الريت تبقى على الاحتياطي دائماً (جوجل لا يدعمها) — فلولا
          هذا الوسم لظهر إغلاق الأمس بثوب سعر اللحظة. */
-      + '<div style="text-align:left"><div style="font-size:24px;font-weight:900">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</div>'
+      + '<div style="text-align:left"><div id="termHeadPrice" style="font-size:24px;font-weight:900">' + (r.price != null ? (+r.price).toFixed(2) : '—') + '</div>'
       + '<div style="font-size:11px;color:' + (r._derived ? '#fbbf24' : 'var(--txt-m)') + '" title="'
       + (r._derived ? ('مصدر السوق الحيّ لا يغطّي هذا الرمز — الرقم إغلاق آخر جلسة من تاريخك المخزَّن'
           + (r._derivedAt ? ' بتاريخ ' + r._derivedAt : ''))
@@ -14676,7 +14791,7 @@ function _autoPriceRefresh() {
     if (!marketOpen) return;                                      // خارج ساعات التداول — الأسعار ثابتة
     // نظّف كاش عروض الأسعار حتى يجلب أرقاماً جديدة فعلاً (بدل الكاش 5 دقائق)
     try { if (typeof _sahmkMem !== 'undefined') { for (const k of [..._sahmkMem.keys()]) if (/quote/i.test(k)) _sahmkMem.delete(k); if (typeof _sahmkPersist === 'function') _sahmkPersist(); } } catch (_) {}
-    loadCSV();
+    loadCSV();   /* واللوحة تُحدَّث من داخل onResult — لا بمهلةٍ مُخمَّنة */
   } catch (e) { /* تجاهل */ }
 }
 /* ════════════════════════════════════════════════════════════════

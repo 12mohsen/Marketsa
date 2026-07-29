@@ -2221,11 +2221,15 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-28-v350';
-console.log('%c[تداول بلس] البناء: 2026-07-28-v350 — ✨ لا رمشَ ولا اختفاء: حركة الظهور (termFade من opacity:0) كانت تُعاد مع كل إطار سحب فيبقى الشارت قرب الشفافية — الآن تُسقَط عند التفاعل وتبقى عند أوّل فتح · 🖐️ الشارت تفاعليّ: سحبٌ للتنقّل في الزمن · عجلة/قرص للتكبير · نقرتان للرجوع للآن — والمحور العمودي يتبع المعروض تلقائياً فلا يخرج الوقف أو الهدف عن الإطار · 🏷️ وسوم الخطة فوق الشموع لا تحتها: كان وسم الوقف يُطمَس بالشموع (أسمنت القصيم 41.98) لأن طبقة الخطة تُرسم كاملةً قبل الشموع — الآن الخطوط خلفها والوسوم أمامها · 🔄 اللوحة الموحّدة تتحدّث وحدها كل دقيقة: كانت تقرأ من PRED_RESULTS التي لا تتغيّر إلا بمسحٍ جديد، فيلزم إعادة تحميل الصفحة. الآن تُسكب الأسعار الطازجة وتُحدَّث في مكانها بلا قفز تمرير · 📈 خطّ «الآن» على الشارت: الشموع يومية فلا تتغيّر أثناء الجلسة، فكانت الترويسة تقول 51.30 والمحور 50.20 بلا تفسير (سابك) — الآن وسمان: «إغلاق» و«الآن» · 🧊 كاش symbol_stats: التحديث التلقائي كل 60 ثانية كان يُطلق أثقل تجميعة في التطبيق (400 يوم × 300 ألف صفّ) ستّين مرّة في الساعة لكل تبويب — الآن 97% أقلّ · 📊 بثّ جدول السوق جاهزٌ ومفتاحه مطفأ (USE_MARKET_SHARED): يُكمل نمط البثّ الخماسي ويُنهي اعتماد كل مستخدم على شيت جوجل · 🧢 سقف الهدف عند ما يبلغه السهم فعلاً (مئين 75 من تاريخه): قياس 223 إشارة أثبت أن متوسط الأقصى 4.55% هابطاً و2.33% صاعداً مقابل هدفٍ 7.73% و8.72% — أي أن الخروج المثاليّ عند الذروة كان يُخطئ الهدف · 🎁 حصاد السعر الرسمي بلا طلب إضافي (الحصّة المجانية كما كانت) · 🔇 كُسر الفشل الصامت الخامس ·🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-28-v354';
+console.log('%c[تداول بلس] البناء: 2026-07-28-v354 — 🌐 أُضيف الحقل _url الذي يطلبه FormSubmit: كان يردّ «افتح الصفحة عبر خادم ويب» لأن المتصفّحات تتشدّد في ترويسة Referer فيظنّ الصفحةَ ملفّاً محلّياً · 🔊 كُسر الفشل الصامت السابع وأخطرها (طلب مستخدمٍ يضيع): الإرسال كان داخل iframe مخفيّ فتُدفَن استجابة FormSubmit — الآن عبر /ajax/ فيُعرَف مصيره ويُقال · 📨 بريد الدعم استُبدل بسلسلة FormSubmit العشوائية: كان مكتوباً نصّاً في المصدر فيُمكن قصفُه مباشرةً بلا مرورٍ بالموقع (وreCAPTCHA معطّلة لأن الإرسال داخل iframe مخفيّ) · 🔐 بُرد الأدمن صارت بصمات SHA-256 لا نصوصاً (كانت تُقرأ بضغطة Ctrl+U وتُحصَد آلياً لقوائم التصيّد) — حجبٌ لا حماية، والحماية في RLS والتحقّق بخطوتين · ✨ لا رمشَ ولا اختفاء: حركة الظهور (termFade من opacity:0) كانت تُعاد مع كل إطار سحب فيبقى الشارت قرب الشفافية — الآن تُسقَط عند التفاعل وتبقى عند أوّل فتح · 🖐️ الشارت تفاعليّ: سحبٌ للتنقّل في الزمن · عجلة/قرص للتكبير · نقرتان للرجوع للآن — والمحور العمودي يتبع المعروض تلقائياً فلا يخرج الوقف أو الهدف عن الإطار · 🏷️ وسوم الخطة فوق الشموع لا تحتها: كان وسم الوقف يُطمَس بالشموع (أسمنت القصيم 41.98) لأن طبقة الخطة تُرسم كاملةً قبل الشموع — الآن الخطوط خلفها والوسوم أمامها · 🔄 اللوحة الموحّدة تتحدّث وحدها كل دقيقة: كانت تقرأ من PRED_RESULTS التي لا تتغيّر إلا بمسحٍ جديد، فيلزم إعادة تحميل الصفحة. الآن تُسكب الأسعار الطازجة وتُحدَّث في مكانها بلا قفز تمرير · 📈 خطّ «الآن» على الشارت: الشموع يومية فلا تتغيّر أثناء الجلسة، فكانت الترويسة تقول 51.30 والمحور 50.20 بلا تفسير (سابك) — الآن وسمان: «إغلاق» و«الآن» · 🧊 كاش symbol_stats: التحديث التلقائي كل 60 ثانية كان يُطلق أثقل تجميعة في التطبيق (400 يوم × 300 ألف صفّ) ستّين مرّة في الساعة لكل تبويب — الآن 97% أقلّ · 📊 بثّ جدول السوق جاهزٌ ومفتاحه مطفأ (USE_MARKET_SHARED): يُكمل نمط البثّ الخماسي ويُنهي اعتماد كل مستخدم على شيت جوجل · 🧢 سقف الهدف عند ما يبلغه السهم فعلاً (مئين 75 من تاريخه): قياس 223 إشارة أثبت أن متوسط الأقصى 4.55% هابطاً و2.33% صاعداً مقابل هدفٍ 7.73% و8.72% — أي أن الخروج المثاليّ عند الذروة كان يُخطئ الهدف · 🎁 حصاد السعر الرسمي بلا طلب إضافي (الحصّة المجانية كما كانت) · 🔇 كُسر الفشل الصامت الخامس ·🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
 /* 📜 تفصيل ما تغيّر في كل بناء: اكتب في الكونسول  buildLog()  */
 window.buildLog = function () {
   const L = [
+    ['v354', '🌐 _url في حمولة الدعم (سبب رفض FormSubmit) · وحمولة واحدة للمسارين بدل تكرارٍ يُنسى أحدهما'],
+    ['v353', '🔊 طلب الدعم يُرسَل عبر /ajax/ فيُعرَف أوصل أم لا (كان يُدفَن في iframe) — والنموذج المخفيّ يبقى احتياطاً'],
+    ['v352', '📨 SUPPORT_EMAIL ⇐ SUPPORT_FORM_ID (سلسلة عشوائية) — صفر بريد في المصدر المنشور'],
+    ['v351', '🔐 ADMIN_EMAILS ⇐ ADMIN_EMAIL_HASHES · وPRIORITY_EMAILS ⇐ بصمات · SHA-256 متزامن مُتحقَّق من متجهاته المعيارية'],
     ['v350', '✨ حركة الظهور مرّةً واحدة لا مع كل إطار سحب (كانت تُخفي الشموع وتُرمش) · وتتبّع الفأرة يحترم نافذة العرض عند التنقّل في الماضي'],
     ['v349', '🖐️ عدسة الشارت: سحب أفقيّ + عجلة/قرص للتكبير + نقرتان للتصفير · ومستمعو السحب يُزالون عند تركه فلا يتسرّبون مع كل إعادة رسم'],
     ['v348', '🏷️ فُصلت طبقة الخطة: المساحات والخطوط خلف الشموع (فلا تحجب السعر) والوسوم أمامها بإطار داكن (فلا تُطمَس)'],
@@ -2941,8 +2945,72 @@ async function authSignOut() {
    الإعدادات تُحفظ في جدول app_settings في Supabase
    وتسري على كل المستخدمين عند فتح التطبيق
 ═════════════════════════════════════ */
-/* إيميلات الأدمن (بأحرف صغيرة) — الأول رئيسي والثاني احتياطي */
-const ADMIN_EMAILS = ['abd1234ify@gmail.com', 'market13s@hotmail.com', 'z0ttee0@gmail.com'];
+/* ══════════════════════════════════════════════════════════════════════
+   🔐 بُرد الطاقم — بصماتها لا نصوصها
+   `index.html` يُنزَّل كاملاً على كل جهاز، فكانت بُرد الأدمن مقروءةً
+   بضغطة Ctrl+U — تُحصَد آلياً وتُوضع في قوائم تصيّد موجَّهة.
+   الآن نخزّن **بصمة SHA-256** لكلٍّ منها ونقارن البصمات.
+
+   ⚠️ وكن صريحاً مع نفسك: هذا **حجبٌ لا حماية**. من خمّن البريد يستطيع
+      أن يبصمه ويقارن. قيمته أنه يمنع الحصاد الآليّ والمرور العابر —
+      لا أنه يصدّ مهاجماً يعرفك.
+   🛡️ والحماية الحقيقية في موضعين لا ثالث لهما:
+      ① سياسات RLS في القاعدة (تفحص auth.jwt() لا ما يدّعيه المتصفّح)
+      ② التحقّق بخطوتين على هذه الحسابات
+   فلو نسخ مهاجمٌ الملف كاملاً وعرف كل شيء، لا يكتب صفّاً واحداً.
+   ══════════════════════════════════════════════════════════════════════ */
+function _sha256hex(msg) {
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+             0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+             0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+             0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+             0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+             0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+             0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+             0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const b = [];
+  for (let i = 0; i < msg.length; i++) {
+    const c = msg.charCodeAt(i);
+    if (c < 128) b.push(c);
+    else if (c < 2048) b.push(192 | (c >> 6), 128 | (c & 63));
+    else b.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63));
+  }
+  const L = b.length * 8;
+  b.push(0x80); while (b.length % 64 !== 56) b.push(0);
+  for (let i = 7; i >= 0; i--) b.push((L / Math.pow(2, i * 8)) & 255);
+  const R = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let i = 0; i < b.length; i += 64) {
+    const w = new Array(64);
+    for (let j = 0; j < 16; j++) w[j] = (b[i+j*4]<<24)|(b[i+j*4+1]<<16)|(b[i+j*4+2]<<8)|b[i+j*4+3];
+    for (let j = 16; j < 64; j++) {
+      const s0 = R(w[j-15],7)^R(w[j-15],18)^(w[j-15]>>>3);
+      const s1 = R(w[j-2],17)^R(w[j-2],19)^(w[j-2]>>>10);
+      w[j] = (w[j-16]+s0+w[j-7]+s1)|0;
+    }
+    let a=H[0],bb=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for (let j = 0; j < 64; j++) {
+      const S1 = R(e,6)^R(e,11)^R(e,25), ch = (e&f)^(~e&g);
+      const t1 = (h+S1+ch+K[j]+w[j])|0;
+      const S0 = R(a,2)^R(a,13)^R(a,22), mj = (a&bb)^(a&c)^(bb&c);
+      const t2 = (S0+mj)|0;
+      h=g; g=f; f=e; e=(d+t1)|0; d=c; c=bb; bb=a; a=(t1+t2)|0;
+    }
+    H = [(H[0]+a)|0,(H[1]+bb)|0,(H[2]+c)|0,(H[3]+d)|0,(H[4]+e)|0,(H[5]+f)|0,(H[6]+g)|0,(H[7]+h)|0];
+  }
+  return H.map(x => ('00000000' + (x >>> 0).toString(16)).slice(-8)).join('');
+}
+/* بصمات بُرد الأدمن — لإضافة بريد: اكتب في الكونسول  _sha256hex('البريد') */
+const ADMIN_EMAIL_HASHES = [
+  '23e833b4be816278af25da2829f877dd4a03613d1306bf2dbb83e04ee665eb95',
+  '16ed810994a6f546d6ce8b83497793ca55cd6309725232cea46d445c35ed29c5',
+  '1d3383e8ab5e08d84473527ab31e29a191bb79b626c0f6ef040e7c4ba7b4a486',
+];
+function _isAdminEmail(e) {
+  const s = String(e || '').trim().toLowerCase();
+  return !!s && ADMIN_EMAIL_HASHES.indexOf(_sha256hex(s)) !== -1;
+}
+try { window._sha256hex = _sha256hex; } catch (_) {}
 
 /* 🔗 بروكسي Cloudflare الخاص (موثوق، غير مشترك) — مُعرّف مبكّراً ليسبق كل استعمال */
 const PRIVATE_PROXY = 'https://tadawul-proxy.abdmohsen94.workers.dev/?url=';
@@ -2967,10 +3035,47 @@ function esc(s) {
     .replace(/'/g, '&#39;');
 }
 window.esc = esc;
-/* 📌 إيميلات تُثبَّت في مقدّمة قائمة المستخدمين (بالترتيب). عدّلها كما تشاء. */
-const PRIORITY_EMAILS = ['abd1234ify@gmail.com','abd12345ify@gmail.com','market13s@hotmail.com','abdmohsen94@gmail.com','almkhzomi1@gmail.com'];
-/* بريد استقبال طلبات الدعم (FormSubmit — يجب أن يكون مفعّلاً لديهم) */
-const SUPPORT_EMAIL = 'market13S@hotmail.com';
+/* 📌 بصمات بُرد تُثبَّت في مقدّمة قائمة المستخدمين (بالترتيب — الأول أولاً).
+   بصمات لا نصوص لنفس السبب أعلاه: لا تُحصَد آلياً من المصدر. */
+const PRIORITY_HASHES = [
+  '23e833b4be816278af25da2829f877dd4a03613d1306bf2dbb83e04ee665eb95',
+  '3009e7a849b9bdc394ea9b1927d3ae476d5a7f4b6bb540eedbd24c615a3984eb',
+  '16ed810994a6f546d6ce8b83497793ca55cd6309725232cea46d445c35ed29c5',
+  'd3e43498ae4eb389ef4d5578f1b49440fe6f7f185f157085e29dfaf4d9624f9e',
+  '994cc478987163acda234d2c62fc976b1281847410a64bdd8156c3500972f8b3',
+];
+function _priorityRank(e) {
+  return PRIORITY_HASHES.indexOf(_sha256hex(String(e || '').trim().toLowerCase()));
+}
+/* ══════════════════════════════════════════════════════════════════════
+   📨 وجهة طلبات الدعم — سلسلة FormSubmit العشوائية لا البريد
+   كان `form.action = 'https://formsubmit.co/' + البريد` — فبريد الدعم
+   مكتوبٌ نصّاً في المصدر. وأثره أخطر من الكشف: أيّ روبوت يستطيع أن
+   يُرسل مباشرةً إلى العنوان نفسه بلا مرورٍ بالموقع أصلاً، ولا يمنعه
+   حقلٌ مخفيّ ولا honeypot — لأنه يتحكّم بالطلب كاملاً.
+   وreCAPTCHA معطّلة عمداً (`_captcha:false`) لأن النموذج يُرسَل داخل
+   iframe مخفيّ، فلو ظهرت لما رآها المستخدم ولسقط الإرسال صامتاً.
+   فالسلسلة العشوائية هي الحاجز الوحيد المتاح: تُخفي الوجهة نفسها.
+
+   📌 درسٌ من التجربة: رسالة FormSubmit تذكر السلسلة مرّتين — في نصّها
+      (31 حرفاً) وفي رابط `/confirm/` (32). ورجّحتُ نسخة الرابط قياساً
+      على أن بصمات MD5 طولها 32، **فأخطأت**: وصل إشعار تلجرام ولم يصل
+      البريد. والصحيح نسخة **النصّ**، وقياسي على الطول لم يكن دليلاً.
+      ▸ فإن غيّرتَ البريد يوماً، انسخ السلسلة من **نصّ** الرسالة.
+   ══════════════════════════════════════════════════════════════════════ */
+const SUPPORT_FORM_ID = 'd1a7b38de87428ae6bbcc93df7e9c66';
+/* 🌐 عنوان الموقع المعتمد — يُرسَل في الحقل `_url` الذي يطلبه FormSubmit.
+   بلاه يردّ: «Make sure you open this page through a web server».
+   والسبب ليس خادمك: المتصفّحات صارت تتشدّد في ترويسة Referer
+   (strict-origin-when-cross-origin)، ومع طلب JSON قد لا تُرسَل أصلاً —
+   فيظنّ FormSubmit أن الصفحة ملفٌّ محلّيّ ويرفض. فنُخبره بأنفسنا. */
+const SITE_URL = 'https://markets-a.com/';
+function _fsUrl() {
+  try {
+    if (location && /^https?:$/.test(location.protocol)) return location.origin + location.pathname;
+  } catch (_) {}
+  return SITE_URL;   // على file:// أو تعذّر القراءة ⇒ العنوان المعتمد
+}
 let appSettings = {};
 
 /* 🛡️ وقت الخادم الموثوق — لمنع التحايل بتغيير ساعة الجهاز */
@@ -2997,7 +3102,7 @@ function nowTrusted() {
 }
 
 /* ══════════ 🛡️ نظام الأدوار والصلاحيات الإشرافية ══════════
-   • الأدمن الرئيسي: إيميله ضمن ADMIN_EMAILS — صلاحية كاملة، وهو وحده يعيّن المشرفين.
+   • الأدمن الرئيسي: بصمة بريده ضمن ADMIN_EMAIL_HASHES — صلاحية كاملة، وهو وحده يعيّن المشرفين.
    • المشرف: مستخدم عادي مُنح role='supervisor' في جدول profiles، مع صلاحيات
      محدّدة في perms (support = الرد على الدعم · users = إدارة اشتراكات/قيود المستخدمين).
    • الحماية الحقيقية على مستوى قاعدة البيانات عبر سياسات RLS (انظر ملف supabase-roles.sql).
@@ -3007,7 +3112,7 @@ let sbPerms = null;     // صلاحيات المشرف {support:bool, users:bool
 
 /* الأدمن الرئيسي (المالك) — القائمة الثابتة */
 function isSuperAdmin() {
-  return !!(sbUser && ADMIN_EMAILS.includes((sbUser.email || '').toLowerCase()));
+  return !!(sbUser && _isAdminEmail(sbUser.email));
 }
 /* مشرف مُعيَّن (وليس أدمن رئيسي) */
 function isSupervisor() {
@@ -5265,7 +5370,7 @@ async function adminCopyEmail(email) {
 /* ── 🗑️ حذف حساب مستخدم نهائياً (عبر دالة admin-users السحابية) ── */
 function adminDeleteUser(email) {
   if (!isSuperAdmin()) { showToast('⛔ حذف الحسابات للأدمن الرئيسي فقط'); return; }
-  if (ADMIN_EMAILS.includes((email || '').toLowerCase())) { showToast('⛔ لا يمكن حذف حساب أدمن'); return; }
+  if (_isAdminEmail(email)) { showToast('⛔ لا يمكن حذف حساب أدمن'); return; }
   const old = document.getElementById('admDelUserPanel');
   if (old) old.remove();
   const el = document.createElement('div');
@@ -5353,9 +5458,9 @@ function adminRenderUsers(query) {
   }
   const _prioIdx = u => {
     const e = (u.email || '').toLowerCase();
-    const i = PRIORITY_EMAILS.indexOf(e);
+    const i = _priorityRank(e);
     if (i !== -1) return i;
-    if (ADMIN_EMAILS.includes(e)) return 100;
+    if (_isAdminEmail(e)) return 100;
     if (u.role === 'supervisor') return 200;
     return 9999;
   };
@@ -5406,7 +5511,7 @@ function adminRenderUsers(query) {
                         overflow:hidden;text-overflow:ellipsis">
               <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
                     background:${_isOnline(u.last_seen) ? '#22c55e' : 'rgba(255,255,255,.2)'};
-                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${esc(u.email)}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !ADMIN_EMAILS.includes((u.email || '').toLowerCase())) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${expiredBadge}${consentBadge}</div>
+                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${esc(u.email)}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !_isAdminEmail(u.email)) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${expiredBadge}${consentBadge}</div>
             <div style="font-size:10px;color:${r.blocked ? '#f87171' : (subExpired ? '#fca5a5' : 'var(--txt-m)')}">${status}</div>
             <div style="font-size:9.5px;color:${_isOnline(u.last_seen) ? '#4ade80' : 'var(--txt-m)'}">${_lastSeenText(u.last_seen)}</div>
             ${u.created_at ? `<div style="font-size:9px;color:var(--txt-m)">📅 سجّل: ${new Date(u.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { year:'numeric', month:'short', day:'numeric' })} · ${_accountAge(u.created_at)}</div>` : ''}
@@ -6002,7 +6107,7 @@ function adminRenderActivity() {
   let list = _admActivity.slice();
   if (filter === 'supervisor') {
     const supMails = new Set((_admUsers || [])
-      .filter(u => u.role === 'supervisor' && !ADMIN_EMAILS.includes((u.email || '').toLowerCase()))
+      .filter(u => u.role === 'supervisor' && !_isAdminEmail(u.email))
       .map(u => (u.email || '').toLowerCase()));
     list = list.filter(a => a.actor_role === 'supervisor' || supMails.has((a.actor_email || '').toLowerCase()));
   }
@@ -6138,7 +6243,7 @@ function adminEditUser(email) {
   const uProf     = bulk ? {} : (_admUsers.find(x => x.email === email) || {});
   const uIsSup    = uProf.role === 'supervisor';
   const uPerms    = uProf.perms || {};
-  const isAdmEmail = !bulk && ADMIN_EMAILS.includes((email || '').toLowerCase());
+  const isAdmEmail = !bulk && _isAdminEmail(email);
   const hiSecs = bulk ? [] : (_payJustActivated || []);   // أقسام فُعّلت للتوّ (إطار أخضر)
   _payJustActivated = [];                                  // استهلاك مرة واحدة
   const old = document.getElementById('adminUserPanel');
@@ -6277,7 +6382,7 @@ function adminEditUser(email) {
 /* 🛡️ حفظ دور المستخدم الإشرافي (للأدمن الرئيسي فقط) */
 async function adminSaveRole(email) {
   if (!isSuperAdmin()) { showToast('⛔ تعيين المشرفين للأدمن الرئيسي فقط'); return; }
-  if (ADMIN_EMAILS.includes((email || '').toLowerCase())) { showToast('⛔ هذا الحساب أدمن رئيسي بالفعل'); return; }
+  if (_isAdminEmail(email)) { showToast('⛔ هذا الحساب أدمن رئيسي بالفعل'); return; }
   const isSup = document.getElementById('admRoleSup').checked;
   const perms = isSup ? {
     support: document.getElementById('admRolePermSupport').checked,
@@ -6364,7 +6469,7 @@ function _admAllTargets() {
   return _admUsers
     .filter(u => u.email
       && !(sbUser && u.email === sbUser.email)
-      && !ADMIN_EMAILS.includes((u.email || '').toLowerCase())
+      && !_isAdminEmail(u.email)
       && !(_admRestr[u.email] && _admRestr[u.email].sub_exempt))
     .map(u => u.email);
 }
@@ -7105,7 +7210,7 @@ function setLoading(msg) {
    نستخدم fetch() بدل PapaParse.download
    لنتحكم بالـ timeout ونتجنب أخطاء XHR.
 ───────────────────────────────────── */
-/* PRIVATE_PROXY نُقل إلى أعلى الملف (قرب ADMIN_EMAILS) ليكون معرّفاً قبل أي استعمال،
+/* PRIVATE_PROXY نُقل إلى أعلى الملف (قرب بصمات الأدمن) ليكون معرّفاً قبل أي استعمال،
    فيزول حارس typeof الزائف. انظر التعريف هناك. */
 
 const PROXY_LIST = [
@@ -18266,7 +18371,8 @@ async function supportSend() {
 
   /* نسخة لبريد الأدمن عبر FormSubmit بنموذج مخفي —
      النماذج لا تخضع لحظر CORS الذي أوقف طريقة AJAX */
-  try { _fsSendViaForm(email, reqType, subject); } catch (e) { console.warn('[support] FS:', e.message); }
+  /* 📨 AJAX أوّلاً (يُعرَف مصيره) ثم النموذج المخفيّ احتياطاً داخل _fsSend */
+  try { _fsSend(email, reqType, subject); } catch (e) { console.warn('[support] FS:', e.message); }
 
   const f = document.getElementById('supportForm');
   if (f) f.remove();
@@ -18277,7 +18383,56 @@ async function supportSend() {
   }
 }
 
-/* إرسال FormSubmit عبر نموذج مخفي داخل iframe (يتجاوز CORS) */
+/* ══════════════════════════════════════════════════════════════════════
+   📨 إرسال طلب الدعم — عبر AJAX أوّلاً ليُعرَف مصيره
+   العلّة المرصودة: وصل إشعار تلجرام ولم يصل البريد. والإرسال كان يقع
+   داخل `iframe` مخفيّ، فاستجابة FormSubmit — نجاحاً أو خطأً — تُدفَن
+   في إطارٍ لا يراه أحد. فلا نعلم أوصلت الرسالة أم ضاعت.
+   وهذا سابع فشلٍ صامت في هذا المشروع، وأخطرها: **طلب مستخدمٍ يضيع**.
+
+   ▸ نقطة `/ajax/` عند FormSubmit تُرجع JSON صريحاً:
+       { "success": "true", "message": "..." }
+     فنعرف الحقيقة ونقولها.
+   ▸ وإن سقط AJAX (شبكة أو CORS) نرجع للنموذج المخفيّ — فلا نخسر
+     مساراً كان يعمل.
+   ══════════════════════════════════════════════════════════════════════ */
+function _fsPayload(email, reqType, subject) {
+  return {
+    _subject: '📨 طلب دعم — تداول بلس (' + reqType + ')',
+    _replyto: email,
+    _captcha: 'false',
+    _template: 'table',
+    _url: _fsUrl(),          // 🌐 بلاه يرفض FormSubmit ويقول «افتحها عبر خادم ويب»
+    'بريد المستخدم': email,
+    'الحالة': (sb && sbUser) ? 'مستخدم مسجّل (رُدّ من لوحة الأدمن أو بالإيميل)' : 'زائر (الرد عبر الإيميل فقط)',
+    'نوع الطلب': reqType,
+    'الموضوع': subject,
+  };
+}
+
+async function _fsSend(email, reqType, subject) {
+  try {
+    const res = await fetch('https://formsubmit.co/ajax/' + SUPPORT_FORM_ID, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(_fsPayload(email, reqType, subject)),
+    });
+    let d = null;
+    try { d = await res.json(); } catch (_) {}
+    const ok = !!(d && String(d.success) === 'true');
+    if (ok) { console.info('[support] ✅ وصل طلب الدعم إلى بريدك عبر FormSubmit'); return true; }
+    console.error('[support] ⛔ FormSubmit رفض الإرسال — الطلب **لم يصل بريدك**.'
+      + ' الحالة ' + res.status + ' · الردّ: ' + (d ? JSON.stringify(d) : 'بلا JSON')
+      + ' · راجع SUPPORT_FORM_ID (السلسلة العشوائية).');
+    return false;
+  } catch (e) {
+    console.warn('[support] تعذّر مسار AJAX (' + (e && e.message) + ') — نرجع للنموذج المخفيّ');
+    try { _fsSendViaForm(email, reqType, subject); } catch (_) {}
+    return null;   // غير معروف — لا نزعم نجاحاً
+  }
+}
+
+/* إرسال FormSubmit عبر نموذج مخفي داخل iframe (احتياطيّ — يتجاوز CORS) */
 function _fsSendViaForm(email, reqType, subject) {
   let ifr = document.getElementById('fsFrame');
   if (!ifr) {
@@ -18287,20 +18442,14 @@ function _fsSendViaForm(email, reqType, subject) {
     document.body.appendChild(ifr);
   }
   const form = document.createElement('form');
-  form.action = 'https://formsubmit.co/' + SUPPORT_EMAIL;
+  form.action = 'https://formsubmit.co/' + SUPPORT_FORM_ID;
   form.method = 'POST';
   form.target = 'fsFrame';
   form.style.display = 'none';
-  const fields = {
-    _subject: `📨 طلب دعم — تداول بلس (${reqType})`,
-    _replyto: email,
-    _captcha: 'false',
-    _template: 'table',
-    'بريد المستخدم': email,
-    'الحالة': (sb && sbUser) ? 'مستخدم مسجّل (رُدّ من لوحة الأدمن أو بالإيميل)' : 'زائر (الرد عبر الإيميل فقط)',
-    'نوع الطلب': reqType,
-    'الموضوع': subject,
-  };
+  /* 🔗 نفس الحمولة بالضبط — مصدرٌ واحد للحقلين المساران.
+     كانت مكرّرةً هنا، فأيّ حقلٍ يُضاف هناك يُنسى هنا (وهو ما وقع
+     مع `_url` تماماً: أُضيف لمسار AJAX ولبقي الاحتياطيّ ناقصاً). */
+  const fields = _fsPayload(email, reqType, subject);
   Object.keys(fields).forEach(k => {
     const i = document.createElement('input');
     i.type = 'hidden'; i.name = k; i.value = fields[k];

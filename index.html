@@ -2221,11 +2221,12 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-28-v343';
-console.log('%c[تداول بلس] البناء: 2026-07-28-v343 — 🧢 سقف الهدف عند ما يبلغه السهم فعلاً (مئين 75 من تاريخه): قياس 223 إشارة أثبت أن متوسط الأقصى 4.55% هابطاً و2.33% صاعداً مقابل هدفٍ 7.73% و8.72% — أي أن الخروج المثاليّ عند الذروة كان يُخطئ الهدف · 🎁 حصاد السعر الرسمي بلا طلب إضافي (الحصّة المجانية كما كانت) · 🔇 كُسر الفشل الصامت الخامس ·🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
+window.APP_BUILD = '2026-07-28-v344';
+console.log('%c[تداول بلس] البناء: 2026-07-28-v344 — 📊 بثّ جدول السوق جاهزٌ ومفتاحه مطفأ (USE_MARKET_SHARED): يُكمل نمط البثّ الخماسي ويُنهي اعتماد كل مستخدم على شيت جوجل · 🧢 سقف الهدف عند ما يبلغه السهم فعلاً (مئين 75 من تاريخه): قياس 223 إشارة أثبت أن متوسط الأقصى 4.55% هابطاً و2.33% صاعداً مقابل هدفٍ 7.73% و8.72% — أي أن الخروج المثاليّ عند الذروة كان يُخطئ الهدف · 🎁 حصاد السعر الرسمي بلا طلب إضافي (الحصّة المجانية كما كانت) · 🔇 كُسر الفشل الصامت الخامس ·🛡️ تحصين سدّ الريت + حارس قِدَم · 💳 المحفظة والمراقبة لا تُطمَس بالانتهاء · 📐 وسيط ما يبلغه السهم فعلاً بجانب الهدف', 'color:#7c3aed;font-weight:bold;font-size:14px');
 /* 📜 تفصيل ما تغيّر في كل بناء: اكتب في الكونسول  buildLog()  */
 window.buildLog = function () {
   const L = [
+    ['v344', '📊 market_shared: الأدمن يبثّ جدول السوق والجميع يقرأ — مفتاحه مطفأ حتى ~500 مستخدم (مقايضة: +50KB لكل جلسة مقابل إنهاء تبعية جوجل)'],
     ['v343', '🧢 الهدف يُقصّ عند مئين 75 من تاريخ السهم نفسه — سقفٌ لا يرفع هدفاً أبداً، ومردودٌ بسطر إن كذّبته البيانات'],
     ['v342', '🎁 السعر الرسمي يُحصد إلى الجدول عند فتح السهم — صفر طلب إضافي · وUSE_SAHMK_API يبقى مُطفأً فالحصّة المجانية كما كانت'],
     ['v341', '🔇 دفعة أسعار سهمك كانت تُتخطّى بـcatch{continue} بلا كلمة، فتبقى الريت «—» بلا سبب · وأُضيف sahmkReset()'],
@@ -7151,7 +7152,70 @@ function parseCSVText(text) {
   });
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   📊 بثّ جدول السوق — آخر طرفٍ خارج سيطرتك
+   `tryAllSources()` تجعل **كل مستخدم** يجلب شيت جوجل بنفسه. وحدود جوجل
+   للنشر CSV غير معلنة؛ فإن سقط تحت الحمل سقط التطبيق عند الجميع دفعةً.
+   وهذا يُكمل نمطك: radar_results · analysis_daily · dividends_shared ·
+   sahmk_shared — والشيت وحده كان خارجه.
+
+   ⚖️ وهو **نقلٌ للحمل لا تخفيضٌ له**: ~45 كيلوبايت من جوجل (مجانية بخطر
+   حدٍّ مجهول) تصير ~50 من Supabase (من حصّتك المقيسة). فحِمل الجلسة
+   يرتفع ~155 ⇒ ~205 كيلوبايت، والطاقة تنزل ~32 ألف ⇒ ~24 ألف جلسة/شهر.
+   تشتري يقيناً بثمن ربع الطاقة.
+
+   ▶️ فالمفتاح **مطفأ**. أشعله عند ~500 مستخدم نشط، أو إن تكرّر
+     «فشل مصدر البيانات» في كونسول المستخدمين. والجدول جاهزٌ حتى ذلك.
+   ══════════════════════════════════════════════════════════════════════ */
+const USE_MARKET_SHARED  = false;              // ← المفتاح: اجعله true عند الحاجة
+const MARKET_SHARED_TTL  = 15 * 60 * 1000;     // طزاجة البثّ = نفس تأخير الشيت
+
+/* 📤 الأدمن يبثّ ما جلبه — بصمت، وفشلُه لا يُسقط شيئاً */
+async function marketUploadShared(data) {
+  try {
+    if (!USE_MARKET_SHARED) return;
+    if (typeof sb === 'undefined' || !sb) return;
+    if (!(typeof isAdmin === 'function' && isAdmin())) return;
+    if (!Array.isArray(data) || data.length < 2) return;
+    await sb.from('market_shared').upsert({
+      id: 1, data: data, rows_n: data.length - 1,
+      fetched_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    console.info('[market] 📤 بُثّ جدول السوق (' + (data.length - 1) + ' صفّاً) للجميع');
+  } catch (e) { console.warn('[market] تعذّر البثّ:', e && e.message); }
+}
+
+/* 📥 غير الأدمن يقرأ البثّ. وإن غاب أو قدُم ⇒ null فيجلب بنفسه.
+   لا نُسقط الجلب أبداً — البثّ تخفيفٌ لا بديل. */
+async function marketLoadShared() {
+  try {
+    if (!USE_MARKET_SHARED) return null;
+    if (typeof sb === 'undefined' || !sb) return null;
+    const { data, error } = await sb.from('market_shared')
+      .select('data, fetched_at, rows_n').eq('id', 1).maybeSingle();
+    if (error || !data || !Array.isArray(data.data) || data.data.length < 2) return null;
+    const age = Date.now() - new Date(data.fetched_at).getTime();
+    if (age > MARKET_SHARED_TTL) {
+      console.info('[market] 🕰️ البثّ قديم (' + Math.round(age / 60000) + ' دقيقة) — نجلب مباشرةً');
+      return null;
+    }
+    console.info('[market] 📥 قُرئ البثّ: ' + (data.rows_n || data.data.length - 1)
+      + ' صفّاً · عمره ' + Math.round(age / 60000) + ' دقيقة — بلا طلب لجوجل');
+    return data.data;
+  } catch (e) { return null; }
+}
+
 async function tryAllSources() {
+  /* 👥 غير الأدمن: جرّب البثّ أوّلاً. والأدمن يجلب دائماً ليبثّ الطازج. */
+  if (USE_MARKET_SHARED && !(typeof isAdmin === 'function' && isAdmin())) {
+    const shared = await marketLoadShared();
+    if (shared) return shared;
+  }
+  return _tryAllSourcesDirect();
+}
+
+async function _tryAllSourcesDirect() {
   // 1. Direct (only when served via HTTP/HTTPS — not file://)
   if (!IS_FILE) {
     try {
@@ -7602,6 +7666,8 @@ function loadCSV() {
       showError('خطأ في معالجة البيانات: ' + e.message);
       console.error('[تداول بلس]', e);
     }
+    /* 📤 الأدمن يبثّ ما جلبه ليقرأه الجميع بلا طلبٍ لجوجل (إن فُعّل المفتاح) */
+    try { marketUploadShared(data); } catch (_) {}
     /* 🩹 السدّ يُعاد بعد **كل** تحميل للسوق، لا عند المسح وحده.
        العلّة المرصودة: كان يُطبَّق في بداية predScanAll فينجح (269/291 لها
        سعر أثناء الفحص)، ثم تُعاد تحميل `rows` فتُمحى القيم المسدودة

@@ -21,12 +21,16 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: جلب الملفات
-        uses: actions/checkout@v4
+        # ⬆️ v4 ← v7: كان GitHub يُحذّر «Node.js 20 is deprecated» ويُجبر
+        #    الإجراءات على Node 24. التحذير لا يُعطّل اليوم، لكنّه إنذارٌ
+        #    بتوقّفها لاحقاً — ورفعُها الآن أهون من إصلاحها بعد أن تتعطّل.
+        uses: actions/checkout@v7
 
       - name: تجهيز Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          # Node 22 (LTS) بدل 20 — يوافق ما تُجبِر عليه GitHub أصلاً
+          node-version: '22'
 
       - name: تثبيت Playwright
         run: |

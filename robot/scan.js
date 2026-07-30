@@ -52,12 +52,24 @@ async function tg(msg) {
        وهو رقم المسح **السابق** المحفوظ. أي إعلان نجاحٍ عن عملٍ لم يتمّ،
        والمستخدمون على تحليل الأمس ولا أحد يعلم.
        وهذا سادسُ فشلٍ صامت نكسره في هذا المشروع. */
+    /* ⏱️ المهلة رُفعت 6 ← 10 دقائق.
+       رُصد فشلٌ حقيقيّ: المسح تلا `sync-historical` (270 رمزاً · 62 ألف
+       صفّ) فتزاحما على نفس القاعدة وتجاوز الستّ. والمسح يجلب شموع 269
+       رمزاً بتزامنٍ محدود — ستّ دقائق كانت تكفي بالكاد، وأيّ بطءٍ عارض
+       يقصمها. وحدّ المهمّة في الـworkflow 20 دقيقة، فالعشر آمنة. */
+    const WAIT_MS = 600000;
     let timedOut = false;
     await page.waitForFunction(
       () => (typeof window.predIsScanning !== 'function') || !window.predIsScanning(),
-      { timeout: 360000, polling: 3000 }
+      { timeout: WAIT_MS, polling: 3000 }
     ).catch(() => { timedOut = true; });
-    if (timedOut) throw new Error('تجاوز المسح ستّ دقائق ولم يكتمل — لم تُرفع نتائج جديدة.');
+    if (timedOut) {
+      /* 📊 كم بلغ قبل أن تنقضي المهلة؟ يفرّق بين «بطيء» و«عالق». */
+      let got = 0;
+      try { got = await page.evaluate(() => (typeof window.predCount === 'function' ? window.predCount() : 0)); } catch (_) {}
+      throw new Error('تجاوز المسح ' + (WAIT_MS / 60000) + ' دقائق ولم يكتمل (بلغ '
+        + (got || 0) + ' سهماً) — لم تُرفع نتائج جديدة.');
+    }
     await page.waitForTimeout(10000);   // اترك الرفع للقاعدة يكتمل
 
     // 6) أعد مسح القنّاص (يحسب المزايا بأحدث بناء)

@@ -1988,8 +1988,14 @@ canvas#mdChart{display:block;width:100% !important}
                border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
                font-size:13.5px;outline:none">
 
-      <input id="authEmail" type="email" placeholder="البريد الإلكتروني" autocomplete="email"
-        name="email" data-testid="login-email" aria-label="البريد الإلكتروني"
+      <!-- 🔑 `autocomplete="username"` لا `email`:
+           `email` تصف حقل بريدٍ في نموذجٍ عامّ، و`username` تصف **معرّف
+           الحساب** في شاشة دخول. ومديرو كلمات المرور يميّزون الحسابات بها:
+           بلا حقل username واضح يُربط الإدخال بالنطاق وحده، فكل حفظٍ جديد
+           يستبدل السابق — فيبقى حسابٌ واحد مهما حفظتَ.
+           والنوع يبقى email ليُظهر لوحة البريد على الجوال. -->
+      <input id="authEmail" type="email" placeholder="البريد الإلكتروني" autocomplete="username"
+        name="username" data-testid="login-email" aria-label="البريد الإلكتروني"
         style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;margin-bottom:10px;
                border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
                font-size:13.5px;outline:none;direction:ltr;text-align:left">
@@ -2235,8 +2241,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-29-v372';
-console.log('%c[تداول بلس] البناء: 2026-07-29-v372 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-07-29-v373';
+console.log('%c[تداول بلس] البناء: 2026-07-29-v373 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2246,6 +2252,7 @@ console.log('%c[تداول بلس] البناء: 2026-07-29-v372 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v373', '🔑 autocomplete="username" بدل "email" — بها يُميّز مدير كلمات المرور الحسابات فيحفظ أكثر من واحد للنطاق'],
     ['v372', '🔑 نموذج الدخول صار <form> حقيقياً — يظهر مفتاح مدير كلمات المرور ويعمل Enter أصلاً'],
     ['v371', '⚖️ كل نسبة ع/م مقرونةٌ بسعرها (لا لبس في نصٍّ ثنائيّ الاتجاه) · وتحذيرٌ حين يعلو الدخولُ السعرَ الحالي فينخفض ع/م بالانتظار'],
     ['v370', '🔑 حساب الردّ يُقرأ من جلسة الأدمن لا من ثابتٍ مكتوب — صفر بريدٍ في الملف كلّه'],
@@ -2716,6 +2723,13 @@ function authSwitchTab(mode) {
   document.getElementById('authPass').placeholder = 'كلمة المرور (6 أحرف على الأقل)';
   /* تأكيد كلمة المرور يظهر في التسجيل فقط، ورابط النسيان في الدخول فقط */
   document.getElementById('authPass2').style.display = mode === 'signup' ? 'block' : 'none';
+  /* 🔑 وسمُ كلمة المرور يتبع الوضع: في الدخول `current-password` فيُعبّئ
+     المدير المحفوظة، وفي التسجيل `new-password` فيقترح كلمةً قوية ولا
+     يعبّئ القديمة فوقها. سمةٌ واحدة ثابتة تُربك الحالتين. */
+  try {
+    const _p = document.getElementById('authPass');
+    if (_p) _p.setAttribute('autocomplete', mode === 'signup' ? 'new-password' : 'current-password');
+  } catch (e) {}
   document.getElementById('authForgotRow').style.display = mode === 'login' ? 'block' : 'none';
   const cr = document.getElementById('authConsentRow');
   if (cr) { cr.style.display = mode === 'signup' ? 'flex' : 'none'; const cb = document.getElementById('authConsent'); if (cb) cb.checked = false; }

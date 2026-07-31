@@ -2247,8 +2247,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-31-v382';
-console.log('%c[تداول بلس] البناء: 2026-07-31-v382 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-07-31-v383';
+console.log('%c[تداول بلس] البناء: 2026-07-31-v383 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2258,6 +2258,7 @@ console.log('%c[تداول بلس] البناء: 2026-07-31-v382 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v383', '🔑 رقم تلجرام السرّي لكل أدمنٍ على حدة (بصمة بريده) — كان واحداً لكل المتصفّح'],
     ['v382', '🔑 مخرج نسيان الرقم السرّي لإعدادات تلجرام — اكتب «نسيت» ثم «تأكيد»'],
     ['v381', '🎨 سطر معلومات الطلب أوضح: 10px ← 11.5px · لونٌ لكل معلومة · والإخفات .6 ← .85'],
     ['v380', '💬 خيط محادثة حقيقيّ: كل ردٍّ يُلحَق بنفس الطلب (support_append) بدل إنشاء بطاقةٍ جديدة'],
@@ -14257,23 +14258,51 @@ document.addEventListener('keydown', e => {
       setTimeout(() => inp.focus(), 60);
     });
   }
+  /* ══════════════════════════════════════════════════════════════════════
+     🔑 رقمٌ سرّيّ لكل أدمنٍ على حدة — كان واحداً لكل المتصفّح
+     `tg_pin` لم يكن يذكر الحساب، فمن يدخل من جهازك يفتح الإعدادات برقمك.
+     الآن المفتاح مُشتقٌّ من **بصمة بريد الأدمن**:
+         tg_pin_<أوّل 16 من SHA-256 للبريد>
+     ▸ فبصمةٌ لا بريدٌ في `localStorage` — على نهج ما فعلناه في المصدر.
+     ▸ وبلا جلسة يعود المفتاح العامّ (لا يُستعمل عملياً — القسم للأدمن).
+     ▸ ولا نُهاجر الرقم القديم عمداً: كل حسابٍ يبدأ بإنشاء رقمه، فيُحلّ
+       معه انحصارُ من نسي القديم بلا حاجةٍ إلى الكونسول.
+     ══════════════════════════════════════════════════════════════════════ */
+  function _tgPinKey() {
+    try {
+      const em = (typeof sbUser !== 'undefined' && sbUser && sbUser.email)
+        ? String(sbUser.email).trim().toLowerCase() : '';
+      if (!em) return 'tg_pin';
+      if (typeof _sha256hex === 'function') return 'tg_pin_' + _sha256hex(em).slice(0, 16);
+      return 'tg_pin_' + em.replace(/[^a-z0-9]/g, '');
+    } catch (e) { return 'tg_pin'; }
+  }
+  /* 🧹 تنظيفٌ لمرّةٍ واحدة: المفتاح القديم المشترك لم يعد يُقرأ، فلا نتركه */
+  try { if (localStorage.getItem('tg_pin')) localStorage.removeItem('tg_pin'); } catch (e) {}
+
   window.tgUnlock = async function () {
     const box = document.getElementById('sniperTgBox');
     if (!box) return;
     if (box.style.display !== 'none') { box.style.display = 'none'; return; }   // مفتوح → أغلق
     const toast = m => { if (typeof showToast === 'function') showToast(m); };
-    const stored = localStorage.getItem('tg_pin') || '';
+    const _pk = _tgPinKey();
+    const _who = (typeof sbUser !== 'undefined' && sbUser && sbUser.email) ? sbUser.email : '';
+    const stored = localStorage.getItem(_pk) || '';
     if (!stored) {
-      const p1 = await _tgAsk('إنشاء رقم سرّي', 'أنشئ رقماً سرّياً يحمي إعدادات تلجرام. احفظه جيداً — لن يظهر لاحقاً.');
+      const p1 = await _tgAsk('إنشاء رقم سرّي',
+        'أنشئ رقماً سرّياً يحمي إعدادات تلجرام. احفظه جيداً — لن يظهر لاحقاً.'
+        + (_who ? '\n🔑 خاصٌّ بحساب: ' + _who + ' على هذا المتصفّح' : ''));
       if (p1 == null || p1 === '') return;
       const p2 = await _tgAsk('تأكيد الرقم السرّي', 'أعد إدخال الرقم السرّي نفسه للتأكيد.');
       if (p1 !== p2) { toast('⚠️ الرقمان غير متطابقين — أعد المحاولة'); return; }
-      localStorage.setItem('tg_pin', _tgHash(p1));
+      localStorage.setItem(_pk, _tgHash(p1));
       box.style.display = 'block'; toast('✅ أُنشئ الرقم السرّي وفُتحت الإعدادات');
       return;
     }
     const p = await _tgAsk('إعدادات تلجرام محمية',
-      'أدخل الرقم السرّي لفتح الإعدادات.\nنسيتَه؟ اكتب:  نسيت');
+      'أدخل الرقم السرّي لفتح الإعدادات.'
+      + (_who ? '\n🔑 حساب: ' + _who : '')
+      + '\nنسيتَه؟ اكتب:  نسيت');
     if (p == null) return;
     /* ══════════════════════════════════════════════════════════════════
        🔑 مخرجُ النسيان — لأن القفل محلّيّ لا سرّيّ
@@ -14286,7 +14315,7 @@ document.addEventListener('keydown', e => {
       const ok = await _tgAsk('تصفير الرقم السرّي',
         'سيُمحى الرقم الحالي وتُنشئ غيره عند الفتح القادم.\nاكتب:  تأكيد', true);
       if (String(ok || '').trim() === 'تأكيد') {
-        try { localStorage.removeItem('tg_pin'); } catch (e) {}
+        try { localStorage.removeItem(_pk); } catch (e) {}
         toast('🔑 صُفّر الرقم — اضغط الإعدادات لإنشاء واحدٍ جديد');
       }
       return;

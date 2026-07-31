@@ -1796,6 +1796,10 @@ canvas#mdChart{display:block;width:100% !important}
         <button onclick="tgTest()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font-weight:800;cursor:pointer;font-family:inherit">🔔 اختبار</button>
       </div>
       <div id="tgStatus" style="font-size:11.5px;margin-top:8px;line-height:1.6"></div>
+      <!-- 🔑 تغيير الرقم من داخل الإعدادات — يشترط القديم قبل الجديد -->
+      <button onclick="tgChangePin()" style="width:100%;margin-top:8px;padding:9px;border-radius:8px;
+        border:1px solid rgba(124,58,237,.45);background:rgba(124,58,237,.12);color:#c4b5fd;
+        font-weight:800;cursor:pointer;font-family:inherit;font-size:12px">🔑 تغيير الرقم السرّي</button>
       <div style="font-size:10.5px;color:var(--txt-m);margin-top:8px;line-height:1.7">🔒 محميّ برقم سرّي، ويظهر للأدمن الرئيسي فقط (لا المشرفون). التوكن يُحفظ على جهازك فقط. <b>لو نسيت الرقم السرّي:</b> امسح بيانات الموقع من المتصفّح ليُعاد إنشاؤه.</div>
     </div>
     <input id="sniperSearchInput" oninput="sniperSearch(this.value)" placeholder="🔍 ابحث باسم السهم أو رمزه…" style="width:100%;max-width:420px;margin:0 auto 14px;display:block;padding:11px 14px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;font-family:inherit;text-align:center;box-sizing:border-box">
@@ -2247,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-31-v383';
-console.log('%c[تداول بلس] البناء: 2026-07-31-v383 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v385';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v385 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2258,6 +2262,8 @@ console.log('%c[تداول بلس] البناء: 2026-07-31-v383 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v385', '🔐 تغيير الرقم السرّي (القديم ← الجديد ← تأكيد) · و«نسيت» تتحقّق من كلمة مرور الحساب عند Supabase لا بزرٍّ مفتوح'],
+    ['v384', '🔑 «نسيت الرقم» صار زرّاً لا كلمةً مكتوبة — الحقل inputmode=numeric يفتح لوحة أرقامٍ فقط على الجوال فتعذّرت كتابتها'],
     ['v383', '🔑 رقم تلجرام السرّي لكل أدمنٍ على حدة (بصمة بريده) — كان واحداً لكل المتصفّح'],
     ['v382', '🔑 مخرج نسيان الرقم السرّي لإعدادات تلجرام — اكتب «نسيت» ثم «تأكيد»'],
     ['v381', '🎨 سطر معلومات الطلب أوضح: 10px ← 11.5px · لونٌ لكل معلومة · والإخفات .6 ← .85'],
@@ -14229,7 +14235,15 @@ document.addEventListener('keydown', e => {
   /* 🔒 قفل إعدادات تلجرام برقم سرّي (يُحفظ مجزّأً على الجهاز) */
   function _tgHash(s) { let h = 0; s = String(s); for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; } return 'h' + h; }
   /* نافذة إدخال أنيقة (بديل prompt) — تُرجع Promise بالقيمة أو null */
-  function _tgAsk(title, sub, danger) {
+  /* ══════════════════════════════════════════════════════════════════════
+     🔑 خيارٌ إضافيّ بزرّ لا بكتابة — العلّة التي حبستك على الجوال
+     الحقل `inputmode="numeric"` يفتح لوحةَ **أرقامٍ فقط** على الجوال، وكنتُ
+     أطلب كلمة «نسيت» فيه: طلبٌ لا يُمكن تنفيذه بلوحةٍ لا تحمل حروفاً.
+     ▸ فصار الخيار **زرّاً** يُنقَر: يعمل على أيّ لوحةٍ وأيّ جهاز.
+     `extra = { label, value }` ⇒ رابطٌ أسفل الأزرار يُرجع `value`.
+     `noInput` ⇒ نافذةُ تأكيدٍ بزرّين بلا حقل إدخال.
+     ══════════════════════════════════════════════════════════════════════ */
+  function _tgAsk(title, sub, danger, extra, noInput) {
     return new Promise(resolve => {
       const old = document.getElementById('tgAskOv'); if (old) old.remove();
       const accent = danger ? '220,38,38' : '124,58,237';
@@ -14242,20 +14256,27 @@ document.addEventListener('keydown', e => {
             '<div style="flex:none;width:44px;height:44px;border-radius:13px;background:rgba(' + accent + ',.16);border:1px solid rgba(' + accent + ',.3);display:flex;align-items:center;justify-content:center;font-size:20px">🔒</div>' +
             '<div style="text-align:right;flex:1"><div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:5px">' + title + '</div><div style="font-size:12px;color:#8891a8;line-height:1.6">' + (sub || '') + '</div></div>' +
           '</div>' +
-          '<input id="tgAskInp" type="password" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:16px;text-align:center;letter-spacing:3px;margin-bottom:16px;font-family:inherit">' +
+          (noInput ? '' :
+          '<input id="tgAskInp" type="password" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:16px;text-align:center;letter-spacing:3px;margin-bottom:16px;font-family:inherit">') +
           '<div style="display:flex;gap:10px">' +
-            '<button id="tgAskOk" style="flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,rgba(' + accent + ',1),rgba(' + accent + ',.75));color:#fff;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px">موافق</button>' +
+            '<button id="tgAskOk" style="flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,rgba(' + accent + ',1),rgba(' + accent + ',.75));color:#fff;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px">' + (noInput ? 'نعم، صفّره' : 'موافق') + '</button>' +
             '<button id="tgAskCancel" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#cbd5e1;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">إلغاء</button>' +
           '</div>' +
+          (extra && extra.label ?
+          '<div style="text-align:center;margin-top:12px"><button id="tgAskExtra" style="background:none;border:none;cursor:pointer;font-family:inherit;color:#7dd3fc;font-size:12.5px;font-weight:700;text-decoration:underline;padding:4px">' + extra.label + '</button></div>' : '') +
         '</div>';
       document.body.appendChild(ov);
       const inp = ov.querySelector('#tgAskInp');
       const done = v => { ov.remove(); resolve(v); };
-      ov.querySelector('#tgAskOk').onclick = () => done(inp.value);
+      ov.querySelector('#tgAskOk').onclick = () => done(noInput ? '__ok__' : inp.value);
       ov.querySelector('#tgAskCancel').onclick = () => done(null);
+      const ex = ov.querySelector('#tgAskExtra');
+      if (ex) ex.onclick = () => done(extra.value);
       ov.onclick = e => { if (e.target === ov) done(null); };
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(inp.value); else if (e.key === 'Escape') done(null); });
-      setTimeout(() => inp.focus(), 60);
+      if (inp) {
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(inp.value); else if (e.key === 'Escape') done(null); });
+        setTimeout(() => inp.focus(), 60);
+      }
     });
   }
   /* ══════════════════════════════════════════════════════════════════════
@@ -14290,8 +14311,8 @@ document.addEventListener('keydown', e => {
     const stored = localStorage.getItem(_pk) || '';
     if (!stored) {
       const p1 = await _tgAsk('إنشاء رقم سرّي',
-        'أنشئ رقماً سرّياً يحمي إعدادات تلجرام. احفظه جيداً — لن يظهر لاحقاً.'
-        + (_who ? '\n🔑 خاصٌّ بحساب: ' + _who + ' على هذا المتصفّح' : ''));
+        'أنشئ <b>أرقاماً</b> تحمي إعدادات تلجرام — واحفظها، لن تظهر لاحقاً.'
+        + (_who ? '<br>🔑 خاصّة بحساب: ' + _who + ' على هذا المتصفّح' : ''));
       if (p1 == null || p1 === '') return;
       const p2 = await _tgAsk('تأكيد الرقم السرّي', 'أعد إدخال الرقم السرّي نفسه للتأكيد.');
       if (p1 !== p2) { toast('⚠️ الرقمان غير متطابقين — أعد المحاولة'); return; }
@@ -14300,9 +14321,8 @@ document.addEventListener('keydown', e => {
       return;
     }
     const p = await _tgAsk('إعدادات تلجرام محمية',
-      'أدخل الرقم السرّي لفتح الإعدادات.'
-      + (_who ? '\n🔑 حساب: ' + _who : '')
-      + '\nنسيتَه؟ اكتب:  نسيت');
+      'أدخل الرقم السرّي لفتح الإعدادات.' + (_who ? '<br>🔑 حساب: ' + _who : ''),
+      false, { label: '🔑 نسيت الرقم السرّي؟', value: '__forgot__' });
     if (p == null) return;
     /* ══════════════════════════════════════════════════════════════════
        🔑 مخرجُ النسيان — لأن القفل محلّيّ لا سرّيّ
@@ -14311,18 +14331,60 @@ document.addEventListener('keydown', e => {
        وهذا القفل يحمي من نظرةٍ عابرة على شاشتك، لا من مهاجم؛ والحماية
        الحقيقية أن القسم لا يظهر إلا للأدمن أصلاً.
        ▸ فنقولها صراحةً: اكتب «نسيت» ليُصفَّر وتُنشئ غيره. */
-    if (String(p).trim() === 'نسيت') {
-      const ok = await _tgAsk('تصفير الرقم السرّي',
-        'سيُمحى الرقم الحالي وتُنشئ غيره عند الفتح القادم.\nاكتب:  تأكيد', true);
-      if (String(ok || '').trim() === 'تأكيد') {
-        try { localStorage.removeItem(_pk); } catch (e) {}
-        toast('🔑 صُفّر الرقم — اضغط الإعدادات لإنشاء واحدٍ جديد');
-      }
+    /* ══════════════════════════════════════════════════════════════════
+       🔐 «نسيت» تتحقّق من **كلمة مرور الحساب** لا بزرٍّ مفتوح
+       ملاحظتك كانت في محلّها: تصفيرٌ بنقرةٍ يعني أن من يجلس أمام شاشتك
+       المفتوحة يُبدّل الرقم بلا أن يعرف القديم — فيقفلك خارج إعداداتك.
+       والآن الاستعادة تسأل كلمة مرور حسابك وتتحقّق منها **عند Supabase**.
+       فصار الرقم السرّي طبقةً ثانية حقيقية: لا يُتجاوَز إلا بما تعرفه أنت.
+       ▸ ولا نُخزّن كلمة المرور ولا نقارنها محلياً — يفحصها الخادم.
+       ══════════════════════════════════════════════════════════════════ */
+    if (p === '__forgot__' || String(p).trim() === 'نسيت') {
+      if (!_who || typeof sb === 'undefined' || !sb) { toast('⚠️ يلزم تسجيل الدخول'); return; }
+      const pw = await _tgAsk('استعادة الرقم السرّي',
+        'للتأكّد أنك صاحب الحساب، أدخل <b>كلمة مرور حسابك</b> في التطبيق.'
+        + '<br>🔑 ' + _who, true);
+      if (pw == null || pw === '') return;
+      toast('⏳ جارٍ التحقّق…');
+      try {
+        const { error } = await sb.auth.signInWithPassword({ email: _who, password: pw });
+        if (error) { toast('⚠️ كلمة مرور الحساب خاطئة — لم يُصفَّر شيء'); return; }
+      } catch (e) { toast('⚠️ تعذّر التحقّق — حاول مرّةً أخرى'); return; }
+      try { localStorage.removeItem(_pk); } catch (e) {}
+      toast('🔑 صُفّر الرقم — اضغط الإعدادات لإنشاء واحدٍ جديد');
       return;
     }
     if (_tgHash(p) === stored) box.style.display = 'block';
     else toast('⚠️ رقم سرّي خاطئ — أو اكتب «نسيت» لتصفيره');
   };
+  /* ══════════════════════════════════════════════════════════════════════
+     🔑 تغيير الرقم السرّي — القديم أوّلاً ثم الجديد مؤكَّداً
+     يُنادى من داخل الإعدادات (بعد فتحها)، فالمستخدم مُتحقَّقٌ منه أصلاً —
+     ومع ذلك نسأل القديم: لأن الشاشة قد تكون مفتوحةً وصاحبها غائباً.
+     ══════════════════════════════════════════════════════════════════════ */
+  window.tgChangePin = async function () {
+    const toast = m => { if (typeof showToast === 'function') showToast(m); };
+    const _pk = _tgPinKey();
+    const stored = localStorage.getItem(_pk) || '';
+    if (!stored) { toast('⚠️ لا رقم سرّي بعد — سيُنشأ عند الفتح القادم'); return; }
+
+    const cur = await _tgAsk('تغيير الرقم السرّي', 'الخطوة ١ من ٣: أدخل <b>الرقم الحالي</b>.');
+    if (cur == null || cur === '') return;
+    if (_tgHash(cur) !== stored) { toast('⚠️ الرقم الحالي خاطئ — لم يتغيّر شيء'); return; }
+
+    const n1 = await _tgAsk('تغيير الرقم السرّي', 'الخطوة ٢ من ٣: أدخل <b>الرقم الجديد</b> (أرقام).');
+    if (n1 == null || n1 === '') return;
+    if (String(n1).length < 4) { toast('⚠️ اجعله أربعة أرقام على الأقل'); return; }
+    if (_tgHash(n1) === stored) { toast('⚠️ الجديد مثل القديم — اختر غيره'); return; }
+
+    const n2 = await _tgAsk('تغيير الرقم السرّي', 'الخطوة ٣ من ٣: أعد إدخال <b>الرقم الجديد</b> للتأكيد.');
+    if (n2 == null) return;
+    if (n1 !== n2) { toast('⚠️ الرقمان غير متطابقين — لم يتغيّر شيء'); return; }
+
+    try { localStorage.setItem(_pk, _tgHash(n1)); } catch (e) { toast('⚠️ تعذّر الحفظ'); return; }
+    toast('✅ تغيّر الرقم السرّي — احفظه في مدير كلمات المرور');
+  };
+
   window.tgSaveSettings = function () {
     const v1 = ((document.getElementById('tgTokenInp') || {}).value || '').trim();
     const v2 = ((document.getElementById('tgChatInp') || {}).value || '').trim();

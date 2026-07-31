@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v385';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v385 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v386';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v386 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v385 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v386', '🛡️ إصلاح «Auth session missing» عند تغيير كلمة المرور — فحصُ الرقم السرّي كان يُنادي signInWithPassword على العميل الرئيسيّ فيُفرغ جلستك عند الفشل. صار بعميلٍ مؤقّت، ومعه حارسُ جلسةٍ قبل updateUser'],
     ['v385', '🔐 تغيير الرقم السرّي (القديم ← الجديد ← تأكيد) · و«نسيت» تتحقّق من كلمة مرور الحساب عند Supabase لا بزرٍّ مفتوح'],
     ['v384', '🔑 «نسيت الرقم» صار زرّاً لا كلمةً مكتوبة — الحقل inputmode=numeric يفتح لوحة أرقامٍ فقط على الجوال فتعذّرت كتابتها'],
     ['v383', '🔑 رقم تلجرام السرّي لكل أدمنٍ على حدة (بصمة بريده) — كان واحداً لكل المتصفّح'],
@@ -2886,7 +2887,32 @@ function authTranslateError(msg) {
   if (m.includes('Email not confirmed'))       return 'البريد لم يُؤكد بعد — افتح رسالة التأكيد في بريدك';
   if (m.includes('valid email'))               return 'اكتب بريداً إلكترونياً صحيحاً';
   if (m.includes('rate limit') || m.includes('Too many')) return 'تجاوزت حد المحاولات المسموح — رسائل البريد محدودة بعدد قليل في الساعة، انتظر قرابة ساعة أو جرّب تسجيل الدخول مباشرة إن كان حسابك أُنشئ';
+  /* 🔑 «Auth session missing» رسالةٌ تقنيّة لا تُخبر المستخدم بشيء —
+     ومعناها الوحيد: انقضت جلسته أو ضاعت، فليدخل من جديد. */
+  if (m.includes('Auth session missing') || m.includes('session_not_found')
+      || m.includes('JWT expired') || m.includes('refresh_token')) {
+    return '🔑 انقضت جلستك — سجّل الخروج ثم ادخل من جديد، وأعد المحاولة';
+  }
   return 'حدث خطأ: ' + m;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   🛡️ حارس الجلسة — قبل أي `updateUser`
+   ما وقع: نودي `updateUser` بلا جلسةٍ حيّة، فعاد الخادم 403 وظهرت
+   «Auth session missing!» خامّاً على الشاشة. والخطأ ليس في كلمة
+   المرور ولا في الشبكة، بل في أن الجلسة كانت قد ضاعت أصلاً —
+   فالفحص هنا يقول ذلك بصراحةٍ بدل أن يُرسل طلباً يعلم أنه سيسقط.
+   ▸ ونُحاول التجديد مرّةً أولاً: كثيراً ما تكون الجلسة موجودةً
+     وتوكنها منقضٍ فقط، فيُنقذها refresh بلا إزعاج المستخدم. */
+async function authLiveSession() {
+  if (!sb) return null;
+  try {
+    let { data } = await sb.auth.getSession();
+    if (data && data.session) return data.session;
+    const r = await sb.auth.refreshSession();
+    if (r && r.data && r.data.session) return r.data.session;
+  } catch (e) {}
+  return null;
 }
 
 async function authSubmit() {
@@ -2920,6 +2946,15 @@ async function authSubmit() {
     if (pass !== pass2) { authShowMsg('كلمتا المرور غير متطابقتين', 'error'); return; }
     const btn0 = document.getElementById('authSubmitBtn');
     btn0.disabled = true; btn0.textContent = '⏳ لحظات...';
+    /* 🛡️ لا تُرسل طلباً تعلم أنه سيسقط بـ403 — افحص الجلسة أوّلاً */
+    const _sess = await authLiveSession();
+    if (!_sess) {
+      btn0.disabled = false; btn0.textContent = '💾 حفظ كلمة المرور الجديدة';
+      authShowMsg(authRecovery
+        ? '🔑 انقضى رابط الاستعادة — اطلب رابطاً جديداً من «نسيت كلمة المرور»'
+        : '🔑 انقضت جلستك — سجّل الخروج ثم ادخل من جديد، وأعد المحاولة', 'error');
+      return;
+    }
     const { error } = await sb.auth.updateUser({ password: pass });
     btn0.disabled = false; btn0.textContent = '💾 حفظ كلمة المرور الجديدة';
     if (error) { authShowMsg(authTranslateError(error.message), 'error'); return; }
@@ -14346,8 +14381,28 @@ document.addEventListener('keydown', e => {
         + '<br>🔑 ' + _who, true);
       if (pw == null || pw === '') return;
       toast('⏳ جارٍ التحقّق…');
+      /* ══════════════════════════════════════════════════════════════
+         🧪 التحقّق بعميلٍ **منفصل** — لا بالعميل الذي يحمل جلستك
+         العلّة التي وقعت: نادينا `sb.auth.signInWithPassword` على العميل
+         الرئيسيّ. وهي تُبدّل الجلسة، وإن فشلت (كلمة مرور خاطئة) تُفرغها —
+         فتبقى الواجهة تُظهرك داخلاً والجلسة ضائعة، فيفشل كل طلبٍ بعدها
+         بـ«Auth session missing» و403. أي أن **فحص الهوية كان يُفقدها**.
+         ▸ الآن: عميلٌ مؤقّت بـ`persistSession:false` — يفحص ويُرمى،
+           وجلستك الأصلية لا تُلمَس أبداً نجح الفحص أو فشل. */
       try {
-        const { error } = await sb.auth.signInWithPassword({ email: _who, password: pw });
+        if (typeof supabase === 'undefined' || !supabase || !supabase.createClient) {
+          toast('⚠️ تعذّر التحقّق — أعد تحميل الصفحة'); return;
+        }
+        const _probe = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+        });
+        const { error } = await _probe.auth.signInWithPassword({ email: _who, password: pw });
+        /* ⚠️ `scope:'local'` وليس الافتراضيّ.
+           فخٌّ كاد يُعيد العلّة نفسها: `signOut()` بلا وسيط نطاقُه
+           **global** — يُبطل كل توكنات التحديث للحساب على كل الأجهزة،
+           فينتحر تنظيفُ العميل المؤقّت بجلستك الحقيقيّة. و`local`
+           يمحو هذا العميل وحده — وهو كل ما نريد. */
+        try { await _probe.auth.signOut({ scope: 'local' }); } catch (_) {}
         if (error) { toast('⚠️ كلمة مرور الحساب خاطئة — لم يُصفَّر شيء'); return; }
       } catch (e) { toast('⚠️ تعذّر التحقّق — حاول مرّةً أخرى'); return; }
       try { localStorage.removeItem(_pk); } catch (e) {}

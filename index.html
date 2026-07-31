@@ -2247,8 +2247,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-29-v375';
-console.log('%c[تداول بلس] البناء: 2026-07-29-v375 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-07-29-v377';
+console.log('%c[تداول بلس] البناء: 2026-07-29-v377 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2258,6 +2258,8 @@ console.log('%c[تداول بلس] البناء: 2026-07-29-v375 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v377', '🖥️ زرّ «افتح في اللوحة الموحّدة» في الرئيسية والمحفظة والمراقبة والعوائد وتحليل السوق — ومحصَّنٌ بنفس حارس الرادار'],
+    ['v376', '🎯 البحث في المحفظة والمراقبة يقودك إلى السهم الموجود ويُومض بطاقته — بدل «موجود بالفعل» ثم وقوف'],
     ['v375', '👥 خمسة حسابات مثبَّتة في مقدّمة «المستخدمون» بترتيبٍ محدَّد — تسبق كل من يسجّل'],
     ['v374', '🔑 name="email" أُعيد مع إبقاء autocomplete="username" — تغييرهما معاً أخفى مفتاح Kaspersky'],
     ['v373', '🔑 autocomplete="username" بدل "email" — بها يُميّز المدير الحسابات فيحفظ أكثر من واحد'],
@@ -8014,6 +8016,12 @@ function openModal(s) {
   drawMdChart(priceN, highN, lowN);
 
   // Show modal
+  /* 🖥️ جسر اللوحة الموحّدة — من الرئيسية مباشرةً بلا بحثٍ ثانٍ عن السهم.
+     ويختفي وحده إن كانت اللوحة مظلَّلة أو مقفلة (termCanOpen). */
+  try {
+    const _tj = document.getElementById('mdTermJump');
+    if (_tj) _tj.innerHTML = (typeof termJumpBtn === 'function') ? termJumpBtn(s.sym, 'lg') : '';
+  } catch (e) {}
   document.getElementById('mdOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -8188,7 +8196,7 @@ function pfSearchHandler() {
   }
   const priceNum = r => { const n = toNum(r.price); return n !== null ? n.toFixed(2) + ' ر.س' : '—'; };
   dd.innerHTML = res.map(r => `
-    <div class="pf-dd-item" onclick="pfOpenBuyModal('${r.sym}','${r.name.replace(/'/g,"\\'")}')">
+    <div class="pf-dd-item" onclick="pfPickFromSearch('${r.sym}','${r.name.replace(/'/g,"\\'")}')">
       <div>
         <div class="pf-dd-name">${r.name}</div>
         <div class="pf-dd-sym">${r.sym || ''}</div>
@@ -8199,6 +8207,43 @@ function pfSearchHandler() {
       </div>
     </div>`).join('');
   dd.style.display = 'block';
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   🎯 البحث يقودك إلى ما تملك — لا يكتفي بإخبارك أنك تملكه
+   كان الضغط على سهمٍ موجودٍ في المحفظة أو المراقبة يقول «موجود بالفعل»
+   ثم يقف. فتبقى تبحث عنه بعينك في قائمةٍ قد تبلغ ثلاثين بطاقة.
+   الآن: يُمرَّر إليه ويُومض إطاره لحظةً — فتراه فوراً وتتصرّف.
+   ══════════════════════════════════════════════════════════════════════ */
+function _cardId(prefix, key) {
+  /* معرّفٌ آمنٌ للـDOM من رمزٍ قد يحوي عربيةً أو رموزاً */
+  return prefix + '-' + String(key || '').replace(/[^A-Za-z0-9_-]/g, '_');
+}
+function _scrollToCard(id, label) {
+  const el = document.getElementById(id);
+  if (!el) { if (label && typeof showToast === 'function') showToast(label + ' موجود بالفعل'); return false; }
+  try {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    /* ✨ ومضةٌ قصيرة تدلّ العين على موضعه بلا أن تُغيّر شيئاً في البطاقة */
+    const _o = el.style.boxShadow, _t = el.style.transition;
+    el.style.transition = 'box-shadow .25s';
+    el.style.boxShadow = '0 0 0 3px rgba(56,189,248,.85)';
+    setTimeout(function () { el.style.boxShadow = _o; setTimeout(function () { el.style.transition = _t; }, 300); }, 1100);
+  } catch (e) {}
+  return true;
+}
+
+/* 🔎 اختيارٌ من نتائج بحث المحفظة: إن كنتَ تملكه فاذهب إليه، وإلا فاشترِه */
+function pfPickFromSearch(sym, name) {
+  const dd = document.getElementById('pfSearchResults'); if (dd) dd.style.display = 'none';
+  const si = document.getElementById('pfSearch'); if (si) si.value = '';
+  const h = (portfolio || []).find(x => x && (x.sym === sym || x.name === name));
+  if (h) {
+    if (typeof showToast === 'function') showToast('📁 ' + (h.name || name) + ' في محفظتك — انتقلنا إليه');
+    _scrollToCard(_cardId('pfcard', h.sym || ('name:' + h.name)), h.name || name);
+    return;
+  }
+  pfOpenBuyModal(sym, name);
 }
 
 /* ── Modal: open buy ── */
@@ -8382,7 +8427,7 @@ function pfRender() {
     const tagCls = pnl >= 0 ? 'gain' : 'loss';
     const tagTxt = pnl >= 0 ? 'ربح' : 'خسارة';
     return `
-    <div class="pf-card">
+    <div class="pf-card" id="${_cardId('pfcard', h.sym || ('name:' + h.name))}">
       <div class="pf-card-top">
         <div class="pf-card-info">
           <div class="pf-card-name">${h.name}</div>
@@ -8422,6 +8467,7 @@ function pfRender() {
         <button class="pf-btn sell"     onclick="pfOpenSellModal('${h.sym}')">📉 بيع</button>
         <button class="pf-btn edit"     onclick="pfOpenEditModal('${h.sym}')">✏️ تعديل</button>
         <button class="pf-btn analyze"  onclick="pfAnalyze('${h.sym}','${h.name.replace(/'/g,"\\'")}')">📊 تحليل</button>
+        ${(typeof termJumpBtn === 'function') ? termJumpBtn(h.sym) : ''}
         <button class="pf-btn danger"   onclick="pfDelete('${h.sym}')">🗑️</button>
       </div>
     </div>`;
@@ -8491,8 +8537,10 @@ function wlAdd(sym, name) {
   const key = sym || (r ? r.sym : '') || `name:${name}`;
 
   if (watchlist.find(w => (w.sym || `name:${w.name}`) === key)) {
-    showToast(`${name} موجود بالفعل في قائمة المراقبة`);
+    /* 👁️ موجودٌ ⇒ اذهب إليه بدل أن تقف عند الإخبار (انظر _scrollToCard) */
+    showToast(`👁️ ${name} في مراقبتك — انتقلنا إليه`);
     wlRender();
+    setTimeout(function () { _scrollToCard(_cardId('wlcard', key), name); }, 60);
     return;
   }
 
@@ -8764,7 +8812,8 @@ function wlRender() {
     }
 
     return `
-    <div class="pf-card" onclick='histOpenFromWatchlist(${JSON.stringify(w).replace(/'/g,"&#39;")})' style="cursor:pointer">
+    <div class="pf-card" id="${_cardId('wlcard', w.sym || ('name:' + w.name))}"
+         onclick='histOpenFromWatchlist(${JSON.stringify(w).replace(/'/g,"&#39;")})' style="cursor:pointer">
       <div class="pf-card-top">
         <div class="pf-card-info">
           <div class="pf-card-name">${w.name}</div>
@@ -8803,6 +8852,7 @@ function wlRender() {
         <button class="pf-btn buy"      onclick="event.stopPropagation();pfOpenBuyModal('${w.sym}','${(w.name||'').replace(/'/g,"\\'")}')">📈 شراء</button>
         <button class="pf-btn add-pf"   onclick="event.stopPropagation();wlAddToPortfolio('${w.sym}')">➕ إضافة للمحفظة</button>
         <button class="pf-btn analyze"  onclick="event.stopPropagation();histOpenFromWatchlist(${JSON.stringify(w).replace(/"/g,'&quot;')})">📊 تحليل</button>
+        ${(typeof termJumpBtn === 'function') ? termJumpBtn(w.sym) : ''}
         <button class="pf-btn danger"   onclick="event.stopPropagation();wlDelete('${w.sym}')">🗑️</button>
       </div>
     </div>`;
@@ -9076,6 +9126,9 @@ function renderReturnsTableInner(el, withDiv, fromYahoo) {
           onmouseout="this.style.background='rgba(74,222,128,.1)'">
           ➕ إضافة إلى المحفظة
         </button>
+        <!-- 🖥️ جسر اللوحة الموحّدة — يختفي وحده إن كانت مظلَّلة أو مقفلة -->
+        ${(typeof termJumpBtn === 'function')
+          ? `<div style="margin-top:7px;text-align:center">${termJumpBtn(s.sym, 'lg')}</div>` : ''}
       </div>`;
   }).join('');
 
@@ -17037,6 +17090,12 @@ function marketStockAnalysis(sym, name) {
         <button onclick="closeMarketAnalysis('${overlayId}');histOpen('${sym}','${name.replace(/'/g,"\\'")}')" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-weight:600;cursor:pointer">📅 عرض الجدول الكامل</button>
         <button onclick="closeMarketAnalysis('${overlayId}');pfOpenBuyModal('${sym}','${name.replace(/'/g,"\\'")}')" style="flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#166534 0%,#22c55e 100%);color:#fff;font-weight:600;cursor:pointer">📈 شراء</button>
       </div>
+      <!-- 🖥️ جسر اللوحة الموحّدة — يُغلق التحليل ثم ينتقل إليها بالسهم نفسه -->
+      <div style="margin-top:8px;text-align:center">
+        ${(typeof termJumpBtn === 'function')
+          ? termJumpBtn(sym, 'lg').replace('termJump(', `closeMarketAnalysis('${overlayId}');termJump(`)
+          : ''}
+      </div>
     </div>
   `;
 
@@ -18847,6 +18906,10 @@ switchTab = function (tab, btn) {
         <div class="md-cell-val red" id="mdLow">—</div>
       </div>
     </div>
+
+    <!-- 🖥️ جسرٌ إلى اللوحة الموحّدة — يُملأ في openModal، ويختفي وحده
+         إن كانت اللوحة مظلَّلة أو مقفلة (termCanOpen). -->
+    <div id="mdTermJump" style="margin-top:10px;text-align:center"></div>
 
     <div class="md-src"></div>
   </div>

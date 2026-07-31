@@ -2247,8 +2247,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-07-31-v378';
-console.log('%c[تداول بلس] البناء: 2026-07-31-v378 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-07-31-v381';
+console.log('%c[تداول بلس] البناء: 2026-07-31-v381 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2258,6 +2258,9 @@ console.log('%c[تداول بلس] البناء: 2026-07-31-v378 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v381', '🎨 سطر معلومات الطلب أوضح: 10px ← 11.5px · لونٌ لكل معلومة · والإخفات .6 ← .85'],
+    ['v380', '💬 خيط محادثة حقيقيّ: كل ردٍّ يُلحَق بنفس الطلب (support_append) بدل إنشاء بطاقةٍ جديدة'],
+    ['v379', '🔒 ✓ الأدمن يُغلق المحادثة (status=closed) · وللمستخدم «➕ محادثة جديدة» · ومراقبة ردودٍ كل 90 ثانية'],
     ['v378', '↩️ زرّ «ردّ على الدعم» في «رسائلي» — يفتح النموذج معبّأً بسياق المحادثة (طلبك + ردّهم)'],
     ['v377', '🖥️ زرّ «افتح في اللوحة الموحّدة» في الرئيسية والمحفظة والمراقبة والعوائد وتحليل السوق — ومحصَّنٌ بنفس حارس الرادار'],
     ['v376', '🎯 البحث في المحفظة والمراقبة يقودك إلى السهم الموجود ويُومض بطاقته — بدل «موجود بالفعل» ثم وقوف'],
@@ -3431,6 +3434,69 @@ async function checkUserReplies() {
   } catch (e) {}
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   💬 عرض خيط المحادثة — رسائل الطرفين بعد الردّ الأول
+   `subject` نصّ الطلب · `reply` أوّل ردٍّ من الدعم (للتوافق مع القديم) ·
+   و`thread` كل ما بعدهما: [{who,text,at}] بالترتيب.
+   ══════════════════════════════════════════════════════════════════════ */
+function _threadHTML(thread) {
+  let arr = thread;
+  if (typeof arr === 'string') { try { arr = JSON.parse(arr); } catch (e) { arr = []; } }
+  if (!Array.isArray(arr) || !arr.length) return '';
+  const esc = t => String(t == null ? '' : t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  return arr.map(m => {
+    const admin = m && m.who === 'admin';
+    const when = m && m.at ? new Date(m.at).toLocaleString('ar', { dateStyle: 'short', timeStyle: 'short' }) : '';
+    return '<div style="margin-top:6px;border-radius:10px;padding:9px 10px;line-height:1.8;'
+      + (admin
+          ? 'background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25)'
+          : 'background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.22)')
+      + '">'
+      + '<div style="font-size:10px;font-weight:700;margin-bottom:3px;color:'
+      + (admin ? '#4ade80' : '#7dd3fc') + '">'
+      + (admin ? '↩️ الدعم' : '👤 أنت') + (when ? ' · ' + when : '') + '</div>'
+      + '<div style="color:var(--txt-2);word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">'
+      + esc(m && m.text) + '</div></div>';
+  }).join('');
+}
+
+/* 📤 ردّ المستخدم — يُلحَق بنفس الطلب عبر RPC محميّة في الخادم */
+async function userSendReply(id) {
+  const ta = document.getElementById('ureptxt-' + id);
+  if (!ta) return;
+  const txt = ta.value.trim();
+  if (txt.length < 2) { showToast('⚠️ اكتب ردّك أولاً'); return; }
+  try {
+    const { error } = await sb.rpc('support_append', { p_id: id, p_text: txt });
+    if (error) throw error;
+    ta.value = '';
+    showToast('✅ أُرسل ردّك — سيصل الدعم فوراً');
+    userOpenMessages();          // أعد الفتح ليظهر الخيط محدَّثاً
+  } catch (e) {
+    /* 🗣️ الخادم يُرجع سبباً مقروءاً (مغلقة · بلغت حدّها · لا صلاحية) فنعرضه كما هو */
+    showToast('⚠️ ' + ((e && e.message) || 'تعذّر الإرسال — نفّذ support_thread.sql'));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   🔔 مراقبةٌ دورية لردود الدعم — كانت تُفحص مرّةً عند الدخول فقط
+   فمن يبقى في التطبيق ساعةً لا يعلم بردٍّ وصله بعد دقيقتين، إلا أن يُعيد
+   التحميل. وهذا يُبطل قيمة الردّ السريع أصلاً.
+   ▸ كل 90 ثانية · وتتوقّف إن كان التبويب مخفيّاً (لا نُرهق القاعدة بلا
+     أحدٍ ينظر) · ومؤقّتٌ واحد لا يتكرّر مهما أُعيدت المزامنة.
+   ══════════════════════════════════════════════════════════════════════ */
+let _repliesTimer = null;
+function _startRepliesWatch() {
+  if (_repliesTimer) return;
+  _repliesTimer = setInterval(function () {
+    try {
+      if (document.hidden) return;
+      if (!sb || !sbUser) return;
+      checkUserReplies();
+    } catch (e) {}
+  }, 90000);
+}
+
 async function userOpenMessages() {
   authMenuHide();
   if (!sb || !sbUser) { authOpenModal(); return; }
@@ -3464,8 +3530,10 @@ async function userOpenMessages() {
     } else {
       body.innerHTML = list.map(r => `
         <div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:10px">
-          <div style="font-size:10.5px;color:#a78bfa;margin-bottom:6px">
-            ${r.req_type} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}
+          <!-- 🎨 نفس معالجة لوحة الأدمن: نوع الطلب أوضح من تاريخه -->
+          <div style="font-size:11.5px;margin-bottom:6px;line-height:1.7">
+            <span style="font-weight:700;color:#c4b5fd">${esc(r.req_type)}</span>
+            <span style="color:var(--txt-m)"> · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</span>
           </div>
           <div style="color:var(--txt);line-height:1.8;margin-bottom:8px;
                       word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(r.subject || '').replace(/</g,'&lt;')}</div>
@@ -3475,6 +3543,7 @@ async function userOpenMessages() {
             <div style="font-size:10.5px;color:#4ade80;font-weight:700;margin-bottom:4px">↩️ رد الدعم:</div>
             <div style="color:var(--txt-2);word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(r.reply).replace(/</g,'&lt;')}</div>
           </div>
+          ${_threadHTML(r.thread)}
           <!-- ══════════════════════════════════════════════════════════
                ↩️ ردُّ المستخدم — الطرف الناقص في المحادثة
                كان الرد يصل من الدعم ثم تُغلق الطريق: يقرأ المستخدم الجواب
@@ -3485,17 +3554,36 @@ async function userOpenMessages() {
                ▸ ولا تغيير في القاعدة: كل ردٍّ طلبٌ جديد مربوطٌ بنصّه.
                ══════════════════════════════════════════════════════════ -->
           <div style="margin-top:8px;text-align:left">
-            <button onclick='showSupportForm(${JSON.stringify({
-                type: r.req_type || 'استفسار',
-                text: '↩️ ردّاً على محادثتنا:\n'
-                    + '— طلبي: ' + String(r.subject || '').replace(/\s+/g, ' ').slice(0, 200) + '\n'
-                    + '— ردّكم: ' + String(r.reply || '').replace(/\s+/g, ' ').slice(0, 200) + '\n\n'
-                    + 'وردّي:\n'
-              }).replace(/'/g, "&#39;")})'
-              style="cursor:pointer;font-family:inherit;border:1px solid rgba(56,189,248,.45);
-                     background:rgba(56,189,248,.12);color:#7dd3fc;border-radius:9px;
-                     padding:6px 12px;font-size:11.5px;font-weight:800">↩️ ردّ على الدعم</button>
+            ${r.status === 'closed' ? `
+              <span style="font-size:11px;color:#94a3b8;margin-inline-end:8px">🔒 محادثة مغلقة</span>
+              <button onclick='showSupportForm()'
+                style="cursor:pointer;font-family:inherit;border:1px solid rgba(74,222,128,.45);
+                       background:rgba(74,222,128,.12);color:#86efac;border-radius:9px;
+                       padding:6px 12px;font-size:11.5px;font-weight:800">➕ محادثة جديدة</button>
+            ` : `
+              <!-- ↩️ الردّ يُضاف إلى **نفس** الطلب (support_append)، لا يُنشئ طلباً
+                   جديداً كما كان — فتبقى المحادثة بطاقةً واحدة عند الطرفين. -->
+              <div id="urep-${r.id}" style="display:none;margin-top:6px;text-align:right">
+                <textarea id="ureptxt-${r.id}" rows="2" maxlength="1000" placeholder="اكتب ردّك..."
+                  style="width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;
+                         border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
+                         font-size:12.5px;font-family:inherit;resize:none;outline:none"></textarea>
+                <div style="display:flex;gap:6px;margin-top:6px">
+                  <button onclick="userSendReply(${r.id})"
+                    style="flex:1;padding:8px;border-radius:9px;border:none;cursor:pointer;font-family:inherit;
+                           font-weight:800;font-size:12px;color:#fff;background:linear-gradient(135deg,#166534,#22c55e)">📤 إرسال</button>
+                  <button onclick="document.getElementById('urep-${r.id}').style.display='none'"
+                    style="padding:8px 12px;border-radius:9px;border:1px solid var(--bdr);cursor:pointer;
+                           font-family:inherit;background:var(--surf-alt);color:var(--txt);font-size:12px">إلغاء</button>
+                </div>
+              </div>
+              <button onclick="const d=document.getElementById('urep-${r.id}');d.style.display=d.style.display==='none'?'block':'none';if(d.style.display==='block')document.getElementById('ureptxt-${r.id}').focus()"
+                style="cursor:pointer;font-family:inherit;border:1px solid rgba(56,189,248,.45);
+                       background:rgba(56,189,248,.12);color:#7dd3fc;border-radius:9px;
+                       padding:6px 12px;font-size:11.5px;font-weight:800">↩️ ردّ على الدعم</button>
+            `}
           </div>` : `
+          ${_threadHTML(r.thread)}
           <div style="font-size:11px;color:#fcd34d">⏳ بانتظار رد الدعم...</div>`}
         </div>`).join('');
       /* علّم الردود كمقروءة */
@@ -3717,6 +3805,7 @@ async function syncProfileAndRestrictions() {
   /* اجلب محفظته ومراقبته من حسابه + تحقق من ردود الدعم الجديدة */
   cloudLoadUserData();
   checkUserReplies();
+  _startRepliesWatch();      // 🔔 ثم كل 90 ثانية — فلا ينتظر إعادة تحميل
   checkAdminSupport();
   checkNewUsers();
   _startPresenceHeartbeat();
@@ -5030,13 +5119,23 @@ async function adminLoadSupport() {
                     background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;
                     cursor:pointer">✉️ رد بالإيميل</button>`;
       return `
+      <!-- 🔎 الإخفات كان .6 فيُطفئ سطر المعلومات مرّتين: لونٌ باهتٌ على
+           بطاقةٍ مُخفتة. و.85 يكفي للتمييز بين المُجاب والجديد بلا إتعاب العين. -->
       <div style="padding:9px 2px;border-bottom:1px solid var(--bdr);
-                  ${r.status === 'new' ? '' : 'opacity:.6'}">
+                  ${r.status === 'new' ? '' : 'opacity:.85'}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div style="min-width:0">
             <div style="font-size:11px;direction:ltr;text-align:left;color:var(--txt);
                         overflow:hidden;text-overflow:ellipsis">${esc(r.email)}</div>
-            <div style="font-size:10px;color:#a78bfa">${isReg ? '👤 مسجّل' : '👁️ زائر'} · ${esc(r.req_type)} · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</div>
+            <!-- 🎨 ثلاث معلوماتٍ في سطر: كانت بلونٍ واحدٍ باهتٍ بحجم 10px،
+                 فتُقرأ كتلةً واحدة. الآن لكلٍّ لونُه ووزنُه — الحالة أوّلاً
+                 (مسجّل أخضر · زائر كهرمانيّ)، ثم نوع الطلب أبيض، ثم التاريخ رمادي. -->
+            <div style="font-size:11.5px;line-height:1.7;margin-top:2px">
+              <span style="font-weight:800;color:${isReg ? '#4ade80' : '#fbbf24'}">${isReg ? '👤 مسجّل' : '👁️ زائر'}</span>
+              <span style="color:var(--txt-m)"> · </span>
+              <span style="font-weight:700;color:var(--txt)">${esc(r.req_type)}</span>
+              <span style="color:var(--txt-m)"> · ${new Date(r.created_at).toLocaleString('ar', {dateStyle:'short', timeStyle:'short'})}</span>
+            </div>
           </div>
           <div style="display:flex;gap:5px;flex-shrink:0">
             <button onclick="adminCopyEmail('${r.email}')" title="نسخ الإيميل"
@@ -5046,9 +5145,11 @@ async function adminLoadSupport() {
             <button onclick="adminSupportDelete(${r.id}, '${r.email}')"
               style="padding:5px 10px;border-radius:8px;border:1px solid rgba(248,113,113,.4);
                      background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">🗑️</button>
-            ${r.status === 'new' ? `<button onclick="adminSupportDone(${r.id})"
+            ${r.status !== 'closed' ? `<button onclick="adminSupportDone(${r.id})"
+              title="إغلاق المحادثة — لن يستطيع المستخدم الردّ عليها بعدها، ويُدعى لبدء محادثةٍ جديدة"
               style="padding:5px 10px;border-radius:8px;border:1px solid rgba(74,222,128,.4);
-                     background:rgba(74,222,128,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✓</button>` : '<span style="font-size:10px;align-self:center">✓</span>'}
+                     background:rgba(74,222,128,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✓</button>`
+              : '<span title="محادثة مغلقة" style="font-size:11px;align-self:center;color:#94a3b8">🔒</span>'}
           </div>
         </div>
         <div style="font-size:11.5px;color:#fff;font-weight:600;margin-top:4px;line-height:1.7;
@@ -5056,6 +5157,7 @@ async function adminLoadSupport() {
                     word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(r.subject || '').replace(/</g,'&lt;')}</div>
         ${r.reply ? `<div style="font-size:11px;color:#86efac;margin-top:4px;line-height:1.7;
                     word-break:break-word;overflow-wrap:anywhere">↩️ ردك: ${String(r.reply).replace(/</g,'&lt;')}</div>` : ''}
+        ${_threadHTML(r.thread)}
         <div id="admRep-${r.id}" style="display:none;margin-top:6px">
           <textarea id="admRepTxt-${r.id}" rows="3" maxlength="500" placeholder="اكتب ردك للمستخدم..."
             style="width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;resize:none;
@@ -5073,10 +5175,20 @@ async function adminLoadSupport() {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   🔒 إغلاق المحادثة — الحالة الثالثة
+   `status` كان حالتين: `new` (بانتظار ردّ) و`done` (رُدَّ عليها). والردّ
+   نفسه يضع `done`، فلا تبقى علامةٌ تفصل «رُدَّ عليها وما زالت مفتوحة»
+   عن «انتهت». فأُضيفت `closed` — بلا عمودٍ جديد ولا سياسة.
+     new    ⇒ ⏳ بانتظار ردّ الدعم
+     done   ⇒ ↩️ رُدَّ عليها · وللمستخدم أن يستوضح
+     closed ⇒ 🔒 مغلقة · ويُدعى لبدء محادثةٍ جديدة
+   ══════════════════════════════════════════════════════════════════════ */
 async function adminSupportDone(id) {
   if (!can('support')) { showToast('⛔ لا تملك صلاحية الدعم'); return; }
-  const { error } = await sb.from('support_requests').update({ status: 'done' }).eq('id', id);
+  const { error } = await sb.from('support_requests').update({ status: 'closed' }).eq('id', id);
   if (error) { _admErr(error, 'فشل التحديث'); return; }
+  showToast('🔒 أُغلقت المحادثة — يستطيع المستخدم بدء واحدةٍ جديدة');
   adminLoadSupport();
 }
 
@@ -5089,11 +5201,25 @@ async function adminSendReply(id) {
   if (!can('support')) { showToast('⛔ لا تملك صلاحية الدعم'); return; }
   const txt = document.getElementById('admRepTxt-' + id).value.trim();
   if (!txt) { showToast('⚠️ اكتب الرد أولاً'); return; }
-  const { error } = await sb.from('support_requests').update({
-    reply: txt,
-    replied_at: new Date().toISOString(),
-    status: 'done',
-  }).eq('id', id);
+  /* ══════════════════════════════════════════════════════════════════
+     💬 أوّل ردٍّ يملأ `reply` (كما كان — فلا تنكسر الطلبات القديمة)،
+     وما بعده يُلحَق بـ`thread` عبر نفس الدالّة التي يستعملها المستخدم.
+     فيبقى الخيط مرتّباً في مكانٍ واحد بدل عمودٍ يُستبدل كلّ مرّة —
+     وكان الردّ الثاني يمحو الأول بلا أثر. */
+  const _cur = (_admSupportList || []).find(x => x && x.id === id) || {};
+  let error = null;
+  if (_cur.reply) {
+    ({ error } = await sb.rpc('support_append', { p_id: id, p_text: txt }));
+    if (error && /support_append|function/i.test(error.message || '')) {
+      showToast('⚠️ نفّذ support_thread.sql أولاً — الخيط غير مفعّل'); return;
+    }
+  } else {
+    ({ error } = await sb.from('support_requests').update({
+      reply: txt,
+      replied_at: new Date().toISOString(),
+      status: 'done',
+    }).eq('id', id));
+  }
   if (error) { _admErr(error, 'فشل إرسال الرد'); return; }
   logAdminAction('reply', (( _admSupportList.find(x => x.id === id) || {}).email) || ('#' + id), txt);
   showToast('✅ أُرسل الرد — سيظهر للمستخدم في «📨 رسائلي» فور فتحه التطبيق');

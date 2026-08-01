@@ -1819,7 +1819,7 @@ canvas#mdChart{display:block;width:100% !important}
     <!-- 🖥️ الرأس: يلتفّ في أسطر على الجوال فلا يُطرد البحث أو الأزرار خارج الشاشة -->
     <div style="flex:none;padding:10px 12px;border-bottom:1px solid var(--bdr);background:var(--surf)">
       <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
-        <button onclick="termExit()" style="flex:none;display:flex;align-items:center;gap:6px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">↩️ رجوع</button>
+        <button id="termBackBtn" onclick="termExit()" style="flex:none;display:flex;align-items:center;gap:6px;background:var(--surf-alt);border:1px solid var(--bdr);color:var(--txt);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">↩️ رجوع</button>
         <div style="flex:none;font-size:15px;font-weight:900;white-space:nowrap">🖥️ اللوحة الموحّدة</div>
         <input id="termSearch" oninput="termFilter(this.value)" placeholder="🔍 ابحث عن سهم…" style="flex:1;min-width:120px;padding:9px 13px;border-radius:9px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box">
       </div>
@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v387';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v387 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v388';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v388 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v387 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v388', '↩️ زرّ الرجوع في اللوحة الموحّدة يُعيدك إلى القسم الذي جئتَ منه ويحمل اسمه — كان يُعيد الجميع إلى الرئيسية دائماً'],
     ['v387', '📨 «تطبيق على المحدد» و«على الكل» لم يكونا يُرسلان شيئاً لتلجرام — منطق الإخطار كان محشوراً في نافذة التخصيص وحدها. استُخرج إلى دالّة مشتركة، ورُصدت معه الأعلام العامّة والاشتراك الجماعي'],
     ['v386', '🛡️ إصلاح «Auth session missing» عند تغيير كلمة المرور — فحصُ الرقم السرّي كان يُنادي signInWithPassword على العميل الرئيسيّ فيُفرغ جلستك عند الفشل. صار بعميلٍ مؤقّت، ومعه حارسُ جلسةٍ قبل updateUser'],
     ['v385', '🔐 تغيير الرقم السرّي (القديم ← الجديد ← تأكيد) · و«نسيت» تتحقّق من كلمة مرور الحساب عند Supabase لا بزرٍّ مفتوح'],
@@ -13280,11 +13281,42 @@ document.addEventListener('keydown', e => {
       + 'padding:' + (big ? '7px 13px' : '4px 9px') + ';font-size:' + (big ? '12.5px' : '11px') + ';font-weight:800;white-space:nowrap">'
       + '🖥️ ' + (big ? 'افتح في اللوحة الموحّدة' : 'اللوحة') + '</button>';
   };
+  /* ══════════════════════════════════════════════════════════════
+     ↩️ من أين جئتَ إلى اللوحة؟
+     كان `termExit` يُعيدك إلى «الرئيسية» دائماً — وهو صحيحٌ لو دخلتَ
+     من الرئيسية، وخطأٌ في كل حالةٍ أخرى: تفتحها من المحفظة فتجد نفسك
+     في الرئيسية، فتبحث عن طريق العودة إلى ما كنت فيه. الزرّ يقول
+     «رجوع» ولا يرجع.
+     ▸ نحفظ القسم الذي انطلقتَ منه، ويعيدك الزرّ إليه ويسمّيه.
+     ▸ و`switchTab` تصفّره عند أي تنقّلٍ يدويّ — فمن دخل اللوحة من
+       شريط الأقسام نفسه لا «أصل» له، فيعود للرئيسية كما كان. */
+  window._termFromTab = null;
+  window._termSetBackLabel = function () {
+    const b = document.getElementById('termBackBtn'); if (!b) return;
+    const t = window._termFromTab;
+    let nm = '';
+    if (t) {
+      const nb = document.querySelector('.nav-btn[data-tab="' + t + '"]');
+      nm = nb ? String(nb.textContent || '').trim() : '';
+    }
+    b.textContent = nm ? ('↩️ ' + nm) : '↩️ رجوع';
+    b.title = nm ? ('العودة إلى ' + nm) : 'العودة إلى الرئيسية';
+  };
   window.termJump = function (sym) {
     try {
       if (!window.termCanOpen()) return;
+      /* 📍 القسم النشط الآن — قبل أن تُبدّله switchTab */
+      let _prev = null;
+      try {
+        const act = document.querySelector('.nav-btn.active');
+        const t = act && act.dataset ? act.dataset.tab : null;
+        if (t && t !== 'terminal') _prev = t;
+      } catch (e) {}
       const btn = document.querySelector('.nav-btn[data-tab="terminal"]');
       if (typeof switchTab === 'function') switchTab('terminal', btn);
+      /* بعد switchTab — لأنها تصفّر الأصل في كل تنقّل */
+      window._termFromTab = _prev;
+      try { window._termSetBackLabel(); } catch (e) {}
       setTimeout(function () {
         try {
           window.termSelect(sym);
@@ -13689,11 +13721,19 @@ document.addEventListener('keydown', e => {
       tag.style.display = 'block';
     } else if (tag) { tag.style.display = 'none'; }
   }
-  /* ↩️ رجوع للأقسام: أخفِ اللوحة وارجع للرئيسية */
+  /* ↩️ رجوع: أخفِ اللوحة وعُد إلى القسم الذي جئتَ منه (أو الرئيسية) */
   window.termExit = function () {
     const f = document.getElementById('termFull'); if (f) f.style.display = 'none';
-    const homeBtn = document.querySelector('.nav-btn[data-tab="home"]');
-    if (homeBtn) try { switchTab('home', homeBtn); } catch (e) {}
+    let dest = window._termFromTab || 'home';
+    let btn = document.querySelector('.nav-btn[data-tab="' + dest + '"]');
+    /* 🛟 لو حُجب ذلك القسم عن المستخدم بعد دخوله (أو اختفى زرّه) — للرئيسية */
+    if (!btn || btn.style.display === 'none') {
+      dest = 'home';
+      btn = document.querySelector('.nav-btn[data-tab="home"]');
+    }
+    window._termFromTab = null;
+    if (btn) try { switchTab(dest, btn); } catch (e) {}
+    try { window._termSetBackLabel(); } catch (e) {}
   };
 
   /* 🎯 قنّاص الفرص: قائمة الأسهم ذات خطة دخول إليوت جاهزة، مرتّبة بالأقوى */
@@ -14640,6 +14680,9 @@ function switchTab(tab, btn) {
   if (tab === 'admin' && !(typeof isAdmin === 'function' && isAdmin())) {
     showToast('⛔ هذا القسم للأدمن فقط'); return;
   }
+  /* 🧹 أي تنقّلٍ يدويّ يمحو «أصل» اللوحة الموحّدة — ومَن دخلها من زرّ
+     «🖥️ اللوحة» يُعيد ضبطه بعد هذا النداء مباشرةً (انظر termJump). */
+  window._termFromTab = null;
   // update buttons
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');

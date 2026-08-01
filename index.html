@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v386';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v386 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v387';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v387 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v386 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v387', '📨 «تطبيق على المحدد» و«على الكل» لم يكونا يُرسلان شيئاً لتلجرام — منطق الإخطار كان محشوراً في نافذة التخصيص وحدها. استُخرج إلى دالّة مشتركة، ورُصدت معه الأعلام العامّة والاشتراك الجماعي'],
     ['v386', '🛡️ إصلاح «Auth session missing» عند تغيير كلمة المرور — فحصُ الرقم السرّي كان يُنادي signInWithPassword على العميل الرئيسيّ فيُفرغ جلستك عند الفشل. صار بعميلٍ مؤقّت، ومعه حارسُ جلسةٍ قبل updateUser'],
     ['v385', '🔐 تغيير الرقم السرّي (القديم ← الجديد ← تأكيد) · و«نسيت» تتحقّق من كلمة مرور الحساب عند Supabase لا بزرٍّ مفتوح'],
     ['v384', '🔑 «نسيت الرقم» صار زرّاً لا كلمةً مكتوبة — الحقل inputmode=numeric يفتح لوحة أرقامٍ فقط على الجوال فتعذّرت كتابتها'],
@@ -6455,6 +6456,92 @@ function _admSelectedEmails() {
   return [...document.querySelectorAll('.admUserSel:checked')].map(c => c.dataset.email);
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   📨 إخطار تلجرام بما تغيّر فعلاً — دالّةٌ واحدة لكل مسارات التعديل
+
+   🐞 العلّة التي أُصلحت: هذا المنطق كان **محشوراً داخل `adminSaveUser`**
+   وحدها (نافذة «⚙️ تخصيص»). أما زرّا «تطبيق على المحدد» و«🌐 على الكل»
+   فيكتبان في `user_restrictions` مباشرةً ثم ينصرفان — بلا رسالة.
+   فيُوقَف حسابٌ أو يُفعَّل اشتراكٌ لعشرين مستخدماً ولا أثر في تلجرام.
+   وهو فشلٌ صامت من الطراز الذي نطارده في هذا المشروع: العمل يتمّ،
+   والسجلّ الذي يُفترض أن يشهد عليه غائب.
+
+   ▸ تُستدعى **قبل** تحديث `_admRestr` — لأنها تقارن بالحالة السابقة.
+   ▸ لا تغيير ⇒ لا رسالة (سلوكٌ مقصود، كي لا يُغرق السجلّ بضجيج).
+   ▸ لا تُسقط الحفظ أبداً: كل ما فيها داخل try.
+   ══════════════════════════════════════════════════════════════════ */
+function _admNotifyChanges(rows, kindLabel) {
+  try {
+    if (typeof window.tgNotify !== 'function' || !Array.isArray(rows) || !rows.length) return;
+    const nm = k => { const d = ADMIN_TAB_DEFS.find(t => t.k === k); return d ? d.t : k; };
+    const diffs = rows.map(r => {
+      const old = _admRestr[r.email] || {};
+      const bits = [];
+      /* 🧩 الأقسام المتاحة */
+      const pH = old.hidden_tabs || [], nH = r.hidden_tabs || [];
+      const opened = pH.filter(k => nH.indexOf(k) < 0).map(nm);
+      const closed = nH.filter(k => pH.indexOf(k) < 0).map(nm);
+      if (opened.length) bits.push('✅ فُتح: ' + opened.join(' · '));
+      if (closed.length) bits.push('🚫 أُغلق: ' + closed.join(' · '));
+      if (!!old.blocked !== !!r.blocked) bits.push(r.blocked ? '⛔ أُوقف الحساب' : '✅ رُفع الإيقاف');
+      if (!!old.sub_exempt !== !!r.sub_exempt) bits.push(r.sub_exempt ? '🛡️ أُعفي من الاشتراك' : '🛡️ أُلغي الإعفاء');
+      /* 🪟🌫️ الأعلام العامّة — تُضبط من الأزرار الجماعية ولم تكن مرصودة */
+      if ('no_popups' in r && !!old.no_popups !== !!r.no_popups)
+        bits.push(r.no_popups ? '🪟 مُنعت المنبثقات (عام)' : '🪟 سُمحت المنبثقات (عام)');
+      if ('blur_view' in r && !!old.blur_view !== !!r.blur_view)
+        bits.push(r.blur_view ? '🌫️ العرض ضبابي (عام)' : '👁️ العرض واضح (عام)');
+      /* 💳 الاشتراك العامّ — مسار الأزرار الجماعية (subPaid · trialDays · subFree) */
+      if ('sub_plan' in r) {
+        const pPlan = old.sub_plan || 'free', cPlan = r.sub_plan || 'free';
+        const pDays = Number(old.sub_days || 0),  cDays = Number(r.sub_days || 0);
+        if (pPlan !== cPlan) {
+          bits.push(cPlan === 'paid'
+            ? (cDays > 0 ? '🎁 تجربة مجانية ' + cDays + ' يوم' : '💳 فُعّل الاشتراك الكامل (دائم)')
+            : '🆓 أُلغيت كل الاشتراكات');
+        } else if (cPlan === 'paid' && pDays !== cDays) {
+          bits.push('📅 مدّة الاشتراك: ' + (cDays > 0 ? cDays + ' يوم' : 'دائم'));
+        }
+      }
+      /* 💳🌫️🪟🎯 لكل قسم: الاشتراك · الضبابي · المنبثقات · قفل الأهداف
+         نقرأ السابق عبر _secSubRaw (نفس ما يستخدمه التطبيق) لتوافق الصيغ القديمة */
+      try {
+        if ('subs' in r) {
+          const nS = r.subs || {};
+          (typeof SUB_SECTION_DEFS !== 'undefined' ? SUB_SECTION_DEFS : []).forEach(d => {
+            const po = ((typeof _secSubRaw === 'function') ? _secSubRaw(old, d.k) : ((old.subs || {})[d.k])) || {};
+            const cu = nS[d.k] || {};
+            const pPlan = po.plan || 'free', cPlan = cu.plan || 'free';
+            if (pPlan !== cPlan) bits.push((cPlan === 'paid' ? '💳 فُعّل اشتراك: ' : '🆓 أُلغي الاشتراك: ') + d.t);
+            else if (cPlan === 'paid' && Number(po.days || 0) !== Number(cu.days || 0))
+              bits.push('📅 مدة اشتراك ' + d.t + ': ' + (cu.days || 0) + ' يوم');
+            if (!!po.blur !== !!cu.blur) bits.push((cu.blur ? '🌫️ ضبابي: ' : '👁️ واضح: ') + d.t);
+            if (!!po.no_popups !== !!cu.no_popups) bits.push((cu.no_popups ? '🪟 مُنعت المنبثقات: ' : '🪟 سُمحت المنبثقات: ') + d.t);
+            if ((po.lock_targets || null) !== (cu.lock_targets || null))
+              bits.push('🎯 الأهداف (' + d.t + '): ' + (cu.lock_targets === 'lock' ? 'مقفلة' : cu.lock_targets === 'open' ? 'مفتوحة' : 'تلقائي'));
+          });
+        }
+      } catch (e) {}
+      return { email: r.email, bits: bits.slice(0, 12) };
+    }).filter(d => d.bits.length);
+
+    if (!diffs.length) {
+      console.info('[tg] لم يتغيّر شيء فعلياً — لم تُرسل رسالة (هذا سلوك مقصود)');
+      return;
+    }
+    /* 👑/🛡️ مَن نفّذ التعديل — أدمن رئيسي أم مشرف، وبريده */
+    const _who  = (typeof sbUser !== 'undefined' && sbUser && sbUser.email) ? sbUser.email : '—';
+    const _role = (typeof isSuperAdmin === 'function' && isSuperAdmin()) ? '👑 أدمن' : '🛡️ مشرف';
+    const head  = _role + ': ' + _who + '\n';
+    const title = kindLabel || 'تعديل';
+    if (diffs.length === 1) {
+      window.tgNotify('⚙️ <b>' + title + '</b>\n' + head + '🎯 على: ' + diffs[0].email + '\n' + diffs[0].bits.join('\n'));
+    } else {
+      window.tgNotify('⚙️ <b>' + title + '</b>\n' + head + '👥 ' + diffs.length + ' مستخدم\n' + diffs[0].bits.join('\n') +
+        '\n\n' + diffs.slice(0, 8).map(d => '• ' + d.email).join('\n') + (diffs.length > 8 ? '\n…' : ''));
+    }
+  } catch (e) {}
+}
+
 async function adminBulkApply(allMode) {
   if (!can('users')) { showToast('⛔ لا تملك صلاحية إدارة المستخدمين'); return; }
   const emails = allMode ? _admAllTargets() : _admSelectedEmails();
@@ -6509,6 +6596,8 @@ async function adminBulkApply(allMode) {
 
   const { error } = await sb.from('user_restrictions').upsert(rows);
   if (error) { _admErr(error, 'فشل التطبيق الجماعي'); return; }
+  /* 📨 قبل تحديث _admRestr — وإلا قارنّا الجديد بالجديد فلا يظهر فرق */
+  _admNotifyChanges(rows, allMode ? 'تطبيق على الكل' : 'تطبيق على المحدد');
   rows.forEach(r => { _admRestr[r.email] = r; });
   let _presetTxt = document.getElementById('admBulkPreset').selectedOptions[0].text;
   if (preset === 'trialDays') _presetTxt = '🎁 تجربة مجانية ' + _trialDays + ' يوم';
@@ -6853,57 +6942,10 @@ async function adminSaveUser() {
   });
   const { error } = await sb.from('user_restrictions').upsert(rows);
   if (error) { _admErr(error, 'فشل الحفظ'); return; }
-  /* 📨 تنبيه تلجرام — «ما نُفِّذ فقط»: يقارن بالحالة السابقة قبل تحديثها محلياً.
-     لا تغيير = لا رسالة. وفي التعديل الجماعي يُرسل ملخّص واحد. */
-  try {
-    if (typeof window.tgNotify === 'function') {
-      const nm = k => { const d = ADMIN_TAB_DEFS.find(t => t.k === k); return d ? d.t : k; };
-      const diffs = rows.map(r => {
-        const old = _admRestr[r.email] || {};
-        const bits = [];
-        /* 🧩 الأقسام المتاحة */
-        const pH = old.hidden_tabs || [], nH = r.hidden_tabs || [];
-        const opened = pH.filter(k => nH.indexOf(k) < 0).map(nm);
-        const closed = nH.filter(k => pH.indexOf(k) < 0).map(nm);
-        if (opened.length) bits.push('✅ فُتح: ' + opened.join(' · '));
-        if (closed.length) bits.push('🚫 أُغلق: ' + closed.join(' · '));
-        if (!!old.blocked !== !!r.blocked) bits.push(r.blocked ? '⛔ أُوقف الحساب' : '✅ رُفع الإيقاف');
-        if (!!old.sub_exempt !== !!r.sub_exempt) bits.push(r.sub_exempt ? '🛡️ أُعفي من الاشتراك' : '🛡️ أُلغي الإعفاء');
-        /* 💳🌫️🪟🎯 لكل قسم: الاشتراك · الضبابي · المنبثقات · قفل الأهداف
-           نقرأ السابق عبر _secSubRaw (نفس ما يستخدمه التطبيق) لتوافق الصيغ القديمة */
-        try {
-          const nS = r.subs || {};
-          (typeof SUB_SECTION_DEFS !== 'undefined' ? SUB_SECTION_DEFS : []).forEach(d => {
-            const po = ((typeof _secSubRaw === 'function') ? _secSubRaw(old, d.k) : ((old.subs || {})[d.k])) || {};
-            const cu = nS[d.k] || {};
-            const pPlan = po.plan || 'free', cPlan = cu.plan || 'free';
-            if (pPlan !== cPlan) bits.push((cPlan === 'paid' ? '💳 فُعّل اشتراك: ' : '🆓 أُلغي الاشتراك: ') + d.t);
-            else if (cPlan === 'paid' && Number(po.days || 0) !== Number(cu.days || 0))
-              bits.push('📅 مدة اشتراك ' + d.t + ': ' + (cu.days || 0) + ' يوم');
-            if (!!po.blur !== !!cu.blur) bits.push((cu.blur ? '🌫️ ضبابي: ' : '👁️ واضح: ') + d.t);
-            if (!!po.no_popups !== !!cu.no_popups) bits.push((cu.no_popups ? '🪟 مُنعت المنبثقات: ' : '🪟 سُمحت المنبثقات: ') + d.t);
-            if ((po.lock_targets || null) !== (cu.lock_targets || null))
-              bits.push('🎯 الأهداف (' + d.t + '): ' + (cu.lock_targets === 'lock' ? 'مقفلة' : cu.lock_targets === 'open' ? 'مفتوحة' : 'تلقائي'));
-          });
-        } catch (e) {}
-        return { email: r.email, bits: bits.slice(0, 12) };
-      }).filter(d => d.bits.length);
-      if (diffs.length) {
-        /* 👑/🛡️ مَن نفّذ التعديل — أدمن رئيسي أم مشرف، وبريده */
-        const _who = (typeof sbUser !== 'undefined' && sbUser && sbUser.email) ? sbUser.email : '—';
-        const _role = (typeof isSuperAdmin === 'function' && isSuperAdmin()) ? '👑 أدمن' : '🛡️ مشرف';
-        const head = _role + ': ' + _who + '\n';
-        if (diffs.length === 1) {
-          window.tgNotify('⚙️ <b>تعديل مستخدم</b>\n' + head + '🎯 على: ' + diffs[0].email + '\n' + diffs[0].bits.join('\n'));
-        } else {
-          window.tgNotify('⚙️ <b>تعديل جماعي</b>\n' + head + '👥 ' + diffs.length + ' مستخدم\n' + diffs[0].bits.join('\n') +
-            '\n\n' + diffs.slice(0, 8).map(d => '• ' + d.email).join('\n') + (diffs.length > 8 ? '\n…' : ''));
-        }
-      } else {
-        console.info('[tg] لم يتغيّر شيء فعلياً — لم تُرسل رسالة (هذا سلوك مقصود)');
-      }
-    }
-  } catch (e) {}
+  /* 📨 تنبيه تلجرام — «ما نُفِّذ فقط»، بالدالّة المشتركة `_admNotifyChanges`.
+     كان هذا المنطق مكتوباً هنا بالكامل، فحُرم منه زرّا «تطبيق على المحدد»
+     و«على الكل». استُخرج كما هو حرفاً بحرف — لا سلوك تغيّر هنا. */
+  _admNotifyChanges(rows, _admPanelBulk ? 'تعديل جماعي' : 'تعديل مستخدم');
   rows.forEach(r => { _admRestr[r.email] = r; });
   (function(){
     const paidSecs = SUB_SECTION_DEFS.filter(d => secIn[d.k] && secIn[d.k].plan === 'paid').map(d => d.t.replace(/^\S+\s/, ''));

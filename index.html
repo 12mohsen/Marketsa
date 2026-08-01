@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v403';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v403 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v404';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v404 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v403 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v404', '↩️ زرّ استرداد للأدمن الرئيسي: يردّ المال ويُقفل الأقسام في ضغطةٍ واحدة — الاسترداد من لوحة موياسر وحدها يترك الاشتراك مفتوحاً'],
     ['v403', '🧾 سجلّ المدفوعات يُظهر القسم المشترى باسمه العربي دائماً — كان نصّ البطاقة يُخفي الخدمات، فيُرى المبلغ بلا مقابله'],
     ['v402', '💳 دفعات البطاقة تظهر «مدفوعة» بلا أزرار تأكيد — كانت تُعرض «قيد المراجعة»، وتأكيدها يدوياً يمنح المدّة مرّتين'],
     ['v401', '🔗 اسم دالّة الدفع في ثابتٍ واحد (FN_PAY) — مسارات Supabase حسّاسة لحالة الأحرف، وVerify-payment ≠ verify-payment'],
@@ -4861,6 +4862,7 @@ function renderAdminSection() {
             <option value="all">الكل</option>
             <option value="pending">⏳ قيد المراجعة</option>
             <option value="paid">💳 مدفوعة بالبطاقة</option>
+            <option value="refunded">↩️ مستردّة</option>
             <option value="confirmed">✅ مؤكّدة</option>
             <option value="rejected">❌ مرفوضة</option>
           </select>
@@ -4967,9 +4969,56 @@ async function adminSendPaymentReply(id) {
 }
 
 /* 💳 دفعةُ بطاقةٍ تحقّقت منها البوّابة — لا تحتاج مراجعةً بشرية */
-function _payIsCard(p) { return !!(p && (p.provider === 'moyasar' || p.status === 'paid')); }
+function _payIsCard(p) {
+  if (!p) return false;
+  return p.provider === 'moyasar'
+      || p.status === 'paid' || p.status === 'refunded' || p.status === 'partially_refunded';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ↩️ استرداد دفعة بطاقة — ضغطةٌ واحدة تفعل الثلاثة
+
+   لماذا لا يُترك للوحة موياسر؟ لأن ردّ المال هناك **لا يُلغي الاشتراك
+   هنا**. فيستعيد العميل ريالاته ويبقى القسم مفتوحاً له. وإصلاحها
+   يدوياً خطوتان منفصلتان، ونسيانُ الثانية يمنح اشتراكاً مجانياً بصمت.
+
+   ▸ والنافذة تقول الأثر **قبل** الضغط لا بعده: كم يُردّ، وأيّ قسمٍ
+     يُقفل، ومتى يصل المال. فالاسترداد لا يُتراجَع عنه.
+   ══════════════════════════════════════════════════════════════════ */
+async function payRefund(provId, total, who) {
+  if (!isSuperAdmin()) { showToast('⛔ الاسترداد للأدمن الرئيسي فقط'); return; }
+  if (!sb || !_sbToken) { showToast('🔑 جلستك انتهت — سجّل الدخول'); return; }
+
+  clearModalOpen(0,
+    'سيُردّ <strong>' + total + ' ر.س</strong> إلى بطاقة <span style="direction:ltr">' + esc(who) + '</span>.<br><br>'
+    + '<div style="text-align:right;line-height:2">'
+    +   '<div>🔒 <b>وتُقفل أقسام هذه الدفعة فوراً</b></div>'
+    +   '<div>🏦 يصل المال خلال ١٤ يوم عمل (يحدّدها بنكه)</div>'
+    +   '<div>↩️ <b>ولا يمكن التراجع</b> — لإعادة فتحها يشتريها من جديد</div>'
+    + '</div>',
+    async function () {
+      showToast('⏳ جارٍ الاسترداد…');
+      try {
+        const resp = await fetch(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + _sbToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'refund', provider_id: provId }),
+        });
+        const j = await resp.json().catch(function () { return {}; });
+        if (!resp.ok || j.error) { showToast('⚠️ ' + (j.error || ('تعذّر الاسترداد — خطأ ' + resp.status))); return; }
+        if (j.already) { showToast('↩️ هذه العملية مستردّةٌ مسبقاً'); }
+        else showToast('✅ استُردّ ' + j.refunded + ' ر.س' + (j.closed && j.closed.length ? ' وأُقفلت أقسامه' : ''));
+        try { await adminLoadPayments(); } catch (e) {}
+        try { adminRenderPayments(); } catch (e) {}
+      } catch (e) { showToast('⚠️ تعذّر الاتصال بخادم الدفع'); }
+    },
+    { title: '↩️ تأكيد الاسترداد', subtitle: 'إجراءٌ نهائيّ لا يُتراجَع عنه',
+      hideCount: true, icon: '↩️', confirmIcon: '↩️', confirmText: 'نعم، استردّ المبلغ' });
+}
 
 function _payStatusBadge(st) {
+  if (st === 'refunded')  return '<span style="background:rgba(248,113,113,.12);color:#fca5a5;border:1px solid rgba(248,113,113,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">↩️ مستردّة</span>';
+  if (st === 'partially_refunded') return '<span style="background:rgba(251,191,36,.12);color:#fcd34d;border:1px solid rgba(251,191,36,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">↩️ مستردّة جزئياً</span>';
   if (st === 'paid')      return '<span style="background:rgba(56,189,248,.15);color:#7dd3fc;border:1px solid rgba(56,189,248,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">💳 مدفوعة بالبطاقة</span>';
   if (st === 'confirmed') return '<span style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">✅ مؤكّدة</span>';
   if (st === 'rejected')  return '<span style="background:rgba(248,113,113,.12);color:#fca5a5;border:1px solid rgba(248,113,113,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">❌ مرفوضة</span>';
@@ -5018,7 +5067,9 @@ function adminRenderPayments() {
     const when = p.created_at ? new Date(p.created_at).toLocaleString('ar', { dateStyle: 'short', timeStyle: 'short' }) : '';
     const st = p.status || 'pending';
     const card = _payIsCard(p);
-    const bcol = st === 'paid' ? '#38bdf8' : st === 'confirmed' ? '#22c55e' : st === 'rejected' ? '#ef4444' : '#f59e0b';
+    const bcol = st === 'paid' ? '#38bdf8' : st === 'confirmed' ? '#22c55e'
+               : (st === 'rejected' || st === 'refunded') ? '#ef4444'
+               : st === 'partially_refunded' ? '#fbbf24' : '#f59e0b';
     const isNew = st === 'pending';
     return `
     <div class="${isNew ? 'pay-new' : ''}" style="border-bottom:1px solid var(--bdr);border-right:3px solid ${bcol};
@@ -5044,9 +5095,13 @@ function adminRenderPayments() {
         <div style="font-size:10px;color:#4ade80;font-weight:700;margin-bottom:3px">↩️ رد الدعم:</div>
         <div style="font-size:11px;color:var(--txt);line-height:1.7;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${esc(p._reply)}</div>
       </div>` : ''}
-      ${card ? `<div style="font-size:10px;color:#7dd3fc;margin-top:6px;line-height:1.7">
-        🔒 تحقّقت منها بوّابة الدفع وفُعِّل الاشتراك تلقائياً — لا تحتاج تأكيداً${p.provider_id ? ` · <span style="direction:ltr;color:var(--txt-m)">${esc(p.provider_id)}</span>` : ''}</div>` : ''}
+      ${card ? `<div style="font-size:10px;color:${st === 'refunded' ? '#fca5a5' : '#7dd3fc'};margin-top:6px;line-height:1.7">
+        ${st === 'refunded' ? '↩️ استُردّ المبلغ وأُقفلت أقسامه'
+          : st === 'partially_refunded' ? '↩️ استُردّ جزءٌ من المبلغ — الأقسام باقية'
+          : '🔒 تحقّقت منها بوّابة الدفع وفُعِّل الاشتراك تلقائياً — لا تحتاج تأكيداً'}${p.provider_id ? ` · <span style="direction:ltr;color:var(--txt-m)">${esc(p.provider_id)}</span>` : ''}</div>` : ''}
       ${canManage ? `<div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
+        ${(card && isSuperAdmin() && st !== 'refunded' && p.provider_id) ? `
+        <button onclick="payRefund('${esc(p.provider_id)}', ${Number(p.total) || 0}, '${esc(p.email)}')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.1);color:#fcd34d;font-size:10.5px;font-weight:700;cursor:pointer">↩️ استرداد</button>` : ''}
         ${card ? '' : `
         <button onclick="_payConfirmAction(${p.id},'confirmed')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✅ تأكيد</button>
         <button onclick="_payConfirmAction(${p.id},'rejected')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">❌ رفض</button>

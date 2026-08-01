@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v400';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v400 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v401';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v401 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v400 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v401', '🔗 اسم دالّة الدفع في ثابتٍ واحد (FN_PAY) — مسارات Supabase حسّاسة لحالة الأحرف، وVerify-payment ≠ verify-payment'],
     ['v400', '🧾 الدفع صار عبر صفحة موياسر المستضافة — أُزيلت المكتبة كلياً (كانت ترمي Element:null وتحجبها Apple Pay)، والمبلغ يُحدَّد في الخادم فلا يُعبَث به'],
     ['v399', '🔄 نسخةٌ نظيفة من مكتبة موياسر عند كل فتحة — كانت تحتفظ بمرجع العنصر الأوّل فترمي «Element: null» في الفتحة الثانية فصاعداً'],
     ['v398', '💳 حصر الدفع في البطاقة — بحذف methods كانت Apple Pay تتقدّم وتملأ النموذج برسائل إعدادها الناقص فلا تظهر حقول البطاقة'],
@@ -4177,6 +4178,15 @@ async function payCopy(text, what) {
    ══════════════════════════════════════════════════════════════════ */
 const MOYASAR_PK = 'pk_test_NzHPa6nzrsvUH7QYVdKUi9TnUPTG6uQS6rjUYWsQ';   /* 🧪 تجريبي — بدّله بـ pk_live_… عند الإطلاق */
 
+/* 🔗 اسم الدالّة السحابية كما هو **منشورٌ فعلاً** في Supabase.
+   ⚠️ مسارات Edge Functions حسّاسة لحالة الأحرف: `Verify-payment` و
+   `verify-payment` مساران مختلفان، والثاني يعطي NOT_FOUND. وحقل الاسم
+   في لوحة Supabase يقول صراحةً إن تعديله **لا يُغيّر المسار** — فالـslug
+   يُثبَّت لحظة الإنشاء ولا يُعدَّل بعدها.
+   ▸ فوضعناه في ثابتٍ واحد: إن أعدتَ إنشاءها بحروفٍ صغيرة يوماً،
+     بدّل هذا السطر وحده. */
+const FN_PAY = 'Verify-payment';
+
 function _moyasarOn()   { return /^pk_(test|live)_/.test(String(MOYASAR_PK || '')); }
 function _moyasarTest() { return /^pk_test_/.test(String(MOYASAR_PK || '')); }
 
@@ -4238,7 +4248,7 @@ async function payCardOpen() {
   if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.innerHTML = '⏳ جارٍ تجهيز صفحة الدفع…'; }
 
   try {
-    const resp = await fetch(SUPABASE_URL + '/functions/v1/verify-payment', {
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -4253,7 +4263,7 @@ async function payCardOpen() {
     });
     const j = await resp.json().catch(function () { return {}; });
     if (!resp.ok || j.error || !j.url) {
-      if (resp.status === 404) { showToast('⚠️ دالّة verify-payment غير منشورة — راسل الدعم'); }
+      if (resp.status === 404) { showToast('⚠️ دالّة الدفع غير منشورة (' + FN_PAY + ') — راسل الدعم'); }
       else { showToast('⚠️ ' + (j.error || ('تعذّر تجهيز الدفع — خطأ ' + resp.status))); }
       if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = '💳 ادفع بالبطاقة الآن <span id="payCardAmt">· ' + total + ' ر.س</span>'; }
       return;
@@ -4310,7 +4320,7 @@ async function payCheckReturn() {
 
   if (!fromMemory) showToast('⏳ جارٍ التحقّق من الدفع وتفعيل اشتراكك…');
   try {
-    const resp = await fetch(SUPABASE_URL + '/functions/v1/verify-payment', {
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -4325,7 +4335,7 @@ async function payCheckReturn() {
       /* 🤫 المسار الاحتياطيّ (من الذاكرة) يصمت عند الفشل: فاتورةٌ لم
          تُدفع ليست خطأً يستحقّ إزعاج من تراجع عن الشراء. */
       if (fromMemory) { console.info('[pay] فاتورةٌ محفوظة غير مدفوعة — تُجوهَل:', j.error || resp.status); return; }
-      if (resp.status === 404) { showToast('⚠️ دالّة verify-payment غير منشورة — راسل الدعم'); return; }
+      if (resp.status === 404) { showToast('⚠️ دالّة الدفع غير منشورة (' + FN_PAY + ') — راسل الدعم'); return; }
       showToast('⚠️ ' + (j.error || ('تعذّر التحقّق — خطأ ' + resp.status)));
       return;
     }

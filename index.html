@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v401';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v401 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v402';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v402 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v401 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v402', '💳 دفعات البطاقة تظهر «مدفوعة» بلا أزرار تأكيد — كانت تُعرض «قيد المراجعة»، وتأكيدها يدوياً يمنح المدّة مرّتين'],
     ['v401', '🔗 اسم دالّة الدفع في ثابتٍ واحد (FN_PAY) — مسارات Supabase حسّاسة لحالة الأحرف، وVerify-payment ≠ verify-payment'],
     ['v400', '🧾 الدفع صار عبر صفحة موياسر المستضافة — أُزيلت المكتبة كلياً (كانت ترمي Element:null وتحجبها Apple Pay)، والمبلغ يُحدَّد في الخادم فلا يُعبَث به'],
     ['v399', '🔄 نسخةٌ نظيفة من مكتبة موياسر عند كل فتحة — كانت تحتفظ بمرجع العنصر الأوّل فترمي «Element: null» في الفتحة الثانية فصاعداً'],
@@ -4858,6 +4859,7 @@ function renderAdminSection() {
             border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;font-family:inherit">
             <option value="all">الكل</option>
             <option value="pending">⏳ قيد المراجعة</option>
+            <option value="paid">💳 مدفوعة بالبطاقة</option>
             <option value="confirmed">✅ مؤكّدة</option>
             <option value="rejected">❌ مرفوضة</option>
           </select>
@@ -4963,7 +4965,11 @@ async function adminSendPaymentReply(id) {
   adminRenderPayments();
 }
 
+/* 💳 دفعةُ بطاقةٍ تحقّقت منها البوّابة — لا تحتاج مراجعةً بشرية */
+function _payIsCard(p) { return !!(p && (p.provider === 'moyasar' || p.status === 'paid')); }
+
 function _payStatusBadge(st) {
+  if (st === 'paid')      return '<span style="background:rgba(56,189,248,.15);color:#7dd3fc;border:1px solid rgba(56,189,248,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">💳 مدفوعة بالبطاقة</span>';
   if (st === 'confirmed') return '<span style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">✅ مؤكّدة</span>';
   if (st === 'rejected')  return '<span style="background:rgba(248,113,113,.12);color:#fca5a5;border:1px solid rgba(248,113,113,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">❌ مرفوضة</span>';
   return '<span style="background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.4);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">⏳ قيد المراجعة</span>';
@@ -4999,7 +5005,8 @@ function adminRenderPayments() {
     const svcText = svcs.map(s => `${s.label || s.k}: ${s.price} ر.س`).join(' · ');
     const when = p.created_at ? new Date(p.created_at).toLocaleString('ar', { dateStyle: 'short', timeStyle: 'short' }) : '';
     const st = p.status || 'pending';
-    const bcol = st === 'confirmed' ? '#22c55e' : st === 'rejected' ? '#ef4444' : '#f59e0b';
+    const card = _payIsCard(p);
+    const bcol = st === 'paid' ? '#38bdf8' : st === 'confirmed' ? '#22c55e' : st === 'rejected' ? '#ef4444' : '#f59e0b';
     const isNew = st === 'pending';
     return `
     <div class="${isNew ? 'pay-new' : ''}" style="border-bottom:1px solid var(--bdr);border-right:3px solid ${bcol};
@@ -5018,10 +5025,13 @@ function adminRenderPayments() {
         <div style="font-size:10px;color:#4ade80;font-weight:700;margin-bottom:3px">↩️ رد الدعم:</div>
         <div style="font-size:11px;color:var(--txt);line-height:1.7;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${esc(p._reply)}</div>
       </div>` : ''}
+      ${card ? `<div style="font-size:10px;color:#7dd3fc;margin-top:6px;line-height:1.7">
+        🔒 تحقّقت منها بوّابة الدفع وفُعِّل الاشتراك تلقائياً — لا تحتاج تأكيداً${p.provider_id ? ` · <span style="direction:ltr;color:var(--txt-m)">${esc(p.provider_id)}</span>` : ''}</div>` : ''}
       ${canManage ? `<div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
+        ${card ? '' : `
         <button onclick="_payConfirmAction(${p.id},'confirmed')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✅ تأكيد</button>
         <button onclick="_payConfirmAction(${p.id},'rejected')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">❌ رفض</button>
-        <button onclick="_payConfirmAction(${p.id},'pending')" style="padding:5px 11px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt-m);font-size:10.5px;font-weight:700;cursor:pointer">⏳ إعادة</button>
+        <button onclick="_payConfirmAction(${p.id},'pending')" style="padding:5px 11px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt-m);font-size:10.5px;font-weight:700;cursor:pointer">⏳ إعادة</button>`}
         <button onclick="adminTogglePayReply(${p.id})" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;cursor:pointer">↩️ رد</button>
         ${isSuperAdmin() ? `<button onclick="_payConfirmAction(${p.id},'delete')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.06);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">🗑️ حذف</button>` : ''}
       </div>

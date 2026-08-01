@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v388';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v388 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v390';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v390 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v388 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v390', '🚀 دعوة التسجيل: أربعة أسطرٍ تُري الزائر ما ينتظره — بدل فقرةٍ تشرح له لماذا مُنع'],
+    ['v389', '🚪 حدّ الزائر: سهمٌ واحد في المحفظة وواحد في المراقبة ثم دعوةٌ للتسجيل — كان يملؤهما بلا حدّ وبياناته في المتصفّح وحده تضيع بمسحه'],
     ['v388', '↩️ زرّ الرجوع في اللوحة الموحّدة يُعيدك إلى القسم الذي جئتَ منه ويحمل اسمه — كان يُعيد الجميع إلى الرئيسية دائماً'],
     ['v387', '📨 «تطبيق على المحدد» و«على الكل» لم يكونا يُرسلان شيئاً لتلجرام — منطق الإخطار كان محشوراً في نافذة التخصيص وحدها. استُخرج إلى دالّة مشتركة، ورُصدت معه الأعلام العامّة والاشتراك الجماعي'],
     ['v386', '🛡️ إصلاح «Auth session missing» عند تغيير كلمة المرور — فحصُ الرقم السرّي كان يُنادي signInWithPassword على العميل الرئيسيّ فيُفرغ جلستك عند الفشل. صار بعميلٍ مؤقّت، ومعه حارسُ جلسةٍ قبل updateUser'],
@@ -8468,6 +8470,58 @@ function _scrollToCard(id, label) {
 }
 
 /* 🔎 اختيارٌ من نتائج بحث المحفظة: إن كنتَ تملكه فاذهب إليه، وإلا فاشترِه */
+/* ══════════════════════════════════════════════════════════════════
+   🚪 حدّ الزائر — سهمٌ واحد في المحفظة وسهمٌ واحد في المراقبة
+
+   ما رُصد في نافذة التصفّح المتخفّي: الزائر يملأ المحفظة والمراقبة بما
+   شاء. وبياناته في `localStorage` وحده — لا تُحفظ في السحابة ولا تنجو
+   من مسح المتصفّح. فهو يبني سجلّاً يظنّه محفوظاً وسيفقده كلّه.
+
+   ▸ سهمٌ واحد يكفي ليجرّب الميزة ويرى قيمتها بنفسه — وهذا هو الغرض.
+   ▸ ولا نمنع تعديل ما أضافه (زيادة كمية · بيع · حذف): الحدّ على
+     **فتح خانةٍ جديدة**، لا على التصرّف في خانته.
+   ▸ والدعوة تشرح السبب («لن تُحفظ إن أغلقتَ المتصفّح») لا تكتفي
+     بـ«سجّل» — فالمستخدم يستحقّ أن يعرف لماذا.
+
+   🔓 ولمَن سجّل: لا حدّ إطلاقاً. هذه بوّابةٌ للزائر وحده.
+   ══════════════════════════════════════════════════════════════════ */
+const GUEST_MAX_ITEMS = 1;
+
+function _isGuestUser() {
+  return !(typeof sbUser !== 'undefined' && sbUser);
+}
+
+/* يعيد true إن كان يجب **منع** الإضافة (ويعرض الدعوة) */
+function _guestSlotFull(kind) {
+  try {
+    if (!_isGuestUser()) return false;                       // 🔓 مسجّل — بلا حدّ
+    const isPf  = kind === 'pf';
+    const list  = isPf ? (portfolio || []) : (watchlist || []);
+    if (list.length < GUEST_MAX_ITEMS) return false;         // ما زال عنده متّسع
+
+    /* ✍️ النبرة: دعوةٌ لا اعتذار.
+       النسخة الأولى شرحت للزائر لماذا مُنع — وهو آخر ما يريد سماعه.
+       فصارت تُريه ما ينتظره إن سجّل، في أربعة أسطرٍ يقرأها بنظرة. */
+    clearModalOpen(0,
+      '<div style="font-size:14.5px;font-weight:800;color:#4ade80;margin-bottom:10px">'
+      + 'محفظتك الحقيقية تبدأ من هنا 🚀</div>'
+      + '<div style="text-align:right;line-height:2.05;font-size:13px">'
+      +   '<div>📈 <strong>أسهم بلا حدّ</strong> — محفظة ومراقبة كاملتان</div>'
+      +   '<div>🎯 <strong>أهداف ووقف خسارة</strong> محسوبة لكل سهم</div>'
+      +   '<div>⚡ <strong>تنبيهات الفرص</strong> فور اكتمال شروطها</div>'
+      +   '<div>☁️ <strong>محفوظة في حسابك</strong> — من أي جهاز، في أي وقت</div>'
+      + '</div>'
+      + '<div style="margin-top:12px;font-size:12.5px;color:var(--txt-m)">'
+      + 'مجاناً · بريدٌ وكلمة مرور · أقلّ من دقيقة</div>',
+      function () { try { if (typeof authOpenModal === 'function') authOpenModal(); } catch (e) {} },
+      { title: 'انضمّ إلينا — مجاناً',
+        subtitle: 'أنت الآن في وضع التجربة',
+        hideCount: true, friendly: true, icon: '🚀', confirmIcon: '←',
+        confirmText: 'أنشئ حسابي الآن' });
+    return true;
+  } catch (e) { return false; }   /* 🛟 خطأٌ في البوّابة لا يمنع مستخدماً */
+}
+
 function pfPickFromSearch(sym, name) {
   const dd = document.getElementById('pfSearchResults'); if (dd) dd.style.display = 'none';
   const si = document.getElementById('pfSearch'); if (si) si.value = '';
@@ -8484,6 +8538,9 @@ function pfPickFromSearch(sym, name) {
 function pfOpenBuyModal(sym, name) {
   document.getElementById('pfSearchResults').style.display = 'none';
   document.getElementById('pfSearch').value = '';
+  /* 🚪 حدّ الزائر — قبل فتح النافذة، لا بعد أن يملأها ويُرفض */
+  const _held = (portfolio || []).some(h => h && (h.sym === sym || h.name === name));
+  if (!_held && _guestSlotFull('pf')) return;
   pfModalMode = 'buy'; pfModalSym = sym;
   const r = rows.find(r => r.sym === sym || r.name === name);
   document.getElementById('pfModalTitle').textContent = 'شراء سهم';
@@ -8569,6 +8626,8 @@ function pfModalSubmit() {
       portfolio[idx].buyPrice = newAvgPrice;
       if (r && r.price) portfolio[idx].currentPrice = r.price;
     } else {
+      /* 🚪 حارسٌ ثانٍ: أي مسارٍ يفتح النافذة بغير pfOpenBuyModal يُمسك هنا */
+      if (_guestSlotFull('pf')) { pfModalClose(); return; }
       const rp = r ? toNum(r.price) : null;
       portfolio.push({
         sym: pfModalSym, name, sector: r ? r.sector : '',
@@ -8777,6 +8836,8 @@ function wlAdd(sym, name) {
     setTimeout(function () { _scrollToCard(_cardId('wlcard', key), name); }, 60);
     return;
   }
+  /* 🚪 حدّ الزائر — بعد فحص «موجود مسبقاً» كي لا نمنعه من الوصول لسهمه */
+  if (_guestSlotFull('wl')) return;
 
   const rp = r ? toNum(r.price) : null;
   watchlist.push({
@@ -8817,6 +8878,13 @@ function clearModalOpen(count, warning, callback, opts) {
   document.getElementById('clearModalCardLabel').textContent   = opts.cardLabel   || 'عدد العناصر التي سيتم حذفها';
   document.getElementById('clearModalConfirmText').textContent = opts.confirmText || 'تأكيد المسح';
   document.getElementById('clearModalCardRow').style.display   = opts.hideCount ? 'none' : 'flex';
+  /* 🗑️ الأيقونة كانت مثبّتةً في HTML — والنافذة صارت تُستعمل لدعوةٍ ودّية
+     أيضاً (حدّ الزائر)، وسلّةُ مهملاتٍ حمراء فوق دعوةٍ للتسجيل تُنذر بحذف
+     شيء. فصارت الأيقونة والنبرة وسيطين، والافتراض هو السلوك القديم. */
+  document.getElementById('clearModalIcon').textContent        = opts.icon        || '🗑️';
+  document.getElementById('clearModalConfirmIcon').textContent = opts.confirmIcon || '🗑️';
+  const _cb = document.getElementById('clearModalConfirmBtn');
+  if (_cb) _cb.style.background = opts.friendly ? 'linear-gradient(135deg,#15803d,#22c55e)' : '';
   document.getElementById('clearModalCount').textContent = count;
   document.getElementById('clearModalWarning').innerHTML = warning;
   clearCallback = callback;
@@ -15924,6 +15992,7 @@ function wlAddFromOpportunity(sym, name) {
     showToast(`${name} موجود بالفعل في قائمة المراقبة`);
     return;
   }
+  if (_guestSlotFull('wl')) return;   /* 🚪 حدّ الزائر */
   const r = rows.find(r => r.sym === sym);
   const rp = r ? toNum(r.price) : null;
   watchlist.push({
@@ -19368,7 +19437,7 @@ switchTab = function (tab, btn) {
         <div class="clear-modal-title" id="clearModalTitle">تأكيد مسح الكل</div>
         <div class="clear-modal-subtitle" id="clearModalSubtitle">سيتم حذف السجل نهائياً</div>
       </div>
-      <div class="clear-modal-icon">🗑️</div>
+      <div class="clear-modal-icon" id="clearModalIcon">🗑️</div>
     </div>
     <div class="clear-modal-card" id="clearModalCardRow">
       <div class="clear-modal-card-label" id="clearModalCardLabel">عدد العناصر التي سيتم حذفها</div>
@@ -19379,8 +19448,8 @@ switchTab = function (tab, btn) {
     </div>
     <div class="clear-modal-actions">
       <button class="clear-modal-btn cancel" onclick="clearModalClose()">إلغاء</button>
-      <button class="clear-modal-btn confirm" onclick="clearModalConfirm()">
-        <span id="clearModalConfirmText">تأكيد المسح</span> 🗑️
+      <button class="clear-modal-btn confirm" id="clearModalConfirmBtn" onclick="clearModalConfirm()">
+        <span id="clearModalConfirmText">تأكيد المسح</span> <span id="clearModalConfirmIcon">🗑️</span>
       </button>
     </div>
   </div>

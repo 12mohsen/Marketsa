@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v398';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v398 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v399';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v399 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v398 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v399', '🔄 نسخةٌ نظيفة من مكتبة موياسر عند كل فتحة — كانت تحتفظ بمرجع العنصر الأوّل فترمي «Element: null» في الفتحة الثانية فصاعداً'],
     ['v398', '💳 حصر الدفع في البطاقة — بحذف methods كانت Apple Pay تتقدّم وتملأ النموذج برسائل إعدادها الناقص فلا تظهر حقول البطاقة'],
     ['v397', '⛔ الدفع يرفض العمل على الملفّ المحلّي ويقول السبب — أصلُه «null» ترفضه بوّابات الدفع، فالاختبار عليه كاذب'],
     ['v396', '🔬 تجريد إعدادات موياسر إلى الحدّ الأدنى (بلا methods/networks) + تشخيصٌ يطبع ما رُسم فعلاً بدل «لا يعمل»'],
@@ -4268,7 +4269,10 @@ async function payCardOpen() {
     + '</div>';
   document.body.appendChild(el);
 
-  try { await _moyasarLoad(); } catch (e) {
+  try {
+    await _moyasarLoad();    // ورقة الأنماط + تصحيح الوضع الداكن (مرّة واحدة)
+    await _moyasarFresh();   // 🔄 نسخةٌ نظيفة من المكتبة (كل فتحة)
+  } catch (e) {
     const b = document.getElementById(id); if (b) b.innerHTML = '';
     _payCardMsg('⚠️ تعذّر تحميل بوّابة الدفع — تحقّق من اتصالك أو من حجب cdn.moyasar.com', 'err');
     return;
@@ -4382,14 +4386,43 @@ function _moyasarLoad() {
       ].join('\n');
       document.head.appendChild(fix);
 
+      resolve();
+    } catch (e) { reject(e); }
+  });
+  return _mysrLoaded;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   🔄 نسخةٌ نظيفة من مكتبة موياسر عند كل فتحة
+
+   🐞 العلّة: `Element: null is not a valid element` من moyasar.js.
+   المكتبة تُهيَّأ مرّةً وتحتفظ بمرجعٍ للعنصر الذي رُبطت به. ونحن نُنشئ
+   عنصراً جديداً في كل فتحة ونحذف القديم — فتبحث المكتبة عن عنصرٍ
+   أزلناه فتجد null. والفتحةُ الأولى وحدها كانت ستنجح.
+
+   ▸ الحلّ: نُسقط السكربت القديم ونحذف `window.Moyasar`، ثم نُحمّل
+     السكربت من جديد بطابعٍ زمنيّ. تنفيذُ السكربت مرّةً أخرى يُنشئ
+     كائناً جديداً بحالةٍ فارغة — كأن الصفحة حُمّلت للتوّ.
+   ▸ الكلفة: طلبٌ واحد عند كل فتحة للبطاقة. مقبولةٌ تماماً مقابل
+     نموذجٍ يعمل في المرّة الثانية والعاشرة كما في الأولى.
+   ══════════════════════════════════════════════════════════════════ */
+function _moyasarFresh() {
+  return new Promise(function (resolve, reject) {
+    try {
+      const prev = document.getElementById('mysrLib');
+      if (prev) prev.remove();
+      try { delete window.Moyasar; } catch (e) { window.Moyasar = undefined; }
       const js = document.createElement('script');
-      js.src = 'https://cdn.moyasar.com/mpf/' + MYSR_VER + '/moyasar.js';
-      js.onload = function () { console.info('[moyasar] المكتبة حُمّلت · النسخة ' + MYSR_VER + ' · Moyasar =', typeof Moyasar); resolve(); };
+      js.id  = 'mysrLib';
+      js.src = 'https://cdn.moyasar.com/mpf/' + MYSR_VER + '/moyasar.js?t=' + Date.now();
+      js.onload = function () {
+        console.info('[moyasar] المكتبة حُمّلت · النسخة ' + MYSR_VER + ' · Moyasar =', typeof window.Moyasar);
+        resolve();
+      };
       js.onerror = function () { reject(new Error('تعذّر تحميل بوّابة الدفع')); };
       document.head.appendChild(js);
     } catch (e) { reject(e); }
   });
-  return _mysrLoaded;
 }
 
 function _payCardMsg(txt, kind) {

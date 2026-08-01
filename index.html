@@ -1939,6 +1939,8 @@ canvas#mdChart{display:block;width:100% !important}
   <div onclick="userOpenMessages()" style="padding:11px 14px;cursor:pointer"
        onmouseover="this.style.background='var(--surf-alt)'" onmouseout="this.style.background=''">
        📨 رسائلي <span id="authMenuMsgsBadge"></span></div>
+  <div onclick="userOpenReceipts()" style="padding:11px 14px;cursor:pointer"
+       onmouseover="this.style.background='var(--surf-alt)'" onmouseout="this.style.background=''">🧾 إيصالاتي</div>
   <div onclick="authOpenRename()" style="padding:11px 14px;cursor:pointer"
        onmouseover="this.style.background='var(--surf-alt)'" onmouseout="this.style.background=''">✏️ تغيير الاسم</div>
   <div onclick="authOpenChangePass()" style="padding:11px 14px;cursor:pointer"
@@ -2257,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v408';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v408 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v409';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v409 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2268,6 +2270,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v408 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v409', '🧾 «إيصالاتي» في قائمة المستخدم — إيصال استلام قابل للطباعة/PDF بكل تفاصيل الاشتراك، ويقول صراحةً إنه ليس فاتورة ضريبية'],
     ['v408', '⏱️ مهلة 25 ثانية لكل نداء دفع — كان الزرّ يبقى «جارٍ التجهيز» إلى الأبد بلا رسالة ولا مخرج، فـfetch المجرّد لا ينقضي'],
     ['v407', '🔝 نافذة تأكيد الحذف/الاسترداد كانت طبقتها 950 وفوقها نوافذ عند 1001 — تُفتح خلف ما يحجبها فيبدو الزرّ معطّلاً. رُفعت إلى 1002'],
     ['v406', '🛟 زرّ الاسترداد يُثبت وصول الضغطة من أوّل سطر، ولا يُعلَّق على نافذةٍ قد تسقط — بديل confirm جاهز'],
@@ -4392,6 +4395,164 @@ async function payCheckReturn() {
     if (fromMemory) return;
     showToast('⚠️ تعذّر الاتصال للتحقّق من الدفع — راسل الدعم ومعك الرقم: ' + (payId || invId));
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   🧾 إيصالاتي — حقُّ من دفع أن يرى ما دفع ومقابل ماذا
+
+   ولماذا «إيصال استلام» لا «فاتورة ضريبية»؟ لأن الفاتورة الضريبية
+   مستندٌ نظاميّ له حقولٌ إلزامية (رقم ضريبيّ · ١٥٪ · رمز QR بصيغة
+   ZATCA). وإصدارُها بلا تسجيلٍ في الزكاة والضريبة ادّعاءٌ باطل يُعرّضك
+   للمساءلة. فالإيصال يقول الحقيقة كاملةً بلا ادّعاء — وهو ما يحتاجه
+   المستخدم فعلاً: دليلٌ على ما دفع ومقابل ماذا ومتى.
+
+   🔒 والبيانات تُقرأ بسياسة `pay_own_read`: كلٌّ يرى صفوفه وحدها.
+   ══════════════════════════════════════════════════════════════════ */
+const RECEIPT_ISSUER = {
+  name: 'تداول بلس',
+  site: 'markets-a.com',
+  mail: 'market13S@hotmail.com',
+};
+
+function _rcpLabel(s) {
+  if (!s) return '';
+  if (s.label) return s.label;
+  const d = (typeof ADMIN_TAB_DEFS !== 'undefined') && ADMIN_TAB_DEFS.find(t => t.k === s.k);
+  return d ? d.t : (s.k === 'account' ? '⛔ التطبيق كله' : (s.k || ''));
+}
+
+async function userOpenReceipts() {
+  authMenuHide();
+  if (!sb || !sbUser) { showToast('🔑 سجّل الدخول لعرض إيصالاتك'); return; }
+
+  const old = document.getElementById('rcpOverlay'); if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'rcpOverlay';
+  el.style.cssText = 'position:fixed;inset:0;z-index:996;background:rgba(0,0,0,.82);display:flex;'
+    + 'align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto';
+  el.onclick = function (e) { if (e.target === el) el.remove(); };
+  el.innerHTML = '<div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;'
+    + 'width:100%;max-width:440px;padding:20px;margin:auto">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    +   '<div style="font-size:16px;font-weight:800">🧾 إيصالاتي</div>'
+    +   '<button onclick="document.getElementById(\'rcpOverlay\').remove()" style="width:28px;height:28px;'
+    +   'border-radius:50%;border:none;background:var(--surf-alt);color:var(--txt);cursor:pointer">✕</button></div>'
+    + '<div id="rcpList" style="font-size:12px;color:var(--txt-m);text-align:center;padding:24px">⏳ جارٍ الجلب…</div>'
+    + '</div>';
+  document.body.appendChild(el);
+
+  let rows = [];
+  try {
+    const { data, error } = await sb.from('payments').select('*')
+      .eq('email', sbUser.email).order('created_at', { ascending: false }).limit(50);
+    if (error) throw error;
+    rows = data || [];
+  } catch (e) {
+    const w = document.getElementById('rcpList');
+    if (w) w.innerHTML = '<div style="color:#fca5a5">⚠️ تعذّر جلب الإيصالات — حاول لاحقاً</div>';
+    console.error('[receipts]', e);
+    return;
+  }
+
+  /* 🚫 لا نعرض «قيد المراجعة»: التحويل البنكي قبل تأكيده ليس إيصالاً،
+     وعرضُه كذلك يوهم المستخدم أن حقّه ثبت وهو لم يثبت بعد. */
+  const paid = rows.filter(function (r) {
+    const s = r.status || 'pending';
+    return s === 'paid' || s === 'confirmed' || s === 'refunded' || s === 'partially_refunded';
+  });
+
+  const w = document.getElementById('rcpList'); if (!w) return;
+  if (!paid.length) {
+    w.innerHTML = '<div style="padding:20px;line-height:1.9">لا إيصالات بعد.<br>'
+      + '<span style="font-size:11px">تظهر هنا تلقائياً بعد أوّل اشتراك مؤكّد.</span></div>';
+    return;
+  }
+  w.style.textAlign = 'right'; w.style.padding = '0';
+  w.innerHTML = paid.map(function (r) {
+    const st = r.status || '';
+    const refunded = (st === 'refunded' || st === 'partially_refunded');
+    const when = r.paid_at || r.created_at;
+    const dt = when ? new Date(when).toLocaleString('ar-SA', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+    const svcs = Array.isArray(r.services) ? r.services : [];
+    const txt = svcs.map(function (s) {
+      return _rcpLabel(s) + (s.days ? ' · ' + s.days + ' يوم' : '');
+    }).join(' · ') || '—';
+    return '<div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:9px;'
+      + 'border-right:3px solid ' + (refunded ? '#ef4444' : '#22c55e') + '">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+      +   '<span style="font-size:14px;font-weight:800;color:' + (refunded ? '#fca5a5' : '#4ade80') + '">'
+      +   (r.total || 0) + ' ر.س' + (refunded ? ' <span style="font-size:10px">↩️ مستردّ</span>' : '') + '</span>'
+      +   '<span style="font-size:10.5px;color:var(--txt-m)">' + dt + '</span></div>'
+      + '<div style="font-size:11.5px;color:var(--txt);margin-top:5px">🧾 ' + esc(txt) + '</div>'
+      + '<button onclick="rcpPrint(' + Number(r.id) + ')" style="width:100%;margin-top:9px;padding:9px;'
+      + 'border-radius:9px;border:1px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);'
+      + 'color:#93c5fd;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">🖨️ عرض الإيصال / حفظ PDF</button>'
+      + '</div>';
+  }).join('');
+  window._rcpRows = paid;
+}
+
+/* 🖨️ إيصالٌ نظيفٌ في نافذةٍ مستقلّة — الطباعة تحفظه PDF على كل جهاز */
+function rcpPrint(id) {
+  const r = (window._rcpRows || []).find(function (x) { return Number(x.id) === Number(id); });
+  if (!r) { showToast('⚠️ تعذّر العثور على الإيصال'); return; }
+  const refunded = (r.status === 'refunded' || r.status === 'partially_refunded');
+  const when = r.paid_at || r.created_at;
+  const dt = when ? new Date(when).toLocaleString('ar-SA', { dateStyle: 'long', timeStyle: 'short' }) : '—';
+  const svcs = Array.isArray(r.services) ? r.services : [];
+  const rowsHtml = (svcs.length ? svcs : [{ k: '—', price: r.total }]).map(function (s) {
+    return '<tr><td>' + esc(_rcpLabel(s) || '—') + '</td><td>' + (s.days ? s.days + ' يوم' : '—')
+      + '</td><td style="text-align:left">' + (s.price != null ? s.price : '—') + ' ر.س</td></tr>';
+  }).join('');
+  /* 🔢 رقمٌ مقروء: رقم صفّنا، ومعه مرجع البوّابة إن وُجد */
+  const no = 'TP-' + String(r.id).padStart(6, '0');
+
+  const html = '<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">'
+    + '<title>' + no + '</title><style>'
+    + 'body{font-family:system-ui,"Segoe UI",Tahoma,sans-serif;background:#fff;color:#111;padding:28px;max-width:640px;margin:auto}'
+    + 'h1{font-size:20px;margin:0 0 2px}.sub{color:#666;font-size:12px;margin-bottom:18px}'
+    + '.box{border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:14px}'
+    + '.row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}'
+    + '.row b{font-weight:600;color:#444}'
+    + 'table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}'
+    + 'th,td{border-bottom:1px solid #eee;padding:8px 4px;text-align:right}'
+    + 'th{color:#666;font-weight:600;font-size:12px}'
+    + '.total{font-size:19px;font-weight:800;text-align:left;padding-top:10px}'
+    + '.note{font-size:11px;color:#777;line-height:1.9;margin-top:16px;border-top:1px solid #eee;padding-top:12px}'
+    + '.stamp{display:inline-block;border:2px solid ' + (refunded ? '#c00' : '#0a0') + ';color:' + (refunded ? '#c00' : '#0a0')
+    + ';border-radius:8px;padding:4px 12px;font-weight:800;font-size:13px;transform:rotate(-3deg)}'
+    + '@media print{body{padding:0}.noprint{display:none}}'
+    + '</style></head><body>'
+    + '<h1>' + RECEIPT_ISSUER.name + '</h1>'
+    + '<div class="sub">' + RECEIPT_ISSUER.site + ' · ' + RECEIPT_ISSUER.mail + '</div>'
+    + '<div class="box">'
+    +   '<div class="row"><b>إيصال استلام رقم</b><span>' + no + '</span></div>'
+    +   '<div class="row"><b>التاريخ</b><span>' + dt + '</span></div>'
+    +   '<div class="row"><b>العميل</b><span style="direction:ltr">' + esc(r.email || '') + '</span></div>'
+    +   '<div class="row"><b>وسيلة الدفع</b><span>' + (r.provider === 'moyasar' ? 'بطاقة (فيزا/مدى/ماستركارد)' : 'تحويل بنكي') + '</span></div>'
+    +   (r.provider_id ? '<div class="row"><b>مرجع العملية</b><span style="direction:ltr;font-size:11px">' + esc(r.provider_id) + '</span></div>' : '')
+    + '</div>'
+    + '<div class="box"><table><thead><tr><th>الخدمة</th><th>المدّة</th><th style="text-align:left">المبلغ</th></tr></thead>'
+    + '<tbody>' + rowsHtml + '</tbody></table>'
+    + '<div class="total">الإجمالي: ' + (r.total || 0) + ' ر.س</div></div>'
+    + '<div style="text-align:center;margin:10px 0"><span class="stamp">'
+    + (refunded ? '↩️ مستردّ' : '✅ مدفوع') + '</span></div>'
+    /* 📝 ما يجب أن يُقال صراحةً — لا في الحواشي */
+    + '<div class="note">'
+    +   '• هذا <b>إيصال استلام</b> وليس فاتورة ضريبية — النشاط غير مسجّل في ضريبة القيمة المضافة، فلا ضريبة محصَّلة ولا مطالبة بها.<br>'
+    +   '• الخدمة رقمية تحليلية <b>تعليمية</b>، ولا تُعدّ نصيحةً استثمارية.<br>'
+    +   '• للاسترداد: راجع سياسة الاسترداد أو راسلنا على ' + RECEIPT_ISSUER.mail + '<br>'
+    +   '• أُصدر إلكترونياً ولا يحتاج ختماً أو توقيعاً.'
+    + '</div>'
+    + '<div class="noprint" style="text-align:center;margin-top:22px">'
+    + '<button onclick="window.print()" style="padding:11px 22px;border-radius:9px;border:none;'
+    + 'background:#111;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">🖨️ طباعة / حفظ PDF</button></div>'
+    + '</body></html>';
+
+  const win = window.open('', '_blank');
+  if (!win) { showToast('⚠️ المتصفّح منع النافذة — اسمح بالنوافذ المنبثقة لهذا الموقع'); return; }
+  win.document.write(html);
+  win.document.close();
 }
 
 /* 💳 فتح صفحة الدفع للمستخدم */

@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v390';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v390 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v393';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v393 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,9 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v390 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v393', '🌙 حقول البطاقة كانت غير مرئية على الخلفية الداكنة (CSS موياسر مبنيٌّ لخلفيةٍ بيضاء) — ورقةُ تصحيح + دعم مدى + حارسٌ ينبّه إن لم تُرسم الحقول'],
+    ['v392', '🧪 فُعّل مفتاح موياسر التجريبي — نموذج البطاقة يعمل الآن ببطاقاتٍ وهمية بلا خصم'],
+    ['v391', '💳 الدفع بالبطاقة جاهزٌ كاملاً وخاملٌ حتى تُلصق المفتاح — التفعيل في الخادم وحده بعد أن يسأل البوّابة، والمتصفّح لا يُفعّل شيئاً'],
     ['v390', '🚀 دعوة التسجيل: أربعة أسطرٍ تُري الزائر ما ينتظره — بدل فقرةٍ تشرح له لماذا مُنع'],
     ['v389', '🚪 حدّ الزائر: سهمٌ واحد في المحفظة وواحد في المراقبة ثم دعوةٌ للتسجيل — كان يملؤهما بلا حدّ وبياناته في المتصفّح وحده تضيع بمسحه'],
     ['v388', '↩️ زرّ الرجوع في اللوحة الموحّدة يُعيدك إلى القسم الذي جئتَ منه ويحمل اسمه — كان يُعيد الجميع إلى الرئيسية دائماً'],
@@ -2495,6 +2498,8 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
         sb.from('visits').insert({ is_user: !!sbUser }).then(() => {}, () => {});
       }
     } catch (e) {}
+    /* 💳 عائدٌ من بوّابة الدفع؟ (?id=…) — بعد أن صارت الجلسة والتوكن جاهزين */
+    try { if (typeof payCheckReturn === 'function') payCheckReturn(); } catch (e) {}
   });
   sb.auth.onAuthStateChange((event, session) => {
     sbUser = session ? session.user : null;
@@ -4146,6 +4151,210 @@ async function payCopy(text, what) {
   } catch (e) { showToast('تعذّر النسخ — انسخه يدوياً'); }
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   💳 الدفع بالبطاقة — موياسر
+   ─────────────────────────────────────────────────────────────────
+   🔑 مفتاحٌ واحدٌ يحكم كل شيء:
+        ''            ⇒ يظهر «قريباً» كما كان (لا شيء يتغيّر للمستخدم)
+        'pk_test_…'   ⇒ يعمل بالبطاقات الوهمية · شارةُ «تجريبي» ظاهرة
+        'pk_live_…'   ⇒ يعمل بالمال الحقيقي · لا شارة
+   فالانتقال من التجربة إلى الحقيقة **تبديلُ سطرٍ واحد** — لا إعادة بناء.
+
+   🔒 والمفتاح المنشور (pk_) عامٌّ بطبيعته، لا خطر في وجوده هنا: هو
+      كرقم حسابك البنكي — يُستقبَل به المال ولا يُسحَب. والمفتاح السرّي
+      (sk_) لا يوجد في هذا الملفّ ولا يجوز، مكانه أسرار الدالّة السحابية.
+
+   🛡️ ولا يُفعّل هذا الكود اشتراكاً أبداً. نموذج موياسر يأخذ البطاقة
+      (فلا يمرّ رقمها بنا)، ثم تُعيدنا البوّابة برقم العملية، فنسأل
+      `verify-payment` — وهي وحدها تُفعّل، بعد أن تسأل موياسر نفسها.
+   ══════════════════════════════════════════════════════════════════ */
+const MOYASAR_PK = 'pk_test_NzHPa6nzrsvUH7QYVdKUi9TnUPTG6uQS6rjUYWsQ';   /* 🧪 تجريبي — بدّله بـ pk_live_… عند الإطلاق */
+
+function _moyasarOn()   { return /^pk_(test|live)_/.test(String(MOYASAR_PK || '')); }
+function _moyasarTest() { return /^pk_test_/.test(String(MOYASAR_PK || '')); }
+
+/* الكتلة المعروضة في نافذة الدفع — تتبدّل مع حالة المفتاح */
+function _cardPayBlock() {
+  if (!_moyasarOn()) {
+    return '<div style="border:1px dashed var(--bdr);border-radius:12px;padding:16px;text-align:center;opacity:.7">'
+      + '<div style="font-size:26px;margin-bottom:6px">💳</div>'
+      + '<div style="font-size:12.5px;color:var(--txt-m);line-height:1.7">الدفع بالبطاقة سيُفعَّل قريباً بإذن الله<br>(المكان جاهز لربط بوابة الدفع لاحقاً)</div>'
+      + '<button disabled style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:none;'
+      + 'font-weight:800;font-size:13px;color:rgba(255,255,255,.5);cursor:not-allowed;'
+      + 'background:var(--surf-alt)">🔒 قريباً</button></div>';
+  }
+  const t = _moyasarTest();
+  return '<div style="border:1px solid ' + (t ? 'rgba(245,158,11,.45)' : 'var(--bdr)') + ';border-radius:12px;padding:14px">'
+    + (t ? '<div style="background:rgba(245,158,11,.12);color:#fcd34d;border:1px solid rgba(245,158,11,.4);'
+         + 'border-radius:9px;padding:8px 10px;font-size:11.5px;font-weight:800;margin-bottom:12px;text-align:center">'
+         + '🧪 وضع التجربة — لا يُخصم مال. استخدم بطاقةً تجريبية: 4111 1111 1111 1111</div>' : '')
+    + '<div id="moyasarForm" class="mysr-form"></div>'
+    + '<div id="payCardMsg" style="display:none;font-size:11.5px;text-align:center;margin-top:10px;padding:9px;border-radius:9px"></div>'
+    + '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;margin-top:10px;line-height:1.7">'
+    + '🔐 بيانات بطاقتك تُرسَل إلى بوّابة الدفع مباشرةً — لا تمرّ بخوادمنا ولا تُخزَّن عندنا</div>'
+    + '</div>';
+}
+
+/* حمّل مكتبة موياسر مرّةً واحدة (CSS + JS) */
+let _mysrLoaded = null;
+function _moyasarLoad() {
+  if (_mysrLoaded) return _mysrLoaded;
+  _mysrLoaded = new Promise(function (resolve, reject) {
+    try {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'https://cdn.moyasar.com/mpf/1.15.0/moyasar.css';
+      document.head.appendChild(css);
+      /* 🌙 ورقةُ تصحيحٍ للوضع الداكن — تُحقن بعد ورقة موياسر لتغلبها.
+         العلّة المرصودة: النموذج حُمّل (تحذير البيئة التجريبية ظهر) لكن
+         الحقول اختفت. لأن CSS موياسر مبنيٌّ لخلفيةٍ بيضاء: نصٌّ داكن
+         وحدودٌ رماديّة فاتحة — على خلفيتنا الداكنة يصير حقلاً غير مرئيّ
+         لا حقلاً غائباً. فالمستخدم يرى فراغاً ويظنّ الدفع معطّلاً. */
+      const fix = document.createElement('style');
+      fix.id = 'mysrDarkFix';
+      fix.textContent = [
+        '.mysr-form{color:#e5e7eb;font-family:inherit}',
+        '.mysr-form label,.mysr-form .mysr-form-label,.mysr-form legend{color:#cbd5e1!important;font-size:12px!important}',
+        '.mysr-form input,.mysr-form select,.mysr-form textarea{',
+        '  background:#0f172a!important;color:#f1f5f9!important;',
+        '  border:1.5px solid #334155!important;border-radius:10px!important;',
+        '  padding:11px 12px!important;font-size:14px!important;font-family:inherit!important;}',
+        '.mysr-form input:focus,.mysr-form select:focus{border-color:#38bdf8!important;outline:none!important;box-shadow:none!important}',
+        '.mysr-form input::placeholder{color:#64748b!important}',
+        '.mysr-form button,.mysr-form .mysr-button,.mysr-form [type=submit]{',
+        '  background:linear-gradient(135deg,#166534,#22c55e)!important;color:#fff!important;',
+        '  border:none!important;border-radius:12px!important;padding:14px!important;',
+        '  font-weight:800!important;font-size:14px!important;font-family:inherit!important;',
+        '  width:100%!important;cursor:pointer!important;}',
+        '.mysr-form .mysr-error,.mysr-form .mysr-form-error,.mysr-form [class*=error]{color:#fca5a5!important}',
+        '.mysr-form a{color:#7dd3fc!important}',
+      ].join('\n');
+      document.head.appendChild(fix);
+
+      const js = document.createElement('script');
+      js.src = 'https://cdn.moyasar.com/mpf/1.15.0/moyasar.js';
+      js.onload = resolve;
+      js.onerror = function () { reject(new Error('تعذّر تحميل بوّابة الدفع')); };
+      document.head.appendChild(js);
+    } catch (e) { reject(e); }
+  });
+  return _mysrLoaded;
+}
+
+function _payCardMsg(txt, kind) {
+  const el = document.getElementById('payCardMsg'); if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = txt;
+  const c = kind === 'ok' ? ['rgba(34,197,94,.12)', 'rgba(34,197,94,.4)', '#4ade80']
+          : kind === 'err' ? ['rgba(239,68,68,.12)', 'rgba(239,68,68,.4)', '#fca5a5']
+          : ['rgba(96,165,250,.12)', 'rgba(96,165,250,.4)', '#93c5fd'];
+  el.style.background = c[0]; el.style.border = '1px solid ' + c[1]; el.style.color = c[2];
+}
+
+/* ابنِ نموذج البطاقة بالمبلغ المحدَّد حالياً — يُنادى من payRecalc */
+async function _payCardMount() {
+  if (!_moyasarOn()) return;
+  const box = document.getElementById('moyasarForm'); if (!box) return;
+  const sel = _paySelected();
+  const total = sel.reduce(function (s, it) { return s + it.price; }, 0);
+
+  if (!sbUser) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--txt-m);padding:14px">🔑 سجّل الدخول أوّلاً للدفع بالبطاقة</div>'; return; }
+  if (!(total > 0)) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--txt-m);padding:14px">اختر خدمةً واحدة على الأقل</div>'; return; }
+
+  /* لا تُعِد البناء بلا داعٍ — إعادةُ البناء تمحو ما كتبه في الحقول */
+  const stamp = total + '|' + sel.map(function (x) { return x.k; }).sort().join(',');
+  if (box.dataset.stamp === stamp) return;
+  box.dataset.stamp = stamp;
+  box.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--txt-m);padding:14px">⏳ جارٍ تحميل بوّابة الدفع…</div>';
+
+  try { await _moyasarLoad(); } catch (e) { box.innerHTML = ''; _payCardMsg('⚠️ تعذّر تحميل بوّابة الدفع — تحقّق من اتصالك', 'err'); return; }
+  if (typeof Moyasar === 'undefined') { box.innerHTML = ''; _payCardMsg('⚠️ بوّابة الدفع غير متاحة الآن', 'err'); return; }
+
+  box.innerHTML = '';
+  try {
+    Moyasar.init({
+      element: '#moyasarForm',
+      /* 🪙 موياسر تعمل بالهللات — 10.00 ر.س = 1000 */
+      amount: Math.round(total * 100),
+      currency: 'SAR',
+      description: sel.map(function (x) { return x.label; }).join(' · ').slice(0, 250),
+      publishable_api_key: MOYASAR_PK,
+      callback_url: (location.origin + location.pathname),
+      methods: ['creditcard'],
+      /* 🇸🇦 مدى أوّلاً — أكثر ما يحمله السعوديّ */
+      supported_networks: ['mada', 'visa', 'mastercard'],
+      /* 🏷️ ما تقرؤه الدالّة السحابية. والسعر ليس منها — تحسبه هي بنفسها. */
+      metadata: {
+        email: sbUser.email,
+        sections: sel.map(function (x) { return x.k; }).join(','),
+      },
+      on_completed: function (payment) {
+        /* لا نُفعّل هنا. نسلّم الرقم للخادم وننتظر حكمه. */
+        try { sessionStorage.setItem('tp_pay_id', payment.id); } catch (e) {}
+        return Promise.resolve({});
+      },
+    });
+    /* 🔍 حارسٌ ضدّ «نموذجٍ بلا حقول»: init قد ينجح ولا يرسم شيئاً
+       (مفتاحٌ خاطئ · مبلغٌ دون 100 هللة · شبكةٌ محجوبة). وبلا هذا
+       الفحص يرى المستخدم فراغاً ولا يعلم أحد — فشلٌ صامتٌ آخر. */
+    setTimeout(function () {
+      const b = document.getElementById('moyasarForm');
+      if (b && !b.querySelector('input')) {
+        _payCardMsg('⚠️ لم تُرسم حقول البطاقة. تحقّق من: المبلغ ≥ 1 ر.س · صحّة المفتاح المنشور · عدم حجب cdn.moyasar.com', 'err');
+      }
+    }, 2500);
+  } catch (e) {
+    box.innerHTML = '';
+    _payCardMsg('⚠️ تعذّر تجهيز النموذج: ' + (e && e.message || e), 'err');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   🔄 العودة من البوّابة — تُنادى عند إقلاع التطبيق
+   موياسر تُعيد المستخدم إلى callback_url ومعها ?id=&status=
+   فنسأل الخادم عن الرقم ثم ننظّف الرابط كي لا يتكرّر عند التحديث.
+   ══════════════════════════════════════════════════════════════════ */
+async function payCheckReturn() {
+  let id = '', st = '';
+  try {
+    const q = new URLSearchParams(location.search);
+    id = q.get('id') || '';
+    st = (q.get('status') || '').toLowerCase();
+  } catch (e) { return; }
+  if (!id) return;
+
+  /* 🧹 نظّف الرابط فوراً — قبل أي await. وإلا أعاد تحديثُ الصفحة
+     نفسَ الاستدعاء، وحُمّل الخادم بطلباتٍ لا تُفيد. */
+  try { history.replaceState({}, '', location.origin + location.pathname); } catch (e) {}
+
+  if (st && st !== 'paid') { showToast('⚠️ لم تكتمل عملية الدفع (' + st + ') — لم يُخصم شيء'); return; }
+  if (!sb || !sbUser || !_sbToken) { showToast('🔑 سجّل الدخول لإتمام تفعيل اشتراكك'); return; }
+
+  showToast('⏳ جارٍ التحقّق من الدفع وتفعيل اشتراكك…');
+  try {
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/verify-payment', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + _sbToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ payment_id: id }),
+    });
+    const j = await resp.json().catch(function () { return {}; });
+    if (!resp.ok || j.error) {
+      if (resp.status === 404) { showToast('⚠️ دالّة verify-payment غير منشورة — راسل الدعم'); return; }
+      showToast('⚠️ ' + (j.error || ('تعذّر التحقّق — خطأ ' + resp.status)));
+      return;
+    }
+    if (j.already) { showToast('✅ هذه العملية مُفعّلة مسبقاً'); return; }
+    try { await refreshUserRestrictions(); } catch (e) {}
+    showToast('✅ تم الدفع وتفعيل اشتراكك' + (j.test ? ' (تجريبي)' : '') + ' — بالتوفيق!');
+  } catch (e) {
+    showToast('⚠️ تعذّر الاتصال للتحقّق من الدفع — راسل الدعم ومعك رقم العملية: ' + id);
+  }
+}
+
 /* 💳 فتح صفحة الدفع للمستخدم */
 function openPayModal(secKey) {
   secKey = secKey || 'account';
@@ -4254,15 +4463,9 @@ function openPayModal(secKey) {
         border:none;cursor:pointer;font-weight:800;font-size:14px;color:#fff;
         background:linear-gradient(135deg,#166534 0%,#22c55e 100%)">✅ تم التحويل — إبلاغ الإدارة</button>
 
-      <!-- طريقة الدفع: بطاقة (فيزا) — مكانها جاهز -->
+      <!-- طريقة الدفع: بطاقة (فيزا / مدى / ماستركارد) -->
       <div style="font-size:13px;font-weight:800;color:#fbbf24;margin:20px 0 10px">💳 البطاقة (فيزا / مدى / ماستركارد)</div>
-      <div style="border:1px dashed var(--bdr);border-radius:12px;padding:16px;text-align:center;opacity:.7">
-        <div style="font-size:26px;margin-bottom:6px">💳</div>
-        <div style="font-size:12.5px;color:var(--txt-m);line-height:1.7">الدفع بالبطاقة سيُفعَّل قريباً بإذن الله<br>(المكان جاهز لربط بوابة الدفع لاحقاً)</div>
-        <button disabled style="width:100%;margin-top:12px;padding:12px;border-radius:11px;border:none;
-          font-weight:800;font-size:13px;color:rgba(255,255,255,.5);cursor:not-allowed;
-          background:var(--surf-alt)">🔒 قريباً</button>
-      </div>
+      ${_cardPayBlock()}
 
       <button onclick="document.getElementById('payModal').remove();showSupportForm()"
         style="width:100%;margin-top:16px;padding:11px;border-radius:11px;cursor:pointer;
@@ -4289,6 +4492,8 @@ function payRecalc() {
   if (tEl) tEl.textContent = total + ' ر.س';
   const allBox = document.getElementById('paySelAll');
   if (allBox) allBox.checked = all.length > 0 && sel.length === all.length;
+  /* 💳 أعِد بناء نموذج البطاقة بالمبلغ الجديد — يتجاهل نفسه إن لم يتغيّر */
+  try { _payCardMount(); } catch (e) {}
 }
 
 /* تفعيل/إلغاء كل الخدمات */

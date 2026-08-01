@@ -2257,8 +2257,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v407';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v407 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v408';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v408 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2268,6 +2268,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v407 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v408', '⏱️ مهلة 25 ثانية لكل نداء دفع — كان الزرّ يبقى «جارٍ التجهيز» إلى الأبد بلا رسالة ولا مخرج، فـfetch المجرّد لا ينقضي'],
     ['v407', '🔝 نافذة تأكيد الحذف/الاسترداد كانت طبقتها 950 وفوقها نوافذ عند 1001 — تُفتح خلف ما يحجبها فيبدو الزرّ معطّلاً. رُفعت إلى 1002'],
     ['v406', '🛟 زرّ الاسترداد يُثبت وصول الضغطة من أوّل سطر، ولا يُعلَّق على نافذةٍ قد تسقط — بديل confirm جاهز'],
     ['v405', '🔬 زرّ الاسترداد يطبع ردّ الخادم في الكونسل ويُحدّث اشتراك المستخدم فوراً — الرسالة المنبثقة تختفي قبل أن تُقرأ'],
@@ -4199,6 +4200,28 @@ const MOYASAR_PK = 'pk_test_NzHPa6nzrsvUH7QYVdKUi9TnUPTG6uQS6rjUYWsQ';   /* 🧪
      بدّل هذا السطر وحده. */
 const FN_PAY = 'Verify-payment';
 
+/* ══════════════════════════════════════════════════════════════════
+   ⏱️ طلبٌ بمهلة — `fetch` بلا مهلةٍ ينتظر إلى الأبد
+
+   رُصد: الزرّ يبقى على «جارٍ تجهيز صفحة الدفع…» ولا شيء في الكونسل.
+   لأن `fetch` المجرّد لا ينقضي: إن تعثّرت الدالّة السحابية أو ضاعت
+   الاستجابة، بقي الوعد معلَّقاً ولا `catch` يُنادى. فيرى المستخدم
+   دوّامةً بلا مخرج، ولا رسالةً تدلّه، ولا زرّاً يُعيد المحاولة.
+
+   ▸ 25 ثانية سقفاً: أطول من أبطأ إقلاعٍ بارد لدالّة Supabase، وأقصر
+     من صبر إنسانٍ ينتظر شاشةً ساكنة.
+   ══════════════════════════════════════════════════════════════════ */
+async function _fetchT(url, opts, ms) {
+  const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const t = setTimeout(function () { try { ctl && ctl.abort(); } catch (e) {} }, ms || 25000);
+  try {
+    return await fetch(url, Object.assign({}, opts, ctl ? { signal: ctl.signal } : {}));
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('انقضت المهلة — لم يستجب خادم الدفع خلال ' + ((ms || 25000) / 1000) + ' ثانية');
+    throw e;
+  } finally { clearTimeout(t); }
+}
+
 function _moyasarOn()   { return /^pk_(test|live)_/.test(String(MOYASAR_PK || '')); }
 function _moyasarTest() { return /^pk_test_/.test(String(MOYASAR_PK || '')); }
 
@@ -4257,10 +4280,18 @@ async function payCardOpen() {
   if (Math.round(total * 100) < 100) { showToast('⚠️ أقلّ مبلغ للدفع بالبطاقة ريالٌ واحد'); return; }
 
   const btn = document.querySelector('#payModal button[onclick="payCardOpen()"]');
+  /* 🔁 استعادةُ الزرّ في مكانٍ واحد — كان مكرَّراً ثلاث مرّات، ونسيانُ
+     إحداها يترك المستخدم أمام زرٍّ ميّت لا يُعيد المحاولة. */
+  const reset = function (msg) {
+    if (!btn) return;
+    btn.disabled = false; btn.style.opacity = '';
+    btn.innerHTML = (msg || '💳 ادفع بالبطاقة الآن') + ' <span id="payCardAmt">· ' + total + ' ر.س</span>';
+  };
   if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.innerHTML = '⏳ جارٍ تجهيز صفحة الدفع…'; }
+  console.info('[pay] ▶️ طلب فاتورة:', { sections: sel.map(function (x) { return x.k; }), total, fn: FN_PAY });
 
   try {
-    const resp = await fetch(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
+    const resp = await _fetchT(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -4274,10 +4305,12 @@ async function payCardOpen() {
       }),
     });
     const j = await resp.json().catch(function () { return {}; });
+    console.info('[pay] الردّ:', resp.status, j);
     if (!resp.ok || j.error || !j.url) {
+      console.error('[pay] ❌ فشل تجهيز الفاتورة:', resp.status, j.error || j);
       if (resp.status === 404) { showToast('⚠️ دالّة الدفع غير منشورة (' + FN_PAY + ') — راسل الدعم'); }
       else { showToast('⚠️ ' + (j.error || ('تعذّر تجهيز الدفع — خطأ ' + resp.status))); }
-      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = '💳 ادفع بالبطاقة الآن <span id="payCardAmt">· ' + total + ' ر.س</span>'; }
+      reset('🔁 أعد المحاولة');
       return;
     }
     /* 🧭 نحفظ رقم الفاتورة قبل المغادرة: لو انقطع اتصاله أثناء العودة
@@ -4286,8 +4319,9 @@ async function payCardOpen() {
     showToast('🔐 جارٍ نقلك إلى صفحة الدفع الآمنة…');
     location.href = j.url;
   } catch (e) {
-    showToast('⚠️ تعذّر الاتصال بخادم الدفع — تحقّق من اتصالك');
-    if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = '💳 ادفع بالبطاقة الآن <span id="payCardAmt">· ' + total + ' ر.س</span>'; }
+    console.error('[pay] ❌ استثناء:', e);
+    showToast('⚠️ ' + (e && e.message || 'تعذّر الاتصال بخادم الدفع'));
+    reset('🔁 أعد المحاولة');
   }
 }
 
@@ -4332,7 +4366,7 @@ async function payCheckReturn() {
 
   if (!fromMemory) showToast('⏳ جارٍ التحقّق من الدفع وتفعيل اشتراكك…');
   try {
-    const resp = await fetch(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
+    const resp = await _fetchT(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -5075,7 +5109,7 @@ async function _payRefundGo(provId) {
     {
       showToast('⏳ جارٍ الاسترداد…');
       try {
-        const resp = await fetch(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
+        const resp = await _fetchT(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
           method: 'POST',
           headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + _sbToken, 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'refund', provider_id: provId }),

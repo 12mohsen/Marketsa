@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v404';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v404 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v405';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v405 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v404 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v405', '🔬 زرّ الاسترداد يطبع ردّ الخادم في الكونسل ويُحدّث اشتراك المستخدم فوراً — الرسالة المنبثقة تختفي قبل أن تُقرأ'],
     ['v404', '↩️ زرّ استرداد للأدمن الرئيسي: يردّ المال ويُقفل الأقسام في ضغطةٍ واحدة — الاسترداد من لوحة موياسر وحدها يترك الاشتراك مفتوحاً'],
     ['v403', '🧾 سجلّ المدفوعات يُظهر القسم المشترى باسمه العربي دائماً — كان نصّ البطاقة يُخفي الخدمات، فيُرى المبلغ بلا مقابله'],
     ['v402', '💳 دفعات البطاقة تظهر «مدفوعة» بلا أزرار تأكيد — كانت تُعرض «قيد المراجعة»، وتأكيدها يدوياً يمنح المدّة مرّتين'],
@@ -4986,17 +4987,50 @@ function _payIsCard(p) {
      يُقفل، ومتى يصل المال. فالاسترداد لا يُتراجَع عنه.
    ══════════════════════════════════════════════════════════════════ */
 async function payRefund(provId, total, who) {
-  if (!isSuperAdmin()) { showToast('⛔ الاسترداد للأدمن الرئيسي فقط'); return; }
-  if (!sb || !_sbToken) { showToast('🔑 جلستك انتهت — سجّل الدخول'); return; }
+  /* 📣 أوّل سطرٍ يُثبت أن الضغطة وصلت.
+     رُصد «ضغطتُ ولم يحدث شيء» — وهي أعمى الأعطال: لا رسالة ولا خطأ،
+     فلا يُعرف أوقعت الضغطة أصلاً أم تعثّرت بعدها. هذا السطر يفصل
+     الاحتمالين قبل أيّ تحقيق. */
+  console.info('[refund] ▶️ ضُغط الزرّ:', { provId, total, who });
+  try {
+    if (typeof isSuperAdmin !== 'function' || !isSuperAdmin()) { showToast('⛔ الاسترداد للأدمن الرئيسي فقط'); return; }
+    if (!sb || !_sbToken) { showToast('🔑 جلستك انتهت — سجّل الدخول'); return; }
+    if (!provId) { showToast('⚠️ هذه الدفعة بلا رقم عملية — استردّها من لوحة موياسر'); return; }
 
-  clearModalOpen(0,
-    'سيُردّ <strong>' + total + ' ر.س</strong> إلى بطاقة <span style="direction:ltr">' + esc(who) + '</span>.<br><br>'
-    + '<div style="text-align:right;line-height:2">'
-    +   '<div>🔒 <b>وتُقفل أقسام هذه الدفعة فوراً</b></div>'
-    +   '<div>🏦 يصل المال خلال ١٤ يوم عمل (يحدّدها بنكه)</div>'
-    +   '<div>↩️ <b>ولا يمكن التراجع</b> — لإعادة فتحها يشتريها من جديد</div>'
-    + '</div>',
-    async function () {
+    const warnHtml =
+      'سيُردّ <strong>' + total + ' ر.س</strong> إلى بطاقة <span style="direction:ltr">' + esc(who) + '</span>.<br><br>'
+      + '<div style="text-align:right;line-height:2">'
+      +   '<div>🔒 <b>وتُقفل أقسام هذه الدفعة فوراً</b></div>'
+      +   '<div>🏦 يصل المال خلال ١٤ يوم عمل (يحدّدها بنكه)</div>'
+      +   '<div>↩️ <b>ولا يمكن التراجع</b> — لإعادة فتحها يشتريها من جديد</div>'
+      + '</div>';
+
+    /* 🛟 ولا نُعلّق إجراءً ماليّاً على نافذةٍ قد تسقط.
+       لو تعثّرت `clearModalOpen` لأي سبب، يبقى `confirm` المتصفّح —
+       أقلّ جمالاً وأكيد الحضور. */
+    let ok = false;
+    try {
+      if (typeof clearModalOpen === 'function' && document.getElementById('clearModalOverlay')) {
+        clearModalOpen(0, warnHtml, function () { _payRefundGo(provId); },
+          { title: '↩️ تأكيد الاسترداد', subtitle: 'إجراءٌ نهائيّ لا يُتراجَع عنه',
+            hideCount: true, icon: '↩️', confirmIcon: '↩️', confirmText: 'نعم، استردّ المبلغ' });
+        return;
+      }
+      ok = confirm('سيُردّ ' + total + ' ر.س إلى ' + who + ' وتُقفل أقسام هذه الدفعة.\nلا يمكن التراجع. متابعة؟');
+    } catch (e) {
+      console.error('[refund] تعثّرت نافذة التأكيد — نستعمل confirm:', e);
+      ok = confirm('سيُردّ ' + total + ' ر.س إلى ' + who + '. متابعة؟');
+    }
+    if (ok) _payRefundGo(provId);
+  } catch (e) {
+    console.error('[refund] ❌ استثناء قبل الإرسال:', e);
+    showToast('⚠️ تعذّر فتح نافذة الاسترداد — ' + (e && e.message || e));
+  }
+}
+
+async function _payRefundGo(provId) {
+  {
+    {
       showToast('⏳ جارٍ الاسترداد…');
       try {
         const resp = await fetch(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
@@ -5005,12 +5039,24 @@ async function payRefund(provId, total, who) {
           body: JSON.stringify({ action: 'refund', provider_id: provId }),
         });
         const j = await resp.json().catch(function () { return {}; });
-        if (!resp.ok || j.error) { showToast('⚠️ ' + (j.error || ('تعذّر الاسترداد — خطأ ' + resp.status))); return; }
+        /* 🔬 اطبع الردّ كاملاً دائماً — نجح أو فشل.
+           رُصد: ضغطةٌ لا يظهر لها أثر، والرسالة المنبثقة تختفي قبل أن
+           تُقرأ. فالسجلّ يبقى، والتخمين ينتهي. */
+        console.info('[refund] الردّ:', resp.status, j);
+        if (!resp.ok || j.error) {
+          console.error('[refund] ❌ فشل:', resp.status, j.error || j);
+          showToast('⚠️ ' + (j.error || ('تعذّر الاسترداد — خطأ ' + resp.status)));
+          return;
+        }
         if (j.already) { showToast('↩️ هذه العملية مستردّةٌ مسبقاً'); }
-        else showToast('✅ استُردّ ' + j.refunded + ' ر.س' + (j.closed && j.closed.length ? ' وأُقفلت أقسامه' : ''));
+        else showToast('✅ استُردّ ' + j.refunded + ' ر.س' + (j.closed && j.closed.length ? ' وأُقفل: ' + j.closed.join(' · ') : ' (لم يُقفل قسم)'));
         try { await adminLoadPayments(); } catch (e) {}
         try { adminRenderPayments(); } catch (e) {}
-      } catch (e) { showToast('⚠️ تعذّر الاتصال بخادم الدفع'); }
+        try { await refreshUserRestrictions(); } catch (e) {}
+      } catch (e) {
+        console.error('[refund] ❌ استثناء:', e);
+        showToast('⚠️ تعذّر الاتصال بخادم الدفع — ' + (e && e.message || e));
+      }
     },
     { title: '↩️ تأكيد الاسترداد', subtitle: 'إجراءٌ نهائيّ لا يُتراجَع عنه',
       hideCount: true, icon: '↩️', confirmIcon: '↩️', confirmText: 'نعم، استردّ المبلغ' });

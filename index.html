@@ -2251,8 +2251,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v402';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v402 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v403';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v403 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2262,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v402 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v403', '🧾 سجلّ المدفوعات يُظهر القسم المشترى باسمه العربي دائماً — كان نصّ البطاقة يُخفي الخدمات، فيُرى المبلغ بلا مقابله'],
     ['v402', '💳 دفعات البطاقة تظهر «مدفوعة» بلا أزرار تأكيد — كانت تُعرض «قيد المراجعة»، وتأكيدها يدوياً يمنح المدّة مرّتين'],
     ['v401', '🔗 اسم دالّة الدفع في ثابتٍ واحد (FN_PAY) — مسارات Supabase حسّاسة لحالة الأحرف، وVerify-payment ≠ verify-payment'],
     ['v400', '🧾 الدفع صار عبر صفحة موياسر المستضافة — أُزيلت المكتبة كلياً (كانت ترمي Element:null وتحجبها Apple Pay)، والمبلغ يُحدَّد في الخادم فلا يُعبَث به'],
@@ -5002,7 +5003,18 @@ function adminRenderPayments() {
   const canManage = isSuperAdmin() || can('users');
   box.innerHTML = list.map(p => {
     const svcs = Array.isArray(p.services) ? p.services : [];
-    const svcText = svcs.map(s => `${s.label || s.k}: ${s.price} ر.س`).join(' · ');
+    /* 🏷️ اسمٌ عربيّ للقسم لا مفتاحه الخام.
+       دفعات البطاقة تُسجَّل من الخادم بالمفاتيح (`watchlist` · `monitor`)
+       بلا `label` — فكان السجلّ يقول «watchlist: 3 ر.س»، ومن يقرأه بعد
+       شهر لا يعرف ما اشتراه العميل. نترجمها من نفس مصدر أسماء الأقسام. */
+    const svcText = svcs.map(s => {
+      let nm = s.label;
+      if (!nm) {
+        const d = (typeof ADMIN_TAB_DEFS !== 'undefined') && ADMIN_TAB_DEFS.find(t => t.k === s.k);
+        nm = d ? d.t : (s.k === 'account' ? '🧾 اشتراك المنصة' : s.k);
+      }
+      return `${nm}: ${s.price} ر.س${s.days ? ` (${s.days} يوم)` : ''}`;
+    }).join(' · ');
     const when = p.created_at ? new Date(p.created_at).toLocaleString('ar', { dateStyle: 'short', timeStyle: 'short' }) : '';
     const st = p.status || 'pending';
     const card = _payIsCard(p);
@@ -5016,11 +5028,18 @@ function adminRenderPayments() {
         <span style="font-size:10px;color:var(--txt-m)">${when}</span>
       </div>
       <div style="font-size:11px;color:var(--txt);margin-top:4px">👤 ${esc(p.sender_name) || '—'} <span style="color:var(--txt-m);direction:ltr">(${esc(p.email)})</span></div>
+      ${/* 🧾 الخدمة أوّلاً ودائماً.
+            العلّة: كان العرض يختار **إمّا** نصّ الرسالة **أو** الخدمات.
+            ودفعةُ البطاقة تحمل رسالةً («بطاقة visa ••••1111») فتُخفي
+            الخدمات كلياً — فيرى الأدمن مبلغاً ورقمَ بطاقةٍ ولا يعرف
+            مقابل أيّ قسمٍ دُفع. والخدمة هي المعلومة، والبطاقة تفصيل. */''}
+      ${svcText ? `<div style="font-size:11px;color:#a7f3d0;font-weight:700;margin-top:6px;
+           background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:8px;
+           padding:7px 10px;line-height:1.7">🧾 ${esc(svcText)}</div>` : ''}
       ${p.message ? `<div style="font-size:11px;color:#fff;font-weight:600;margin-top:6px;line-height:1.7;
            background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;
-           word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${esc(p.message)}</div>`
-        : `${svcText ? `<div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">🧾 ${esc(svcText)}</div>` : ''}
-           <div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">🏦 ${esc(p.bank_name) || '—'}${p.bank_iban ? ` · <span style="direction:ltr">${esc(p.bank_iban)}</span>` : ''}</div>`}
+           word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${esc(p.message)}</div>` : ''}
+      ${(!card && !p.message) ? `<div style="font-size:10.5px;color:var(--txt-m);margin-top:3px">🏦 ${esc(p.bank_name) || '—'}${p.bank_iban ? ` · <span style="direction:ltr">${esc(p.bank_iban)}</span>` : ''}</div>` : ''}
       ${p._reply ? `<div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:9px;padding:8px 10px;margin-top:6px">
         <div style="font-size:10px;color:#4ade80;font-weight:700;margin-bottom:3px">↩️ رد الدعم:</div>
         <div style="font-size:11px;color:var(--txt);line-height:1.7;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${esc(p._reply)}</div>

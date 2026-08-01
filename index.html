@@ -456,8 +456,14 @@ html.dark .nav-bar{background:#0d1117;border-color:rgba(255,255,255,.06)}
 }
 
 /* ─── Clear All Modal (modern minimal) ─── */
+/* 🔝 1002 وليس 950.
+   عطلٌ مرصود: زرّ «↩️ استرداد» يُطبع في الكونسل ولا يظهر شيء. لأن نافذة
+   التأكيد هذه طبقتها 950، وفوقها نوافذ عند 993…1001 — فتُفتح خلف ما
+   يحجبها. والكود ينتظر ضغطةً لن تأتي، والمستخدم يرى زرّاً معطّلاً.
+   ▸ وهي آخر ما يظهر على الشاشة دائماً (تأكيد حذفٍ أو استرداد)، فحقّها
+     أن تكون فوق الجميع لا تحتهم. */
 .clear-modal-overlay{
-  position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.78);
+  position:fixed;inset:0;z-index:1002;background:rgba(0,0,0,.78);
   backdrop-filter:blur(4px);
   display:flex;align-items:center;justify-content:center;padding:20px;
   opacity:0;pointer-events:none;transition:opacity .25s ease;
@@ -2251,8 +2257,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v406';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v406 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-01-v407';
+console.log('%c[تداول بلس] البناء: 2026-08-01-v407 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2262,6 +2268,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v406 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v407', '🔝 نافذة تأكيد الحذف/الاسترداد كانت طبقتها 950 وفوقها نوافذ عند 1001 — تُفتح خلف ما يحجبها فيبدو الزرّ معطّلاً. رُفعت إلى 1002'],
     ['v406', '🛟 زرّ الاسترداد يُثبت وصول الضغطة من أوّل سطر، ولا يُعلَّق على نافذةٍ قد تسقط — بديل confirm جاهز'],
     ['v405', '🔬 زرّ الاسترداد يطبع ردّ الخادم في الكونسل ويُحدّث اشتراك المستخدم فوراً — الرسالة المنبثقة تختفي قبل أن تُقرأ'],
     ['v404', '↩️ زرّ استرداد للأدمن الرئيسي: يردّ المال ويُقفل الأقسام في ضغطةٍ واحدة — الاسترداد من لوحة موياسر وحدها يترك الاشتراك مفتوحاً'],
@@ -5011,10 +5018,43 @@ async function payRefund(provId, total, who) {
        أقلّ جمالاً وأكيد الحضور. */
     let ok = false;
     try {
-      if (typeof clearModalOpen === 'function' && document.getElementById('clearModalOverlay')) {
+      const ov = document.getElementById('clearModalOverlay');
+      if (typeof clearModalOpen === 'function' && ov) {
         clearModalOpen(0, warnHtml, function () { _payRefundGo(provId); },
           { title: '↩️ تأكيد الاسترداد', subtitle: 'إجراءٌ نهائيّ لا يُتراجَع عنه',
             hideCount: true, icon: '↩️', confirmIcon: '↩️', confirmText: 'نعم، استردّ المبلغ' });
+
+        /* ══════════════════════════════════════════════════════════
+           👁️ لا تكتفِ بـ«أمرتُها أن تُفتح» — تحقّق أنها ظهرت فعلاً.
+
+           رُصد: `[refund] ▶️ ضُغط الزرّ` يُطبع مرّتين ولا شيء بعده. أي
+           أن النداء وصل ووقف عند التأكيد. والنافذة تُفتح — لكن لا
+           تُرى: طبقةٌ أعلى منها، أو عنصرٌ يقصّها، أو CSS يمنع ظهورها.
+           فينتظر الكودُ ضغطةً لن تأتي، ويظنّ المستخدم الزرَّ معطّلاً.
+
+           ▸ فنقيس `display` بعد الفتح. إن لم تظهر فعلاً، نُغلقها ونقع
+             على `confirm` المتصفّح — الذي لا يحجبه شيء.
+           ══════════════════════════════════════════════════════════ */
+        /* ⏱️ القياس بعد 400 م.ث لا فوراً.
+           فخٌّ كدتُ أقع فيه: `.clear-modal-overlay` تبدأ `opacity:0`
+           وتنتقل إلى 1 في ربع ثانية. فقياسُها لحظةَ الفتح يقرأ صفراً
+           **دائماً** — فيحكم الكود بأنها لم تظهر ويقفز إلى confirm في
+           كل مرّة. أي أن الفحص نفسه كان سيصير العطل. */
+        setTimeout(function () {
+          try {
+            if (!ov.classList.contains('open')) return;   // أُغلقت أو نُفّذت
+            const cs = getComputedStyle(ov);
+            const r  = ov.getBoundingClientRect();
+            const shown = cs.display !== 'none' && cs.visibility !== 'hidden'
+                       && Number(cs.opacity) > 0.5 && r.width > 10 && r.height > 10;
+            console.info('[refund] نافذة التأكيد:', { display: cs.display, visibility: cs.visibility,
+              opacity: cs.opacity, zIndex: cs.zIndex, w: Math.round(r.width), h: Math.round(r.height), ظهرت: shown });
+            if (shown) return;                            // ظهرت — ننتظر ضغطة المستخدم
+            console.warn('[refund] ⚠️ النافذة مفتوحةٌ ولا تُرى — نستعمل confirm');
+            try { if (typeof clearModalClose === 'function') clearModalClose(); } catch (e3) {}
+            if (confirm('سيُردّ ' + total + ' ر.س إلى ' + who + ' وتُقفل أقسام هذه الدفعة.\nلا يمكن التراجع. متابعة؟')) _payRefundGo(provId);
+          } catch (e2) { console.warn('[refund] تعذّر قياس النافذة:', e2); }
+        }, 400);
         return;
       }
       ok = confirm('سيُردّ ' + total + ' ر.س إلى ' + who + ' وتُقفل أقسام هذه الدفعة.\nلا يمكن التراجع. متابعة؟');
@@ -5022,6 +5062,7 @@ async function payRefund(provId, total, who) {
       console.error('[refund] تعثّرت نافذة التأكيد — نستعمل confirm:', e);
       ok = confirm('سيُردّ ' + total + ' ر.س إلى ' + who + '. متابعة؟');
     }
+    console.info('[refund] قرار التأكيد:', ok);
     if (ok) _payRefundGo(provId);
   } catch (e) {
     console.error('[refund] ❌ استثناء قبل الإرسال:', e);

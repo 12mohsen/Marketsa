@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-01-v411';
-console.log('%c[تداول بلس] البناء: 2026-08-01-v411 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-02-v412';
+console.log('%c[تداول بلس] البناء: 2026-08-02-v412 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-01-v411 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v412', '📐 استرداد نسبيّ: الخادم يحسب ثمن الأيام غير المستهلَكة ويعرضه بجانب الكامل — الوعد في السياسة صار أداةً تُنفّذه. ويُقفل القسم في الحالتين'],
     ['v411', '📄 رابط سياسة الاسترداد في نافذة الدفع — أمام عين المشتري قبل أن يدفع لا في حاشيةٍ تُكتشف بعد الخصم'],
     ['v410', '📏 نافذة الإيصالات بارتفاعٍ محدود وشريط تمرير داخليّ — كانت تمتدّ خارج الشاشة فيختفي زرّ الإغلاق'],
     ['v409', '🧾 «إيصالاتي» في قائمة المستخدم — إيصال استلام قابل للطباعة/PDF بكل تفاصيل الاشتراك، ويقول صراحةً إنه ليس فاتورة ضريبية'],
@@ -5211,82 +5212,98 @@ function _payIsCard(p) {
      يُقفل، ومتى يصل المال. فالاسترداد لا يُتراجَع عنه.
    ══════════════════════════════════════════════════════════════════ */
 async function payRefund(provId, total, who) {
-  /* 📣 أوّل سطرٍ يُثبت أن الضغطة وصلت.
-     رُصد «ضغطتُ ولم يحدث شيء» — وهي أعمى الأعطال: لا رسالة ولا خطأ،
-     فلا يُعرف أوقعت الضغطة أصلاً أم تعثّرت بعدها. هذا السطر يفصل
-     الاحتمالين قبل أيّ تحقيق. */
   console.info('[refund] ▶️ ضُغط الزرّ:', { provId, total, who });
   try {
     if (typeof isSuperAdmin !== 'function' || !isSuperAdmin()) { showToast('⛔ الاسترداد للأدمن الرئيسي فقط'); return; }
     if (!sb || !_sbToken) { showToast('🔑 جلستك انتهت — سجّل الدخول'); return; }
-    if (!provId) { showToast('⚠️ هذه الدفعة بلا رقم عملية — استردّها من لوحة موياسر'); return; }
+    if (!provId) { showToast('⚠️ هذه الدفعة بلا رقم عملية — استردّها من لوحة ميسر'); return; }
 
-    const warnHtml =
-      'سيُردّ <strong>' + total + ' ر.س</strong> إلى بطاقة <span style="direction:ltr">' + esc(who) + '</span>.<br><br>'
-      + '<div style="text-align:right;line-height:2">'
-      +   '<div>🔒 <b>وتُقفل أقسام هذه الدفعة فوراً</b></div>'
-      +   '<div>🏦 يصل المال خلال ١٤ يوم عمل (يحدّدها بنكه)</div>'
-      +   '<div>↩️ <b>ولا يمكن التراجع</b> — لإعادة فتحها يشتريها من جديد</div>'
-      + '</div>';
-
-    /* 🛟 ولا نُعلّق إجراءً ماليّاً على نافذةٍ قد تسقط.
-       لو تعثّرت `clearModalOpen` لأي سبب، يبقى `confirm` المتصفّح —
-       أقلّ جمالاً وأكيد الحضور. */
-    let ok = false;
+    /* ══════════════════════════════════════════════════════════
+       📐 اسأل الخادم عن المبلغين قبل أن تسأل الأدمن.
+       السياسة تَعِد بـ«ما يقابل الأيام غير المستهلَكة» — وحسابُه بيدٍ
+       بشريّة على عشرات العمليات خطأٌ مؤجَّل. فيحسبه الخادم من مصدر
+       الحقيقة (`start` و`days` في اشتراك المستخدم)، ويقرأ الأدمنُ
+       الرقم ويختار — لا أن يجتهد ويخطئ في صالحه أو ضدّه. */
+    showToast('⏳ جارٍ حساب المستحقّ…');
+    let q = null;
     try {
-      const ov = document.getElementById('clearModalOverlay');
-      if (typeof clearModalOpen === 'function' && ov) {
-        clearModalOpen(0, warnHtml, function () { _payRefundGo(provId); },
-          { title: '↩️ تأكيد الاسترداد', subtitle: 'إجراءٌ نهائيّ لا يُتراجَع عنه',
-            hideCount: true, icon: '↩️', confirmIcon: '↩️', confirmText: 'نعم، استردّ المبلغ' });
-
-        /* ══════════════════════════════════════════════════════════
-           👁️ لا تكتفِ بـ«أمرتُها أن تُفتح» — تحقّق أنها ظهرت فعلاً.
-
-           رُصد: `[refund] ▶️ ضُغط الزرّ` يُطبع مرّتين ولا شيء بعده. أي
-           أن النداء وصل ووقف عند التأكيد. والنافذة تُفتح — لكن لا
-           تُرى: طبقةٌ أعلى منها، أو عنصرٌ يقصّها، أو CSS يمنع ظهورها.
-           فينتظر الكودُ ضغطةً لن تأتي، ويظنّ المستخدم الزرَّ معطّلاً.
-
-           ▸ فنقيس `display` بعد الفتح. إن لم تظهر فعلاً، نُغلقها ونقع
-             على `confirm` المتصفّح — الذي لا يحجبه شيء.
-           ══════════════════════════════════════════════════════════ */
-        /* ⏱️ القياس بعد 400 م.ث لا فوراً.
-           فخٌّ كدتُ أقع فيه: `.clear-modal-overlay` تبدأ `opacity:0`
-           وتنتقل إلى 1 في ربع ثانية. فقياسُها لحظةَ الفتح يقرأ صفراً
-           **دائماً** — فيحكم الكود بأنها لم تظهر ويقفز إلى confirm في
-           كل مرّة. أي أن الفحص نفسه كان سيصير العطل. */
-        setTimeout(function () {
-          try {
-            if (!ov.classList.contains('open')) return;   // أُغلقت أو نُفّذت
-            const cs = getComputedStyle(ov);
-            const r  = ov.getBoundingClientRect();
-            const shown = cs.display !== 'none' && cs.visibility !== 'hidden'
-                       && Number(cs.opacity) > 0.5 && r.width > 10 && r.height > 10;
-            console.info('[refund] نافذة التأكيد:', { display: cs.display, visibility: cs.visibility,
-              opacity: cs.opacity, zIndex: cs.zIndex, w: Math.round(r.width), h: Math.round(r.height), ظهرت: shown });
-            if (shown) return;                            // ظهرت — ننتظر ضغطة المستخدم
-            console.warn('[refund] ⚠️ النافذة مفتوحةٌ ولا تُرى — نستعمل confirm');
-            try { if (typeof clearModalClose === 'function') clearModalClose(); } catch (e3) {}
-            if (confirm('سيُردّ ' + total + ' ر.س إلى ' + who + ' وتُقفل أقسام هذه الدفعة.\nلا يمكن التراجع. متابعة؟')) _payRefundGo(provId);
-          } catch (e2) { console.warn('[refund] تعذّر قياس النافذة:', e2); }
-        }, 400);
-        return;
-      }
-      ok = confirm('سيُردّ ' + total + ' ر.س إلى ' + who + ' وتُقفل أقسام هذه الدفعة.\nلا يمكن التراجع. متابعة؟');
+      const qr = await _fetchT(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + _sbToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'refund_quote', provider_id: provId }),
+      });
+      q = await qr.json().catch(function () { return null; });
+      console.info('[refund] التقدير:', qr.status, q);
+      if (q && q.already) { showToast('↩️ هذه العملية مستردّةٌ مسبقاً'); return; }
+      if (!qr.ok || (q && q.error)) { showToast('⚠️ ' + ((q && q.error) || ('تعذّر الحساب — خطأ ' + qr.status))); return; }
     } catch (e) {
-      console.error('[refund] تعثّرت نافذة التأكيد — نستعمل confirm:', e);
-      ok = confirm('سيُردّ ' + total + ' ر.س إلى ' + who + '. متابعة؟');
+      console.error('[refund] تعذّر التقدير:', e);
+      showToast('⚠️ ' + (e && e.message || 'تعذّر الاتصال بخادم الدفع')); return;
     }
-    console.info('[refund] قرار التأكيد:', ok);
-    if (ok) _payRefundGo(provId);
+    _payRefundChoose(provId, who, q || {});
   } catch (e) {
     console.error('[refund] ❌ استثناء قبل الإرسال:', e);
     showToast('⚠️ تعذّر فتح نافذة الاسترداد — ' + (e && e.message || e));
   }
 }
 
-async function _payRefundGo(provId) {
+/* 🪟 نافذة الاختيار: كامل أم نسبيّ — بالأرقام لا بالوصف */
+function _payRefundChoose(provId, who, q) {
+  const full = Number(q.full) || 0;
+  const pro  = (q.prorata == null) ? null : Number(q.prorata);
+  const lines = Array.isArray(q.lines) ? q.lines : [];
+
+  const old = document.getElementById('rfOverlay'); if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'rfOverlay';
+  /* 🔝 1003 — فوق نافذة التأكيد (1002)، وهي آخر ما يُفتح */
+  el.style.cssText = 'position:fixed;inset:0;z-index:1003;background:rgba(0,0,0,.86);display:flex;'
+    + 'align-items:center;justify-content:center;padding:14px';
+  el.onclick = function (e) { if (e.target === el) el.remove(); };
+
+  const detail = lines.map(function (l) {
+    return '<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0;color:var(--txt-m)">'
+      + '<span>' + esc(l.name || l.k) + '</span>'
+      + '<span>' + (l.days ? (l.left + ' من ' + l.days + ' يوم · ' + l.amount + ' ر.س') : 'دائم') + '</span></div>';
+  }).join('');
+
+  const btn = function (id, label, sub, color, disabled) {
+    return '<button id="' + id + '"' + (disabled ? ' disabled' : '') + ' style="width:100%;padding:13px;margin-bottom:9px;'
+      + 'border-radius:12px;border:1.5px solid ' + color + '55;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';'
+      + 'background:' + color + '18;color:' + color + ';font-family:inherit;text-align:center;'
+      + 'opacity:' + (disabled ? '.45' : '1') + '">'
+      + '<div style="font-size:14px;font-weight:800">' + label + '</div>'
+      + '<div style="font-size:10.5px;opacity:.85;margin-top:2px">' + sub + '</div></button>';
+  };
+
+  el.innerHTML = '<div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;'
+    + 'width:100%;max-width:380px;padding:20px;max-height:92vh;overflow-y:auto">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+    +   '<div style="font-size:15px;font-weight:800">↩️ الاسترداد</div>'
+    +   '<button onclick="document.getElementById(\'rfOverlay\').remove()" style="width:28px;height:28px;'
+    +   'border-radius:50%;border:none;background:var(--surf-alt);color:var(--txt);cursor:pointer">✕</button></div>'
+    + '<div style="font-size:11.5px;color:var(--txt-m);direction:ltr;text-align:left;margin-bottom:12px">' + esc(who || '') + '</div>'
+    + (detail ? '<div style="border:1px solid var(--bdr);border-radius:10px;padding:9px 11px;margin-bottom:14px">' + detail + '</div>' : '')
+    + btn('rfFull', '💯 كامل — ' + full + ' ر.س', 'خلال ٧ أيام · أو إن كان الخلل منّا', '#f87171', false)
+    + btn('rfPro', pro == null ? '📐 نسبيّ — لا ينطبق' : ('📐 نسبيّ — ' + pro + ' ر.س'),
+          pro == null ? 'اشتراكٌ دائم بلا مدّة' : 'ثمن الأيام غير المستهلَكة', '#fbbf24', pro == null || pro <= 0)
+    + '<div style="font-size:10.5px;color:var(--txt-m);line-height:1.9;margin-top:6px;'
+    + 'border-top:1px solid var(--bdr);padding-top:10px">'
+    + '🔒 يُقفل القسم في الحالتين — الاسترداد إلغاءٌ للصفقة<br>'
+    + '🏦 يصل المال خلال ١٤ يوم عمل · ↩️ ولا يمكن التراجع</div>'
+    + '</div>';
+  document.body.appendChild(el);
+
+  const go = function (mode, amt) {
+    if (!confirm('سيُردّ ' + amt + ' ر.س ويُقفل القسم. لا يمكن التراجع.\nمتابعة؟')) return;
+    el.remove();
+    _payRefundGo(provId, mode);
+  };
+  const bf = document.getElementById('rfFull'); if (bf) bf.onclick = function () { go('full', full); };
+  const bp = document.getElementById('rfPro');  if (bp && pro != null && pro > 0) bp.onclick = function () { go('prorata', pro); };
+}
+
+async function _payRefundGo(provId, mode) {
   {
     {
       showToast('⏳ جارٍ الاسترداد…');
@@ -5294,7 +5311,7 @@ async function _payRefundGo(provId) {
         const resp = await _fetchT(SUPABASE_URL + '/functions/v1/' + FN_PAY, {
           method: 'POST',
           headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + _sbToken, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'refund', provider_id: provId }),
+          body: JSON.stringify({ action: 'refund', provider_id: provId, mode: mode || 'full' }),
         });
         const j = await resp.json().catch(function () { return {}; });
         /* 🔬 اطبع الردّ كاملاً دائماً — نجح أو فشل.

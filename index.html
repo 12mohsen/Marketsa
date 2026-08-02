@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-02-v413';
-console.log('%c[تداول بلس] البناء: 2026-08-02-v413 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-02-v417';
+console.log('%c[تداول بلس] البناء: 2026-08-02-v417 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,10 @@ console.log('%c[تداول بلس] البناء: 2026-08-02-v413 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v417', '📜 ثلاث وثائق منشورة (شروط · خصوصية · استرداد) مترابطة، وإقرارُ موافقةٍ في نافذة الدفع، وإخلاء مسؤولية يذكر صراحةً أنه ليس توصيةً استثمارية'],
+    ['v416', '⏳ زرّ تحديث اللوحة ينتظر انتهاء الجلب فعلاً لا مهلةً بالساعة — كان يُعلن النجاح على شبكةٍ بطيئة والجلب جارٍ، وعلى الفشل كذباً. ويُسمّي الآن ما سقط'],
+    ['v415', '🔄 زرّ «تحديث البيانات» في رأس لوحة الأدمن يُشعِر بأنه عمل — إعادة البناء تمحو الزرّ نفسه، فالإشارة في الرسائل لا عليه'],
+    ['v414', '🔄 زرّ تحديث المدفوعات يُشعِر بأنه عمل: انضغاطة + «جارٍ التحديث» + رسالةٌ بالعدد — وإخبارُك بأن لا جديد معلومةٌ أيضاً لا صمت'],
     ['v413', '🧾 الإيصال يحمل اسم صاحب البطاقة وآخر أربعة أرقامها — كان يحمل البريد وحده، وهو معرّف حسابٍ لا يصلح إثباتاً ولا يُطابق كشف البنك'],
     ['v412', '📐 استرداد نسبيّ: الخادم يحسب ثمن الأيام غير المستهلَكة ويعرضه بجانب الكامل — الوعد في السياسة صار أداةً تُنفّذه. ويُقفل القسم في الحالتين'],
     ['v411', '📄 رابط سياسة الاسترداد في نافذة الدفع — أمام عين المشتري قبل أن يدفع لا في حاشيةٍ تُكتشف بعد الخصم'],
@@ -4566,7 +4570,7 @@ function rcpPrint(id) {
     /* 📝 ما يجب أن يُقال صراحةً — لا في الحواشي */
     + '<div class="note">'
     +   '• هذا <b>إيصال استلام</b> وليس فاتورة ضريبية — النشاط غير مسجّل في ضريبة القيمة المضافة، فلا ضريبة محصَّلة ولا مطالبة بها.<br>'
-    +   '• الخدمة رقمية تحليلية <b>تعليمية</b>، ولا تُعدّ نصيحةً استثمارية.<br>'
+    +   '• الخدمة أداةٌ تعليمية وتحليلية لأغراضٍ معلوماتية فقط، <b>ولا تمثّل توصيةً استثمارية أو دعوةً لشراء أو بيع أي ورقة مالية</b>.<br>'
     +   '• للاسترداد: راجع سياسة الاسترداد أو راسلنا على ' + RECEIPT_ISSUER.mail + '<br>'
     +   '• أُصدر إلكترونياً ولا يحتاج ختماً أو توقيعاً.'
     + '</div>'
@@ -4702,10 +4706,12 @@ function openPayModal(secKey) {
            موضعها هنا مقصود: أمام عين المشتري **قبل** أن يدفع، لا في
            حاشيةٍ يُكتشف بعد الخصم. ومن يعرف حقّه في الاسترداد سلفاً
            يشتري بثقةٍ أكبر لا أقلّ. وموياسر تطلب رابطاً عامّاً لها. -->
-      <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--txt-m);line-height:1.9">
-        بالمتابعة أنت توافق على
-        <a href="/refund.html" target="_blank" rel="noopener" style="color:#7dd3fc;font-weight:700">سياسة الاسترداد</a>
-        — استردادٌ كامل خلال ٧ أيام
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--txt-m);line-height:2">
+        بإتمام الشراء تقرّ بأنك قرأت ووافقت على<br>
+        <a href="/terms.html" target="_blank" rel="noopener" style="color:#7dd3fc;font-weight:700">شروط الاستخدام</a> ·
+        <a href="/privacy.html" target="_blank" rel="noopener" style="color:#7dd3fc;font-weight:700">سياسة الخصوصية</a> ·
+        <a href="/refund.html" target="_blank" rel="noopener" style="color:#7dd3fc;font-weight:700">سياسة الاسترداد</a><br>
+        <span style="color:#4ade80">استردادٌ كامل خلال ٧ أيام</span>
       </div>
     </div>`;
   document.body.appendChild(el);
@@ -4840,8 +4846,10 @@ function renderAdminSection() {
   wrap.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:16px 0">
       <div style="font-size:19px;font-weight:800">⚙️ لوحة ${owner ? 'الأدمن' : 'الإشراف'}</div>
-      <button onclick="renderAdminSection()" style="padding:8px 14px;border-radius:9px;border:1px solid var(--bdr);
-        background:var(--surf-alt);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer">🔄 تحديث البيانات</button>
+      <button id="admRefreshAll" onclick="adminRefreshAll()" style="padding:8px 14px;border-radius:9px;border:1px solid var(--bdr);
+        background:var(--surf-alt);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;transition:transform .12s ease"
+        onmousedown="this.style.transform='scale(.94)'" onmouseup="this.style.transform=''"
+        onmouseleave="this.style.transform=''">🔄 تحديث البيانات</button>
     </div>
     ${supBanner}
 
@@ -5106,8 +5114,10 @@ function renderAdminSection() {
             <option value="confirmed">✅ مؤكّدة</option>
             <option value="rejected">❌ مرفوضة</option>
           </select>
-          <button onclick="adminLoadPayments()" style="padding:7px 12px;border-radius:8px;border:1px solid var(--bdr);
-            background:var(--surf-alt);color:var(--txt);font-size:11.5px;font-weight:700;cursor:pointer">🔄 تحديث</button>
+          <button id="admPayRefresh" onclick="adminLoadPayments(true)" style="padding:7px 12px;border-radius:8px;border:1px solid var(--bdr);
+            background:var(--surf-alt);color:var(--txt);font-size:11.5px;font-weight:700;cursor:pointer;
+            transition:transform .12s ease" onmousedown="this.style.transform='scale(.94)'"
+            onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">🔄 تحديث</button>
         </div>
       </div>
       <input id="admPaySearch" type="text" placeholder="🔍 ابحث بالاسم أو الإيميل أو البنك أو المبلغ أو نص الطلب..."
@@ -5120,21 +5130,107 @@ function renderAdminSection() {
       </div>` : ''}
 
     </div>`;
-  if (seeUsers) adminLoadUsers();
-  if (owner)    adminLoadStats();
-  if (seeSup)   adminLoadSupport();
-  if (owner)    _admRenderBanksList();
-  if (owner)    adminLoadActivity();
-  if (owner)    histLoadStats();
-  if (seeUsers) adminLoadPayments();
+  /* ══════════════════════════════════════════════════════════════
+     📡 اجمع وعود الجلب بدل أن تُطلقها وتنساها
+
+     الدوالّ الستّ `async` أصلاً — أي أنها تُبلّغ عن انتهائها منذ اليوم
+     الأوّل، وكنّا نُطلقها ولا نستمع. فيقول زرّ التحديث «تمّ» بعد مهلةٍ
+     بالساعة لا بعد انتهاء العمل: على شبكةٍ بطيئة يُعلن النجاح والجلب
+     جارٍ، وعلى فشلٍ يُعلن النجاح كذباً. رسالةٌ تُصدّق نفسها.
+
+     ▸ الآن تُرجع الدالّة وعداً واحداً يجمعها. و`allSettled` لا `all`:
+       سقوطُ واحدةٍ لا يُخفي نتيجة الباقي — بل نعدّها ونُخبر بها.
+     ▸ ومن يناديها بلا انتظار (switchTab مثلاً) لا يتأثّر: الوعد
+       المُهمَل لا يُغيّر شيئاً.
+     ══════════════════════════════════════════════════════════════ */
+  const jobs = [];
+  const run = function (name, fn) {
+    try {
+      const r = fn();
+      jobs.push(Promise.resolve(r).then(
+        function () { return { name: name, ok: true }; },
+        function (e) { console.error('[admin] فشل ' + name + ':', e); return { name: name, ok: false, err: e }; }
+      ));
+    } catch (e) {
+      console.error('[admin] فشل ' + name + ' فوراً:', e);
+      jobs.push(Promise.resolve({ name: name, ok: false, err: e }));
+    }
+  };
+
+  if (seeUsers) run('المستخدمون',   adminLoadUsers);
+  if (owner)    run('الإحصاءات',    adminLoadStats);
+  if (seeSup)   run('الدعم',        adminLoadSupport);
+  if (owner)    { try { _admRenderBanksList(); } catch (e) { console.error('[admin] البنوك:', e); } }
+  if (owner)    run('سجل النشاط',   adminLoadActivity);
+  if (owner)    run('البيانات التاريخية', histLoadStats);
+  if (seeUsers) run('المدفوعات',    adminLoadPayments);
+
+  return Promise.all(jobs);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   🔄 «تحديث البيانات» — يجب أن يُشعِر أنه عمل
+
+   العلّة: `renderAdminSection()` يُعيد بناء اللوحة ويُطلق ستّ عمليات
+   جلبٍ متوازية… بلا أيّ إشارة. ولأن اللوحة تُعاد بناءً فورياً، تبدو
+   الشاشة كما هي تماماً — فيظنّ الضاغطُ أن ضغطته ضاعت. وأسوأ من ذلك أن
+   إعادة البناء **تمحو الزرّ نفسه** فتضيع معه أي حالةٍ وضعناها عليه.
+
+   ▸ فالإشارة هنا لا تُعلَّق على الزرّ: رسالةٌ فورية «⏳ جارٍ التحديث»،
+     ثم بعد أن تهدأ عمليات الجلب رسالةٌ ثانية بما تجدّد فعلاً.
+   ▸ ولماذا 1400 م.ث؟ لأن الجلب لا يعيد وعداً نستطيع انتظاره — الدوال
+     تُطلق ولا تُرجع. فهذه مهلةٌ تكفي أبطأها، ولو تأخّرت واحدة فالعدد
+     يُقرأ بعدها بلا ضرر.
+   ══════════════════════════════════════════════════════════════════ */
+async function adminRefreshAll() {
+  if (typeof isAdmin !== 'function' || !isAdmin()) { showToast('⛔ هذه اللوحة للأدمن فقط'); return; }
+  showToast('⏳ جارٍ تحديث بيانات اللوحة…');
+  const t0 = Date.now();
+  let res = [];
+  try {
+    res = await renderAdminSection();      // ⏳ انتظارٌ حقيقيّ — لا مهلةٌ بالساعة
+  } catch (e) {
+    console.error('[admin] فشل التحديث:', e);
+    showToast('⚠️ تعذّر التحديث — ' + (e && e.message || e));
+    return;
+  }
+  const failed = (res || []).filter(function (r) { return r && !r.ok; });
+  const secs = ((Date.now() - t0) / 1000).toFixed(1);
+  const u = (typeof _admUsers    !== 'undefined' && _admUsers)    ? _admUsers.length    : 0;
+  const p = (typeof _admPayments !== 'undefined' && _admPayments) ? _admPayments.length : 0;
+
+  /* 🚨 الفشل يُقال بصوتٍ عالٍ ويُسمّى.
+     «تعذّر التحديث» وحدها لا تكفي: أيّ جزء سقط؟ فمن يعرف أن المدفوعات
+     وحدها فشلت يثق بباقي الشاشة، ومن لا يعرف يشكّ في كلّها. */
+  if (failed.length) {
+    showToast('⚠️ تعذّر تحديث: ' + failed.map(function (r) { return r.name; }).join(' · '));
+    return;
+  }
+  showToast('✅ تحدَّثت اللوحة (' + secs + 'ث) — ' + u + ' مستخدم · ' + p + ' عملية دفع');
 }
 
 /* ── 🧾 سجل المدفوعات ── */
 let _admPayments = [];
 let _payJustActivated = [];   // مفاتيح الأقسام المفعّلة للتوّ (لتمييزها بإطار أخضر في نافذة الإدارة)
-async function adminLoadPayments() {
+/* ══════════════════════════════════════════════════════════════════
+   🔄 التحديث يجب أن يُشعِر أنه حدث
+
+   رُصد: «الزرّ صلب لا يتجاوب» — مع أن السجلّ يتحدّث فعلاً. والعلّة أن
+   العمل يتمّ صامتاً: لا انضغاطة، ولا دوّامة، ولا رسالة. وإن لم تتغيّر
+   البيانات (وهو الغالب) بقيت الشاشة كما هي حرفاً بحرف — فيظنّ الضاغطُ
+   أن ضغطته ضاعت، فيضغط ثانيةً وثالثة.
+
+   ▸ ثلاث إشارات: الزرّ ينضغط · يصير «⏳ جارٍ التحديث» · ثم رسالةٌ تقول
+     العدد. **إخبارُه بأن شيئاً لم يتغيّر معلومةٌ أيضاً، لا صمت.**
+   ▸ و`silent` للنداءات الداخلية (بعد استرداد مثلاً) — لا نُزعجه برسالةٍ
+     عن عملٍ لم يطلبه.
+   ══════════════════════════════════════════════════════════════════ */
+async function adminLoadPayments(loud) {
   const box = document.getElementById('admPaymentsBox');
   if (!box) return;
+  const rb = document.getElementById('admPayRefresh');
+  const before = (_admPayments || []).length;
+  if (loud && rb) { rb.disabled = true; rb.style.opacity = '.6'; rb.textContent = '⏳ جارٍ التحديث'; }
   try {
     const [{ data, error }, repRes] = await Promise.all([
       sb.from('payments').select('*').order('created_at', { ascending: false }).limit(300),
@@ -5153,6 +5249,12 @@ async function adminLoadPayments() {
       p._reply = repMap[(p.email || '').toLowerCase() + '||' + (p.message || '')] || null;
     });
     adminRenderPayments();
+    if (loud) {
+      const after = _admPayments.length, add = after - before;
+      showToast(add > 0 ? ('✅ تحديث — ' + add + ' عملية جديدة')
+              : add < 0 ? ('✅ تحديث — ' + after + ' عملية')
+              : ('✅ محدَّث — لا جديد (' + after + ')'));
+    }
   } catch (e) {
     const msg = String(e && e.message || e);
     const hint = msg.includes('does not exist') || msg.includes('relation')
@@ -5160,6 +5262,11 @@ async function adminLoadPayments() {
       : (msg.includes('permission') || msg.includes('policy')) ? 'سياسات RLS تمنع القراءة' : '';
     box.innerHTML = `<div style="padding:10px;line-height:1.8">⚠️ تعذّر جلب السجل<br>
       <span style="font-size:10.5px">${hint}</span></div>`;
+    if (loud) showToast('⚠️ تعذّر التحديث' + (hint ? ' — ' + hint : ''));
+  } finally {
+    /* 🛟 في `finally` لا في نهاية `try`: لو سقط الجلب بقي الزرّ معطّلاً
+       إلى الأبد، فلا يستطيع حتى إعادة المحاولة. */
+    if (rb) { rb.disabled = false; rb.style.opacity = ''; rb.textContent = '🔄 تحديث'; }
   }
 }
 

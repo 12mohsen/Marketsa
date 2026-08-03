@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v425';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v425 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v426';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v426 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v425 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v426', '🕰️ لا رقمَ بلا تاريخه — كل خطّة تحمل جلسةَ حسابها، والمتأخّرة جلستين تُحجب أرقام تنفيذها ويبقى الشارت والاستثمار. ومعها تقريرُ صحّةِ بياناتٍ يصلك في تلجرام كل ليلة، فتعرف العطل قبل أن يسألك مستخدم'],
     ['v425', '🧹 المزامنة تُسقط كاش الشموع — كنتَ تضغط «جلب/تحديث» فيُخزَّن فعلاً ثم ترى الشارت على شموع ما قبله فتظنّه لم يعمل. ومزامنةُ الروبوت صارت تسأل القاعدة أوّلاً فلا تُزاحم دالّة sync-historical'],
     ['v424', '📅 «أين شمعة اليوم؟» — الشموع تتقادم بصمت لأن الروبوت لا يُحدّث جدول الأسعار، والتحذير كان مشروطاً بفارق 8% فلا يبلغه تأخّرُ جلسة. صار التأخّر يُقاس بالتاريخ ويُعلَن. ومعه: سطرُ «المعروض» كان يُرسم خارج الإطار منذ v419 فلا يراه أحد'],
     ['v423', '📐 وسمٌ يقول إن التحليل يوميٌّ دائماً — أزرار الإطار تُبدّل الشموع لا الحكم، وكان الصمت يجعل المستخدم ينسب تبدّل المسح إلى الزرّ'],
@@ -6716,6 +6717,40 @@ function _basisBlockHTML(b) {
     + 'يُنتج أرقاماً تبدو دقيقة وهي بلا معنى. تُستأنف تلقائياً فور إعادة مزامنة تاريخ هذا السهم.</div></div>';
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   🕰️ حاجز التأخّر — أرقام التنفيذ لا تُعرض من جلسةٍ مضت
+   جارُ حارس الأساس ونظيره. ذاك يمنع رقماً من سُلّمٍ مختلف، وهذا يمنع
+   رقماً من **زمنٍ مختلف**. والمستخدم لا يفرّق: كلاهما رقمٌ يبدو دقيقاً
+   ويقف عليه قرارُ شراء.
+
+   ▸ ولم نحجب الشارت ولا الإحصاءات ولا رأي الاستثمار: جلستان لا تقلبان
+     اتجاهاً مداه أشهر، وحجبُ ما لا يضرّ يُفقد الحجبَ معناه حين يلزم.
+     نحجب ما يُنفَّذ اليوم فقط: الدخول والوقف والهدف وشارة الجاهزية.
+   ══════════════════════════════════════════════════════════════════════ */
+function _lagBlockHTML(g) {
+  if (!g || !g.block) return '';
+  return '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.5);border-radius:11px;padding:12px;margin-bottom:11px;line-height:1.85">'
+    + '<div style="font-size:14px;font-weight:900;color:#fcd34d">🕰️ خطة التنفيذ مؤجَّلة — البيانات متأخّرة ' + g.lag + ' جلسة</div>'
+    + '<div style="font-size:12px;color:var(--txt);margin-top:6px">الحساب جرى على جلسة <b>' + g.asOf + '</b>'
+    + '، وآخر جلسة مُغلقة <b>' + g.expected + '</b>.</div>'
+    + '<div style="font-size:12px;color:#fed7aa;margin-top:7px"><b>حجبنا الدخول والوقف والهدف عمداً.</b> '
+    + 'نقطةُ دخولٍ عمرها جلستان قد تكون بُلِغت وخُرِقت ومضت، ووقفٌ قديم قد يكون ضُرِب — '
+    + 'فعرضُها اليوم يُغري بصفقةٍ على سعرٍ لم يعد قائماً.</div>'
+    + '<div style="font-size:11.5px;color:var(--txt-m);margin-top:6px">والشارت والإحصاءات ورأي الاستثمار طويل المدى تبقى معروضة — '
+    + 'جلستان لا تقلبان اتجاهاً مداه أشهر. وتعود الخطة تلقائياً فور وصول بيانات الجلسة.</div></div>';
+}
+/* 🏷️ ختم التاريخ — يُلصق بكل خطة تُعرض، متأخّرةً كانت أو محدّثة */
+function _asOfStampHTML(g) {
+  if (!g || !g.asOf) return '';
+  const late = !!g.warn;
+  return '<div style="font-size:10.5px;margin-bottom:7px;padding:5px 9px;border-radius:8px;line-height:1.7;'
+    + (late ? 'background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.4);color:#fcd34d;font-weight:800'
+            : 'background:var(--surf-alt);color:var(--txt-m)') + '">'
+    + '📅 محسوبة على جلسة <b>' + g.asOf + '</b>'
+    + (late ? ' — <b>متأخّرة جلسة عن ' + g.expected + '</b>. راجعها قبل التنفيذ؛ السعر أعلى الصفحة حيّ.' : ' (آخر جلسة مُغلقة)')
+    + '</div>';
+}
+
 /* ════════════════════════════════════════════════════════════════
    💰 التوزيعات الحقيقية — تُجلب من المصدر (تواريخ ومبالغ فعلية)
    تُصحّح القائمة اليدوية: تكشف مَن توقّف عن التوزيع ومتى آخر توزيع.
@@ -7004,6 +7039,36 @@ window.histSyncRecent = async function (opts) {
   _histSyncing = false;
   try { logAdminAction('hist_sync_recent', ok + ' رمز', rowsN + ' صف' + (fail ? ' · ' + fail + ' فشل' : '') + (cut ? ' · بلغ السقف الزمني' : '')); } catch (_) {}
   return { ok, fail, rows: rowsN, total: list.length, cut };
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   🩺 تقرير صحّة البيانات — يُقرأ ليلاً ويُرسَل إلى تلجرام
+   القاعدة التي خرجنا بها: **العطل الصامت أخطر من العطل الصاخب.** فبقيت
+   الشموع متأخّرة ولا أحد يعلم حتى فتح مستخدمٌ سهماً وسأل. فنقيس كل
+   ليلة كم رمزاً متخلّفاً عن آخر جلسة، ونُسمّي أسوأها.
+   ▸ ويقرأ من `PRED_RESULTS` بعد المسح — بلا استعلامٍ إضافي ولا كلفة.
+   ══════════════════════════════════════════════════════════════════════ */
+window.dataHealthReport = function () {
+  try {
+    const exp = window.predLastCloseYMD ? window.predLastCloseYMD() : '';
+    const res = (typeof PRED_RESULTS !== 'undefined' && Array.isArray(PRED_RESULTS)) ? PRED_RESULTS : [];
+    if (!res.length) return { ok: false, note: 'لا نتائج مسح' };
+    let fresh = 0, late1 = 0, late2 = 0, unknown = 0;
+    const worst = [];
+    res.forEach(r => {
+      const g = window.predLagOf ? window.predLagOf(r) : null;
+      if (!g || g.lag == null) { unknown++; return; }
+      if (g.lag === 0) fresh++;
+      else if (g.lag === 1) late1++;
+      else { late2++; worst.push({ sym: r.sym, name: r.name, lag: g.lag, asOf: g.asOf }); }
+    });
+    worst.sort((a, b) => b.lag - a.lag);
+    return {
+      ok: true, expected: exp, total: res.length,
+      fresh, late1, late2, unknown,
+      worst: worst.slice(0, 10),
+    };
+  } catch (e) { return { ok: false, note: String(e && e.message || e) }; }
 };
 
 /* زر الأدمن: يجلب لكل رموز السوق المحمّلة (rows) ويخزّنها في القاعدة */
@@ -11869,6 +11934,56 @@ document.addEventListener('keydown', e => {
     const iso = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
     return PRED_HOLIDAYS.includes(iso);
   }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     📅 «على أيّ جلسةٍ حُسِب هذا؟» — طبقة تاريخ الحكم
+     العلّة الجذرية التي كلّفتنا ثلاثة بلاغات: التطبيق يعرض **رقماً بلا
+     تاريخه**. فخطةٌ محسوبةٌ على جلسة الأمس تبدو كخطة اليوم، والمستخدم
+     يقرأ سعراً حيّاً فوقها فيظنّهما شيئاً واحداً. ولا فرق عنده بين
+     تحليلٍ متأخّر وتحليلٍ خاطئ — كلاهما يُخسره ماله.
+
+     ▸ ولا نعدّ الأيام التقويمية: الجمعة والسبت ليستا تأخّراً، وعدّهما
+       تأخّراً يُطلق إنذاراً كاذباً كل أحد فيُبلَّد الحسّ ويُهمَل الصادق.
+     ══════════════════════════════════════════════════════════════════════ */
+  window.predLastCloseYMD = function () {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })
+        .format(new Date(predLastClose()));
+    } catch (e) { return ''; }
+  };
+  /* كم جلسة تداول يتأخّر تاريخٌ عن آخر إغلاق؟ 0 = محدّث · null = مجهول */
+  window.predSessionsBehind = function (ymd) {
+    const a = String(ymd || '').slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(a)) return null;
+    const b = window.predLastCloseYMD();
+    if (!b) return null;
+    if (a >= b) return 0;
+    const start = Date.parse(a + 'T00:00:00Z');
+    let t = Date.parse(b + 'T00:00:00Z');
+    if (isNaN(t) || isNaN(start)) return null;
+    let n = 0;
+    while (t > start && n < 40) {
+      const d = new Date(t), wd = d.getUTCDay();
+      if (wd >= 0 && wd <= 4 && !predIsHolidayYMD(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())) n++;
+      t -= 86400000;
+    }
+    return n;
+  };
+  /* حالة التأخّر لنتيجةٍ واحدة — المرجع الوحيد لكل ما يُعرض */
+  window.predLagOf = function (r) {
+    const asOf = r && r.asOf ? String(r.asOf).slice(0, 10) : '';
+    const lag = asOf ? window.predSessionsBehind(asOf) : null;
+    return {
+      asOf: asOf,
+      expected: window.predLastCloseYMD(),
+      lag: lag,
+      /* جلسةٌ واحدة تُوسَم ولا تُحجَب — قد تكون بيانات المصدر لم تصل بعد
+         وحكمُ الاتجاه لا ينقلب بجلسة. وجلستان فأكثر تُحجَب أرقامُ
+         التنفيذ: نقطة دخولٍ عمرها يومان قد تكون خُرِقت مرّتين. */
+      warn: (lag != null && lag === 1),
+      block: (lag != null && lag >= 2),
+    };
+  };
   function predIsMarketOpen() {
     const p = predKsaParts();
     if (p.wd < 0 || p.wd > 4) return false;                 // الجمعة/السبت
@@ -12076,6 +12191,9 @@ document.addEventListener('keydown', e => {
               /* 🗓️ الأطر: من التاريخ الكامل إن توفّر، وإلا من شموع الكاش (سنة) */
               try { a.mtf = _MTF_CACHE[r.sym] || _mtfRead(candles, a.price); } catch (e) {}
               try { a.bars = Array.isArray(candles) ? candles.length : 0; } catch (e) {}   // عمق التاريخ (لوسم السهم الحديث)
+              /* 📅 تاريخ الجلسة التي حُسِب عليها هذا الحكم — يُحمل مع النتيجة
+                 إلى كل شاشة تعرضها. رقمٌ بلا تاريخه هو أصل ما وقعنا فيه. */
+              try { const _lc = candles[candles.length - 1]; a.asOf = (_lc && _lc.d) ? String(_lc.d).slice(0, 10) : ''; } catch (e) {}
               try { const _f = (typeof rows !== 'undefined' && Array.isArray(rows)) ? rows.find(x => x.sym === r.sym) : null; if (_f && _f.eps != null) a.eps = _f.eps; } catch (e) {}   // EPS لقيمة جراهام
               PRED_RESULTS.push(a); ok++;
             }
@@ -13484,7 +13602,12 @@ document.addEventListener('keydown', e => {
       if (!_noplan) { try { const V = _termVerdict(r); _blocked = !!(V && V.k === 'avoid'); } catch (e) {} }
       const k = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
       if (_noplan) c.noplan++; else if (_blocked) c.avoid++;
-      _blocked = _blocked || _noplan;   // كلاهما يُستبعد من شارات التوقيت
+      /* 🕰️ والمتأخّر بجلستين يُستبعد من شارات التوقيت كذلك — وإلا قال
+         الشريط «جاهز 6» وفيه سهمٌ خطّته محجوبةٌ في شاشته. عددٌ يَعِد
+         بما لا يُفتَح هو الكذب نفسه الذي أصلحناه في v421. */
+      let _lagBlk = false;
+      if (!_noplan) { try { const G = predLagOf(r); _lagBlk = !!(G && G.block); } catch (e) {} }
+      _blocked = _blocked || _noplan || _lagBlk;   // كلها تُستبعد من شارات التوقيت
       if (!_blocked && r.elPlan && r.elPlan.rr) c.ready++;
       if (k && c[k] != null && (!_blocked || k === 'tight' || k === 'gone')) c[k]++;
       /* 🧱 القاعدة على الأطر (نفس منطق القنّاص) */
@@ -14574,8 +14697,13 @@ document.addEventListener('keydown', e => {
        فالخطة والأهداف وع/م أرقامٌ محسوبة من سُلّمين مختلفين. نُعلنها
        ونحجبها — ولا نعرض رقماً واحداً بجانبها. */
     const _bas = (typeof _basisCheck === 'function') ? _basisCheck(r.sym, r.price) : null;
+    /* 🕰️ وحارسٌ ثانٍ بجانبه: الزمن. الأول يمنع رقماً من سُلّمٍ مختلف،
+       وهذا يمنع رقماً من جلسةٍ مضت — والخطر واحد. */
+    const _lg = (typeof predLagOf === 'function') ? predLagOf(r) : null;
     if (_bas && !_bas.ok) {
       html += _basisBlockHTML(_bas);
+    } else if (_lg && _lg.block && r.elPlan && r.elPlan.rr) {
+      html += _lagBlockHTML(_lg);
     } else if (r.elPlan && r.elPlan.rr) {
       const p = r.elPlan, k = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
       const kMap = { now: ['#4ade80', '✅ عند الدخول الآن'], wait: ['#7dd3fc', '⏳ بانتظار الوصول'], gone: ['#fb923c', '🚫 فات الدخول'], tight: ['#fca5a5', '🚨 وقف ملتصق'] };
@@ -14663,7 +14791,8 @@ document.addEventListener('keydown', e => {
         }
       }
       html += sec('🎯 خطة القنّاص',
-        '<div style="font-size:13px;font-weight:800;color:' + _kmColor + ';margin-bottom:8px">' + _kmText + '</div>'
+        _asOfStampHTML(_lg)
+        + '<div style="font-size:13px;font-weight:800;color:' + _kmColor + ';margin-bottom:8px">' + _kmText + '</div>'
         + planBox
         + (_planHeld
             ? '<div style="margin-top:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:9px;padding:8px 10px;font-size:11.5px;color:#fca5a5;line-height:1.8">'

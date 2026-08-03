@@ -109,7 +109,27 @@ async function tg(msg) {
     if (!n || n < 200) {
       throw new Error('النتائج ناقصة: ' + (n || 0) + ' سهم فقط (المتوقّع ~269).');
     }
-    await tg('✅ المسح التلقائي تمّ — ' + n + ' سهم · التحليل محدّث للجميع.' + syncMsg);
+    /* 8) 🩺 تقرير صحّة البيانات — أن تعرف العطل قبل أن يسألك مستخدم
+       العطل الصامت هو ما كلّفنا الثقة: بقيت الشموع متأخّرة ولا شيء
+       يُنبّه، حتى فتح أحدهم سهماً فرأى إغلاق الأمس تحت سعر اليوم.
+       فصار كل مسحٍ يُبلّغ حالَ البيانات لا نجاحَه فقط. */
+    let health = '';
+    try {
+      const h = await page.evaluate(() => (window.dataHealthReport ? window.dataHealthReport() : null));
+      if (h && h.ok) {
+        health = '\n\n🩺 صحّة البيانات (آخر جلسة ' + h.expected + ')'
+          + '\n✅ محدّث: ' + h.fresh + ' · 🟡 متأخّر جلسة: ' + h.late1
+          + ' · 🔴 متأخّر جلستين+: ' + h.late2
+          + (h.unknown ? ' · ❔ بلا تاريخ: ' + h.unknown : '');
+        if (h.late2 > 0) {
+          health += '\n⛔ خطط التنفيذ محجوبة على ' + h.late2 + ' سهماً.';
+          if (h.worst && h.worst.length) {
+            health += '\nأسوأها: ' + h.worst.map(w => w.sym + ' (' + w.lag + ')').join(' · ');
+          }
+        }
+      }
+    } catch (_) {}
+    await tg('✅ المسح التلقائي تمّ — ' + n + ' سهم · التحليل محدّث للجميع.' + syncMsg + health);
     console.log('done · results:', n);
   } catch (e) {
     const msg = (e && e.message) || String(e);

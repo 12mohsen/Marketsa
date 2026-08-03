@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-02-v419';
-console.log('%c[تداول بلس] البناء: 2026-08-02-v419 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-02-v421';
+console.log('%c[تداول بلس] البناء: 2026-08-02-v421 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-02-v419 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v421', '🚫 شارات التوقيت تستبعد المحكوم عليها بـ«تجنّب» — كان الشريط يقول «عند الدخول 3» وفيها سهمٌ خطّته مُعطَّلة، وأُفردت شارة 🔴 تجنّب فلا تُخفى'],
+    ['v420', '⏳ «انتظر» صارت تُفرّق بين تجاوز الدخول والتقصير عنه بالرقم — كانت تقول «لم يبلغ» والسعر فوقه، فيبدو التحليل خاطئاً وهو سليم'],
     ['v419', '📅 الشارت يقول ماذا يعرض (عدد الجلسات · التواريخ · المدى) — بطاقة «52 أسبوع» تقيس 253 جلسة والشارت يرسم 180، فبدا الصادقان متناقضَين'],
     ['v418', '🔴 تأكيد الاسترداد بنافذة التطبيق الحمراء لا بصندوق المتصفّح — إجراءٌ ماليّ لا يُتراجَع عنه يستحقّ نفس وضوح «تأكيد الحذف»'],
     ['v417', '📜 ثلاث وثائق منشورة (شروط · خصوصية · استرداد) مترابطة، وإقرارُ موافقةٍ في نافذة الدفع، وإخلاء مسؤولية يذكر صراحةً أنه ليس توصيةً استثمارية'],
@@ -13299,7 +13301,33 @@ document.addEventListener('keydown', e => {
 
     /* ═══ 🟡 المآخذ — تُنزل «ادخل» إلى «انتظر» مع ذكرها ═══ */
     const holds = [];
-    if (execK === 'wait') holds.push('السعر لم يبلغ الدخول بعد — راقب وصوله');
+    /* ══════════════════════════════════════════════════════════════
+       ⏳ «انتظر» حالتان متعاكستان — ولا يصحّ لهما نصٌّ واحد
+
+       بلاغٌ حقيقيّ: السعر 32.18 والدخول 31.61، فيقول التطبيق «السعر لم
+       يبلغ الدخول بعد». والسعر **تجاوزه** بـ1.8% ولم يقصّر عنه — فالنصّ
+       عكسُ الواقع، والقارئ يشكّ في الحساب كلّه وهو سليم.
+
+       والسبب أن `_snExecKey` تُرجع `wait` في حالتين:
+         · g > +1.5%  ⇒ فات التراجع، انتظر ارتداداً **نزولاً**
+         · g < −2%    ⇒ لم يصل بعد، انتظر صعوده **إليه**
+       وكانتا تتشاركان جملةً واحدة تصف الثانية وحدها.
+
+       ▸ والرقم يُذكر: «تجاوزه بـ1.8%» أوضح من «انتظر» مجرّدة، ويُري
+         القارئ كم يبعد عن خطّته بالضبط.
+       ══════════════════════════════════════════════════════════════ */
+    if (execK === 'wait') {
+      const _en = plan && +plan.entry, _px = +r.price;
+      const _g = (_en > 0 && _px > 0) ? ((_px - _en) / _en) * 100 : null;
+      if (_g != null && _g > 0) {
+        holds.push('السعر تجاوز الدخول بـ' + _g.toFixed(1) + '% — انتظر ارتداداً إلى ' + _en.toFixed(2)
+                   + ' فالشراء الآن يرفع مخاطرتك');
+      } else if (_g != null) {
+        holds.push('السعر دون الدخول بـ' + Math.abs(_g).toFixed(1) + '% — راقب صعوده إلى ' + _en.toFixed(2));
+      } else {
+        holds.push('السعر بعيدٌ عن نقطة الدخول — راقب وصوله');
+      }
+    }
     if (!(r.elTrig && r.elTrig.dir === 'bull' && typeof _snTrigVolOK === 'function' && _snTrigVolOK(r))) {
       if (r.elTrig && r.elTrig.dir === 'bull') holds.push('الزناد بحجم ضعيف — الأيدي الكبيرة لم تدخل بعد');
       else holds.push('لا زناد صعودي مؤكَّد — انتظر شمعة انعكاس');
@@ -13336,12 +13364,32 @@ document.addEventListener('keydown', e => {
   /* 🎯 شريط فلاتر: الفرص + القاعدة على الأطر — يُحسب على كل النتائج ويفلتر الجانبية */
   function _termRenderFilterBar(all) {
     const bar = document.getElementById('termFilterBar'); if (!bar) return;
-    const c = { ready: 0, now: 0, wait: 0, gone: 0, tight: 0 };
+    const c = { ready: 0, now: 0, wait: 0, gone: 0, tight: 0, avoid: 0 };
     const bc = { 'base:day': 0, 'base:wk': 0, 'base:mo': 0, 'base:wkmo': 0, 'base:all': 0, 'base:any': 0 };
     all.forEach(r => {
-      if (r.elPlan && r.elPlan.rr) c.ready++;
+      /* ══════════════════════════════════════════════════════════
+         🚫 الخطة المُعطَّلة لا «دخول» لها
+
+         بلاغٌ حقيقيّ: الشريط يقول «✅ عند الدخول 3» وفيها ساكو (4008)،
+         وحكمها في الشاشة نفسها «🔴 تجنّب — الخطة مُعطَّلة».
+
+         والسبب أن الشريط كان يقرأ `_snExecKey` وحده — وهي تقيس
+         **قرب السعر من نقطة الدخول** لا شيء غير ذلك. فسهمٌ مانعُه
+         قاطع (ارتدادٌ داخل هبوط · أطرٌ هابطة · تحت الإبطال) يُعدّ
+         «جاهزاً للدخول» لأن سعره صادف الرقم.
+
+         ▸ ومن ينقر «عند الدخول» يطلب **مرشّحين يُنفَّذون**، لا أسهماً
+           تصادف سعرها. فنستبعد المحكوم عليها بـ«تجنّب»، ونُفردها في
+           شارةٍ خاصّة — فلا تُخفى ولا تُخلَط.
+         ▸ ونستثني `tight`: المانع فيها **هو** التوقيت نفسه، فإخفاؤها
+           من شارتها يُفرغها من معناها.
+         ══════════════════════════════════════════════════════════ */
+      let _blocked = false;
+      try { const V = _termVerdict(r); _blocked = !!(V && V.k === 'avoid'); } catch (e) {}
       const k = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
-      if (k && c[k] != null) c[k]++;
+      if (_blocked) c.avoid++;
+      if (!_blocked && r.elPlan && r.elPlan.rr) c.ready++;
+      if (k && c[k] != null && (!_blocked || k === 'tight' || k === 'gone')) c[k]++;
       /* 🧱 القاعدة على الأطر (نفس منطق القنّاص) */
       if (typeof _snBaseFrames === 'function') {
         const f = _snBaseFrames(r);
@@ -13384,6 +13432,8 @@ document.addEventListener('keydown', e => {
       btn('wait', '56,189,248', '⏳ بانتظار', c.wait) +
       btn('gone', '251,146,60', '🚫 فات', c.gone) +
       btn('tight', '248,113,113', '🚨 ملتصق', c.tight) +
+      /* 🔴 شارةُ المحجوبة — لا تُخفى بل تُفرد، فمن أراد أن يرى ما رُفض ولماذا يجده */
+      btn('avoid', '239,68,68', '🔴 تجنّب', c.avoid) +
       /* 🧱 فلاتر القاعدة على الأطر — بلون كهرماني مميّز */
       btn('base:day', '245,158,11', '🧱📅 قاعدة يومي', bc['base:day']) +
       btn('base:wk', '245,158,11', '🧱🗓️ أسبوعي', bc['base:wk']) +
@@ -13415,12 +13465,28 @@ document.addEventListener('keydown', e => {
         } catch (e) { return false; }
       });
     }
-    else if (TERM_FILT === 'ready') list = list.filter(r => r.elPlan && r.elPlan.rr);
+    /* 🚫 نفس قاعدة الشريط في التصفية — وإلا اختلف العدّ عن المعروض */
+    else if (TERM_FILT === 'avoid') {
+      list = list.filter(r => { try { const V = _termVerdict(r); return !!(V && V.k === 'avoid'); } catch (e) { return false; } });
+    }
+    else if (TERM_FILT === 'ready') {
+      list = list.filter(r => {
+        if (!(r.elPlan && r.elPlan.rr)) return false;
+        try { const V = _termVerdict(r); return !(V && V.k === 'avoid'); } catch (e) { return true; }
+      });
+    }
     else if (TERM_FILT.indexOf('base:') === 0) {
       const mode = TERM_FILT.slice(5);   // day/wk/mo/wkmo/all/any
       list = list.filter(r => (typeof _snBaseMatch === 'function') ? !!_snBaseMatch(r, mode) : false);
     }
-    else if (TERM_FILT) list = list.filter(r => ((typeof _snExecKey === 'function') ? _snExecKey(r) : null) === TERM_FILT);
+    else if (TERM_FILT) {
+      list = list.filter(r => {
+        const k = (typeof _snExecKey === 'function') ? _snExecKey(r) : null;
+        if (k !== TERM_FILT) return false;
+        if (TERM_FILT === 'tight' || TERM_FILT === 'gone') return true;   // المانع فيهما هو التوقيت
+        try { const V = _termVerdict(r); return !(V && V.k === 'avoid'); } catch (e) { return true; }
+      });
+    }
     /* 🧭 ترتيب بالقرار: 🟢 ادخل أولاً · ثم 🟡 انتظر · ثم الباقي — القرار الأقوى في الأعلى */
     const _vrank = r => { const V = _termVerdict(r); return V ? (V.k === 'enter' ? 3 : V.k === 'wait' ? 2 : 1) : 0; };
     list.sort((a, b) =>

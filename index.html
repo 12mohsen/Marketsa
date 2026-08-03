@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v424';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v424 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v425';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v425 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v424 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v425', '🧹 المزامنة تُسقط كاش الشموع — كنتَ تضغط «جلب/تحديث» فيُخزَّن فعلاً ثم ترى الشارت على شموع ما قبله فتظنّه لم يعمل. ومزامنةُ الروبوت صارت تسأل القاعدة أوّلاً فلا تُزاحم دالّة sync-historical'],
     ['v424', '📅 «أين شمعة اليوم؟» — الشموع تتقادم بصمت لأن الروبوت لا يُحدّث جدول الأسعار، والتحذير كان مشروطاً بفارق 8% فلا يبلغه تأخّرُ جلسة. صار التأخّر يُقاس بالتاريخ ويُعلَن. ومعه: سطرُ «المعروض» كان يُرسم خارج الإطار منذ v419 فلا يراه أحد'],
     ['v423', '📐 وسمٌ يقول إن التحليل يوميٌّ دائماً — أزرار الإطار تُبدّل الشموع لا الحكم، وكان الصمت يجعل المستخدم ينسب تبدّل المسح إلى الزرّ'],
     ['v422', '⚪ فصلُ «لا إعداد» عن «تجنّب» — جمعتُهما في v421 فصارت الشارة «265 من 269» وفقدت معناها. التحذير للمانع القاطع، لا لغياب الفرصة'],
@@ -6945,12 +6946,31 @@ async function histFetchYahoo5y(sym, range) {
      فنجلب **شهراً واحداً** ونكتب آخر عشر جلسات فقط — ما ينقص لا ما مضى.
    ▸ ولا نُفشِل الروبوت إن تعثّرت: المسح أهمّ، والتأخّر صار مُعلَناً على
      الشارت في كل الأحوال. نُبلّغ ولا نُسقِط.
+
+   ⚠️ وهناك أصلاً دالّة `sync-historical` على Supabase تفعل الشيء نفسه
+      بـCron. فلا نُزاحمها: **نسأل القاعدة أوّلاً**، فإن كانت الشموع
+      بالغةً آخر جلسة انسحبنا في ثانية بلا جلبٍ ولا كتابة. فإن كان
+      الـCron يعمل لم تُكلّف هذه الخطوةُ الروبوتَ شيئاً، وإن تعطّل
+      تولّت مكانه. احتياطٌ لا تكرار.
    ══════════════════════════════════════════════════════════════════════ */
 window.histSyncRecent = async function (opts) {
   const o = opts || {};
   if (typeof isStaff === 'function' && !isStaff()) return { ok: 0, fail: 0, skipped: 'ليس أدمن' };
   if (_histSyncing) return { ok: 0, fail: 0, skipped: 'مزامنة جارية' };
   if (!Array.isArray(rows) || !rows.length) return { ok: 0, fail: 0, skipped: 'لا رموز محمّلة' };
+  /* 🔎 هل تحتاج القاعدة شيئاً أصلاً؟ سؤالٌ واحد قبل 270 جلبة. */
+  if (!o.force) {
+    try {
+      const { data: nd } = await sb.from('historical_prices')
+        .select('d').order('d', { ascending: false }).limit(1);
+      const newest = nd && nd[0] && String(nd[0].d).slice(0, 10);
+      const expD = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })
+        .format(new Date(predLastClose()));
+      if (newest && expD && newest >= expD) {
+        return { ok: 0, fail: 0, rows: 0, newest, skipped: 'محدّثة أصلاً حتى ' + newest };
+      }
+    } catch (e) {}
+  }
   _histSyncing = true;
   const list = rows.filter(r => r && r.sym);
   const KEEP = Math.max(2, +o.keep || 10);      // كم جلسة أخيرة نكتب
@@ -7022,6 +7042,15 @@ async function adminSyncHistorical() {
   const ws = []; for (let i = 0; i < 3; i++) ws.push(worker());
   await Promise.all(ws);
   _histSyncing = false;
+  /* ══════════════════════════════════════════════════════════════════
+     🧹 أسقط كاش الشموع بعد المزامنة
+     العلّة: `PRED_CACHE` يُملأ عند أوّل قراءة ويبقى طوال الصفحة. فكنتَ
+     تضغط الزرّ، ويُخزَّن 297 ألف صفّ فعلاً، ثم تفتح السهم فتراه على
+     شموع ما **قبل** المزامنة — فتظنّ أن الزرّ لم يعمل وهو عمل.
+     `adminBasisFix` كان يُسقط الكاش وهذه لا — تفاوتٌ بلا سبب.
+     ══════════════════════════════════════════════════════════════════ */
+  try { if (typeof PRED_CACHE !== 'undefined') Object.keys(PRED_CACHE).forEach(k => delete PRED_CACHE[k]); } catch (_) {}
+  try { if (typeof window.termDropCandleCache === 'function') window.termDropCandleCache(); } catch (_) {}
   if (btn) { btn.disabled = false; btn.textContent = '📥 جلب/تحديث البيانات التاريخية (5 سنوات)'; }
   if (prog) prog.textContent = `✅ اكتمل: ${okSyms}/${total} رمز · ${okRows} صف${failed ? ` · ${failed} فشل` : ''}`;
   logAdminAction('hist_sync', `${okSyms} رمز`, `${okRows} صف مخزّن${failed ? ` · ${failed} فشل` : ''}`);
@@ -13594,6 +13623,15 @@ document.addEventListener('keydown', e => {
      الاحترافية للسهم المتاح، يفتحها بزرّ اختياري.
      ══════════════════════════════════════════════════════════════════ */
   const _termCandleCache = {};
+  /* 🧹 منفذٌ لإسقاط هذا الكاش من خارج الإغلاق (بعد مزامنة البيانات
+     التاريخية) — وإلا بقي الشارت على شموع ما قبل المزامنة حتى تُعيد
+     تحميل الصفحة، فيبدو الزرّ كأنه لم يعمل. */
+  window.termDropCandleCache = function (sym) {
+    try {
+      if (sym) delete _termCandleCache[sym];
+      else Object.keys(_termCandleCache).forEach(k => delete _termCandleCache[k]);
+    } catch (_) {}
+  };
   let TERM_TF = 'D';              // إطار الشارت: D يومي · W أسبوعي · M شهري
   let _termDaily = null;          // آخر شموع يومية مجلوبة (لإعادة التجميع بلا جلب)
   /* 🔴 السعر الحيّ للسهم المفتوح — يُرسم على المحور بجانب إغلاق آخر شمعة.

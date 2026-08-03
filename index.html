@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-02-v423';
-console.log('%c[تداول بلس] البناء: 2026-08-02-v423 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v424';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v424 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-02-v423 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v424', '📅 «أين شمعة اليوم؟» — الشموع تتقادم بصمت لأن الروبوت لا يُحدّث جدول الأسعار، والتحذير كان مشروطاً بفارق 8% فلا يبلغه تأخّرُ جلسة. صار التأخّر يُقاس بالتاريخ ويُعلَن. ومعه: سطرُ «المعروض» كان يُرسم خارج الإطار منذ v419 فلا يراه أحد'],
     ['v423', '📐 وسمٌ يقول إن التحليل يوميٌّ دائماً — أزرار الإطار تُبدّل الشموع لا الحكم، وكان الصمت يجعل المستخدم ينسب تبدّل المسح إلى الزرّ'],
     ['v422', '⚪ فصلُ «لا إعداد» عن «تجنّب» — جمعتُهما في v421 فصارت الشارة «265 من 269» وفقدت معناها. التحذير للمانع القاطع، لا لغياب الفرصة'],
     ['v421', '🚫 شارات التوقيت تستبعد المحكوم عليها بـ«تجنّب» — كان الشريط يقول «عند الدخول 3» وفيها سهمٌ خطّته مُعطَّلة، وأُفردت شارة 🔴 تجنّب فلا تُخفى'],
@@ -6894,11 +6895,12 @@ async function divScanAll(btn) {
   try { renderReturns(); } catch (e) {}
 }
 
-/* جلب 5 سنوات يومي من المصدر (نفس بروكسيات التطبيق) بصيغة صفوف للتخزين */
-async function histFetchYahoo5y(sym) {
+/* جلب 5 سنوات يومي من المصدر (نفس بروكسيات التطبيق) بصيغة صفوف للتخزين
+   ▸ `range` اختياريّ: '5y' افتراضاً، و'1mo' للمزامنة اليومية الخفيفة. */
+async function histFetchYahoo5y(sym, range) {
   const _syncStamp = new Date().toISOString();   // 🕰️ طابع هذه المزامنة
   const ticker = (sym === 'TASI') ? '^TASI.SR' : sym + '.SR';
-  const directUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=5y';
+  const directUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=' + (range || '5y');
   const proxies = [
     (typeof PRIVATE_PROXY !== 'undefined' ? PRIVATE_PROXY : '') + encodeURIComponent(directUrl),
     'https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl),
@@ -6930,6 +6932,59 @@ async function histFetchYahoo5y(sym) {
   }
   return null;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   🌙 مزامنة يومية خفيفة — «أين شمعة اليوم؟»
+   العلّة: `historical_prices` كان يملؤه زرّ الأدمن وحده، والروبوت يشغّل
+   المسح فقط. فمتى لم يُضغط الزرّ بقيت الشموع على تاريخها بينما السعر
+   الحيّ يتقدّم — فيرى المستخدم إغلاقاً من الأمس تحت سعرِ اليوم بلا
+   تفسير. وهذا ما رُصد على 4009: شارتٌ يقول 31.02 وترويسةٌ تقول 32.46.
+
+   ▸ ولماذا لا نُعيد جلب 5 سنوات كل ليلة؟ لأنّها 62 ألف صفّ لـ270 رمزاً،
+     وقد زاحمت المسحَ من قبل حتى تجاوز مهلته (انظر تعليق robot/scan.js).
+     فنجلب **شهراً واحداً** ونكتب آخر عشر جلسات فقط — ما ينقص لا ما مضى.
+   ▸ ولا نُفشِل الروبوت إن تعثّرت: المسح أهمّ، والتأخّر صار مُعلَناً على
+     الشارت في كل الأحوال. نُبلّغ ولا نُسقِط.
+   ══════════════════════════════════════════════════════════════════════ */
+window.histSyncRecent = async function (opts) {
+  const o = opts || {};
+  if (typeof isStaff === 'function' && !isStaff()) return { ok: 0, fail: 0, skipped: 'ليس أدمن' };
+  if (_histSyncing) return { ok: 0, fail: 0, skipped: 'مزامنة جارية' };
+  if (!Array.isArray(rows) || !rows.length) return { ok: 0, fail: 0, skipped: 'لا رموز محمّلة' };
+  _histSyncing = true;
+  const list = rows.filter(r => r && r.sym);
+  const KEEP = Math.max(2, +o.keep || 10);      // كم جلسة أخيرة نكتب
+  /* ⏱️ سقفٌ زمنيّ صارم. مهلة مهمّة الروبوت 20 دقيقة: ~3 لتنصيب Playwright
+     و10 للمسح. فلو تباطأت البروكسيات ومضت المزامنة بلا حدّ لالتهمت ما
+     تبقّى وأسقطت المسح — وهو الأهمّ. فنقف عند الحدّ ونكتب ما أنجزناه:
+     مزامنةٌ ناقصة تُستكمل غداً، ومسحٌ ساقط لا يُعوَّض. */
+  const DEADLINE = Date.now() + Math.max(30000, +o.budgetMs || 240000);
+  let idx = 0, ok = 0, fail = 0, rowsN = 0, cut = false;
+  async function worker() {
+    while (idx < list.length) {
+      if (Date.now() > DEADLINE) { cut = true; break; }
+      const r = list[idx++];
+      try {
+        const cs = await histFetchYahoo5y(r.sym, '1mo');
+        if (cs && cs.length) {
+          const tail = cs.slice(-KEEP);
+          const { error } = await sb.from('historical_prices').upsert(tail, { onConflict: 'symbol,d' });
+          if (error) throw error;
+          rowsN += tail.length; ok++;
+          /* 🧹 أسقط الكاش لهذا الرمز وإلا بقي الشارت على شموع ما قبل المزامنة */
+          try { if (typeof PRED_CACHE !== 'undefined') delete PRED_CACHE[r.sym]; } catch (_) {}
+          try { if (typeof _termCandleCache !== 'undefined') delete _termCandleCache[r.sym]; } catch (_) {}
+        } else fail++;
+      } catch (e) { fail++; }
+    }
+  }
+  try {
+    await Promise.all([worker(), worker(), worker(), worker()]);
+  } catch (e) {}
+  _histSyncing = false;
+  try { logAdminAction('hist_sync_recent', ok + ' رمز', rowsN + ' صف' + (fail ? ' · ' + fail + ' فشل' : '') + (cut ? ' · بلغ السقف الزمني' : '')); } catch (_) {}
+  return { ok, fail, rows: rowsN, total: list.length, cut };
+};
 
 /* زر الأدمن: يجلب لكل رموز السوق المحمّلة (rows) ويخزّنها في القاعدة */
 async function adminSyncHistorical() {
@@ -11877,7 +11932,11 @@ document.addEventListener('keydown', e => {
         const out = [];
         for (let i = 0; i < r.timestamp.length; i++) {
           if (q.close[i] == null) continue;
-          out.push({ o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+          /* 📅 التاريخ يُحفظ هنا أيضاً — كان مسار ياهو يُرجع OHLC بلا `d`،
+             فيعجز الشارت عن قول «آخر شمعة متى» متى جاءت البيانات منه. */
+          let _dd = '';
+          try { _dd = new Date(r.timestamp[i] * 1000).toISOString().slice(0, 10); } catch (_) {}
+          out.push({ d: _dd, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
         }
         if (out.length >= 25) { PRED_CACHE[sym] = out; return out; }
       } catch (e) { /* جرّب البروكسي التالي */ }
@@ -13800,12 +13859,33 @@ document.addEventListener('keydown', e => {
     }
     let warnHtml = '';
     const histLast = +cds[cds.length - 1].c;
-    if (livePrice > 0 && histLast > 0) {
-      const gap = Math.abs(livePrice - histLast) / livePrice;
-      if (gap > 0.08) {
-        warnHtml = '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:8px;padding:8px 11px;margin-bottom:8px;font-size:11px;color:#fcd34d;font-weight:700;line-height:1.7">'
-          + 'ℹ️ آخر شمعة في الشارت <b>' + histLast.toFixed(2) + '</b> · السعر الحيّ <b>' + livePrice.toFixed(2) + '</b> — الشارت يومي (متأخّر)، اعتمد الحيّ للتنفيذ.</div>';
-      }
+    /* ══════════════════════════════════════════════════════════════════
+       📅 «أين شمعة اليوم؟» — بلاغٌ حقيقيّ على 4009
+       الشارت أظهر إغلاقاً 31.02 والسعر أعلى الصفحة 32.46، وجلسةُ اليوم
+       غائبة من الشموع. والسبب أن `historical_prices` **لا يُحدّثها
+       الروبوت** — يملؤها زرّ الأدمن وحده. فتتقادم الشموع بصمت، و
+       `_predDbFresh` يقبلها حتى ستّ جلسات متأخّرة بلا كلمة.
+       والتحذير القديم كان يشترط فارقاً يتجاوز 8% — وفارقُ جلسةٍ واحدة
+       نادراً ما يبلغه (هنا 4.6%) فبقي صامتاً. **والصمت هو العلّة**:
+       يرى المستخدم رقمين ولا يعرف أن أحدهما من الأمس.
+       فنقيس التأخّر بالتاريخ لا بالنسبة — سؤالٌ صحيح بدل تقريبٍ ظنّي.
+       ══════════════════════════════════════════════════════════════════ */
+    let _lastD = '', _expD = '', _stale = false;
+    try {
+      _lastD = String(cds[cds.length - 1].d || '').slice(0, 10);
+      _expD = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(new Date(predLastClose()));
+      _stale = !!(_lastD && _expD && _lastD < _expD);
+    } catch (e) {}
+    if (_stale) {
+      warnHtml = '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:8px;padding:8px 11px;margin-bottom:8px;font-size:11px;color:#fcd34d;font-weight:700;line-height:1.7">'
+        + '📅 آخر شمعة مرسومة: <b>' + _lastD + '</b> — وجلسة <b>' + _expD + '</b> لم تُضَف إلى الشموع بعد.'
+        + ' السعر أعلى الصفحة <b>حيّ</b> ولا ينتظرها، فاعتمده للتنفيذ.'
+        + ((typeof isSuperAdmin === 'function' && isSuperAdmin())
+            ? '<br>🛠️ للأدمن: «📥 جلب/تحديث البيانات التاريخية» في لوحة الأدمن يملأ الجلسات الناقصة.' : '')
+        + '</div>';
+    } else if (livePrice > 0 && histLast > 0 && Math.abs(livePrice - histLast) / livePrice > 0.08) {
+      warnHtml = '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:8px;padding:8px 11px;margin-bottom:8px;font-size:11px;color:#fcd34d;font-weight:700;line-height:1.7">'
+        + 'ℹ️ آخر شمعة في الشارت <b>' + histLast.toFixed(2) + '</b> · السعر الحيّ <b>' + livePrice.toFixed(2) + '</b> — الشارت يومي (متأخّر)، اعتمد الحيّ للتنفيذ.</div>';
     }
     _termDaily = cds;   // احفظ اليومي لإعادة التجميع عند تبديل الإطار
     _termLivePx = (livePrice > 0) ? +livePrice : null;   // 🔴 للسعر الحيّ على المحور
@@ -14162,7 +14242,11 @@ document.addEventListener('keydown', e => {
       + '<text x="' + (W - R0) + '" y="' + (HT - volH - 2).toFixed(1) + '" font-size="9" fill="#94a3b8" text-anchor="end">الحجم</text>'
       /* 📅 نطاق ما يُعرض — أسفل يسار الشارت، بعيداً عن الشموع والوسوم */
       + (_rangeNote
-          ? '<text x="' + L0 + '" y="' + (HT - 2).toFixed(1) + '" font-size="9" fill="#64748b" direction="rtl">'
+          /* ⚠️ كان `direction="rtl"` مع `text-anchor` الافتراضي «start»:
+             ونقطةُ الإرساء في الاتجاه اليمينيّ هي **يمين** النصّ، فيمتدّ
+             النصّ يساراً من x=6 — أي خارج الإطار كلّه. فالسطر كان يُرسم
+             منذ v419 ولا يراه أحد. نُرسيه من اليمين ونترك الاتجاه للنصّ. */
+          ? '<text x="' + (W - R0) + '" y="' + (HT - 2).toFixed(1) + '" font-size="9.5" fill="#94a3b8" text-anchor="end">'
             + _rangeNote.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</text>'
           : '')
       + '</svg>';

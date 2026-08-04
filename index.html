@@ -2272,8 +2272,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v435';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v435 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v436';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v436 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2283,6 +2283,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v435 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v436', '🎁 العروض — مربّع نسبة خصم (١–١٠٠٪) لكل قسم في «أسعار الخدمات»، يرى الأدمن السعر بعد الخصم فوراً، ويرى المستخدم السعر القديم مشطوباً وشارة «−N٪» وسطر «وفّرتَ كذا». والخصم مطبَّقٌ في الخادم كذلك — وإلا رأى العميل ١٩٩ وخُصم منه ٣٩٩'],
     ['v435', '🔒 قائمة المستخدمين تُظهر قيود الأقسام — كان الأدمن يقفل الأهداف على كل الأقسام والسطر يقول «✅ وصول كامل»، لأنه يقرأ الأعلام العامّة القديمة لا subs[k].lock_targets. والشاشة التي بُنيت ليطمئنّ بها كانت تطمئنه على غير حقّه'],
     ['v434', '🔒 الشارت يخضع لقفل الاشتراك كما تخضع البطاقة — رُصد على أسمنت القصيم: الأدمن ضبط «مقفلة (مظلَّلة)» فظُلّلت البطاقة والشارت بجانبها يرسم «دخول 43.55 · وقف 41.98 · هدف 46.10» بوضوح. الحجب يُطبَّق على المعلومة لا على مكانٍ تُعرض فيه'],
     ['v433', '📱 حاجزٌ يمنع أيّ عنصر من توسيع الصفحة على الجوال (overflow-x:clip للأقسام) — رُصد القسم منكمشاً في شريطٍ ضيّق ومعظم الشاشة فراغ. حاجزٌ للعَرَض لا تشخيصٌ للسبب: الجذر لم يُحدَّد بعد'],
@@ -4229,15 +4230,54 @@ function getBanks() {
 
 /* 💵 سعر خدمة قسمٍ في صفحة الدفع:
    أولاً سعر المستخدم الخاص (إن كان مشتركاً مدفوعاً)، وإلا السعر العام من appSettings.servicePrices */
+/* ══════════════════════════════════════════════════════════════════════
+   🎁 العروض — نسبة خصمٍ يضبطها الأدمن لكل قسم
+   `servicePrices[k].off` = ١..١٠٠ (٪). صفرٌ أو غيابٌ ⇒ لا عرض.
+
+   ⚠️ وهذه المعادلة **مكرّرةٌ حرفياً في `verify-payment.ts`**، ولا يجوز
+   تغيير إحداهما وحدها: الشاشة تعرض السعر والخادمُ يُصدر الفاتورة، فلو
+   اختلفتا رأى العميل ١٩٩ وخُصم منه ٣٩٩ — وهذا نوعُ خطأٍ لا يُغتفر.
+   ▸ والحدّ الأدنى ريالٌ واحد: بوّابة الدفع لا تقبل أقلّ من ١٠٠ هللة،
+     فخصمُ ١٠٠٪ يُنتج فاتورةً مرفوضة لا اشتراكاً مجّانياً.
+   ▸ ولا يُخصم من **سعر المستخدم الخاص**: ذاك سعرٌ ضبطتَه له بعينه،
+     فخصمُ العرض فوقه يُنقصه مرّتين بلا أن تقصد.
+   ══════════════════════════════════════════════════════════════════════ */
+const SVC_MIN_CHARGE = 1;
+function _offPrice(base, off) {
+  const b = Number(base) || 0, o = Math.max(0, Math.min(100, Number(off) || 0));
+  if (b <= 0 || o <= 0) return b;
+  return Math.max(SVC_MIN_CHARGE, Math.round(b * (1 - o / 100) * 100) / 100);
+}
 function _svcPrice(k) {
   const u = _subInfo(userRestrictions, k);
   if (u.plan === 'paid' && (u.price || 0) > 0)
-    return { price: Number(u.price) || 0, days: Number(u.days) || 0, expired: !!u.expired };
+    return { price: Number(u.price) || 0, base: Number(u.price) || 0, off: 0, days: Number(u.days) || 0, expired: !!u.expired };
   const g = (appSettings && appSettings.servicePrices && appSettings.servicePrices[k]) || null;
-  if (g && (Number(g.price) || 0) > 0)
-    return { price: Number(g.price) || 0, days: Number(g.days) || 0, expired: false };
-  return { price: 0, days: 0, expired: false };
+  if (g && (Number(g.price) || 0) > 0) {
+    const base = Number(g.price) || 0;
+    const off  = Math.max(0, Math.min(100, Number(g.off) || 0));
+    const eff  = _offPrice(base, off);
+    return { price: eff, base: base, off: (eff < base ? off : 0), days: Number(g.days) || 0, expired: false };
+  }
+  return { price: 0, base: 0, off: 0, days: 0, expired: false };
 }
+/* 👁️ معاينة فورية في لوحة الأدمن — يرى الأدمن الرقم قبل أن يحفظه */
+window.admOffPreview = function (k) {
+  try {
+    const pEl = document.getElementById('admSvc-' + k + '-price');
+    const oEl = document.getElementById('admSvc-' + k + '-off');
+    const out = document.getElementById('admSvcOut-' + k);
+    if (!out) return;
+    const base = parseFloat(pEl && pEl.value) || 0;
+    const off  = Math.max(0, Math.min(100, parseInt(oEl && oEl.value, 10) || 0));
+    if (base <= 0) { out.textContent = '—'; out.style.color = 'var(--txt-m)'; return; }
+    if (off <= 0)  { out.textContent = base + ' ر.س'; out.style.color = 'var(--txt-m)'; return; }
+    const eff = _offPrice(base, off);
+    const floored = (eff === SVC_MIN_CHARGE && base * (1 - off / 100) < SVC_MIN_CHARGE);
+    out.innerHTML = '<span style="color:#4ade80">' + eff + ' ر.س</span>'
+      + (floored ? '<br><span style="font-size:9px;color:#fcd34d">الحدّ الأدنى</span>' : '');
+  } catch (e) {}
+};
 
 /* اسم القسم المعروض في صفحة الدفع */
 function _payLabel(secKey) {
@@ -4668,7 +4708,7 @@ function openPayModal(secKey) {
        { k: 'analysis', t: '⚡ تحليل السوق' }];
   const payItems = defs.map(d => {
     const p = _svcPrice(d.k);
-    return { k: d.k, label: _payLabel(d.k), price: p.price, days: p.days, expired: p.expired };
+    return { k: d.k, label: _payLabel(d.k), price: p.price, base: p.base, off: p.off, days: p.days, expired: p.expired };
   });
   const priced = payItems.filter(it => it.price > 0);
   /* الاختيار المبدئي: القسم القادم من الزر إن كان مسعّراً، وإلا كل الخدمات المسعّرة */
@@ -4728,20 +4768,30 @@ function openPayModal(secKey) {
         <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;
                       border-bottom:1px solid rgba(255,255,255,.06);cursor:${avail ? 'pointer' : 'default'};opacity:${avail ? '1' : '.55'}">
           <span style="display:flex;align-items:center;gap:8px;min-width:0">
-            <input type="checkbox" class="paySvc" data-k="${it.k}" data-price="${it.price}" data-days="${it.days}"
+            <input type="checkbox" class="paySvc" data-k="${it.k}" data-price="${it.price}" data-base="${it.base}" data-off="${it.off}" data-days="${it.days}"
               data-label="${it.label.replace(/"/g,'&quot;')}" onchange="payRecalc()" ${avail ? '' : 'disabled'}
               ${avail && (preHasSec ? it.k === secKey : true) ? 'checked' : ''} style="width:18px;height:18px;cursor:${avail ? 'pointer' : 'not-allowed'};flex-shrink:0">
             <span style="min-width:0">
               <span style="font-size:13px;font-weight:700;color:var(--txt)">${it.label}</span>
+              ${avail && it.off > 0 ? `<span style="display:inline-block;margin-inline-start:6px;background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.5);border-radius:20px;padding:1px 7px;font-size:9.5px;font-weight:900;white-space:nowrap">🎁 عرض −${it.off}%</span>` : ''}
               ${avail && it.days ? `<span style="font-size:10.5px;color:var(--txt-m);display:block">المدة: ${it.days} يوم${it.expired ? ' · ⏳ منتهٍ' : ''}</span>` : ''}
             </span>
           </span>
-          <b style="font-size:14px;color:${avail ? '#4ade80' : 'var(--txt-m)'};white-space:nowrap">${avail ? it.price + ' ر.س' : 'غير مُسعّر'}</b>
+          ${avail && it.off > 0
+            ? `<b style="font-size:14px;white-space:nowrap;text-align:left">
+                 <span style="color:var(--txt-m);text-decoration:line-through;font-size:11.5px;font-weight:600">${it.base}</span>
+                 <span style="color:#4ade80"> ${it.price} ر.س</span>
+               </b>`
+            : `<b style="font-size:14px;color:${avail ? '#4ade80' : 'var(--txt-m)'};white-space:nowrap">${avail ? it.price + ' ر.س' : 'غير مُسعّر'}</b>`}
         </label>`; }).join('')}
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px">
           <span style="font-size:13px;font-weight:800;color:var(--txt)">الإجمالي</span>
           <span id="payTotal" style="font-size:22px;font-weight:900;color:#4ade80">0 ر.س</span>
         </div>
+        <!-- 🎁 كم وفّر فعلاً — يُحسب من المختار لا من كل المعروض -->
+        <div id="paySaved" style="display:none;text-align:center;background:rgba(239,68,68,.12);
+             border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:7px 10px;margin-bottom:6px;
+             font-size:12px;font-weight:800;color:#fca5a5"></div>
       </div>` : `
       <div style="background:var(--surf-alt);border:1px dashed var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px;
                   text-align:center;font-size:12.5px;color:var(--txt-m);line-height:1.8">
@@ -4803,6 +4853,19 @@ function payRecalc() {
   const total = sel.reduce((s, c) => s + (Number(c.dataset.price) || 0), 0);
   const tEl = document.getElementById('payTotal');
   if (tEl) tEl.textContent = total + ' ر.س';
+  /* 🎁 وفّرتَ كذا — على المختار وحده، ويختفي السطر إن لم يُختَر مخفَّض.
+     رقمُ توفيرٍ يشمل ما لم يشترِه العميل وعدٌ كاذب، وهو أوّل ما يُكتشف. */
+  try {
+    const base = sel.reduce((s, c) => s + (Number(c.dataset.base) || Number(c.dataset.price) || 0), 0);
+    const saved = Math.round((base - total) * 100) / 100;
+    const sEl = document.getElementById('paySaved');
+    if (sEl) {
+      if (saved > 0) {
+        sEl.style.display = 'block';
+        sEl.textContent = '🎁 وفّرتَ ' + saved + ' ر.س من أصل ' + Math.round(base * 100) / 100 + ' ر.س';
+      } else sEl.style.display = 'none';
+    }
+  } catch (e) {}
   const allBox = document.getElementById('paySelAll');
   if (allBox) allBox.checked = all.length > 0 && sel.length === all.length;
   /* 💳 حدّث المبلغ على زرّ البطاقة (النموذج نفسه يُبنى عند الضغط) */
@@ -5075,14 +5138,28 @@ function renderAdminSection() {
         <div style="${head}">💵 أسعار الخدمات</div>
         <div style="font-size:11px;color:var(--txt-m);line-height:1.7;margin-bottom:12px">
           هذه الأسعار العامة تظهر لكل المستخدمين في صفحة الدفع لكل قسم. (سعر المستخدم الخاص إن وُجد يبقى أولوية له.)
+          <br>🎁 <b style="color:#fcd34d">العرض:</b> اكتب نسبة الخصم (١–١٠٠٪) ويظهر للمستخدم السعر مشطوباً بجانب الجديد.
+          اتركه فارغاً أو صفراً فلا عرض.
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:0 0 6px;font-size:10px;color:var(--txt-m)">
+          <span style="flex:1"></span>
+          <span style="width:92px;text-align:center">السعر ر.س</span>
+          <span style="width:66px;text-align:center">أيام</span>
+          <span style="width:72px;text-align:center">🎁 خصم ٪</span>
+          <span style="width:96px;text-align:center">بعد الخصم</span>
         </div>
         ${tabs.map(t => { const g = ((s.servicePrices || {})[t.k]) || {}; return `
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)">
             <span style="flex:1;font-size:12.5px;color:var(--txt)">${t.t}</span>
             <input id="admSvc-${t.k}-price" type="number" min="0" step="any" placeholder="السعر ر.س" value="${g.price != null ? g.price : ''}"
+              oninput="admOffPreview('${t.k}')"
               style="width:92px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;outline:none;font-family:inherit">
             <input id="admSvc-${t.k}-days" type="number" min="0" placeholder="أيام" value="${g.days != null ? g.days : ''}"
               style="width:66px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;outline:none;font-family:inherit">
+            <input id="admSvc-${t.k}-off" type="number" min="0" max="100" step="1" placeholder="٪" value="${(Number(g.off) || 0) > 0 ? g.off : ''}"
+              oninput="admOffPreview('${t.k}')" title="نسبة الخصم من 1 إلى 100 — اتركه فارغاً فلا عرض"
+              style="width:72px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fcd34d;font-size:11.5px;font-weight:800;outline:none;font-family:inherit;text-align:center">
+            <span id="admSvcOut-${t.k}" style="width:96px;text-align:center;font-size:11px;font-weight:800;color:var(--txt-m);white-space:nowrap"></span>
           </div>`; }).join('')}
         <button onclick="adminSaveServicePrices(this)" style="width:100%;margin-top:14px;padding:12px;border-radius:11px;
           border:none;cursor:pointer;font-weight:800;font-size:13px;color:#1a1a1a;transition:all .2s;
@@ -5201,6 +5278,12 @@ function renderAdminSection() {
       </div>` : ''}
 
     </div>`;
+  /* 🎁 اعرض السعر بعد الخصم فور رسم الجدول — لا بعد أوّل نقرة */
+  try {
+    (typeof ADMIN_TAB_DEFS !== 'undefined' ? ADMIN_TAB_DEFS : []).forEach(function (t) {
+      if (typeof admOffPreview === 'function') admOffPreview(t.k);
+    });
+  } catch (e) {}
   /* ══════════════════════════════════════════════════════════════
      📡 اجمع وعود الجلب بدل أن تُطلقها وتنساها
 
@@ -5890,10 +5973,14 @@ async function adminSaveServicePrices(btn) {
   keys.forEach(k => {
     const pEl = document.getElementById('admSvc-' + k + '-price');
     const dEl = document.getElementById('admSvc-' + k + '-days');
+    const oEl = document.getElementById('admSvc-' + k + '-off');
     if (!pEl) return;
     const price = parseFloat(pEl.value) || 0;
     const days  = parseInt(dEl && dEl.value, 10) || 0;
-    if (price > 0) sp[k] = { price, days };
+    /* 🎁 نسبة العرض — تُحصر بين 0 و100 هنا كذلك، فلا تُكتب قيمةٌ فاسدة
+       في القاعدة يقرأها الخادم لاحقاً بلا حارس. */
+    const off = Math.max(0, Math.min(100, parseInt(oEl && oEl.value, 10) || 0));
+    if (price > 0) sp[k] = off > 0 ? { price, days, off } : { price, days };
   });
   appSettings = Object.assign({}, appSettings, { servicePrices: sp });
   const { error } = await sb.from('app_settings')

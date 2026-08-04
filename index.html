@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v430';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v430 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v431';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v431 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v430 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v431', '⬆️ أزرار التكبير خرجت من زاوية الشارت إلى شريطٍ فوقه — كانت تحجب وسم «🎯 هدف» وMA20/MA50. وأوسمةُ الخطة تُرسم عند مستوياتها السعرية فتقع في أيّ ارتفاع: لا زاوية آمنة داخل الشارت، ورقمُ هدفٍ محجوب أسوأ من زرٍّ مفقود'],
     ['v430', '🔍 أزرار ＋ － ↺ على الشارت — اشتراطُ Ctrl في v428 حرس تمريرَ الصفحة وسلب التكبيرَ ممّن كان يستعمله. الإصلاح الذي يكسر ما يعمل ليس إصلاحاً. ومعه: وسم «معروض N شمعة» لم يعد يظهر على العرض الافتراضي، وكان يظهر دائماً وزرّه لا يفعل شيئاً'],
     ['v429', '🔒 قفل الأهداف كان يحرس باباً والبيت له عشرة: من انتهى اشتراك محفظته يفتح السهم نفسه من الرئيسية فيرى إليوت وأهدافه ودخوله ووقفه كاملةً — لأن كل حارسٍ يسأل عن قسمه وحده. الآن: عميلٌ انتهى أو استُردّ ولا نشطَ له ⇒ مقفلٌ في كل قسم. والمجانيّ الذي لم يدفع قطّ لم يُمَسّ'],
     ['v428', '🔍 عجلة الفأرة لم تعد تُكبّر الشارت بلا قصد — كانت تبتلع تمرير الصفحة فتنكمش النافذة من 180 شمعة إلى ستّين بلا علم أحد، فبدا شارت أرامكو مبتوراً وهو سليم. التكبير الآن بـCtrl، ووسمٌ يقول «معروض N من M» كلّما كنتَ مكبّراً'],
@@ -14066,28 +14067,24 @@ document.addEventListener('keydown', e => {
        ══════════════════════════════════════════════════════════════════ */
     const _defTake = _TERM_GEOM.defTake || Math.min(n, 180);
     const _zoomed = _termLens.take > 0 && _termLens.take !== _defTake;
-    if (_termLens.off > 0 || _zoomed) {
-      const tag = document.createElement('div');
-      tag.style.cssText = 'position:absolute;top:6px;inset-inline-start:8px;z-index:5;background:rgba(251,191,36,.92);'
-        + 'color:#0b1220;border-radius:14px;padding:3px 10px;font-size:10.5px;font-weight:800;cursor:pointer';
-      tag.textContent = (_termLens.off > 0 ? '🕰️ ترجع ' + _termLens.off + ' شمعة · ' : '')
-        + (_zoomed ? '🔍 معروض ' + _termLens.take + ' شمعة · ' : '')
-        + 'انقر للعرض الافتراضي';
-      tag.onclick = function () { _termLensReset(); redraw(); };
-      host.style.position = 'relative';
-      host.appendChild(tag);
-    }
 
     /* ══════════════════════════════════════════════════════════════════
-       🔍 أزرار التكبير — الطريق الظاهر، لا السرّيّ
-       اشترطتُ `Ctrl` مع العجلة كي لا تبتلع تمريرَ الصفحة، فصحّ المنع
-       وضاع المُتاح: من كان يُكبّر بالعجلة وجد الشارت لا يستجيب ولا شيء
-       يدلّه على البديل. **إصلاحٌ يكسر ما كان يعمل ليس إصلاحاً.**
-       فالتكبير الآن بثلاثة طرق ظاهرة: هذه الأزرار · Ctrl+عجلة ·
-       قرصٌ بإصبعين على اللمس. ولا يُحرَم أحدٌ منه بحجّة حراسة التمرير.
+       🔍 شريط التحكّم — **فوق** الشارت لا داخله
+
+       خطأان متتاليان في مكانٍ واحد: اشترطتُ `Ctrl` فسلبتُ التكبير ممّن
+       كان يستعمله، ثم أعدتُه أزراراً **طافيةً على زاوية الشارت** فحجبت
+       وسم «🎯 هدف 33.22» ووسمَي MA20/MA50.
+       والسبب أنّي عاملتُ الشارت كأنّ فيه فراغاً: وأوسمةُ الخطة تُرسم
+       على الحافة اليسرى **عند مستوياتها السعرية**، فتقع في أيّ ارتفاع —
+       فما من زاويةٍ آمنة فيه. ورقمُ هدفٍ محجوبٌ أسوأ من زرٍّ مفقود.
+       فالحلّ ألّا نزاحمه أصلاً: شريطٌ مستقلّ فوقه، لا يحجب شيئاً أبداً.
        ══════════════════════════════════════════════════════════════════ */
+    const bar = document.createElement('div');
+    /* `z-index` أعلى من شريط بيانات التتبّع (5) — فلا يغطّيه عند المرور */
+    bar.style.cssText = 'position:relative;z-index:7;display:flex;align-items:center;'
+      + 'justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 0 5px';
     const ctl = document.createElement('div');
-    ctl.style.cssText = 'position:absolute;top:6px;inset-inline-end:8px;z-index:6;display:flex;gap:4px';
+    ctl.style.cssText = 'display:flex;gap:4px';
     const mk = (txt, title, fn) => {
       const b = document.createElement('button');
       b.type = 'button'; b.textContent = txt; b.title = title;
@@ -14108,8 +14105,22 @@ document.addEventListener('keydown', e => {
     ctl.appendChild(mk('＋', 'تكبير (شموع أقلّ وأوضح)', () => zoomBy(1)));
     ctl.appendChild(mk('－', 'تصغير (شموع أكثر ومدى أوسع)', () => zoomBy(-1)));
     if (_zoomed || _termLens.off > 0) ctl.appendChild(mk('↺', 'العرض الافتراضي', () => { _termLensReset(); redraw(); }));
+    bar.appendChild(ctl);
+
+    /* 🏷️ وسم الحالة في الشريط نفسه — لا فوق الشموع */
+    const tag = document.createElement('div');
+    if (_termLens.off > 0 || _zoomed) {
+      tag.style.cssText = 'background:rgba(251,191,36,.92);color:#0b1220;border-radius:14px;'
+        + 'padding:3px 10px;font-size:10.5px;font-weight:800;cursor:pointer';
+      tag.textContent = (_termLens.off > 0 ? '🕰️ ترجع ' + _termLens.off + ' شمعة · ' : '')
+        + (_zoomed ? '🔍 معروض ' + _termLens.take + ' شمعة · ' : '')
+        + 'انقر للعرض الافتراضي';
+      tag.onclick = function () { _termLensReset(); redraw(); };
+    }
+    bar.appendChild(tag);
+
     host.style.position = 'relative';
-    host.appendChild(ctl);
+    host.insertBefore(bar, host.firstChild);   // ⬆️ فوق الشارت، خارج مساحة الرسم
   }
   async function _termLoadChart(sym, livePrice) {
     const wrap = document.getElementById('termChartWrap'), host = document.getElementById('termChart');

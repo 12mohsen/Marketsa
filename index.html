@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v429';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v429 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v430';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v430 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v429 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v430', '🔍 أزرار ＋ － ↺ على الشارت — اشتراطُ Ctrl في v428 حرس تمريرَ الصفحة وسلب التكبيرَ ممّن كان يستعمله. الإصلاح الذي يكسر ما يعمل ليس إصلاحاً. ومعه: وسم «معروض N شمعة» لم يعد يظهر على العرض الافتراضي، وكان يظهر دائماً وزرّه لا يفعل شيئاً'],
     ['v429', '🔒 قفل الأهداف كان يحرس باباً والبيت له عشرة: من انتهى اشتراك محفظته يفتح السهم نفسه من الرئيسية فيرى إليوت وأهدافه ودخوله ووقفه كاملةً — لأن كل حارسٍ يسأل عن قسمه وحده. الآن: عميلٌ انتهى أو استُردّ ولا نشطَ له ⇒ مقفلٌ في كل قسم. والمجانيّ الذي لم يدفع قطّ لم يُمَسّ'],
     ['v428', '🔍 عجلة الفأرة لم تعد تُكبّر الشارت بلا قصد — كانت تبتلع تمرير الصفحة فتنكمش النافذة من 180 شمعة إلى ستّين بلا علم أحد، فبدا شارت أرامكو مبتوراً وهو سليم. التكبير الآن بـCtrl، ووسمٌ يقول «معروض N من M» كلّما كنتَ مكبّراً'],
     ['v427', '📉 عمق التاريخ يُعلَن — رُصد على أرامكو: شارتنا يعرض أسابيع وTradingView تسعة أشهر، لأن المخزَّن مبتور. والوسم كان يقول «سهم حديث» جزماً بما لا يعلم (أرامكو مدرَجة منذ 2019). صار يذكر العدد والاحتمالين وما يضعف به'],
@@ -13973,7 +13974,19 @@ document.addEventListener('keydown', e => {
        ▸ وبلا مفتاح: لا نمنع التمرير، فالصفحة تنساب كما يتوقّع القارئ.
        ══════════════════════════════════════════════════════════════════ */
     svg.addEventListener('wheel', function (e) {
-      if (!(e.ctrlKey || e.metaKey)) return;   // تمريرٌ عاديّ ⇒ اترك الصفحة تنساب
+      /* بلا مفتاح: لا نمنع التمرير — ونُومض زرّ التكبير ثانيةً واحدة
+         ليعرف الباحثُ عن التكبير أين ذهب، فلا يظنّها عطلاً. */
+      if (!(e.ctrlKey || e.metaKey)) {
+        try {
+          const c = host.querySelector('button[title^="تكبير"]');
+          if (c && !c._hint) {
+            c._hint = 1; c.style.transition = 'box-shadow .2s';
+            c.style.boxShadow = '0 0 0 3px rgba(251,191,36,.55)';
+            setTimeout(function () { c.style.boxShadow = ''; c._hint = 0; }, 900);
+          }
+        } catch (_) {}
+        return;
+      }
       e.preventDefault();
       const step = Math.max(2, Math.round(_termLens.take * 0.12));
       _termLens.take += (e.deltaY > 0 ? step : -step);   // لأسفل = تصغير (شموع أكثر)
@@ -14051,18 +14064,52 @@ document.addEventListener('keydown', e => {
        يقول إنها ضيّقة، فيقارنها بشارتٍ آخر ويحكم على بياناتنا بالنقص.
        الحالتان تُخفيان الحقيقة نفسها، فتستحقّان الإعلان نفسه.
        ══════════════════════════════════════════════════════════════════ */
-    const _zoomed = _termLens.take > 0 && _termLens.take < n;
+    const _defTake = _TERM_GEOM.defTake || Math.min(n, 180);
+    const _zoomed = _termLens.take > 0 && _termLens.take !== _defTake;
     if (_termLens.off > 0 || _zoomed) {
       const tag = document.createElement('div');
       tag.style.cssText = 'position:absolute;top:6px;inset-inline-start:8px;z-index:5;background:rgba(251,191,36,.92);'
         + 'color:#0b1220;border-radius:14px;padding:3px 10px;font-size:10.5px;font-weight:800;cursor:pointer';
       tag.textContent = (_termLens.off > 0 ? '🕰️ ترجع ' + _termLens.off + ' شمعة · ' : '')
-        + (_zoomed ? '🔍 معروض ' + _termLens.take + ' من ' + n + ' شمعة · ' : '')
-        + 'انقر للعرض الكامل';
+        + (_zoomed ? '🔍 معروض ' + _termLens.take + ' شمعة · ' : '')
+        + 'انقر للعرض الافتراضي';
       tag.onclick = function () { _termLensReset(); redraw(); };
       host.style.position = 'relative';
       host.appendChild(tag);
     }
+
+    /* ══════════════════════════════════════════════════════════════════
+       🔍 أزرار التكبير — الطريق الظاهر، لا السرّيّ
+       اشترطتُ `Ctrl` مع العجلة كي لا تبتلع تمريرَ الصفحة، فصحّ المنع
+       وضاع المُتاح: من كان يُكبّر بالعجلة وجد الشارت لا يستجيب ولا شيء
+       يدلّه على البديل. **إصلاحٌ يكسر ما كان يعمل ليس إصلاحاً.**
+       فالتكبير الآن بثلاثة طرق ظاهرة: هذه الأزرار · Ctrl+عجلة ·
+       قرصٌ بإصبعين على اللمس. ولا يُحرَم أحدٌ منه بحجّة حراسة التمرير.
+       ══════════════════════════════════════════════════════════════════ */
+    const ctl = document.createElement('div');
+    ctl.style.cssText = 'position:absolute;top:6px;inset-inline-end:8px;z-index:6;display:flex;gap:4px';
+    const mk = (txt, title, fn) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = txt; b.title = title;
+      b.style.cssText = 'cursor:pointer;width:26px;height:26px;line-height:1;border-radius:8px;'
+        + 'border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.85);color:#cbd5e1;'
+        + 'font-size:14px;font-weight:800;font-family:inherit;padding:0';
+      b.onclick = function (e) { e.preventDefault(); e.stopPropagation(); fn(); };
+      /* ⚠️ امنع بدء السحب من الزرّ — وإلا صار كل ضغطٍ سحباً في الزمن */
+      b.onmousedown = function (e) { e.stopPropagation(); };
+      b.ontouchstart = function (e) { e.stopPropagation(); };
+      return b;
+    };
+    const zoomBy = (dir) => {
+      const step = Math.max(2, Math.round(_termLens.take * 0.2));
+      _termLens.take += (dir > 0 ? -step : step);   // dir>0 = تكبير (شموع أقلّ)
+      clamp(); redraw();
+    };
+    ctl.appendChild(mk('＋', 'تكبير (شموع أقلّ وأوضح)', () => zoomBy(1)));
+    ctl.appendChild(mk('－', 'تصغير (شموع أكثر ومدى أوسع)', () => zoomBy(-1)));
+    if (_zoomed || _termLens.off > 0) ctl.appendChild(mk('↺', 'العرض الافتراضي', () => { _termLensReset(); redraw(); }));
+    host.style.position = 'relative';
+    host.appendChild(ctl);
   }
   async function _termLoadChart(sym, livePrice) {
     const wrap = document.getElementById('termChartWrap'), host = document.getElementById('termChart');
@@ -14383,6 +14430,12 @@ document.addEventListener('keydown', e => {
     /* 📐 احفظ الهندسة ليقرأها متتبّع الفأرة (نفس القيم بالضبط) */
     _TERM_GEOM.W = W; _TERM_GEOM.HT = HT; _TERM_GEOM.chH = chH; _TERM_GEOM.L0 = L0; _TERM_GEOM.R0 = R0; _TERM_GEOM.cw = cw; _TERM_GEOM.take = seg.length;
     _TERM_GEOM.off = _lens.off;   // 🔍 لتعرف نافذة العرض عند التتبّع
+    /* 📐 النافذة الافتراضية — بها نعرف: هل غيّر المستخدم العرض أم لا؟
+       بلاها ظهر وسم «🔍 معروض 180 من 254» على **كل** شارت افتراضيّ،
+       وزرّه «انقر للعرض الكامل» يُصفّر العدسة فتعود 180 نفسها — وعدٌ
+       لا يتحقّق. والوسم لحالةٍ اختارها المستخدم لا لحدٍّ نضعه نحن. */
+    _TERM_GEOM.defTake = Math.min(cds.length, maxBars);
+    _TERM_GEOM.total = cds.length;
     _TERM_GEOM.lo = lo; _TERM_GEOM.hi = hi;   // 🎯 لتحويل موضع الفأرة العمودي إلى سعر (الصليب الأفقي)
     const Y = p => 4 + chH * (1 - (p - lo) / (hi - lo));
     const vMax = Math.max.apply(null, V) || 1;

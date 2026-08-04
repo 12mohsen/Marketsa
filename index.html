@@ -2259,8 +2259,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v426';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v426 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v428';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v428 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2270,6 +2270,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v426 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v428', '🔍 عجلة الفأرة لم تعد تُكبّر الشارت بلا قصد — كانت تبتلع تمرير الصفحة فتنكمش النافذة من 180 شمعة إلى ستّين بلا علم أحد، فبدا شارت أرامكو مبتوراً وهو سليم. التكبير الآن بـCtrl، ووسمٌ يقول «معروض N من M» كلّما كنتَ مكبّراً'],
+    ['v427', '📉 عمق التاريخ يُعلَن — رُصد على أرامكو: شارتنا يعرض أسابيع وTradingView تسعة أشهر، لأن المخزَّن مبتور. والوسم كان يقول «سهم حديث» جزماً بما لا يعلم (أرامكو مدرَجة منذ 2019). صار يذكر العدد والاحتمالين وما يضعف به'],
     ['v426', '🕰️ لا رقمَ بلا تاريخه — كل خطّة تحمل جلسةَ حسابها، والمتأخّرة جلستين تُحجب أرقام تنفيذها ويبقى الشارت والاستثمار. ومعها تقريرُ صحّةِ بياناتٍ يصلك في تلجرام كل ليلة، فتعرف العطل قبل أن يسألك مستخدم'],
     ['v425', '🧹 المزامنة تُسقط كاش الشموع — كنتَ تضغط «جلب/تحديث» فيُخزَّن فعلاً ثم ترى الشارت على شموع ما قبله فتظنّه لم يعمل. ومزامنةُ الروبوت صارت تسأل القاعدة أوّلاً فلا تُزاحم دالّة sync-historical'],
     ['v424', '📅 «أين شمعة اليوم؟» — الشموع تتقادم بصمت لأن الروبوت لا يُحدّث جدول الأسعار، والتحذير كان مشروطاً بفارق 8% فلا يبلغه تأخّرُ جلسة. صار التأخّر يُقاس بالتاريخ ويُعلَن. ومعه: سطرُ «المعروض» كان يُرسم خارج الإطار منذ v419 فلا يراه أحد'],
@@ -7055,7 +7057,13 @@ window.dataHealthReport = function () {
     if (!res.length) return { ok: false, note: 'لا نتائج مسح' };
     let fresh = 0, late1 = 0, late2 = 0, unknown = 0;
     const worst = [];
+    /* 📉 وعمق التاريخ بجانب حداثته — رُصد على أرامكو: بياناتها محدّثة
+       اليوم لكنها عشرات الجلسات لا مئات، فالتحليل يقوم على جذعٍ مقطوع
+       وكل شيء يبدو سليماً. تأخّرٌ في الزمن وقِصَرٌ في العمق: عطلان
+       مختلفان يُنتجان نفس الضرر، فيُقاسان معاً. */
+    const shallow = [];
     res.forEach(r => {
+      if (r && r.bars && r.bars < 240) shallow.push({ sym: r.sym, bars: r.bars });
       const g = window.predLagOf ? window.predLagOf(r) : null;
       if (!g || g.lag == null) { unknown++; return; }
       if (g.lag === 0) fresh++;
@@ -7063,10 +7071,13 @@ window.dataHealthReport = function () {
       else { late2++; worst.push({ sym: r.sym, name: r.name, lag: g.lag, asOf: g.asOf }); }
     });
     worst.sort((a, b) => b.lag - a.lag);
+    shallow.sort((a, b) => a.bars - b.bars);
     return {
       ok: true, expected: exp, total: res.length,
       fresh, late1, late2, unknown,
       worst: worst.slice(0, 10),
+      shallowN: shallow.length,
+      shallow: shallow.slice(0, 10),
     };
   } catch (e) { return { ok: false, note: String(e && e.message || e) }; }
 };
@@ -13906,8 +13917,22 @@ document.addEventListener('keydown', e => {
       _termLens.off  = Math.max(0, Math.min(_termLens.off, n - _termLens.take));
     };
 
-    /* 🔍 عجلة الفأرة — تكبير حول منتصف المعروض */
+    /* ══════════════════════════════════════════════════════════════════
+       🔍 عجلة الفأرة — تكبيرٌ **بمفتاحٍ مصاحب** لا بمجرّد المرور
+
+       ⚠️ العلّة التي أوقعتنا في تحقيقٍ كامل: كان كل حدث عجلةٍ فوق الشارت
+       يُنفّذ `preventDefault` ثم يُكبّر. فمن يُمرّر الصفحة ومؤشّره فوق
+       الشارت **لا تتحرّك الصفحة — يتحرّك الشارت**: تنكمش النافذة من 180
+       شمعة إلى ستّين بلا أن يقصد ولا أن يعلم.
+       ورأينا أثره مباشرةً: شارت أرامكو عندنا محصورٌ في 25.8–27.9 بينما
+       TradingView يعرض 23.5–28، فبدا التطبيق كأنّ بياناته مبتورة — وهي
+       سليمة، والقاعدة أثبتت أن لأرامكو تاريخاً كاملاً.
+
+       ▸ فالتكبير الآن يلزمه Ctrl (أو ⌘) — وهو عُرف الخرائط والمحرّرات.
+       ▸ وبلا مفتاح: لا نمنع التمرير، فالصفحة تنساب كما يتوقّع القارئ.
+       ══════════════════════════════════════════════════════════════════ */
     svg.addEventListener('wheel', function (e) {
+      if (!(e.ctrlKey || e.metaKey)) return;   // تمريرٌ عاديّ ⇒ اترك الصفحة تنساب
       e.preventDefault();
       const step = Math.max(2, Math.round(_termLens.take * 0.12));
       _termLens.take += (e.deltaY > 0 ? step : -step);   // لأسفل = تصغير (شموع أكثر)
@@ -13978,12 +14003,21 @@ document.addEventListener('keydown', e => {
       e.preventDefault(); _termLensReset(); redraw();
     });
 
-    /* 🏷️ مؤشّرٌ صغير حين نكون في الماضي — فلا يظنّ المستخدم أنه ينظر لليوم */
-    if (_termLens.off > 0) {
+    /* ══════════════════════════════════════════════════════════════════
+       🏷️ مؤشّر الحالة — «أنت لا تنظر إلى الوضع الافتراضي»
+       كان يظهر للتنقّل في الماضي (`off`) **ولا يظهر للتكبير** (`take`).
+       فمن كبّر — قصداً أو بعجلة فأرةٍ عابرة — يرى نافذةً ضيّقة بلا شيء
+       يقول إنها ضيّقة، فيقارنها بشارتٍ آخر ويحكم على بياناتنا بالنقص.
+       الحالتان تُخفيان الحقيقة نفسها، فتستحقّان الإعلان نفسه.
+       ══════════════════════════════════════════════════════════════════ */
+    const _zoomed = _termLens.take > 0 && _termLens.take < n;
+    if (_termLens.off > 0 || _zoomed) {
       const tag = document.createElement('div');
       tag.style.cssText = 'position:absolute;top:6px;inset-inline-start:8px;z-index:5;background:rgba(251,191,36,.92);'
         + 'color:#0b1220;border-radius:14px;padding:3px 10px;font-size:10.5px;font-weight:800;cursor:pointer';
-      tag.textContent = '🕰️ ترجع ' + _termLens.off + ' شمعة — انقر للرجوع للآن';
+      tag.textContent = (_termLens.off > 0 ? '🕰️ ترجع ' + _termLens.off + ' شمعة · ' : '')
+        + (_zoomed ? '🔍 معروض ' + _termLens.take + ' من ' + n + ' شمعة · ' : '')
+        + 'انقر للعرض الكامل';
       tag.onclick = function () { _termLensReset(); redraw(); };
       host.style.position = 'relative';
       host.appendChild(tag);
@@ -14048,6 +14082,27 @@ document.addEventListener('keydown', e => {
       warnHtml = '<div style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);border-radius:8px;padding:8px 11px;margin-bottom:8px;font-size:11px;color:#fcd34d;font-weight:700;line-height:1.7">'
         + 'ℹ️ آخر شمعة في الشارت <b>' + histLast.toFixed(2) + '</b> · السعر الحيّ <b>' + livePrice.toFixed(2) + '</b> — الشارت يومي (متأخّر)، اعتمد الحيّ للتنفيذ.</div>';
     }
+    /* ══════════════════════════════════════════════════════════════════
+       📉 عمق التاريخ — لماذا يبدو شارتنا أقصر من غيره
+       بلاغٌ حقيقيّ على **أرامكو 2222**: TradingView يعرض تسعة أشهر
+       (23.5 ← 28) وشارتنا يعرض بضعة أسابيع في نطاق 25.8–27.9. والسبب
+       ليس رسماً مختلفاً بل **مخزوناً أقصر**: ما في القاعدة لهذا الرمز
+       عشرات الجلسات لا مئات.
+       ▸ وأثره أبعد من الشكل: MA50 والمدى السنويّ وعدّ إليوت تُحسب على
+         ما هو موجود، فتُنتج أرقاماً تبدو تامّة وهي على تاريخٍ ناقص.
+       ▸ فنقولها فوق الشارت — ولا نتركه يُقارَن بغيره ويُظنّ خاطئاً.
+       ══════════════════════════════════════════════════════════════════ */
+    try {
+      if (cds.length < 240) {
+        warnHtml += '<div style="background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.45);border-radius:8px;padding:8px 11px;margin-bottom:8px;font-size:11px;color:#fdba74;font-weight:700;line-height:1.7">'
+          + '📉 المخزَّن لهذا السهم <b>' + cds.length + ' جلسة</b> فقط (السنة ≈ 252)'
+          + (_lastD ? ' · من <b>' + String(cds[0].d || '').slice(0, 10) + '</b> إلى <b>' + _lastD + '</b>' : '')
+          + ' — فالشارت لا يعرض سنةً كاملة، و<b>MA50 والمدى السنويّ وعدّ إليوت</b> محسوبةٌ على تاريخٍ ناقص.'
+          + ((typeof isSuperAdmin === 'function' && isSuperAdmin())
+              ? '<br>🛠️ للأدمن: أعِد مزامنة هذا الرمز من «📥 جلب/تحديث البيانات التاريخية (5 سنوات)».' : '')
+          + '</div>';
+      }
+    } catch (e) {}
     _termDaily = cds;   // احفظ اليومي لإعادة التجميع عند تبديل الإطار
     _termLivePx = (livePrice > 0) ? +livePrice : null;   // 🔴 للسعر الحيّ على المحور
     _termSkipAnim = false;   // ✨ فتحٌ جديد ⇒ الظهور المتدرّج مرّةً واحدة
@@ -15260,16 +15315,32 @@ document.addEventListener('keydown', e => {
              وحين يوجد شرحٌ بعد «—» نُخفيه في تلميح على الشاشات الضيّقة
              فتبقى المعلومة الأساسية ظاهرة والشرح بلمسة. */
           const _narrow = (typeof window !== 'undefined' && window.innerWidth && window.innerWidth < 430);
-          const chip = (bg, bd, fg, txt) => {
+          /* الوسيط الخامس: شرحٌ صريح يظهر تلميحاً دائماً (لا على الضيّق فقط)
+             — لبعض الشارات شرحٌ لا يُختصر في السطر ولا يصحّ إسقاطه. */
+          const chip = (bg, bd, fg, txt, tipAlways) => {
             let head = txt, tip = '';
             const i = String(txt).indexOf(' — ');
             if (_narrow && i > 0) { head = txt.slice(0, i); tip = String(txt).slice(i + 3).replace(/"/g, '&quot;'); }
+            if (tipAlways) tip = String(tipAlways).replace(/"/g, '&quot;');
             return '<span' + (tip ? ' title="' + tip + '"' : '') + ' style="background:' + bg + ';border:1px solid ' + bd
               + ';color:' + fg + ';border-radius:14px;padding:5px 11px;font-size:clamp(11px,3vw,12px);font-weight:700;'
               + 'white-space:normal;line-height:1.6;max-width:100%;word-break:break-word;display:inline-block">'
               + head + (tip ? ' <span style="opacity:.65">ⓘ</span>' : '') + '</span>';
           };
-          if (r.bars && r.bars < 240) b += chip('rgba(251,146,60,.15)', 'rgba(251,146,60,.5)', '#fb923c', '🌱 سهم حديث · ' + r.bars + ' شمعة — تاريخ غير كافٍ، إشارات أقل موثوقية');
+          /* ══════════════════════════════════════════════════════════
+             📉 «تاريخ قصير» لا «سهم حديث» — تشخيصٌ كان يُجزم بما لا يعلم
+             رُصد على **أرامكو 2222**: شارت التطبيق يعرض ~60 جلسة بينما
+             TradingView يعرض تسعة أشهر. وأرامكو مُدرَجة منذ 2019 — فوسمُها
+             «🌱 سهم حديث» كذبٌ صريح، وسببُ قِصَرِ تاريخها **نقصٌ في
+             المخزَّن** لا حداثةُ إدراج.
+             ▸ والتطبيق لا يملك تاريخ الإدراج، فلا يجوز أن يجزم بالسبب.
+               يذكر الحقيقة (عدد الشموع) ويعرض الاحتمالين، ويقول ما الذي
+               يضعف بها — فالمستخدم يقدّر بنفسه.
+             ══════════════════════════════════════════════════════════ */
+          if (r.bars && r.bars < 240) b += chip('rgba(251,146,60,.15)', 'rgba(251,146,60,.5)', '#fb923c',
+            '📉 تاريخ قصير · ' + r.bars + ' شمعة',
+            'المخزَّن لهذا الرمز ' + r.bars + ' جلسة فقط (السنة ≈ 252). إمّا سهمٌ حديث الإدراج وإمّا نقصٌ في البيانات المخزَّنة — ولا نجزم بأيّهما. '
+            + 'وما يضعف بذلك: MA50 والمدى السنويّ وعدّ إليوت تُحسب على تاريخٍ ناقص، فإشاراتها أقلّ موثوقية.');
           /* 🧱 قاعدة عبر الأطر — تُعرض أولاً (إطاران فأكثر) */
           (function () {
             const tb = _snTriBase(r);
@@ -19610,7 +19681,7 @@ function histRender(dataRows, tab, isSim = false, isYahoo = false) {
           🕯️ الشموع اليابانية <span id="histCandleSub" style="font-weight:500;color:rgba(255,255,255,.45)"></span>
         </div>
         <div style="font-size:10.5px;color:rgba(255,255,255,.35)">
-          اسحب للتنقل • عجلة الفأرة أو القرص للتكبير
+          اسحب للتنقل • Ctrl + عجلة الفأرة (أو قرص بإصبعين) للتكبير
         </div>
       </div>
       <div id="histCandleLegend" style="direction:ltr;text-align:left;font-size:11px;

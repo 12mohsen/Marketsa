@@ -2272,8 +2272,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v433';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v433 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v435';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v435 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2283,6 +2283,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v433 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v435', '🔒 قائمة المستخدمين تُظهر قيود الأقسام — كان الأدمن يقفل الأهداف على كل الأقسام والسطر يقول «✅ وصول كامل»، لأنه يقرأ الأعلام العامّة القديمة لا subs[k].lock_targets. والشاشة التي بُنيت ليطمئنّ بها كانت تطمئنه على غير حقّه'],
+    ['v434', '🔒 الشارت يخضع لقفل الاشتراك كما تخضع البطاقة — رُصد على أسمنت القصيم: الأدمن ضبط «مقفلة (مظلَّلة)» فظُلّلت البطاقة والشارت بجانبها يرسم «دخول 43.55 · وقف 41.98 · هدف 46.10» بوضوح. الحجب يُطبَّق على المعلومة لا على مكانٍ تُعرض فيه'],
     ['v433', '📱 حاجزٌ يمنع أيّ عنصر من توسيع الصفحة على الجوال (overflow-x:clip للأقسام) — رُصد القسم منكمشاً في شريطٍ ضيّق ومعظم الشاشة فراغ. حاجزٌ للعَرَض لا تشخيصٌ للسبب: الجذر لم يُحدَّد بعد'],
     ['v432', '🕰️ الشارت يخضع لحاجز التأخّر كما تخضع البطاقة — رُصد على ميدغلف: البطاقة تقول «الخطة مؤجَّلة» وتحجب الأرقام، والشارت تحتها يرسم «دخول 14.49 · هدف 16.38» بوسومٍ واثقة والسعر 17.08 تجاوزهما. ما مُنع من البطاقة كان يخرج من الشارت'],
     ['v431', '⬆️ أزرار التكبير خرجت من زاوية الشارت إلى شريطٍ فوقه — كانت تحجب وسم «🎯 هدف» وMA20/MA50. وأوسمةُ الخطة تُرسم عند مستوياتها السعرية فتقع في أيّ ارتفاع: لا زاوية آمنة داخل الشارت، ورقمُ هدفٍ محجوب أسوأ من زرٍّ مفقود'],
@@ -6584,6 +6586,7 @@ function adminRenderUsers(query) {
       const parts = [];
       const subBits = [];
       let anyExpired = false, anyActivePaid = false;
+      let _lockBadgeN = 0, _blurBadgeN = 0;   // 🔒/🌫️ لشارتَي الرأس
       SUB_SECTION_DEFS.forEach(d => {
         const x = _subInfo(r, d.k);
         if (x.plan !== 'paid') return;
@@ -6599,12 +6602,41 @@ function adminRenderUsers(query) {
           parts.push(`🔒 مخفي عنه: ${r.hidden_tabs.map(tabName).join('، ')}`);
         if (r.no_popups) parts.push('🪟 منبثقات ممنوعة');
         if (r.blur_view) parts.push('🌫️ عرض ضبابي');
+        /* ══════════════════════════════════════════════════════════════
+           🔒 قيود الأقسام تظهر في السطر — كانت تُضبط ولا يدلّ عليها شيء
+           بلاغٌ حقيقيّ: الأدمن ضبط «الأهداف ووقف الخسارة: مقفلة» على
+           **كل** الأقسام، والسطر تحت البريد يقول «✅ وصول كامل».
+           والسبب أن هذا السطر يقرأ الأعلام القديمة العامّة (hidden_tabs ·
+           no_popups · blur_view) ولا يقرأ `subs[k].lock_targets` ولا
+           `subs[k].blur` — وهي ما يضبطه الأدمن اليوم في جدول الأقسام.
+           فالشاشة التي بُنيت ليطمئنّ بها الأدمن كانت تطمئنه على غير حقّه.
+           ══════════════════════════════════════════════════════════════ */
+        const _lockT = [], _openT = [], _blurS = [];
+        ADMIN_TAB_DEFS.forEach(d => {
+          const so = (r.subs && r.subs[d.k]) || null;
+          if (!so) return;
+          if (so.lock_targets === 'lock') _lockT.push(tabName(d.k));
+          else if (so.lock_targets === 'open') _openT.push(tabName(d.k));
+          if (so.blur) _blurS.push(tabName(d.k));
+        });
+        const _allTabs = ADMIN_TAB_DEFS.length;
+        if (_lockT.length) parts.push('🔒 أهداف مقفلة: ' + (_lockT.length >= _allTabs ? 'كل الأقسام' : _lockT.join('، ')));
+        if (_openT.length) parts.push('🔓 أهداف مفتوحة: ' + _openT.join('، '));
+        if (_blurS.length) parts.push('🌫️ قسم مظلَّل: ' + (_blurS.length >= _allTabs ? 'كل الأقسام' : _blurS.join('، ')));
+        _lockBadgeN = _lockT.length; _blurBadgeN = _blurS.length;
         if (parts.length === 0) parts.push('✅ وصول كامل');
       }
       const status = parts.join(' · ');
       const isMe = sbUser && u.email === sbUser.email;
       const expiredBadge = subExpired
         ? ' <span style="display:inline-block;background:rgba(248,113,113,.18);color:#fca5a5;border:1px solid rgba(248,113,113,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">⏳ اشتراك منتهٍ</span>'
+        : '';
+      /* 🔒 شارتان بجانب البريد — لمحةٌ تُغني عن قراءة السطر كلّه */
+      const lockBadge = _lockBadgeN
+        ? ' <span title="الأهداف ووقف الخسارة مقفلة في ' + _lockBadgeN + ' قسم" style="display:inline-block;background:rgba(245,158,11,.16);color:#fcd34d;border:1px solid rgba(245,158,11,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">🔒 أهداف مقفلة ' + _lockBadgeN + '</span>'
+        : '';
+      const blurBadge = _blurBadgeN
+        ? ' <span title="القسم معروض ضبابياً في ' + _blurBadgeN + ' قسم" style="display:inline-block;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid rgba(148,163,184,.45);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">🌫️ مظلَّل ' + _blurBadgeN + '</span>'
         : '';
       const _cons = _admConsent[(u.email || '').toLowerCase()];
       const consentBadge = (_cons && _cons.agreed)
@@ -6621,7 +6653,7 @@ function adminRenderUsers(query) {
                         overflow:hidden;text-overflow:ellipsis">
               <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
                     background:${_isOnline(u.last_seen) ? '#22c55e' : 'rgba(255,255,255,.2)'};
-                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${esc(u.email)}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !_isAdminEmail(u.email)) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${expiredBadge}${consentBadge}</div>
+                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${esc(u.email)}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !_isAdminEmail(u.email)) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${expiredBadge}${lockBadge}${blurBadge}${consentBadge}</div>
             <div style="font-size:10px;color:${r.blocked ? '#f87171' : (subExpired ? '#fca5a5' : 'var(--txt-m)')}">${status}</div>
             <div style="font-size:9.5px;color:${_isOnline(u.last_seen) ? '#4ade80' : 'var(--txt-m)'}">${_lastSeenText(u.last_seen)}</div>
             ${u.created_at ? `<div style="font-size:9px;color:var(--txt-m)">📅 سجّل: ${new Date(u.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { year:'numeric', month:'short', day:'numeric' })} · ${_accountAge(u.created_at)}</div>` : ''}
@@ -14432,13 +14464,27 @@ document.addEventListener('keydown', e => {
        نرسمها الآن مناطقَ ملوّنة: مساحة المخاطرة حمراء ومساحة العائد
        خضراء — فيُرى ع/م **مساحةً** لا رقماً، ويُدرَك بالنظرة الأولى.
        ونوسّع نطاق المحور ليسع الخطة، وإلا خرجت خارج الإطار فلا تظهر. */
-    let _pl = null, _vw = null, _planStale = false;
+    let _pl = null, _vw = null, _planStale = false, _planLocked = false;
+    /* ══════════════════════════════════════════════════════════════════
+       🔒 والشارت يخضع لقفل الاشتراك كما تخضع البطاقة
+       بلاغٌ حقيقيّ على «أسمنت القصيم 3040»: الأدمن ضبط اللوحة الموحّدة
+       على «الأهداف ووقف الخسارة: مقفلة (مظلَّلة)»، فظُلّلت البطاقة فعلاً
+       وظهر زرّ «🔒 الأهداف للمشتركين» — **والشارت بجانبها يرسم
+       «دخول 43.55 · وقف 41.98 · هدف 46.10» بوسومٍ واضحة**.
+       فالقفل يحرس البطاقة والشارتُ يُفشي ما حرسته. ولا فرق عند القارئ
+       بين رقمٍ في بطاقة ورقمٍ على شارت — بل الشارت أوضح.
+       ▸ ولا نكتفي بإخفاء الأرقام: خطٌّ أفقيّ بلا رقم يُقرأ من المحور
+         فيُعرف المستوى. فنُسقط الخطة من الرسم كلّها حين تكون مقفلة.
+       ▸ وهذه ثالثُ مرّة يخرج فيها المحجوب من نافذةٍ أخرى اليوم — والدرس
+         واحد: **الحجب يُطبَّق على المعلومة لا على مكانٍ يُعرض فيه.**
+       ══════════════════════════════════════════════════════════════════ */
+    try { _planLocked = (typeof _targetsLocked === 'function') && _targetsLocked('terminal'); } catch (e) {}
     try {
       const _r = (typeof PRED_RESULTS !== 'undefined' && Array.isArray(PRED_RESULTS))
         ? PRED_RESULTS.find(x => x && x.sym === sym) : null;
       if (_r) {
         const p = _r.elPlan;
-        if (p && +p.entry > 0 && +p.stop > 0 && +p.target > 0) {
+        if (!_planLocked && p && +p.entry > 0 && +p.stop > 0 && +p.target > 0) {
           _pl = { entry: +p.entry, stop: +p.stop, target: +p.target };
         }
         if (_r.vwapA && +_r.vwapA.vwap > 0) _vw = +_r.vwapA.vwap;
@@ -14594,6 +14640,10 @@ document.addEventListener('keydown', e => {
       + planTags          /* 🏷️ وسوم الخطة فوق الشموع — لا تُطمَس */
       + '<text x="' + L0 + '" y="12" font-size="10.5" font-weight="700" fill="#38bdf8">MA20</text>'
       + '<text x="' + (L0 + 42) + '" y="12" font-size="10.5" font-weight="700" fill="#f59e0b">MA50</text>'
+      /* 🔒 قل لماذا خلا الشارت من الخطة — وإلا بدا ناقصاً أو معطوباً */
+      + (_planLocked
+          ? '<text x="' + (L0 + 92) + '" y="12" font-size="10" font-weight="700" fill="#fcd34d">🔒 مستويات الدخول والوقف والهدف للمشتركين</text>'
+          : '')
       + '<text x="' + (W - R0) + '" y="' + (HT - volH - 2).toFixed(1) + '" font-size="9" fill="#94a3b8" text-anchor="end">الحجم</text>'
       /* 📅 نطاق ما يُعرض — أسفل يسار الشارت، بعيداً عن الشموع والوسوم */
       + (_rangeNote

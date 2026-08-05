@@ -114,6 +114,24 @@ if ('serviceWorker' in navigator) {
 .term-svg { animation: termFade .45s ease-out both; }
 .term-svg rect, .term-svg line, .term-svg path { transition: opacity .2s ease; }
 @keyframes termFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* ══════════════════════════════════════════════════════════════════════
+   ⚠️ نبضةُ انتباه — لتحذيرٍ يُقرأ قبل أن تُتّخذ عليه خطوة
+
+   المطلوب: أن يومض التحذير ثوانيَ فلا يتسرّع القارئ.
+   ▸ ونبضةٌ لا وميض: الوميض الحادّ (ظهور/اختفاء) يؤذي أصحاب الحساسية
+     الضوئية، ويُقرأ عطلاً في الواجهة لا تحذيراً. فنُوسّع الهالة ونُخفتها
+     بلطف — تُلفت العين ولا تُجهدها.
+   ▸ و**ثلاث نبضات ثم تسكن**: التحذير الدائم يُصبح خلفيةً تُتجاهَل بعد
+     يومين، فيفقد التحذير معناه يوم يلزم. ينبض ليُقرأ، ثم يترك القارئ.
+   ▸ ويُحترم `prefers-reduced-motion`: من عطّل الحركة في نظامه لا تُفرَض
+     عليه — يرى الإطار ثابتاً والنصّ كما هو، فالمعلومة لم تنقص.
+   ══════════════════════════════════════════════════════════════════════ */
+@keyframes tpAttn {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
+  50%      { box-shadow: 0 0 0 5px rgba(251,191,36,.28); }
+}
+.tp-attn { animation: tpAttn 1.1s ease-in-out 3; }
+@media (prefers-reduced-motion: reduce) { .tp-attn { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .term-svg { animation: none; } }
 
 /* ═══════════════════════════════════════
@@ -2272,8 +2290,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v436';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v436 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-04-v438';
+console.log('%c[تداول بلس] البناء: 2026-08-04-v438 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2283,6 +2301,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-04-v436 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v438', '⚠️ تحذير «تحفّظ على القيمة العادلة» ينبض ثلاث نبضات عند ظهوره ثم يسكن — نبضةُ هالةٍ لا وميضٌ حادّ (يؤذي أصحاب الحساسية الضوئية ويُقرأ عطلاً)، وتسكن لأن التحذير الدائم يصير خلفيةً تُتجاهَل يوم يلزم'],
+    ['v437', '💰 زرّ «بسعر عادل أو أقلّ» في وضع الاستثمار — الشارات الخمس تصنّف الحكم لا السعر، فسهمٌ عادل السعر يسقط من «منطقة تجميع» لغياب مؤشراته. المعيار: السعر ≤ ربحية × 15، ويُرتَّب بأوسع هامش أمان أوّلاً'],
     ['v436', '🎁 العروض — مربّع نسبة خصم (١–١٠٠٪) لكل قسم في «أسعار الخدمات»، يرى الأدمن السعر بعد الخصم فوراً، ويرى المستخدم السعر القديم مشطوباً وشارة «−N٪» وسطر «وفّرتَ كذا». والخصم مطبَّقٌ في الخادم كذلك — وإلا رأى العميل ١٩٩ وخُصم منه ٣٩٩'],
     ['v435', '🔒 قائمة المستخدمين تُظهر قيود الأقسام — كان الأدمن يقفل الأهداف على كل الأقسام والسطر يقول «✅ وصول كامل»، لأنه يقرأ الأعلام العامّة القديمة لا subs[k].lock_targets. والشاشة التي بُنيت ليطمئنّ بها كانت تطمئنه على غير حقّه'],
     ['v434', '🔒 الشارت يخضع لقفل الاشتراك كما تخضع البطاقة — رُصد على أسمنت القصيم: الأدمن ضبط «مقفلة (مظلَّلة)» فظُلّلت البطاقة والشارت بجانبها يرسم «دخول 43.55 · وقف 41.98 · هدف 46.10» بوضوح. الحجب يُطبَّق على المعلومة لا على مكانٍ تُعرض فيه'],
@@ -13819,13 +13839,31 @@ document.addEventListener('keydown', e => {
        «💎 منطقة تجميع» فيرى المؤهَّلة وحدها. */
     if (TERM_MODE === 'invest') {
       const ic = { accum: 0, trap: 0, high: 0, rich: 0, noeps: 0, noctx: 0 };
+      /* ══════════════════════════════════════════════════════════════
+         💰 «بسعرٍ عادل أو أقلّ» — محورٌ مستقلّ لا حكمٌ سادس
+
+         سؤال المستخدم: «السعر 43.38 فوق القيمة العادلة 32.85 — أريد
+         زرّاً للأسهم ذات القيمة العادلة». وهو سؤالٌ لا تجيبه الشارات
+         الخمس، لأنها تصنّف **الحكم** لا **السعر**:
+           ▸ «💎 منطقة تجميع» تشترط سياقاً طويل المدى (اتجاه · قاعدة ·
+             موقع)، فتُسقط سهماً عادل السعر لأن مؤشراته غائبة.
+           ▸ و«⚠️ رخيص بلا أرض» سعرُه عادل كذلك، لكنه مصنَّفٌ تحذيراً.
+         فالسعر العادل يتقاطع مع أربعٍ من الخمس، ولا يُغني عنه أيٌّ منها.
+
+         ▸ المعيار: `mos ≥ 0` أي السعر ≤ القيمة العادلة (ربحية × 15).
+         ▸ ولا يُغني عن قراءة الحكم: عادلُ السعر قد يكون فخّاً، ولذلك
+           يبقى حكمُه ظاهراً في بطاقته. هذا زرُّ **بحث** لا زرُّ شراء.
+         ══════════════════════════════════════════════════════════════ */
+      let icFair = 0;
       all.forEach(r => {
         try {
           const v = investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null));
           if (v && ic[v.k] !== undefined) ic[v.k]++;
+          if (v && v.g && +v.g.mos >= 0) icFair++;
         } catch (e) {}
       });
       bar.innerHTML =
+        btn('inv:fair', '56,189,248', '💰 بسعر عادل أو أقلّ', icFair, true) +
         btn('inv:accum', '74,222,128', '💎 منطقة تجميع', ic.accum, true) +
         btn('inv:trap', '251,191,36', '⚠️ رخيص بلا أرض', ic.trap) +
         btn('inv:high', '251,191,36', '⚠️ قرب قمة 5 سنوات', ic.high) +
@@ -13867,12 +13905,29 @@ document.addEventListener('keydown', e => {
     /* 🏛️ فلاتر الاستثمار — تُفرز بحكم investView لا بشارة التنفيذ */
     if (TERM_FILT.indexOf('inv:') === 0) {
       const want = TERM_FILT.slice(4);
-      list = list.filter(r => {
-        try {
-          const v = investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null));
-          return !!(v && v.k === want);
-        } catch (e) { return false; }
-      });
+      if (want === 'fair') {
+        /* 💰 محورُ السعر لا محورُ الحكم — ويُرتَّب بأوسع هامش أمان أوّلاً،
+           فأوّل ما تراه أبعدُها عن قيمته العادلة لا أوّلُها أبجدياً. */
+        list = list
+          .map(r => {
+            let mos = null;
+            try {
+              const v = investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null));
+              if (v && v.g && +v.g.mos >= 0) mos = +v.g.mos;
+            } catch (e) {}
+            return { r: r, mos: mos };
+          })
+          .filter(x => x.mos != null)
+          .sort((a, b) => b.mos - a.mos)
+          .map(x => x.r);
+      } else {
+        list = list.filter(r => {
+          try {
+            const v = investView(r, (typeof _symInd !== 'undefined' ? _symInd[r.sym] : null));
+            return !!(v && v.k === want);
+          } catch (e) { return false; }
+        });
+      }
     }
     /* 🚫 نفس قاعدة الشريط في التصفية — وإلا اختلف العدّ عن المعروض */
     else if (TERM_FILT === 'avoid') {
@@ -13901,12 +13956,16 @@ document.addEventListener('keydown', e => {
         try { const V = _termVerdict(r); return !(V && V.k === 'avoid'); } catch (e) { return true; }
       });
     }
-    /* 🧭 ترتيب بالقرار: 🟢 ادخل أولاً · ثم 🟡 انتظر · ثم الباقي — القرار الأقوى في الأعلى */
-    const _vrank = r => { const V = _termVerdict(r); return V ? (V.k === 'enter' ? 3 : V.k === 'wait' ? 2 : 1) : 0; };
-    list.sort((a, b) =>
-      (_vrank(b) - _vrank(a)) ||
-      ((b.elPlan && b.elPlan.rr ? 1 : 0) - (a.elPlan && a.elPlan.rr ? 1 : 0)) ||
-      (b.probability || 0) - (a.probability || 0));
+    /* 🧭 ترتيب بالقرار: 🟢 ادخل أولاً · ثم 🟡 انتظر · ثم الباقي — القرار الأقوى في الأعلى
+       ⚠️ ويُتخطّى في فلتر «💰 بسعر عادل أو أقلّ»: ذاك رُتّب بهامش الأمان
+       عمداً، وإعادةُ الفرز هنا تمحو ترتيبَه بلا أن يظهر خطأ. */
+    if (TERM_FILT !== 'inv:fair') {
+      const _vrank = r => { const V = _termVerdict(r); return V ? (V.k === 'enter' ? 3 : V.k === 'wait' ? 2 : 1) : 0; };
+      list.sort((a, b) =>
+        (_vrank(b) - _vrank(a)) ||
+        ((b.elPlan && b.elPlan.rr ? 1 : 0) - (a.elPlan && a.elPlan.rr ? 1 : 0)) ||
+        (b.probability || 0) - (a.probability || 0));
+    }
     if (!list.length) { wrap.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:24px;font-size:13px">لا نتائج لبحثك</div>'; return; }
     wrap.innerHTML = list.slice(0, 120).map(r => {
       const sel = r.sym === TERM_SEL;
@@ -14944,7 +15003,7 @@ document.addEventListener('keydown', e => {
             + '<div style="font-size:10.5px;color:var(--txt-m);margin-top:7px;line-height:1.7">القيمة العادلة = ربحية السهم × 15 · والشراء المتحفّظ دون <b>' + iv.g.conservative + '</b>. '
             + '<b>هامش الأمان هو ما يحميك حين تُخطئ</b> — لا ما يربحك حين تُصيب.</div>'
             /* 📐 مضاعف جراهام افتراضٌ عامّ لا وعدٌ من السوق */
-            + (iv.fairFar ? '<div style="margin-top:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:9px;padding:8px 10px;font-size:11px;color:#fcd34d;line-height:1.8">'
+            + (iv.fairFar ? '<div class="tp-attn" style="margin-top:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:9px;padding:8px 10px;font-size:11px;color:#fcd34d;line-height:1.8">'
                 + '📐 <b>تحفّظ على القيمة العادلة:</b> ' + iv.g.fair + ' تعلو قمة السنة (' + iv.hi52 + ') بـ<b>' + iv.fairFar + '%</b> — '
                 + 'أي أن السهم <b>لم يبلغها قطّ خلال سنة</b>. مضاعف جراهام (×15) افتراضٌ عامّ، والسوق قد يكون له سببٌ في تسعير هذا السهم أدنى منه باستمرار. '
                 + 'فاقرأ هامش الأمان بتحفّظ.</div>' : ''));

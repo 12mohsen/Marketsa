@@ -4885,7 +4885,18 @@ function openPayModal(secKey) {
         لا توجد خدمات مسعّرة على حسابك حالياً.<br>تواصل مع الدعم لتحديد الباقة والسعر.
       </div>`}
 
-      <!-- طريقة الدفع: تحويل بنكي -->
+      <!-- ══════════════════════════════════════════════════════════════
+           🏦 التحويل البنكي — يُخفى كاملاً بمفتاح الأدمن
+
+           السبب: كانت تُعرض حساباتٌ **تجريبية** (آيبان أصفار) لكل مستخدم.
+           فمن يحوّل إليها يخسر وقته، ويصلك إشعارٌ بتحويلٍ لم يقع — وأنت
+           تظنّه واقعاً. وطريقةُ دفعٍ لا تعمل أسوأ من طريقةٍ غائبة.
+           ▸ فيُخفى **القسم كلّه**: العنوان والحسابات وحقل الاسم وزرّ
+             «تم التحويل». إخفاءُ الحسابات وحدها يُبقي زرّاً يُبلّغ عن
+             تحويلٍ إلى لا شيء.
+           ▸ والافتراض «ظاهر» — فلا يتغيّر شيء لمن ضبط حساباته فعلاً.
+           ══════════════════════════════════════════════════════════════ -->
+      ${(appSettings && appSettings.bankTransferOff) ? '' : `
       <div style="font-size:13px;font-weight:800;color:#fbbf24;margin-bottom:10px">🏦 التحويل البنكي</div>
       <div style="font-size:11.5px;color:var(--txt-m);line-height:1.7;margin-bottom:10px">
         حوّل المبلغ إلى أحد الحسابات التالية، ثم <b style="color:#fbbf24">اختر البنك الذي حوّلت إليه</b> واضغط «تم التحويل» لإبلاغ الإدارة ويُفعَّل اشتراكك بعد المراجعة.
@@ -4900,6 +4911,7 @@ function openPayModal(secKey) {
       <button onclick="payNotifyTransfer('${secKey}')" style="width:100%;margin-top:10px;padding:14px;border-radius:12px;
         border:none;cursor:pointer;font-weight:800;font-size:14px;color:#fff;
         background:linear-gradient(135deg,#166534 0%,#22c55e 100%)">✅ تم التحويل — إبلاغ الإدارة</button>
+      `}
 
       <!-- طريقة الدفع: بطاقة (فيزا / مدى / ماستركارد) -->
       <div style="font-size:13px;font-weight:800;color:#fbbf24;margin:20px 0 10px">💳 البطاقة (فيزا / مدى / ماستركارد)</div>
@@ -5206,6 +5218,23 @@ function renderAdminSection() {
         <div style="${head}">🏦 الحسابات البنكية للدفع</div>
         <div style="font-size:11px;color:var(--txt-m);line-height:1.7;margin-bottom:10px">
           تظهر للمستخدم في صفحة الدفع عند تجديد اشتراكه عبر التحويل البنكي.
+        </div>
+        <!-- 👁️ مفتاح إظهار/إخفاء التحويل البنكي كاملاً من صفحة الدفع -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:${(s.bankTransferOff) ? 'rgba(248,113,113,.1)' : 'rgba(74,222,128,.09)'};
+                    border:1px solid ${(s.bankTransferOff) ? 'rgba(248,113,113,.45)' : 'rgba(74,222,128,.4)'};border-radius:11px;padding:10px 12px;margin-bottom:10px">
+          <span style="font-size:12.5px;font-weight:800;color:${(s.bankTransferOff) ? '#fca5a5' : '#86efac'}">
+            ${(s.bankTransferOff) ? '🚫 التحويل البنكي مُخفى عن المستخدمين' : '👁️ التحويل البنكي ظاهر للمستخدمين'}
+          </span>
+          <span style="flex:1"></span>
+          <button onclick="adminToggleBankTransfer(this)" style="cursor:pointer;font-family:inherit;border:none;border-radius:9px;
+            padding:8px 16px;font-size:12.5px;font-weight:800;color:#0b1220;
+            background:${(s.bankTransferOff) ? 'linear-gradient(135deg,#4ade80,#22c55e)' : 'linear-gradient(135deg,#fbbf24,#f59e0b)'}">
+            ${(s.bankTransferOff) ? '👁️ أظهره' : '🚫 أخفِه'}
+          </button>
+          <div style="flex:1 0 100%;font-size:10.5px;color:var(--txt-m);line-height:1.8">
+            الإخفاء يشمل <b>القسم كلّه</b>: العنوان والحسابات وحقل الاسم وزرّ «تم التحويل» — فلا يبقى زرٌّ يُبلّغ عن تحويلٍ إلى حسابٍ غير جاهز.
+            والبطاقة تبقى تعمل كما هي.
+          </div>
         </div>
         <div id="admBanksList"></div>
         <div style="border:1px dashed var(--bdr);border-radius:12px;padding:12px;margin-top:8px">
@@ -6051,6 +6080,29 @@ async function _adminRemoveBankConfirmed(id) {
   if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
   const banks = ((appSettings && appSettings.banks) || []).filter(b => b.id !== id);
   if (await _admSaveBanks(banks)) { showToast('🗑️ حُذف الحساب'); _admRenderBanksList(); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   🏦 مفتاح إظهار/إخفاء التحويل البنكي
+   يُخزَّن في `appSettings.bankTransferOff` — إعدادٌ عامّ كبقيّة الإعدادات،
+   فيسري على كل المستخدمين فوراً بلا رفعِ بناء.
+   ▸ ولا يمسّ الحسابات المحفوظة: تبقى كما هي وتعود بضغطة.
+   ══════════════════════════════════════════════════════════════════════ */
+async function adminToggleBankTransfer(btn) {
+  if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
+  const _o = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ الحفظ…'; }
+  const next = !(appSettings && appSettings.bankTransferOff);
+  appSettings = Object.assign({}, appSettings, { bankTransferOff: next });
+  const { error } = await sb.from('app_settings')
+    .upsert({ id: 1, data: appSettings, updated_at: new Date().toISOString() });
+  if (error) {
+    appSettings.bankTransferOff = !next;   // ↩️ أعِد الحالة، فالحفظ لم يقع
+    _admErr(error, 'فشل الحفظ'); _btnFail(btn, _o, '⚠️ تعذّر الحفظ'); return;
+  }
+  showToast(next ? '🚫 أُخفي التحويل البنكي عن المستخدمين' : '👁️ ظهر التحويل البنكي للمستخدمين');
+  try { logAdminAction('bank_transfer_toggle', next ? 'إخفاء' : 'إظهار', ''); } catch (_) {}
+  try { renderAdminSection(); } catch (_) {}
 }
 
 /* 💵 حفظ الأسعار العامة للخدمات (تظهر في صفحة الدفع لكل المستخدمين) */
@@ -8220,6 +8272,8 @@ async function adminSave(btn) {
     /* 🏦 حافظ على الحسابات البنكية وأسعار الخدمات المُدارة بشكل منفصل */
     banks:          Array.isArray(appSettings.banks) ? appSettings.banks : [],
     servicePrices:  appSettings.servicePrices || {},
+    /* 👁️ ومفتاح التحويل البنكي — يُصرَّح به كي لا يضيع مع أيّ حفظٍ عامّ */
+    bankTransferOff: !!appSettings.bankTransferOff,
   });
   const { error } = await sb.from('app_settings')
     .upsert({ id: 1, data: appSettings, updated_at: new Date().toISOString() });

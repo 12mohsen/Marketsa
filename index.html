@@ -691,6 +691,35 @@ html.dark .pf-btn.buy{background:#0d2a1a;border-color:#166534;color:#4ade80}
 html.dark .pf-btn.sell{background:#2a0d0d;border-color:#991b1b;color:#f87171}
 html.dark .wl-btn.add-pf{background:#0d2a1a;border-color:#166534;color:#4ade80}
 
+/* ══════════════════════════════════════════════════════════════════════
+   💵 جدول أسعار الخدمات — الأنماط في CSS لا في `style=` داخل الوسم
+   السبب: النمطُ السطريّ يهزم الوسائطَ الاستعلامية (media query) بلا
+   `!important`. فقاعدة الجوال `flex:1 0 100%` على اسم الخدمة كانت
+   تُهزَم بـ`style="flex:1"` المكتوب في الوسم — فبقي الاسم في الصفّ
+   وانضغطت الحقول الأربعة معه، وهو ما رُصد على الشاشة.
+   ▸ ولكلّ حقلٍ عنوانُه الصغير `.adm-svc-lbl`: مخفيٌّ على الحاسوب حيث
+     يكفي رأسُ العمود، ظاهرٌ على الجوال حيث يُخفى الرأس. والاعتماد على
+     `placeholder` كان خطأً — يختفي أوّلَ ما تُكتب قيمة، فيرى الأدمن
+     أربعةَ مربّعاتٍ بلا هويّة ولا يدري أيُّها الخصم وأيُّها مدّته.
+   ══════════════════════════════════════════════════════════════════════ */
+.adm-svc-head{display:flex;align-items:center;gap:8px;padding:0 0 6px;font-size:10px;color:var(--txt-m)}
+.adm-svc-row{display:flex;align-items:flex-end;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.adm-svc-name{flex:1;min-width:0;font-size:12.5px;color:var(--txt);padding-bottom:8px}
+.adm-svc-f{display:flex;flex-direction:column;gap:3px;flex:0 0 auto}
+.adm-svc-lbl{display:none}
+.adm-svc-f input{width:100%;box-sizing:border-box;padding:7px 9px;border-radius:8px;
+  border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
+  font-size:11.5px;outline:none;font-family:inherit;text-align:center}
+.adm-svc-f input:focus{border-color:#f59e0b}
+/* 🎁 حقلا العرض يُميَّزان لوناً — فلا يُخلطان بالسعر والمدّة الأصليّين */
+.adm-svc-f.off input{border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);
+  color:#fcd34d;font-weight:800}
+.adm-svc-f.wp{width:92px}
+.adm-svc-f.wd{width:66px}
+.adm-svc-f.wo{width:72px}
+.adm-svc-out{width:132px;text-align:center;font-size:11px;font-weight:800;
+  color:var(--txt-m);line-height:1.5;padding-bottom:8px}
+
 /* Responsive */
 @media(max-width:640px){
   /* ══════════════════════════════════════════════════════════════════
@@ -708,18 +737,24 @@ html.dark .wl-btn.add-pf{background:#0d2a1a;border-color:#166534;color:#4ade80}
   .pf-wrap{max-width:100%}
   .pf-wrap{padding:16px 14px 40px}
   /* ══════════════════════════════════════════════════════════════════
-     💵 جدول أسعار الخدمات على الجوال — صفٌّ واحد لا يسع خمسة أعمدة
-     رُصد: عمود «بعد الخصم» يخرج خارج الشاشة، فيضبط الأدمن خصماً ولا
-     يرى نتيجته — وهو العمود الوحيد الذي يُراجَع به الرقم قبل الحفظ.
-     ▸ فيُكدَّس: الاسم سطراً، والحقول الأربعة تتقاسم العرض، والنتيجة
-       سطراً أسفلها. ورؤوس الأعمدة تُخفى لأن لكل حقلٍ نصَّه الداخليّ.
+     💵 جدول أسعار الخدمات على الجوال — بطاقةٌ لكل خدمة لا صفُّ جدول
+     خمسةُ أعمدةٍ لا تسعها شاشةُ جوال. وحلُّ «اضغطها حتى تدخل» يُنتج
+     أربعةَ مربّعاتٍ متطابقةٍ بلا هويّة — والأدمن يضبط فيها **أسعاراً
+     تُخصم من بطاقات الناس**، فخطأُ عمودٍ ليس خطأً تجميلياً.
+     ▸ فبطاقة: الاسم سطراً كاملاً، ثمّ أربعةُ حقولٍ **فوق كلٍّ عنوانه**،
+       ثمّ «بعد الخصم» شريطاً أسفلها — وهو العمود الذي يُراجَع به الرقم
+       قبل الحفظ، وكان يخرج خارج الشاشة فلا يُرى أصلاً.
      ══════════════════════════════════════════════════════════════════ */
   .adm-svc-head{display:none}
-  .adm-svc-row{flex-wrap:wrap;gap:6px;padding:10px 0}
-  .adm-svc-row>span:first-child{flex:1 0 100%;font-weight:800;margin-bottom:2px}
-  .adm-svc-row input{flex:1 1 0;width:auto !important;min-width:0;text-align:center}
-  .adm-svc-out{flex:1 0 100%;width:auto !important;text-align:center !important;
-               background:var(--surf-alt);border-radius:8px;padding:5px 0;margin-top:2px}
+  .adm-svc-row{flex-wrap:wrap;align-items:flex-end;gap:8px 6px;padding:12px 0}
+  .adm-svc-name{flex:1 0 100%;width:100%;font-weight:800;font-size:13px;padding-bottom:0}
+  .adm-svc-f{flex:1 1 0;min-width:0}
+  .adm-svc-f.wp,.adm-svc-f.wd,.adm-svc-f.wo{width:auto}
+  .adm-svc-lbl{display:block;font-size:9px;font-weight:700;color:var(--txt-m);
+    text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+  .adm-svc-f input{padding:8px 4px}
+  .adm-svc-out{flex:1 0 100%;width:100%;background:var(--surf-alt);border-radius:8px;
+    padding:6px 8px;margin-top:2px;line-height:1.6;padding-bottom:6px}
   .pf-summary{grid-template-columns:1fr 1fr;gap:8px}
   .pf-sum-val{font-size:18px}
   .pf-card-metrics{grid-template-columns:1fr 1fr}
@@ -2303,8 +2338,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-06-v439';
-console.log('%c[تداول بلس] البناء: 2026-08-06-v439 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-06-v441';
+console.log('%c[تداول بلس] البناء: 2026-08-06-v441 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2314,6 +2349,9 @@ console.log('%c[تداول بلس] البناء: 2026-08-06-v439 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v441', '💵 جدول أسعار الخدمات على الجوال — بطاقةٌ لكل خدمة وعنوانٌ فوق كل حقل. كانت أربعةَ مربّعاتٍ متطابقةٍ بلا هويّة لأن `placeholder` يختفي أوّلَ ما تُكتب قيمة، و«بعد الخصم» يخرج خارج الشاشة. وسببُ فشل إصلاحِ v439: النمطُ السطريّ `style="flex:1"` يهزم قاعدةَ الجوال — فنُقلت الأنماط إلى CSS'],
+    ['v440', '🏦 مفتاح إظهار/إخفاء التحويل البنكي بيد الأدمن — كانت تُعرض حساباتٌ تجريبية (آيبان أصفار) لكل مستخدم، فمن يحوّل إليها يخسر ماله ويصلك إشعارٌ بتحويلٍ لم يقع فتظنّه واقعاً. والإخفاء يشمل القسم كلّه لا الحسابات وحدها: إبقاءُ زرّ «تم التحويل» بلا حساباتٍ يُبلّغ عن تحويلٍ إلى لا شيء'],
+    ['v439', '⏳ مدّة العرض بيد الأدمن — كان الخصم يسري بلا نهاية، والمدّة محسوبة بوقت الخادم لا بساعة الجهاز، ومطبَّقة في verify-payment كذلك وإلا انتهى العرض في الشاشة وبقي في الفاتورة'],
     ['v438', '⚠️ تحذير «تحفّظ على القيمة العادلة» ينبض ثلاث نبضات عند ظهوره ثم يسكن — نبضةُ هالةٍ لا وميضٌ حادّ (يؤذي أصحاب الحساسية الضوئية ويُقرأ عطلاً)، وتسكن لأن التحذير الدائم يصير خلفيةً تُتجاهَل يوم يلزم'],
     ['v437', '💰 زرّ «بسعر عادل أو أقلّ» في وضع الاستثمار — الشارات الخمس تصنّف الحكم لا السعر، فسهمٌ عادل السعر يسقط من «منطقة تجميع» لغياب مؤشراته. المعيار: السعر ≤ ربحية × 15، ويُرتَّب بأوسع هامش أمان أوّلاً'],
     ['v436', '🎁 العروض — مربّع نسبة خصم (١–١٠٠٪) لكل قسم في «أسعار الخدمات»، يرى الأدمن السعر بعد الخصم فوراً، ويرى المستخدم السعر القديم مشطوباً وشارة «−N٪» وسطر «وفّرتَ كذا». والخصم مطبَّقٌ في الخادم كذلك — وإلا رأى العميل ١٩٩ وخُصم منه ٣٩٩'],
@@ -5258,7 +5296,7 @@ function renderAdminSection() {
           <br>⏳ <b style="color:#fcd34d">مدّته:</b> بالأيام — يبدأ العدّ من <b>لحظة الحفظ</b>، وبعدها يعود السعر إلى أصله تلقائياً.
           اتركها فارغة فالعرض بلا نهاية. ولا يُصفَّر العدّاد إلا إن غيّرتَ النسبة أو المدّة.
         </div>
-        <div class="adm-svc-head" style="display:flex;align-items:center;gap:8px;padding:0 0 6px;font-size:10px;color:var(--txt-m)">
+        <div class="adm-svc-head">
           <span style="flex:1"></span>
           <span style="width:92px;text-align:center">السعر ر.س</span>
           <span style="width:66px;text-align:center">أيام</span>
@@ -5267,20 +5305,33 @@ function renderAdminSection() {
           <span style="width:132px;text-align:center">بعد الخصم</span>
         </div>
         ${tabs.map(t => { const g = ((s.servicePrices || {})[t.k]) || {}; return `
-          <div class="adm-svc-row" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)">
-            <span style="flex:1;font-size:12.5px;color:var(--txt)">${t.t}</span>
-            <input id="admSvc-${t.k}-price" type="number" min="0" step="any" placeholder="السعر ر.س" value="${g.price != null ? g.price : ''}"
-              oninput="admOffPreview('${t.k}')"
-              style="width:92px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;outline:none;font-family:inherit">
-            <input id="admSvc-${t.k}-days" type="number" min="0" placeholder="أيام" value="${g.days != null ? g.days : ''}"
-              style="width:66px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;outline:none;font-family:inherit">
-            <input id="admSvc-${t.k}-off" type="number" min="0" max="100" step="1" placeholder="٪" value="${(Number(g.off) || 0) > 0 ? g.off : ''}"
-              oninput="admOffPreview('${t.k}')" title="نسبة الخصم من 1 إلى 100 — اتركه فارغاً فلا عرض"
-              style="width:72px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fcd34d;font-size:11.5px;font-weight:800;outline:none;font-family:inherit;text-align:center">
-            <input id="admSvc-${t.k}-offdays" type="number" min="0" step="1" placeholder="مدّة العرض" value="${(Number(g.off_days) || 0) > 0 ? g.off_days : ''}"
-              oninput="admOffPreview('${t.k}')" title="مدّة العرض بالأيام — يبدأ العدّ من لحظة الحفظ. اتركه فارغاً فالعرض بلا نهاية"
-              style="width:72px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fcd34d;font-size:11.5px;font-weight:800;outline:none;font-family:inherit;text-align:center">
-            <span id="admSvcOut-${t.k}" class="adm-svc-out" style="width:132px;text-align:center;font-size:11px;font-weight:800;color:var(--txt-m);white-space:nowrap;line-height:1.5"></span>
+          <div class="adm-svc-row">
+            <span class="adm-svc-name">${t.t}</span>
+            <label class="adm-svc-f wp">
+              <span class="adm-svc-lbl">السعر ر.س</span>
+              <input id="admSvc-${t.k}-price" type="number" min="0" step="any" inputmode="decimal"
+                value="${g.price != null ? g.price : ''}" oninput="admOffPreview('${t.k}')"
+                title="السعر الأصلي بالريال قبل أي خصم">
+            </label>
+            <label class="adm-svc-f wd">
+              <span class="adm-svc-lbl">أيام</span>
+              <input id="admSvc-${t.k}-days" type="number" min="0" inputmode="numeric"
+                value="${g.days != null ? g.days : ''}"
+                title="مدّة الاشتراك بالأيام — كم يوماً يبقى القسم مفتوحاً بعد الشراء">
+            </label>
+            <label class="adm-svc-f wo off">
+              <span class="adm-svc-lbl">🎁 خصم ٪</span>
+              <input id="admSvc-${t.k}-off" type="number" min="0" max="100" step="1" inputmode="numeric"
+                value="${(Number(g.off) || 0) > 0 ? g.off : ''}" oninput="admOffPreview('${t.k}')"
+                title="نسبة الخصم من 1 إلى 100 — اتركه فارغاً فلا عرض">
+            </label>
+            <label class="adm-svc-f wo off">
+              <span class="adm-svc-lbl">⏳ مدّته</span>
+              <input id="admSvc-${t.k}-offdays" type="number" min="0" step="1" inputmode="numeric"
+                value="${(Number(g.off_days) || 0) > 0 ? g.off_days : ''}" oninput="admOffPreview('${t.k}')"
+                title="مدّة العرض بالأيام — يبدأ العدّ من لحظة الحفظ. اتركه فارغاً فالعرض بلا نهاية">
+            </label>
+            <span id="admSvcOut-${t.k}" class="adm-svc-out"></span>
           </div>`; }).join('')}
         <button onclick="adminSaveServicePrices(this)" style="width:100%;margin-top:14px;padding:12px;border-radius:11px;
           border:none;cursor:pointer;font-weight:800;font-size:13px;color:#1a1a1a;transition:all .2s;

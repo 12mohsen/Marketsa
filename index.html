@@ -707,6 +707,19 @@ html.dark .wl-btn.add-pf{background:#0d2a1a;border-color:#166534;color:#4ade80}
   .section-panel{overflow-x:clip}
   .pf-wrap{max-width:100%}
   .pf-wrap{padding:16px 14px 40px}
+  /* ══════════════════════════════════════════════════════════════════
+     💵 جدول أسعار الخدمات على الجوال — صفٌّ واحد لا يسع خمسة أعمدة
+     رُصد: عمود «بعد الخصم» يخرج خارج الشاشة، فيضبط الأدمن خصماً ولا
+     يرى نتيجته — وهو العمود الوحيد الذي يُراجَع به الرقم قبل الحفظ.
+     ▸ فيُكدَّس: الاسم سطراً، والحقول الأربعة تتقاسم العرض، والنتيجة
+       سطراً أسفلها. ورؤوس الأعمدة تُخفى لأن لكل حقلٍ نصَّه الداخليّ.
+     ══════════════════════════════════════════════════════════════════ */
+  .adm-svc-head{display:none}
+  .adm-svc-row{flex-wrap:wrap;gap:6px;padding:10px 0}
+  .adm-svc-row>span:first-child{flex:1 0 100%;font-weight:800;margin-bottom:2px}
+  .adm-svc-row input{flex:1 1 0;width:auto !important;min-width:0;text-align:center}
+  .adm-svc-out{flex:1 0 100%;width:auto !important;text-align:center !important;
+               background:var(--surf-alt);border-radius:8px;padding:5px 0;margin-top:2px}
   .pf-summary{grid-template-columns:1fr 1fr;gap:8px}
   .pf-sum-val{font-size:18px}
   .pf-card-metrics{grid-template-columns:1fr 1fr}
@@ -5216,7 +5229,7 @@ function renderAdminSection() {
           <br>⏳ <b style="color:#fcd34d">مدّته:</b> بالأيام — يبدأ العدّ من <b>لحظة الحفظ</b>، وبعدها يعود السعر إلى أصله تلقائياً.
           اتركها فارغة فالعرض بلا نهاية. ولا يُصفَّر العدّاد إلا إن غيّرتَ النسبة أو المدّة.
         </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:0 0 6px;font-size:10px;color:var(--txt-m)">
+        <div class="adm-svc-head" style="display:flex;align-items:center;gap:8px;padding:0 0 6px;font-size:10px;color:var(--txt-m)">
           <span style="flex:1"></span>
           <span style="width:92px;text-align:center">السعر ر.س</span>
           <span style="width:66px;text-align:center">أيام</span>
@@ -5225,7 +5238,7 @@ function renderAdminSection() {
           <span style="width:132px;text-align:center">بعد الخصم</span>
         </div>
         ${tabs.map(t => { const g = ((s.servicePrices || {})[t.k]) || {}; return `
-          <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)">
+          <div class="adm-svc-row" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)">
             <span style="flex:1;font-size:12.5px;color:var(--txt)">${t.t}</span>
             <input id="admSvc-${t.k}-price" type="number" min="0" step="any" placeholder="السعر ر.س" value="${g.price != null ? g.price : ''}"
               oninput="admOffPreview('${t.k}')"
@@ -5235,10 +5248,10 @@ function renderAdminSection() {
             <input id="admSvc-${t.k}-off" type="number" min="0" max="100" step="1" placeholder="٪" value="${(Number(g.off) || 0) > 0 ? g.off : ''}"
               oninput="admOffPreview('${t.k}')" title="نسبة الخصم من 1 إلى 100 — اتركه فارغاً فلا عرض"
               style="width:72px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fcd34d;font-size:11.5px;font-weight:800;outline:none;font-family:inherit;text-align:center">
-            <input id="admSvc-${t.k}-offdays" type="number" min="0" step="1" placeholder="أيام" value="${(Number(g.off_days) || 0) > 0 ? g.off_days : ''}"
+            <input id="admSvc-${t.k}-offdays" type="number" min="0" step="1" placeholder="مدّة العرض" value="${(Number(g.off_days) || 0) > 0 ? g.off_days : ''}"
               oninput="admOffPreview('${t.k}')" title="مدّة العرض بالأيام — يبدأ العدّ من لحظة الحفظ. اتركه فارغاً فالعرض بلا نهاية"
               style="width:72px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fcd34d;font-size:11.5px;font-weight:800;outline:none;font-family:inherit;text-align:center">
-            <span id="admSvcOut-${t.k}" style="width:132px;text-align:center;font-size:11px;font-weight:800;color:var(--txt-m);white-space:nowrap;line-height:1.5"></span>
+            <span id="admSvcOut-${t.k}" class="adm-svc-out" style="width:132px;text-align:center;font-size:11px;font-weight:800;color:var(--txt-m);white-space:nowrap;line-height:1.5"></span>
           </div>`; }).join('')}
         <button onclick="adminSaveServicePrices(this)" style="width:100%;margin-top:14px;padding:12px;border-radius:11px;
           border:none;cursor:pointer;font-weight:800;font-size:13px;color:#1a1a1a;transition:all .2s;

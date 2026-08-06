@@ -2290,8 +2290,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-04-v438';
-console.log('%c[تداول بلس] البناء: 2026-08-04-v438 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-06-v439';
+console.log('%c[تداول بلس] البناء: 2026-08-06-v439 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -4268,6 +4268,41 @@ function _offPrice(base, off) {
   if (b <= 0 || o <= 0) return b;
   return Math.max(SVC_MIN_CHARGE, Math.round(b * (1 - o / 100) * 100) / 100);
 }
+/* ══════════════════════════════════════════════════════════════════════
+   ⏳ مدّة العرض — عرضٌ بلا نهاية ليس عرضاً
+
+   يضبط الأدمن `off_days` (يوم · يومان · أسبوع…)، ويُختم `off_start` لحظةَ
+   إنشاء العرض أو تغييره. فإذا انقضت المدّة عاد السعر إلى أصله **تلقائياً**
+   بلا أن يتذكّر أحد.
+
+   ▸ ولماذا يُحفظ `off_start` ولا يُكتفى بتاريخ انتهاء؟ لأن الأدمن يفكّر
+     بالمدّة («يومين») لا بالتاريخ، والتاريخ يُشتقّ منها.
+   ▸ ولا يُصفَّر العدّاد عند كل حفظ: من يعدّل سعر رادار يجب ألّا يُمدّد
+     عرض المحفظة بلا قصد. يُصفَّر **فقط** إن تغيّرت النسبة أو المدّة.
+   ▸ و`off_days = 0` تعني عرضاً مفتوحاً بلا نهاية — السلوك القديم كما هو.
+   ▸ والوقت من `nowTrusted()` لا من جهاز المستخدم: ساعةٌ مُقدَّمة على
+     جهازه كانت ستُنهي عرضاً قائماً أو تُحيي منتهياً.
+   ══════════════════════════════════════════════════════════════════════ */
+function _offState(g) {
+  const off = Math.max(0, Math.min(100, Number(g && g.off) || 0));
+  if (off <= 0) return { off: 0, active: false, days: 0, endsAt: null, msLeft: null };
+  const days = Math.max(0, Number(g.off_days) || 0);
+  if (days <= 0) return { off, active: true, days: 0, endsAt: null, msLeft: null };   // بلا نهاية
+  const st = g.off_start ? Date.parse(g.off_start) : NaN;
+  if (!isFinite(st)) return { off, active: true, days, endsAt: null, msLeft: null };  // بلا ختم ⇒ لا نُسقطه
+  const endsAt = st + days * 864e5;
+  const msLeft = endsAt - nowTrusted();
+  return { off: msLeft > 0 ? off : 0, active: msLeft > 0, days, endsAt, msLeft };
+}
+/* ⏱️ ما بقي من العرض بصيغةٍ تُقرأ */
+function _offLeftTxt(ms) {
+  if (ms == null) return '';
+  if (ms <= 0) return 'انتهى';
+  const d = Math.floor(ms / 864e5), h = Math.floor((ms % 864e5) / 36e5), m = Math.floor((ms % 36e5) / 6e4);
+  if (d > 0) return 'يبقى ' + d + ' يوم' + (h ? ' و' + h + ' ساعة' : '');
+  if (h > 0) return 'يبقى ' + h + ' ساعة' + (m ? ' و' + m + ' دقيقة' : '');
+  return 'يبقى ' + Math.max(1, m) + ' دقيقة';
+}
 function _svcPrice(k) {
   const u = _subInfo(userRestrictions, k);
   if (u.plan === 'paid' && (u.price || 0) > 0)
@@ -4275,9 +4310,11 @@ function _svcPrice(k) {
   const g = (appSettings && appSettings.servicePrices && appSettings.servicePrices[k]) || null;
   if (g && (Number(g.price) || 0) > 0) {
     const base = Number(g.price) || 0;
-    const off  = Math.max(0, Math.min(100, Number(g.off) || 0));
-    const eff  = _offPrice(base, off);
-    return { price: eff, base: base, off: (eff < base ? off : 0), days: Number(g.days) || 0, expired: false };
+    const os   = _offState(g);                       // ⏳ العرض المنتهي = لا عرض
+    const eff  = _offPrice(base, os.off);
+    return { price: eff, base: base, off: (eff < base ? os.off : 0),
+             offEndsAt: os.endsAt, offMsLeft: os.msLeft,
+             days: Number(g.days) || 0, expired: false };
   }
   return { price: 0, base: 0, off: 0, days: 0, expired: false };
 }
@@ -4294,8 +4331,23 @@ window.admOffPreview = function (k) {
     if (off <= 0)  { out.textContent = base + ' ر.س'; out.style.color = 'var(--txt-m)'; return; }
     const eff = _offPrice(base, off);
     const floored = (eff === SVC_MIN_CHARGE && base * (1 - off / 100) < SVC_MIN_CHARGE);
+    /* ⏳ اعرض متى ينتهي — من الحفظ السابق إن لم يتغيّر شيء، أو من الآن إن تغيّر */
+    const dEl = document.getElementById('admSvc-' + k + '-offdays');
+    const od = Math.max(0, parseInt(dEl && dEl.value, 10) || 0);
+    let tail = '';
+    if (od > 0) {
+      const cur = (appSettings && appSettings.servicePrices && appSettings.servicePrices[k]) || {};
+      const same = (Number(cur.off) || 0) === off && (Number(cur.off_days) || 0) === od;
+      const st = (same && cur.off_start) ? Date.parse(cur.off_start) : nowTrusted();
+      const ends = st + od * 864e5;
+      const left = ends - nowTrusted();
+      tail = '<br><span style="font-size:9px;color:' + (left > 0 ? '#fcd34d' : '#f87171') + '">'
+        + (left > 0 ? _offLeftTxt(left) : 'انتهى') + '</span>';
+    } else if (off > 0) {
+      tail = '<br><span style="font-size:9px;color:var(--txt-m)">بلا نهاية</span>';
+    }
     out.innerHTML = '<span style="color:#4ade80">' + eff + ' ر.س</span>'
-      + (floored ? '<br><span style="font-size:9px;color:#fcd34d">الحدّ الأدنى</span>' : '');
+      + (floored ? '<br><span style="font-size:9px;color:#fcd34d">الحدّ الأدنى</span>' : '') + tail;
   } catch (e) {}
 };
 
@@ -4728,7 +4780,8 @@ function openPayModal(secKey) {
        { k: 'analysis', t: '⚡ تحليل السوق' }];
   const payItems = defs.map(d => {
     const p = _svcPrice(d.k);
-    return { k: d.k, label: _payLabel(d.k), price: p.price, base: p.base, off: p.off, days: p.days, expired: p.expired };
+    return { k: d.k, label: _payLabel(d.k), price: p.price, base: p.base, off: p.off,
+             offMsLeft: p.offMsLeft, days: p.days, expired: p.expired };
   });
   const priced = payItems.filter(it => it.price > 0);
   /* الاختيار المبدئي: القسم القادم من الزر إن كان مسعّراً، وإلا كل الخدمات المسعّرة */
@@ -4794,6 +4847,7 @@ function openPayModal(secKey) {
             <span style="min-width:0">
               <span style="font-size:13px;font-weight:700;color:var(--txt)">${it.label}</span>
               ${avail && it.off > 0 ? `<span style="display:inline-block;margin-inline-start:6px;background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.5);border-radius:20px;padding:1px 7px;font-size:9.5px;font-weight:900;white-space:nowrap">🎁 عرض −${it.off}%</span>` : ''}
+              ${avail && it.off > 0 && it.offMsLeft != null ? `<span style="display:inline-block;margin-inline-start:5px;font-size:9.5px;font-weight:800;color:#fcd34d;white-space:nowrap">⏳ ${_offLeftTxt(it.offMsLeft)}</span>` : ''}
               ${avail && it.days ? `<span style="font-size:10.5px;color:var(--txt-m);display:block">المدة: ${it.days} يوم${it.expired ? ' · ⏳ منتهٍ' : ''}</span>` : ''}
             </span>
           </span>
@@ -5159,14 +5213,16 @@ function renderAdminSection() {
         <div style="font-size:11px;color:var(--txt-m);line-height:1.7;margin-bottom:12px">
           هذه الأسعار العامة تظهر لكل المستخدمين في صفحة الدفع لكل قسم. (سعر المستخدم الخاص إن وُجد يبقى أولوية له.)
           <br>🎁 <b style="color:#fcd34d">العرض:</b> اكتب نسبة الخصم (١–١٠٠٪) ويظهر للمستخدم السعر مشطوباً بجانب الجديد.
-          اتركه فارغاً أو صفراً فلا عرض.
+          <br>⏳ <b style="color:#fcd34d">مدّته:</b> بالأيام — يبدأ العدّ من <b>لحظة الحفظ</b>، وبعدها يعود السعر إلى أصله تلقائياً.
+          اتركها فارغة فالعرض بلا نهاية. ولا يُصفَّر العدّاد إلا إن غيّرتَ النسبة أو المدّة.
         </div>
         <div style="display:flex;align-items:center;gap:8px;padding:0 0 6px;font-size:10px;color:var(--txt-m)">
           <span style="flex:1"></span>
           <span style="width:92px;text-align:center">السعر ر.س</span>
           <span style="width:66px;text-align:center">أيام</span>
           <span style="width:72px;text-align:center">🎁 خصم ٪</span>
-          <span style="width:96px;text-align:center">بعد الخصم</span>
+          <span style="width:72px;text-align:center">⏳ مدّته</span>
+          <span style="width:132px;text-align:center">بعد الخصم</span>
         </div>
         ${tabs.map(t => { const g = ((s.servicePrices || {})[t.k]) || {}; return `
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)">
@@ -5179,7 +5235,10 @@ function renderAdminSection() {
             <input id="admSvc-${t.k}-off" type="number" min="0" max="100" step="1" placeholder="٪" value="${(Number(g.off) || 0) > 0 ? g.off : ''}"
               oninput="admOffPreview('${t.k}')" title="نسبة الخصم من 1 إلى 100 — اتركه فارغاً فلا عرض"
               style="width:72px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fcd34d;font-size:11.5px;font-weight:800;outline:none;font-family:inherit;text-align:center">
-            <span id="admSvcOut-${t.k}" style="width:96px;text-align:center;font-size:11px;font-weight:800;color:var(--txt-m);white-space:nowrap"></span>
+            <input id="admSvc-${t.k}-offdays" type="number" min="0" step="1" placeholder="أيام" value="${(Number(g.off_days) || 0) > 0 ? g.off_days : ''}"
+              oninput="admOffPreview('${t.k}')" title="مدّة العرض بالأيام — يبدأ العدّ من لحظة الحفظ. اتركه فارغاً فالعرض بلا نهاية"
+              style="width:72px;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);color:#fcd34d;font-size:11.5px;font-weight:800;outline:none;font-family:inherit;text-align:center">
+            <span id="admSvcOut-${t.k}" style="width:132px;text-align:center;font-size:11px;font-weight:800;color:var(--txt-m);white-space:nowrap;line-height:1.5"></span>
           </div>`; }).join('')}
         <button onclick="adminSaveServicePrices(this)" style="width:100%;margin-top:14px;padding:12px;border-radius:11px;
           border:none;cursor:pointer;font-weight:800;font-size:13px;color:#1a1a1a;transition:all .2s;
@@ -6000,7 +6059,20 @@ async function adminSaveServicePrices(btn) {
     /* 🎁 نسبة العرض — تُحصر بين 0 و100 هنا كذلك، فلا تُكتب قيمةٌ فاسدة
        في القاعدة يقرأها الخادم لاحقاً بلا حارس. */
     const off = Math.max(0, Math.min(100, parseInt(oEl && oEl.value, 10) || 0));
-    if (price > 0) sp[k] = off > 0 ? { price, days, off } : { price, days };
+    const odEl = document.getElementById('admSvc-' + k + '-offdays');
+    const offDays = Math.max(0, parseInt(odEl && odEl.value, 10) || 0);
+    if (price <= 0) return;
+    if (off <= 0) { sp[k] = { price, days }; return; }
+    /* ⏳ ختمُ البداية: يُحفظ كما هو إن لم تتغيّر النسبة ولا المدّة.
+       فمن يعدّل سعر رادار لا يُمدّد عرض المحفظة بلا أن يدري — وتمديدٌ
+       صامتٌ لعرضٍ يعني بيعاً بسعرٍ لم تقصده. */
+    const prev = (appSettings && appSettings.servicePrices && appSettings.servicePrices[k]) || {};
+    const unchanged = (Number(prev.off) || 0) === off && (Number(prev.off_days) || 0) === offDays && prev.off_start;
+    sp[k] = { price, days, off };
+    if (offDays > 0) {
+      sp[k].off_days = offDays;
+      sp[k].off_start = unchanged ? prev.off_start : new Date(nowTrusted()).toISOString();
+    }
   });
   appSettings = Object.assign({}, appSettings, { servicePrices: sp });
   const { error } = await sb.from('app_settings')

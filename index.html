@@ -2338,8 +2338,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-06-v442';
-console.log('%c[تداول بلس] البناء: 2026-08-06-v442 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-07-v443';
+console.log('%c[تداول بلس] البناء: 2026-08-07-v443 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2349,6 +2349,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-06-v442 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v443', '📜 شارة الموافقة كانت تتّهم الجميع بغير حقّ — القاعدة تقول ٧ وافقوا والشاشة تقول لا أحد، لأن استدعاء `admin_consents` يأخذ البيانات ويُهمل `error`، ومكتبة Supabase تُرجع الخطأ ولا ترميه فلا يلتقطه `catch`. فصار العجز عن القراءة حالةً ثالثة معلَنة «⚠️ غير معروفة» لا تُخلط بالرفض — فـ«لم يوافق» ادّعاءٌ على شخص لا يُقال عند الجهل'],
     ['v442', '🈯 رسائل تلجرام ونشاط الإشراف بالعربية كاملةً — كان `bank_transfer_toggle` يخرج مفتاحاً إنجليزياً عارياً وسط نصٍّ عربيّ، لأن جدول الترجمة في دالّة الخادم وجدول التطبيق منفصلان ولم يُحدَّثا. وأربعةُ إجراءاتٍ أخرى كانت تسقط من عدّادات النشاط. والإجراءُ غير المترجَم صار يُعلَّم صراحةً بدل أن يظهر عارياً'],
     ['v441', '💵 جدول أسعار الخدمات على الجوال — بطاقةٌ لكل خدمة وعنوانٌ فوق كل حقل. كانت أربعةَ مربّعاتٍ متطابقةٍ بلا هويّة لأن `placeholder` يختفي أوّلَ ما تُكتب قيمة، و«بعد الخصم» يخرج خارج الشاشة. وسببُ فشل إصلاحِ v439: النمطُ السطريّ `style="flex:1"` يهزم قاعدةَ الجوال — فنُقلت الأنماط إلى CSS'],
     ['v440', '🏦 مفتاح إظهار/إخفاء التحويل البنكي بيد الأدمن — كانت تُعرض حساباتٌ تجريبية (آيبان أصفار) لكل مستخدم، فمن يحوّل إليها يخسر ماله ويصلك إشعارٌ بتحويلٍ لم يقع فتظنّه واقعاً. والإخفاء يشمل القسم كلّه لا الحسابات وحدها: إبقاءُ زرّ «تم التحويل» بلا حساباتٍ يُبلّغ عن تحويلٍ إلى لا شيء'],
@@ -6670,7 +6671,7 @@ async function adminLoadStats() {
 }
 
 /* ── قائمة المستخدمين وإدارة قيود كل مستخدم ── */
-let _admUsers = [], _admRestr = {}, _admConsent = {};
+let _admUsers = [], _admRestr = {}, _admConsent = {}, _admConsentErr = null;
 const ADMIN_TAB_DEFS = [
   { k: 'watchlist', t: '📁 المحفظة' },
   { k: 'monitor',   t: '👁️ المراقبة' },
@@ -6695,12 +6696,27 @@ async function adminLoadUsers() {
       sb.from('user_restrictions').select('*'),
     ]);
     if (e1) throw e1;
-    /* 📜 موافقات الشروط (من auth.users عبر دالة آمنة للأدمن) — تجاهل الفشل بصمت */
+    /* ══════════════════════════════════════════════════════════════════
+       📜 موافقات الشروط (من auth.users عبر دالة آمنة للأدمن)
+       🐛 كان: `const { data: cons } = await sb.rpc(...)` — يأخذ البيانات
+          ويُهمل `error`. ومكتبة Supabase **لا ترمي استثناءً**، بل تُرجع
+          الخطأ في `error` — فالـ`try/catch` حوله لا يلتقط شيئاً، ويسقط
+          الخطأ في الفراغ، فيبقى الجدول فارغاً وتُطبع «لم يوافق» على
+          الجميع بثقة. رُصد: القاعدة تقول ٧ وافقوا والشاشة تقول لا أحد.
+       ▸ و«لم يوافق» ادّعاءٌ على شخص. قولها لأننا عجزنا عن القراءة خطأ
+         في حقّه — فصار العجز يُعلَن حالةً ثالثة لا يُخلط بالرفض.
+       ══════════════════════════════════════════════════════════════════ */
     _admConsent = {};
+    _admConsentErr = null;
     try {
-      const { data: cons } = await sb.rpc('admin_consents');
-      (cons || []).forEach(c => { if (c && c.email) _admConsent[c.email.toLowerCase()] = c; });
-    } catch (e) {}
+      const { data: cons, error: ce } = await sb.rpc('admin_consents');
+      if (ce) {
+        _admConsentErr = ce.message || String(ce);
+        console.warn('[موافقات الشروط] تعذّرت القراءة:', _admConsentErr);
+      } else {
+        (cons || []).forEach(c => { if (c && c.email) _admConsent[c.email.toLowerCase()] = c; });
+      }
+    } catch (e) { _admConsentErr = (e && e.message) || 'خطأ غير متوقّع'; }
     _admUsers = users || [];
     /* علّم المسجّلين الحاليين كمقروءين حتى لا يتكرّر تنبيه من رآهم الأدمن */
     try { const _nw = _admUsers.map(u => u.created_at).filter(Boolean).sort().pop(); if (_nw) localStorage.setItem('tp_admin_newuser_seen', _nw); } catch (e) {}
@@ -6937,8 +6953,11 @@ function adminRenderUsers(query) {
       const blurBadge = _blurBadgeN
         ? ' <span title="القسم معروض ضبابياً في ' + _blurBadgeN + ' قسم" style="display:inline-block;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid rgba(148,163,184,.45);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">🌫️ مظلَّل ' + _blurBadgeN + '</span>'
         : '';
+      /* 📜 ثلاث حالات لا اثنتان: وافق · لم يوافق · تعذّرت القراءة */
       const _cons = _admConsent[(u.email || '').toLowerCase()];
-      const consentBadge = (_cons && _cons.agreed)
+      const consentBadge = _admConsentErr
+        ? ' <span title="تعذّرت قراءة الموافقات: ' + String(_admConsentErr).replace(/"/g, "'") + ' — لا يُستنتج من هذا أنه لم يوافق" style="display:inline-block;background:rgba(245,158,11,.16);color:#fcd34d;border:1px solid rgba(245,158,11,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">⚠️ الموافقة غير معروفة</span>'
+        : (_cons && _cons.agreed)
         ? ' <span title="' + (_cons.agreed_at ? 'وافق في ' + new Date(_cons.agreed_at).toLocaleString('en-GB') : 'وافق') + '" style="display:inline-block;background:rgba(74,222,128,.16);color:#86efac;border:1px solid rgba(74,222,128,.45);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">وافق ✓</span>'
         : ' <span title="لم يوافق على الشروط بعد" style="display:inline-block;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid rgba(148,163,184,.4);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:700;direction:rtl;white-space:nowrap">لم يوافق</span>';
       return `

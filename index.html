@@ -2338,8 +2338,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-07-v444';
-console.log('%c[تداول بلس] البناء: 2026-08-07-v444 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-07-v445';
+console.log('%c[تداول بلس] البناء: 2026-08-07-v445 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2349,6 +2349,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-07-v444 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v445', '📱 تعديلات المشرف تصل تلجرام أخيراً — رمز البوت في localStorage أي على جهاز الأدمن وحده، فالمشرف يعجز عن الإرسال بصمت، والخادم كان يتخطّى user_edit و bulk_apply عمداً بحجّة أن التطبيق يرسلها ⇒ تعديلُ المشرف لا يصل أحداً. الآن: من أرسل يُعلّم صفّه بـ«[tg✓]» ومن عجز يتكفّل به الخادم. والردّ على الدعم كان يصل لأنه يمرّ بالخادم أصلاً'],
     ['v444', '🛡️ صفّ المشرف لم يعد يُرفَع عليه «⏳ اشتراك منتهٍ» بالأحمر — عضو فريق الإشراف يتجاوز بوابة القفل وقفل الأهداف والتظليل جميعاً، فالراية صحيحةٌ عن بياناته كاذبةٌ عن وصوله. وضررها عمليّ: تدفع الأدمن إلى تجديد اشتراكٍ لمن لا يحتاجه'],
     ['v443', '📜 شارة الموافقة كانت تتّهم الجميع بغير حقّ — القاعدة تقول ٧ وافقوا والشاشة تقول لا أحد، لأن استدعاء `admin_consents` يأخذ البيانات ويُهمل `error`، ومكتبة Supabase تُرجع الخطأ ولا ترميه فلا يلتقطه `catch`. فصار العجز عن القراءة حالةً ثالثة معلَنة «⚠️ غير معروفة» لا تُخلط بالرفض — فـ«لم يوافق» ادّعاءٌ على شخص لا يُقال عند الجهل'],
     ['v442', '🈯 رسائل تلجرام ونشاط الإشراف بالعربية كاملةً — كان `bank_transfer_toggle` يخرج مفتاحاً إنجليزياً عارياً وسط نصٍّ عربيّ، لأن جدول الترجمة في دالّة الخادم وجدول التطبيق منفصلان ولم يُحدَّثا. وأربعةُ إجراءاتٍ أخرى كانت تسقط من عدّادات النشاط. والإجراءُ غير المترجَم صار يُعلَّم صراحةً بدل أن يظهر عارياً'],
@@ -7777,7 +7778,7 @@ function adminRenderActivity() {
       <div style="max-height:230px;overflow-y:auto;border-top:1px dashed var(--bdr);padding-top:6px">
         ${items.slice(0, 80).map(a => { const m = _ACT_META[a.action] || { icon:'•', label:a.action };
           return `<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11px;line-height:1.6">
-            <span>${m.icon} <b style="color:var(--txt)">${m.label}</b></span>${a.target ? ` · <span style="direction:ltr">${String(a.target).replace(/</g,'&lt;')}</span>` : ''}<span style="color:var(--txt-m);font-size:9.5px"> · ${new Date(a.created_at).toLocaleString('ar',{dateStyle:'short',timeStyle:'short'})}</span>${a.details ? `<div style="color:var(--txt-m);font-size:10px;margin-top:1px;word-break:break-word;overflow-wrap:anywhere">${String(a.details).replace(/</g,'&lt;')}</div>` : ''}
+            <span>${m.icon} <b style="color:var(--txt)">${m.label}</b></span>${a.target ? ` · <span style="direction:ltr">${String(a.target).replace(/</g,'&lt;')}</span>` : ''}<span style="color:var(--txt-m);font-size:9.5px"> · ${new Date(a.created_at).toLocaleString('ar',{dateStyle:'short',timeStyle:'short'})}</span>${a.details ? `<div style="color:var(--txt-m);font-size:10px;margin-top:1px;word-break:break-word;overflow-wrap:anywhere">${String(a.details).replace(/^\[tg✓\]\s*/,'').replace(/</g,'&lt;')}</div>` : ''}
           </div>`; }).join('')}
       </div>
     </div>`;
@@ -7817,9 +7818,31 @@ function _admSelectedEmails() {
    ▸ لا تغيير ⇒ لا رسالة (سلوكٌ مقصود، كي لا يُغرق السجلّ بضجيج).
    ▸ لا تُسقط الحفظ أبداً: كل ما فيها داخل try.
    ══════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   📱 هل هذا الجهاز قادرٌ على إرسال تلجرام أصلاً؟
+   رمز البوت والوجهة في `localStorage` — أي **على جهاز الأدمن وحده**.
+   فالمشرف على جهازه لا يملكهما، و`tgSend` تُرجع {ok:false} فوراً بلا
+   ضجيج: يعدّل قيود مستخدم، ولا يصل تلجرام شيء. رُصد فعلاً.
+   ▸ ولا يُحلّ بنقل الرمز إلى `app_settings` — فجدول الإعدادات مقروءٌ
+     للجميع، فيصير رمز بوتك في متناول كل زائر.
+   ▸ فالحلّ: من لا يستطيع الإرسال يترك الأمر للخادم (دالّة notify)،
+     ومن أرسل يُعلّم صفّه بـ`[tg✓]` فلا يُرسَل مرّتين.
+   ══════════════════════════════════════════════════════════════════════ */
+const _TG_MARK = '[tg✓] ';
+function _tgDeviceReady() {
+  try {
+    return !!((localStorage.getItem('tg_bot_token') || '').trim() &&
+              (localStorage.getItem('tg_chat_id')   || '').trim());
+  } catch (_) { return false; }
+}
+
 function _admNotifyChanges(rows, kindLabel) {
   try {
-    if (typeof window.tgNotify !== 'function' || !Array.isArray(rows) || !rows.length) return;
+    if (!Array.isArray(rows) || !rows.length) return false;
+    if (typeof window.tgNotify !== 'function' || !_tgDeviceReady()) {
+      console.info('[tg] هذا الجهاز غير مضبوط للإرسال — يتكفّل الخادم بالإخطار');
+      return false;
+    }
     const nm = k => { const d = ADMIN_TAB_DEFS.find(t => t.k === k); return d ? d.t : k; };
     const diffs = rows.map(r => {
       const old = _admRestr[r.email] || {};
@@ -7873,7 +7896,7 @@ function _admNotifyChanges(rows, kindLabel) {
 
     if (!diffs.length) {
       console.info('[tg] لم يتغيّر شيء فعلياً — لم تُرسل رسالة (هذا سلوك مقصود)');
-      return;
+      return true;   // لا فرق ⇒ لا يُخطِر الخادم أيضاً
     }
     /* 👑/🛡️ مَن نفّذ التعديل — أدمن رئيسي أم مشرف، وبريده */
     const _who  = (typeof sbUser !== 'undefined' && sbUser && sbUser.email) ? sbUser.email : '—';
@@ -7886,7 +7909,8 @@ function _admNotifyChanges(rows, kindLabel) {
       window.tgNotify('⚙️ <b>' + title + '</b>\n' + head + '👥 ' + diffs.length + ' مستخدم\n' + diffs[0].bits.join('\n') +
         '\n\n' + diffs.slice(0, 8).map(d => '• ' + d.email).join('\n') + (diffs.length > 8 ? '\n…' : ''));
     }
-  } catch (e) {}
+    return true;
+  } catch (e) { return false; }
 }
 
 async function adminBulkApply(allMode) {
@@ -7944,11 +7968,12 @@ async function adminBulkApply(allMode) {
   const { error } = await sb.from('user_restrictions').upsert(rows);
   if (error) { _admErr(error, 'فشل التطبيق الجماعي'); return; }
   /* 📨 قبل تحديث _admRestr — وإلا قارنّا الجديد بالجديد فلا يظهر فرق */
-  _admNotifyChanges(rows, allMode ? 'تطبيق على الكل' : 'تطبيق على المحدد');
+  const _tgSent = _admNotifyChanges(rows, allMode ? 'تطبيق على الكل' : 'تطبيق على المحدد');
   rows.forEach(r => { _admRestr[r.email] = r; });
   let _presetTxt = document.getElementById('admBulkPreset').selectedOptions[0].text;
   if (preset === 'trialDays') _presetTxt = '🎁 تجربة مجانية ' + _trialDays + ' يوم';
-  logAdminAction('bulk_apply', emails.length + ' مستخدم' + (allMode ? ' (الكل)' : ''), _presetTxt);
+  logAdminAction('bulk_apply', emails.length + ' مستخدم' + (allMode ? ' (الكل)' : ''),
+                 (_tgSent ? _TG_MARK : '') + _presetTxt);
   showToast(`✅ طُبّق «${_presetTxt}» على ${emails.length} مستخدم${allMode ? ' (الكل عدا المستثنين 🛡️)' : ''}`);
   adminLoadUsers();
 }
@@ -8292,7 +8317,7 @@ async function adminSaveUser() {
   /* 📨 تنبيه تلجرام — «ما نُفِّذ فقط»، بالدالّة المشتركة `_admNotifyChanges`.
      كان هذا المنطق مكتوباً هنا بالكامل، فحُرم منه زرّا «تطبيق على المحدد»
      و«على الكل». استُخرج كما هو حرفاً بحرف — لا سلوك تغيّر هنا. */
-  _admNotifyChanges(rows, _admPanelBulk ? 'تعديل جماعي' : 'تعديل مستخدم');
+  const _tgSent = _admNotifyChanges(rows, _admPanelBulk ? 'تعديل جماعي' : 'تعديل مستخدم');
   rows.forEach(r => { _admRestr[r.email] = r; });
   (function(){
     const paidSecs = SUB_SECTION_DEFS.filter(d => secIn[d.k] && secIn[d.k].plan === 'paid').map(d => d.t.replace(/^\S+\s/, ''));
@@ -8302,7 +8327,8 @@ async function adminSaveUser() {
     if (hidden_tabs.length) bits.push('إخفاء ' + hidden_tabs.length + ' قسم');
     if (no_popups) bits.push('🪟 منع منبثقات');
     if (blur_view) bits.push('🌫️ ضبابي');
-    logAdminAction('user_edit', rows.length === 1 ? rows[0].email : (rows.length + ' مستخدم'), bits.join(' · ') || 'تحديث قيود');
+    logAdminAction('user_edit', rows.length === 1 ? rows[0].email : (rows.length + ' مستخدم'),
+                   (_tgSent ? _TG_MARK : '') + (bits.join(' · ') || 'تحديث قيود'));
   })();
   showToast(`✅ حُفظت القيود لـ${rows.length} مستخدم — تسري عند فتحهم التطبيق`);
   const p = document.getElementById('adminUserPanel');

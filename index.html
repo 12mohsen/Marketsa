@@ -2338,8 +2338,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-07-v443';
-console.log('%c[تداول بلس] البناء: 2026-08-07-v443 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-07-v444';
+console.log('%c[تداول بلس] البناء: 2026-08-07-v444 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2349,6 +2349,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-07-v443 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v444', '🛡️ صفّ المشرف لم يعد يُرفَع عليه «⏳ اشتراك منتهٍ» بالأحمر — عضو فريق الإشراف يتجاوز بوابة القفل وقفل الأهداف والتظليل جميعاً، فالراية صحيحةٌ عن بياناته كاذبةٌ عن وصوله. وضررها عمليّ: تدفع الأدمن إلى تجديد اشتراكٍ لمن لا يحتاجه'],
     ['v443', '📜 شارة الموافقة كانت تتّهم الجميع بغير حقّ — القاعدة تقول ٧ وافقوا والشاشة تقول لا أحد، لأن استدعاء `admin_consents` يأخذ البيانات ويُهمل `error`، ومكتبة Supabase تُرجع الخطأ ولا ترميه فلا يلتقطه `catch`. فصار العجز عن القراءة حالةً ثالثة معلَنة «⚠️ غير معروفة» لا تُخلط بالرفض — فـ«لم يوافق» ادّعاءٌ على شخص لا يُقال عند الجهل'],
     ['v442', '🈯 رسائل تلجرام ونشاط الإشراف بالعربية كاملةً — كان `bank_transfer_toggle` يخرج مفتاحاً إنجليزياً عارياً وسط نصٍّ عربيّ، لأن جدول الترجمة في دالّة الخادم وجدول التطبيق منفصلان ولم يُحدَّثا. وأربعةُ إجراءاتٍ أخرى كانت تسقط من عدّادات النشاط. والإجراءُ غير المترجَم صار يُعلَّم صراحةً بدل أن يظهر عارياً'],
     ['v441', '💵 جدول أسعار الخدمات على الجوال — بطاقةٌ لكل خدمة وعنوانٌ فوق كل حقل. كانت أربعةَ مربّعاتٍ متطابقةٍ بلا هويّة لأن `placeholder` يختفي أوّلَ ما تُكتب قيمة، و«بعد الخصم» يخرج خارج الشاشة. وسببُ فشل إصلاحِ v439: النمطُ السطريّ `style="flex:1"` يهزم قاعدةَ الجوال — فنُقلت الأنماط إلى CSS'],
@@ -6908,8 +6909,20 @@ function adminRenderUsers(query) {
         if (x.expired) anyExpired = true; else anyActivePaid = true;
         subBits.push(`${d.t.replace(/^\S+\s/, '')}: ${x.expired ? '⏳منتهٍ' : (x.daysLeft !== null ? 'باقي ' + x.daysLeft + 'ي' : 'مفعّل')}${x.price ? ' (' + x.price + ' ر.س)' : ''}`);
       });
-      const subExpired = anyExpired && !r.blocked;
+      /* ══════════════════════════════════════════════════════════════════
+         🛡️ عضو فريق الإشراف لا تسري عليه الاشتراكات
+         `isAdmin()` (أدمن رئيسي أو مشرف) يتجاوز كلَّ حارسٍ في التطبيق:
+         بوابة القفل، وقفل الأهداف، والتظليل. فرايةُ «⏳ اشتراك منتهٍ»
+         الحمراء على صفّ مشرفٍ **صحيحةٌ عن بياناته وكاذبةٌ عن وصوله**.
+         ▸ وضررُها عمليّ لا تجميليّ: تدفع الأدمن إلى تجديد اشتراكٍ أو
+           إهداء أيامٍ لمن لا يحتاجها — فيُنفق مالاً ووقتاً على وهم.
+         ▸ فتُستبدل براية معلوماتية، ويبقى تفصيل الاشتراك مكتوباً كما هو
+           لأنه واقعٌ في القاعدة، ولو كان بلا أثر.
+         ══════════════════════════════════════════════════════════════════ */
+      const _isStaffRow = (u.role === 'supervisor') || _isAdminEmail((u.email || '').toLowerCase());
+      const subExpired = anyExpired && !r.blocked && !_isStaffRow;
       if (subBits.length) parts.push('💳 ' + subBits.join(' · '));
+      if (_isStaffRow && anyExpired) parts.push('🛡️ الاشتراكات لا تسري عليه — وصوله كامل بصفته من فريق الإشراف');
       if (r.sub_exempt) parts.push('🛡️ مستثنى من «على الكل»');
       if (r.blocked) parts.push('⛔ موقوف كلياً');
       else {
@@ -6945,7 +6958,9 @@ function adminRenderUsers(query) {
       const isMe = sbUser && u.email === sbUser.email;
       const expiredBadge = subExpired
         ? ' <span style="display:inline-block;background:rgba(248,113,113,.18);color:#fca5a5;border:1px solid rgba(248,113,113,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">⏳ اشتراك منتهٍ</span>'
-        : '';
+        : (_isStaffRow && anyExpired
+          ? ' <span title="اشتراكه منتهٍ في القاعدة، لكن عضو فريق الإشراف يتجاوز كل القيود — فلا حاجة لتجديده" style="display:inline-block;background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:700;direction:rtl;white-space:nowrap">🛡️ لا تسري عليه</span>'
+          : '');
       /* 🔒 شارتان بجانب البريد — لمحةٌ تُغني عن قراءة السطر كلّه */
       const lockBadge = _lockBadgeN
         ? ' <span title="الأهداف ووقف الخسارة مقفلة في ' + _lockBadgeN + ' قسم" style="display:inline-block;background:rgba(245,158,11,.16);color:#fcd34d;border:1px solid rgba(245,158,11,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">🔒 أهداف مقفلة ' + _lockBadgeN + '</span>'

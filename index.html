@@ -2338,8 +2338,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-07-v449';
-console.log('%c[تداول بلس] البناء: 2026-08-07-v449 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-07-v450';
+console.log('%c[تداول بلس] البناء: 2026-08-07-v450 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2349,6 +2349,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-07-v449 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v450', '💀 طبقةُ الإبلاغ عن أخطاء الكتابة كانت ميتةً كلُّها — ١٤ موضعاً تكتب في القاعدة داخل `try/catch`، ومكتبة Supabase لا ترمي استثناءً، فما مِن `catch` منها يعمل. النتيجة: «رُفعت N نتيجة» و«بُثّ جدول السوق» تُطبع ولو فشل الرفع، والمسار الاحتياطيّ لتسجيل التنبؤات لم يُنفَّذ قطّ. وأصلحتُ معها استنتاجاً بنيتُه على غياب تحذيرٍ لم يكن ليظهر أصلاً'],
     ['v449', '🧾 الاسترداد كان يُلغي أكثر ممّا استُردّ — رُصد حيّاً: عميل اشترى المحفظة وحدها، ثم حزمةً فيها المحفظة واللوحة الموحّدة. والتفعيل يُراكم الأيام، فلمّا استُردّت الحزمة أُغلقت المحفظة كلُّها وضاعت أيامٌ دفع ثمنها في عمليةٍ **لم تُستردّ**. الآن: يُطرح ما أسهمت به هذه العملية وحدها، وما بقي له رصيدٌ من دفعاتٍ أخرى يبقى مفتوحاً'],
     ['v448', '🔎 تمشيطٌ كامل: كل نداء Supabase صار يقرأ `error` (٦٧ من ٦٧). وأخطرها في تفعيل الاشتراك بعد الدفع — كان `prev = data || {}` يُهمل الخطأ، وكلُّ ما يُكتب مبنيٌّ على `prev`: فتعثّرُ قراءةٍ واحد يمحو اشتراكات المستخدم الأخرى ويرفع الإيقاف عن الموقوف، والشاشة تقول «✅ أُكّدت العملية». صار يُرمى الخطأ فيتوقّف كل شيء. ومعه: سقوط الشارت إلى مصدرٍ معدَّل بالتوزيعات لم يعد صامتاً'],
     ['v447', '🛡️ فشلُ قراءة القيود لم يعد يعني «لا قيود» — كانت `userRestrictions = data || {}` تُهمل `error`، فأيّ تعثّرٍ شبكيّ لحظيّ يُفرغ القيود: لا حجب ولا تظليل ولا إيقاف واشتراكٌ غير منتهٍ. وتُستدعى عند كل عودةٍ إلى التبويب. الآن: عند الفشل تبقى القيود السابقة، ولا يُوسَّع وصولٌ بناءً على جهل'],
@@ -3822,7 +3823,8 @@ async function _markOffline() {
   if (!sb || !sbUser) return;
   const past = new Date(Date.now() - 10 * 60 * 1000).toISOString();
   try {
-    await sb.from('profiles').update({ last_seen: past }).eq('id', sbUser.id);
+    const { error } = await sb.from('profiles').update({ last_seen: past }).eq('id', sbUser.id);
+    if (error) console.warn('[حضور] تعذّر وسم الخروج — قد يبدو متصلاً بعد خروجه:', error.message || error);
   } catch (e) {}
 }
 
@@ -4065,10 +4067,12 @@ async function syncProfileAndRestrictions() {
   _startSubWatch();
   /* سجّل ملف المستخدم (ليظهر في قائمة الأدمن) */
   try {
-    await sb.from('profiles').upsert({
+    /* فشلُه يُخفي المستخدم عن قائمة الأدمن كلّياً — فلا يُدار ولا يُسعَّر */
+    const { error } = await sb.from('profiles').upsert({
       id: sbUser.id, email: sbUser.email,
       display_name: authDisplayName(), last_seen: new Date().toISOString(),
     });
+    if (error) console.warn('[ملف] تعذّر تسجيل ملفّ المستخدم — قد لا يظهر في قائمة الأدمن:', error.message || error);
   } catch (e) {}
   /* 🛡️ اجلب دور المستخدم وصلاحياته الإشرافية من ملفه
      الفشل هنا يُسقط إلى 'user' — وهو الاتجاه الآمن (يُغلق لا يفتح)، لكنه
@@ -5099,7 +5103,11 @@ async function payNotifyTransfer(secKey) {
   /* 🧾 سجّل العملية في سجل المدفوعات (منظّم — يسهل رجوع الإدارة إليه) */
   try {
     if (sb && sbUser) {
-      await sb.from('payments').insert({
+      /* 💸 فشلُ هذا الصفّ يعني: العميل حوّل مالاً ولا سجلّ لعمليته.
+         وكان يمرّ صامتاً لأن `insert` لا يرمي. فيُعلَن الآن للعميل نفسه
+         — رسالةُ الدعم تصل على كل حال، لكنه يجب أن يعلم أن الإيصال
+         الآليّ لم يُسجَّل فيحتفظ بإشعار تحويله. */
+      const { error } = await sb.from('payments').insert({
         email: sbUser.email,
         sender_name: senderName,
         services: sel,
@@ -5111,6 +5119,10 @@ async function payNotifyTransfer(secKey) {
         message: text,
         status: 'pending',
       });
+      if (error) {
+        console.warn('[payments] تعذّر تسجيل العملية:', error.message || error);
+        showToast('⚠️ وصل بلاغك للإدارة، لكن لم يُسجَّل إيصالٌ آليّ — احتفظ بإشعار التحويل');
+      }
     }
   } catch (e) { console.warn('[payments] تعذّر تسجيل العملية:', e.message); }
   const m = document.getElementById('payModal');
@@ -6919,8 +6931,13 @@ async function adminDeleteUserConfirmed(email) {
     return;
   }
   /* تنظيف احتياطي من الجداول (الدالة السحابية تنظف أيضاً) */
-  try { await sb.from('user_restrictions').delete().eq('email', email); } catch (e) {}
-  try { await sb.from('profiles').delete().eq('email', email); } catch (e) {}
+  /* ⚠️ بقاءُ صفٍّ في `user_restrictions` بعد حذف الحساب ليس فوضى تنظيم:
+     من سجّل بنفس البريد لاحقاً **يرث قيوده القديمة** — إيقافاً أو تظليلاً
+     أو اشتراكاً منتهياً — بلا أن يفهم أحدٌ لماذا. */
+  { const { error } = await sb.from('user_restrictions').delete().eq('email', email);
+    if (error) console.warn('[حذف] بقيت قيود ' + email + ' في القاعدة — احذفها يدوياً:', error.message || error); }
+  { const { error } = await sb.from('profiles').delete().eq('email', email);
+    if (error) console.warn('[حذف] بقي ملفّ ' + email + ' في القاعدة:', error.message || error); }
   logAdminAction('delete_user', email, '');
   showToast('✅ حُذف الحساب نهائياً: ' + email);
   adminLoadUsers();
@@ -7102,13 +7119,17 @@ const _ACT_META = {
 async function logAdminAction(action, target, details) {
   try {
     if (!sb || !sbUser) return;
-    await sb.from('admin_activity').insert({
+    /* ⚠️ `insert` **لا يرمي استثناءً** — يُرجع {error}. فكان الـcatch
+       أدناه ميتاً لا يعمل أبداً، وفشلُ التسجيل يمرّ بلا أثر: الإجراء
+       يقع والسجلّ الذي يشهد عليه غائب، وأحدٌ لا يعلم. */
+    const { error } = await sb.from('admin_activity').insert({
       actor_email: sbUser.email,
       actor_role : isSuperAdmin() ? 'admin' : 'supervisor',
       action,
       target : target != null ? String(target).slice(0, 200) : null,
       details: details ? String(details).slice(0, 500) : null,
     });
+    if (error) console.warn('[نشاط الإشراف] تعذّر تسجيل الإجراء «' + action + '»:', error.message || error);
   } catch (e) { console.warn('[نشاط الإشراف] تعذّر تسجيل الإجراء:', e); }
 }
 
@@ -7332,7 +7353,8 @@ async function divUploadShared() {
   if (typeof sb === 'undefined' || !sb) return;
   if (!(typeof isAdmin === 'function' && isAdmin())) return;
   try {
-    await sb.from('dividends_shared').upsert({ id: 1, data: DIV_HISTORY, updated_at: new Date().toISOString() });
+    const { error } = await sb.from('dividends_shared').upsert({ id: 1, data: DIV_HISTORY, updated_at: new Date().toISOString() });
+    if (error) { console.warn('[div] ✗ لم تُرفع التوزيعات — يبقى الناس على القديم:', error.message || error); return; }
     console.info('[div] ✓ رُفعت بيانات التوزيعات للجميع');
   } catch (e) { console.warn('[div] رفع التوزيعات تعذّر:', e && e.message); }
 }
@@ -9071,11 +9093,14 @@ async function marketUploadShared(data) {
     if (typeof sb === 'undefined' || !sb) return;
     if (!(typeof isAdmin === 'function' && isAdmin())) return;
     if (!Array.isArray(data) || data.length < 2) return;
-    await sb.from('market_shared').upsert({
+    const { error } = await sb.from('market_shared').upsert({
       id: 1, data: data, rows_n: data.length - 1,
       fetched_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
+    /* ⚠️ «بُثّ» كانت تُطبع ولو فشل الرفع — فيطمئنّ الأدمن والناس على
+       جدولٍ قديم. وهذا جوهر أزمة «شمعة اليوم غير مرئية». */
+    if (error) { console.warn('[market] ✗ لم يُبَثّ جدول السوق — يبقى الناس على القديم:', error.message || error); return; }
     console.info('[market] 📤 بُثّ جدول السوق (' + (data.length - 1) + ' صفّاً) للجميع');
   } catch (e) { console.warn('[market] تعذّر البثّ:', e && e.message); }
 }
@@ -9382,11 +9407,12 @@ async function sahmkUploadShared(payload) {
   if (typeof sb === 'undefined' || !sb) return;
   if (!(typeof isAdmin === 'function' && isAdmin())) return;
   try {
-    await sb.from('sahmk_shared').upsert({
+    const { error } = await sb.from('sahmk_shared').upsert({
       id: 1, data: payload,
       fetched_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
+    if (error) { console.warn('[sahmk] ✗ لم تُرفع الأسعار — يبقى الناس على القديم:', error.message || error); return; }
     console.info('[sahmk] ✓ رُفعت الأسعار للجميع (' + ((payload.quotes || []).length) + ' سهم)');
   } catch (e) { console.warn('[sahmk] رفع الأسعار تعذّر:', e && e.message); }
 }
@@ -12128,7 +12154,8 @@ document.addEventListener('keydown', e => {
     });
     if (!rows_.length) { console.info('[plan] لا خطط لتسجيلها اليوم'); return; }
     try {
-      await sb.from('plan_outcomes').upsert(rows_, { onConflict: 'symbol,plan_date' });
+      const { error: _poErr } = await sb.from('plan_outcomes').upsert(rows_, { onConflict: 'symbol,plan_date' });
+      if (_poErr) { console.warn('[plan] ✗ لم تُسجَّل الخطط — لا محاسبة لها لاحقاً:', _poErr.message || _poErr); return; }
       console.info('[plan] 🎯 سُجّلت ' + rows_.length + ' خطة للمحاسبة'
         + ' · ذهبية: ' + rows_.filter(x => x.golden).length);
       /* ⚖️ ثم نحسم ما نضج من الخطط السابقة — بلا خادم، من تاريخك المخزَّن */
@@ -12192,13 +12219,16 @@ document.addEventListener('keydown', e => {
     /* الأعمدة الاختيارية: إن لم تُضَف بعد في القاعدة نُسقطها ولا نُعطّل التسجيل */
     const OPT = ['confl', 'above_vwap', 'vwap_pct', 'trig_vol', 'confirmed', 'liq20', 'el_clean', 'el_fit',
                  'build', 'wk_trend', 'plan_rr'];
-    try { await sb.from('predictions').upsert(rows, { onConflict: 'symbol,pred_date' }); }
-    catch (e) {
-      try {
-        const bare = rows.map(r => { const o = Object.assign({}, r); OPT.forEach(k => delete o[k]); return o; });
-        await sb.from('predictions').upsert(bare, { onConflict: 'symbol,pred_date' });
-        console.warn('[pred] سُجّلت بلا أعمدة المعايرة — نفّذ calib_columns.sql لتفعيل القياس');
-      } catch (e2) { console.warn('[pred] تعذّر تسجيل التنبؤات:', e2 && e2.message); }
+    /* ⚠️ المسار الاحتياطيّ أدناه كان **ميتاً**: `upsert` لا يرمي، فلا
+       يصل الـcatch أبداً. فإن غابت أعمدة المعايرة فشل التسجيل كلُّه
+       بصمت — لا تنبؤات مسجَّلة، ولا رسالةَ «نفّذ calib_columns.sql»،
+       والمعايرة كلُّها مبنيّة على جدولٍ فارغ. */
+    const { error: _pErr } = await sb.from('predictions').upsert(rows, { onConflict: 'symbol,pred_date' });
+    if (_pErr) {
+      const bare = rows.map(r => { const o = Object.assign({}, r); OPT.forEach(k => delete o[k]); return o; });
+      const { error: _pErr2 } = await sb.from('predictions').upsert(bare, { onConflict: 'symbol,pred_date' });
+      if (_pErr2) console.warn('[pred] تعذّر تسجيل التنبؤات:', _pErr2.message || _pErr2);
+      else console.warn('[pred] سُجّلت بلا أعمدة المعايرة — نفّذ calib_columns.sql لتفعيل القياس · السبب:', _pErr.message || _pErr);
     }
   }
   async function predLoadOutcomes() {
@@ -12326,8 +12356,13 @@ document.addEventListener('keydown', e => {
     const on = !(appSettings && appSettings.showPredStats);
     appSettings = Object.assign({}, appSettings, { showPredStats: on });
     try {
-      await sb.from('app_settings').upsert({ id: 1, data: appSettings, updated_at: new Date().toISOString() });
-      if (typeof showToast === 'function') showToast(on ? '👁️ أصبحت إحصائيات الدقّة ظاهرة للمستخدمين' : '🔒 أُخفيت إحصائيات الدقّة عن المستخدمين');
+      const { error } = await sb.from('app_settings').upsert({ id: 1, data: appSettings, updated_at: new Date().toISOString() });
+      /* كان يقول «أصبحت ظاهرة» ولو لم تُحفظ — والأدمن يمضي واثقاً */
+      if (error) {
+        appSettings.showPredStats = !on;
+        if (typeof showToast === 'function') showToast('⚠️ تعذّر الحفظ — لم يتغيّر شيء');
+        console.warn('[إعدادات] تعذّر حفظ إظهار الإحصائيات:', error.message || error);
+      } else if (typeof showToast === 'function') showToast(on ? '👁️ أصبحت إحصائيات الدقّة ظاهرة للمستخدمين' : '🔒 أُخفيت إحصائيات الدقّة عن المستخدمين');
     } catch (e) { if (typeof showToast === 'function') showToast('⚠️ تعذّر الحفظ'); }
     predUpdateStatsChips();
   }
@@ -13132,12 +13167,16 @@ document.addEventListener('keydown', e => {
         return Object.assign({}, r, { golden: g });
       });
       const nG = stamped.filter(r => r.golden).length;
-      await sb.from('radar_results').upsert({
+      const { error } = await sb.from('radar_results').upsert({
         id: 1, data: stamped,
         scanned_at: new Date().toISOString(),
         golden_n: nG,                       // للتشخيص السريع من القاعدة
         logic_v: (window.APP_BUILD || ''),  // أي إصدار أصدر هذا الحكم
       });
+      /* ⚠️ «رُفعت N نتيجة» كانت تُطبع ولو فشل الرفع — فيظنّ الأدمن أن
+         المسح وصل الناس، وهم على نتائج الأمس. وهذا بالضبط ما جعل
+         «شمعة اليوم» تغيب دون أن ينبّه شيء. */
+      if (error) { console.warn('[radar] ✗ لم تُرفع النتائج — يبقى الناس على مسحٍ قديم:', error.message || error); return; }
       console.log('[radar] رُفعت ' + stamped.length + ' نتيجة · ذهبية: ' + nG + ' · ' + (window.APP_BUILD || ''));
     } catch (e) { console.warn('[radar] رفع النتائج المشتركة تعذّر:', e && e.message); }
   }
@@ -16246,10 +16285,17 @@ document.addEventListener('keydown', e => {
     });
     try {
       /* أدرِج الجديد فقط (لا تلمس الموجود لتبقى الخطة والحالة مثبّتتين) */
-      if (trades.length) await sb.from('tracked_trades').upsert(trades, { onConflict: 'sym', ignoreDuplicates: true });
+      if (trades.length) {
+        const { error } = await sb.from('tracked_trades').upsert(trades, { onConflict: 'sym', ignoreDuplicates: true });
+        if (error) console.warn('[track] لم تُدرَج الصفقات الجديدة:', error.message || error);
+      }
       /* احذف ما لم يعد في المراقبة (الرموز أرقام، فالصيغة آمنة) */
-      if (syms.length) await sb.from('tracked_trades').delete().not('sym', 'in', '(' + syms.join(',') + ')');
-      else await sb.from('tracked_trades').delete().neq('sym', '__none__');
+      {
+        const { error } = syms.length
+          ? await sb.from('tracked_trades').delete().not('sym', 'in', '(' + syms.join(',') + ')')
+          : await sb.from('tracked_trades').delete().neq('sym', '__none__');
+        if (error) console.warn('[track] لم تُحذف الصفقات المرفوعة من المراقبة:', error.message || error);
+      }
     } catch (e) { console.warn('[track] مزامنة الصفقات تعذّرت:', e && e.message); }
   }
   window.watchTrackSync = watchTrackSync;
@@ -17212,7 +17258,8 @@ async function analysisUploadShared() {
   if (!(typeof isAdmin === 'function' && isAdmin())) return;
   if (!histAllDailyCache || !histAllDailyCache.bySymbol || !Object.keys(histAllDailyCache.bySymbol).length) return;
   try {
-    await sb.from('analysis_daily').upsert({ id: 1, data: histAllDailyCache.bySymbol, updated_at: new Date().toISOString() });
+    const { error } = await sb.from('analysis_daily').upsert({ id: 1, data: histAllDailyCache.bySymbol, updated_at: new Date().toISOString() });
+    if (error) { console.warn('[analysis] ✗ لم تُرفع البيانات اليومية — يبقى الناس على القديم:', error.message || error); return; }
     console.info('[analysis] ✓ رُفعت البيانات اليومية المشتركة للجميع');
   } catch (e) { console.warn('[analysis] رفع البيانات المشتركة تعذّر:', e && e.message); }
 }

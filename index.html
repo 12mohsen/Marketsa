@@ -2338,8 +2338,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-07-v447';
-console.log('%c[تداول بلس] البناء: 2026-08-07-v447 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-07-v448';
+console.log('%c[تداول بلس] البناء: 2026-08-07-v448 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2349,6 +2349,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-07-v447 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v448', '🔎 تمشيطٌ كامل: كل نداء Supabase صار يقرأ `error` (٦٧ من ٦٧). وأخطرها في تفعيل الاشتراك بعد الدفع — كان `prev = data || {}` يُهمل الخطأ، وكلُّ ما يُكتب مبنيٌّ على `prev`: فتعثّرُ قراءةٍ واحد يمحو اشتراكات المستخدم الأخرى ويرفع الإيقاف عن الموقوف، والشاشة تقول «✅ أُكّدت العملية». صار يُرمى الخطأ فيتوقّف كل شيء. ومعه: سقوط الشارت إلى مصدرٍ معدَّل بالتوزيعات لم يعد صامتاً'],
     ['v447', '🛡️ فشلُ قراءة القيود لم يعد يعني «لا قيود» — كانت `userRestrictions = data || {}` تُهمل `error`، فأيّ تعثّرٍ شبكيّ لحظيّ يُفرغ القيود: لا حجب ولا تظليل ولا إيقاف واشتراكٌ غير منتهٍ. وتُستدعى عند كل عودةٍ إلى التبويب. الآن: عند الفشل تبقى القيود السابقة، ولا يُوسَّع وصولٌ بناءً على جهل'],
     ['v446', '📝 رسالة المشرف تقول ما تغيّر لا ما هو قائم — كانت رسالته لقطةً للحالة النهائية «اشتراك: المحفظة،المراقبة،رادار» تتكرّر حرفياً في كل تعديل، فتتطابق رسالتان لعملين مختلفين. ورسالة الأدمن فرقٌ حقيقيّ لأن متصفّحه يقارن قبل وبعد. فصار الفرق يُكتب في السجلّ ليرسله الخادم — والسجلّ الذي لا يُميّز عملاً من عمل ليس سجلّاً'],
     ['v445', '📱 تعديلات المشرف تصل تلجرام أخيراً — رمز البوت في localStorage أي على جهاز الأدمن وحده، فالمشرف يعجز عن الإرسال بصمت، والخادم كان يتخطّى user_edit و bulk_apply عمداً بحجّة أن التطبيق يرسلها ⇒ تعديلُ المشرف لا يصل أحداً. الآن: من أرسل يُعلّم صفّه بـ«[tg✓]» ومن عجز يتكفّل به الخادم. والردّ على الدعم كان يصل لأنه يمرّ بالخادم أصلاً'],
@@ -3057,7 +3058,8 @@ function authTranslateError(msg) {
 async function authLiveSession() {
   if (!sb) return null;
   try {
-    let { data } = await sb.auth.getSession();
+    let { data, error: _se } = await sb.auth.getSession();
+    if (_se) console.warn('[جلسة] تعذّرت قراءة الجلسة — تُجرَّب إعادة التجديد:', _se.message || _se);
     if (data && data.session) return data.session;
     const r = await sb.auth.refreshSession();
     if (r && r.data && r.data.session) return r.data.session;
@@ -3554,9 +3556,11 @@ function _showMsgNotice(opts) {
 async function checkAdminSupport() {
   if (!sb || !isAdmin()) return;
   try {
-    const { data } = await sb.from('support_requests')
+    const { data, error } = await sb.from('support_requests')
       .select('created_at').eq('status', 'new')
       .order('created_at', { ascending: false }).limit(50);
+    /* 🔇 الفشل هنا يعني «لا تنبيه» لا «لا طلبات» — فيُعلَن بدل أن يُصمَت عنه */
+    if (error) { console.warn('[دعم] تعذّر فحص الطلبات الجديدة — قد تكون هناك طلبات لم تُنبَّه عليها:', error.message || error); return; }
     const list = data || [];
     if (list.length === 0) return;
     let seen = null;
@@ -3576,9 +3580,10 @@ async function checkAdminSupport() {
 async function checkNewUsers() {
   if (!sb || !isAdmin()) return;
   try {
-    const { data } = await sb.from('profiles')
+    const { data, error } = await sb.from('profiles')
       .select('email,created_at')
       .order('created_at', { ascending: false }).limit(50);
+    if (error) { console.warn('[مستخدمون] تعذّر فحص المسجّلين الجدد:', error.message || error); return; }
     const list = (data || []).filter(u => u.created_at);
     if (!list.length) return;
     const newest = list[0].created_at;
@@ -3603,10 +3608,12 @@ async function checkNewUsers() {
 async function checkUserReplies() {
   if (!sb || !sbUser) return;
   try {
-    const { data } = await sb.from('support_requests')
+    const { data, error } = await sb.from('support_requests')
       .select('replied_at').eq('email', sbUser.email)
       .not('reply', 'is', null)
       .order('replied_at', { ascending: false }).limit(1);
+    /* ⚠️ الفشل يُخفي نقطة «لديك ردّ» — فيظنّ المستخدم أن دعمه أُهمل */
+    if (error) { console.warn('[رسائلي] تعذّر فحص ردود الدعم:', error.message || error); return; }
     const latest = data && data[0] ? data[0].replied_at : null;
     if (!latest) return;
     let seen = null;
@@ -5647,12 +5654,14 @@ async function adminSendPaymentReply(id) {
      وإن لم يوجد أنشئ سجلاً جديداً حتى يصل الرد للمستخدم في «رسائلي» مضموناً */
   let targetId = null;
   try {
-    const { data } = await sb.from('support_requests')
+    const { data, error } = await sb.from('support_requests')
       .select('id')
       .eq('email', p.email)
       .eq('req_type', '💳 دفع/تجديد اشتراك')
       .eq('subject', p.message || '')
       .order('created_at', { ascending: false }).limit(1);
+    /* الفشل هنا يُنشئ طلباً جديداً بدل تحديث القائم ⇒ رسالتان للمستخدم */
+    if (error) console.warn('[دعم] تعذّر إيجاد طلب الدفع — قد يُنشأ سجلٌّ جديد بدل تحديث القائم:', error.message || error);
     if (data && data[0]) targetId = data[0].id;
   } catch (e) {}
   let error;
@@ -5983,8 +5992,21 @@ async function _payActivateSubs(p) {
   /* اجلب قيود المستخدم الحالية للحفاظ عليها */
   let prev = _admRestr[p.email];
   if (!prev) {
-    try { const { data } = await sb.from('user_restrictions').select('*').eq('email', p.email).maybeSingle(); prev = data || {}; }
-    catch (e) { prev = {}; }
+    /* ══════════════════════════════════════════════════════════════════
+       🔴 هنا كان أخطر ما في الملفّ: `prev = data || {}` تُهمل `error`.
+       وكل ما يُكتب أدناه مبنيٌّ على `prev`: الاشتراكات الأخرى، والأقسام
+       المخفيّة، وعلَم الإيقاف، والإعفاء. فتعثّرُ قراءةٍ واحد عند تأكيد
+       دفعةٍ كان **يمحو اشتراكات المستخدم الأخرى**، ويرفع الإيقاف عن
+       الموقوف، ويُلغي إخفاء الأقسام — كلُّ ذلك بصمت، والشاشة تقول
+       «✅ أُكّدت العملية وفُعّلت».
+       ▸ فالصواب أن يُرمى الخطأ: `adminSetPaymentStatus` تلتقطه وتُظهر
+         «فشل تفعيل الاشتراك» وتُوقف كل شيء. تأكيدٌ مؤجَّل أهون من
+         اشتراكاتٍ ممحوّة لا يعلم بها أحد.
+       ══════════════════════════════════════════════════════════════════ */
+    const { data: _pv, error: _pe } = await sb.from('user_restrictions')
+      .select('*').eq('email', p.email).maybeSingle();
+    if (_pe) throw new Error('تعذّرت قراءة قيود المستخدم — أُلغي التفعيل حتى لا تُمحى اشتراكاته الأخرى: ' + (_pe.message || _pe));
+    prev = _pv || {};
   }
   const now = new Date().toISOString();
   const subs = Object.assign({}, prev.subs || {});
@@ -7327,7 +7349,8 @@ async function divSyncIfNewer(force) {
   if (!force && now - _lastDivChk < 120000) return false;    // مرة كل دقيقتين كحدّ أقصى
   _lastDivChk = now;
   try {
-    const { data } = await sb.from('dividends_shared').select('updated_at').eq('id', 1).maybeSingle();
+    const { data, error } = await sb.from('dividends_shared').select('updated_at').eq('id', 1).maybeSingle();
+    if (error) { console.warn('[div] تعذّر فحص التوزيعات الأحدث — تبقى النسخة الحالية:', error.message || error); return false; }
     if (!data || !data.updated_at) return false;
     const remote = new Date(data.updated_at).getTime();
     const local = (DIV_HISTORY && DIV_HISTORY._scannedAt) ? new Date(DIV_HISTORY._scannedAt).getTime() : 0;
@@ -7459,8 +7482,10 @@ window.histSyncRecent = async function (opts) {
   /* 🔎 هل تحتاج القاعدة شيئاً أصلاً؟ سؤالٌ واحد قبل 270 جلبة. */
   if (!o.force) {
     try {
-      const { data: nd } = await sb.from('historical_prices')
+      const { data: nd, error: _ne } = await sb.from('historical_prices')
         .select('d').order('d', { ascending: false }).limit(1);
+      /* الفشل يُسقط إلى المزامنة الكاملة — أثقل لا أخطر، لكنه يُعلَن */
+      if (_ne) console.warn('[hist] تعذّر فحص أحدث شمعة — تُنفَّذ المزامنة كاملةً:', _ne.message || _ne);
       const newest = nd && nd[0] && String(nd[0].d).slice(0, 10);
       const expD = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })
         .format(new Date(predLastClose()));
@@ -11142,8 +11167,12 @@ async function pfAnalyzeFetchHist(sym, cur, highN, lowN, volN, fmt) {
      محدّث يومياً) — يتفادى أسعار Yahoo المعدّلة بالتوزيعات وبيانات الشيت القديمة. */
   if (typeof sb !== 'undefined' && sb) {
     try {
-      const { data: dbc } = await sb.from('historical_prices')
+      /* ⚠️ الفشل هنا يسقط إلى Yahoo — وأسعاره **معدَّلة بالتوزيعات**،
+         فيُرسم الشارت بسُلّمٍ يخالف السعر المعروض. وهو الخلل الذي رُصد
+         على أرامكو (24.11 بدل 26.68). فلا يمرّ صامتاً بعد اليوم. */
+      const { data: dbc, error: _de } = await sb.from('historical_prices')
         .select('d,o,h,l,c,v').eq('symbol', sym).order('d', { ascending: false }).limit(1600);
+      if (_de) console.warn('[hist] تعذّرت قراءة القاعدة للسهم ' + sym + ' — يُلجأ لمصدرٍ قد تختلف أسعاره:', _de.message || _de);
       if (dbc && dbc.length >= 2) {
         const rowsFmt = dbc.map(r => [sym, r.d, +r.c, +r.v || 0, null, null, +r.o, +r.h, +r.l]);
         histCache[`${sym}_daily`] = rowsFmt;
@@ -12096,7 +12125,8 @@ document.addEventListener('keydown', e => {
         + ' · ذهبية: ' + rows_.filter(x => x.golden).length);
       /* ⚖️ ثم نحسم ما نضج من الخطط السابقة — بلا خادم، من تاريخك المخزَّن */
       try {
-        const { data } = await sb.rpc('resolve_plan_outcomes', { max_bars: 30 });
+        const { data, error } = await sb.rpc('resolve_plan_outcomes', { max_bars: 30 });
+        if (error) console.warn('[plan] تعذّر حسم الخطط الناضجة — تبقى معلّقة:', error.message || error);
         const d = Array.isArray(data) ? data[0] : data;
         if (d) console.info('[plan] ⚖️ حُسمت ' + (d['محسومة'] ?? 0) + ' خطة · معلّقة: ' + (d['ما زالت معلّقة'] ?? 0));
       } catch (e) {}
@@ -16224,7 +16254,8 @@ document.addEventListener('keydown', e => {
     if (!force && now - _lastSyncChk < 120000) return false;   // فحص كل دقيقتين كحدّ أقصى
     _lastSyncChk = now;
     try {
-      const { data } = await sb.from('radar_results').select('scanned_at').eq('id', 1).maybeSingle();
+      const { data, error } = await sb.from('radar_results').select('scanned_at').eq('id', 1).maybeSingle();
+      if (error) { console.warn('[radar] تعذّر فحص نتائج أحدث — تبقى النتائج الحالية:', error.message || error); return false; }
       if (!data || !data.scanned_at) return false;
       const remote = new Date(data.scanned_at).getTime();
       if (!PRED_LAST_TS || remote > PRED_LAST_TS + 60000) {    // أحدث بأكثر من دقيقة
@@ -19862,9 +19893,11 @@ async function histFetch(tab) {
      نقرأها مرة لكل رمز في الجلسة ونعتمدها، فلا يستبدلها مسار الشيت/Yahoo لاحقاً. */
   if (typeof sb !== 'undefined' && sb && !_histDbLoaded.has(sym)) {
     try {
-      const { data: dbc } = await sb.from('historical_prices')
+      /* ⚠️ كسابقه: الفشل يُلجئ إلى مصدرٍ أسعاره معدَّلة بالتوزيعات */
+      const { data: dbc, error: _de2 } = await sb.from('historical_prices')
         .select('d,o,h,l,c,v').eq('symbol', sym)
         .order('d', { ascending: false }).limit(1000);   // الأحدث أولاً (سقف 1000 = آخر ~4 سنوات، يشمل اليوم)
+      if (_de2) console.warn('[hist] تعذّرت قراءة القاعدة للسهم ' + sym + ' — يُلجأ لمصدرٍ قد تختلف أسعاره:', _de2.message || _de2);
       if (signal.aborted) return;
       if (dbc && dbc.length >= 2) {
         dailyRaw = dbc.map(r => [sym, r.d, +r.c, +r.v || 0, null, null, +r.o, +r.h, +r.l]);

@@ -702,23 +702,31 @@ html.dark .wl-btn.add-pf{background:#0d2a1a;border-color:#166534;color:#4ade80}
      `placeholder` كان خطأً — يختفي أوّلَ ما تُكتب قيمة، فيرى الأدمن
      أربعةَ مربّعاتٍ بلا هويّة ولا يدري أيُّها الخصم وأيُّها مدّته.
    ══════════════════════════════════════════════════════════════════════ */
-.adm-svc-head{display:flex;align-items:center;gap:8px;padding:0 0 6px;font-size:10px;color:var(--txt-m)}
-.adm-svc-row{display:flex;align-items:flex-end;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)}
-.adm-svc-name{flex:1;min-width:0;font-size:12.5px;color:var(--txt);padding-bottom:8px}
-.adm-svc-f{display:flex;flex-direction:column;gap:3px;flex:0 0 auto}
-.adm-svc-lbl{display:none}
-.adm-svc-f input{width:100%;box-sizing:border-box;padding:7px 9px;border-radius:8px;
+/* ══════════════════════════════════════════════════════════════════════
+   ⚠️ ولماذا لا وسائط استعلامية (media query) هنا؟
+   لأنها تقيس **عرض النافذة** لا عرض الصندوق. ولوحة الأدمن عمودٌ ضيّق
+   داخل نافذةٍ عريضة: فيُطبَّق تخطيط الحاسوب وخمسةُ أعمدةٍ ثابتة (٤٧٤px)
+   تُحشر في ٣٦٠ ⇒ يُسحق اسم القسم حتى يصير «الـ». رُصد فعلاً على الشاشة.
+   ▸ فتخطيطٌ واحد للجميع: الاسم سطراً كاملاً، والحقول تتقاسم ما بقي،
+     والنتيجة شريطاً أسفلها. لا يعتمد على عرض النافذة إطلاقاً.
+   ══════════════════════════════════════════════════════════════════════ */
+.adm-svc-head{display:none}          /* رؤوس الأعمدة لا تلزم — لكل حقلٍ عنوانه */
+.adm-svc-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 6px;
+  padding:12px 0;border-bottom:1px solid var(--bdr)}
+.adm-svc-name{flex:1 0 100%;width:100%;min-width:0;font-size:13px;font-weight:800;color:var(--txt)}
+.adm-svc-f{display:flex;flex-direction:column;gap:3px;flex:1 1 0;min-width:0}
+.adm-svc-lbl{display:block;font-size:9.5px;font-weight:700;color:var(--txt-m);
+  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.adm-svc-f input{width:100%;box-sizing:border-box;padding:8px 6px;border-radius:8px;
   border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
   font-size:11.5px;outline:none;font-family:inherit;text-align:center}
 .adm-svc-f input:focus{border-color:#f59e0b}
 /* 🎁 حقلا العرض يُميَّزان لوناً — فلا يُخلطان بالسعر والمدّة الأصليّين */
 .adm-svc-f.off input{border:1.5px solid rgba(245,158,11,.45);background:rgba(245,158,11,.08);
   color:#fcd34d;font-weight:800}
-.adm-svc-f.wp{width:92px}
-.adm-svc-f.wd{width:66px}
-.adm-svc-f.wo{width:72px}
-.adm-svc-out{width:132px;text-align:center;font-size:11px;font-weight:800;
-  color:var(--txt-m);line-height:1.5;padding-bottom:8px}
+.adm-svc-out{flex:1 0 100%;width:100%;text-align:center;font-size:11px;font-weight:800;
+  color:var(--txt-m);line-height:1.6;background:var(--surf-alt);border-radius:8px;
+  padding:6px 8px;margin-top:2px}
 
 /* Responsive */
 @media(max-width:640px){
@@ -736,25 +744,8 @@ html.dark .wl-btn.add-pf{background:#0d2a1a;border-color:#166534;color:#4ade80}
   .section-panel{overflow-x:clip}
   .pf-wrap{max-width:100%}
   .pf-wrap{padding:16px 14px 40px}
-  /* ══════════════════════════════════════════════════════════════════
-     💵 جدول أسعار الخدمات على الجوال — بطاقةٌ لكل خدمة لا صفُّ جدول
-     خمسةُ أعمدةٍ لا تسعها شاشةُ جوال. وحلُّ «اضغطها حتى تدخل» يُنتج
-     أربعةَ مربّعاتٍ متطابقةٍ بلا هويّة — والأدمن يضبط فيها **أسعاراً
-     تُخصم من بطاقات الناس**، فخطأُ عمودٍ ليس خطأً تجميلياً.
-     ▸ فبطاقة: الاسم سطراً كاملاً، ثمّ أربعةُ حقولٍ **فوق كلٍّ عنوانه**،
-       ثمّ «بعد الخصم» شريطاً أسفلها — وهو العمود الذي يُراجَع به الرقم
-       قبل الحفظ، وكان يخرج خارج الشاشة فلا يُرى أصلاً.
-     ══════════════════════════════════════════════════════════════════ */
-  .adm-svc-head{display:none}
-  .adm-svc-row{flex-wrap:wrap;align-items:flex-end;gap:8px 6px;padding:12px 0}
-  .adm-svc-name{flex:1 0 100%;width:100%;font-weight:800;font-size:13px;padding-bottom:0}
-  .adm-svc-f{flex:1 1 0;min-width:0}
-  .adm-svc-f.wp,.adm-svc-f.wd,.adm-svc-f.wo{width:auto}
-  .adm-svc-lbl{display:block;font-size:9px;font-weight:700;color:var(--txt-m);
-    text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
-  .adm-svc-f input{padding:8px 4px}
-  .adm-svc-out{flex:1 0 100%;width:100%;background:var(--surf-alt);border-radius:8px;
-    padding:6px 8px;margin-top:2px;line-height:1.6;padding-bottom:6px}
+  /* 💵 جدول أسعار الخدمات: تخطيطه واحدٌ في كل العروض — انظر شرحه في
+     القواعد الأساسية أعلى الملفّ (الوسائط الاستعلامية لا تصلح له). */
   .pf-summary{grid-template-columns:1fr 1fr;gap:8px}
   .pf-sum-val{font-size:18px}
   .pf-card-metrics{grid-template-columns:1fr 1fr}

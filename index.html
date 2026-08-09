@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v461';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v461 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v462';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v462 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2363,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-09-v461 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v462', '🚪 المحاولة الأولى: أربع صيغِ خروجٍ على نفس الدخول والوقف — الأصل · هدف 2R · وقف تعادل بعد +1R · نصفٌ عند 1R. وفرضيّتها من التشخيص: الخاسرة المتوسّطة ترتفع +1.51R ثمّ تعود فتضرب الوقف، والهدف على بُعد 8.37R لا يُبلَغ إلا ٩٪ (تعادلُه ١٠٫٧٪) — يانصيبٌ يميل ضدّك. ومعها تقسيمٌ زمنيّ: ضبطٌ على ≤2024 وتحقّقٌ على ≥2025، والمعيار مكتوبٌ قبل النظر'],
     ['v461', '🩺 تشخيصٌ قبل العلاج — المختبر صار يعرض **كيف** تخسر لا كم تخسر: توزيع المخارج (وقف · هدف · انتهاء مهلة) بمتوسّط R لكلٍّ، وتشريحُ الخاسرة بأقصى ربحٍ عائم (بلغت ٧٠٪ من الطريق ثمّ ارتدّت ⇒ يُدين الهدف · لم تتحرّك ⇒ يُدين الدخول)، وتفصيلٌ سنويّ لكل الخطط، ونسبةُ التنفيذ لكل شرط. ولا سطرَ واحد تغيّر في المحرّك'],
     ['v460', '🔬 المختبر صار يقيس بصرامة: عيّناتٌ غير متداخلة (STEP=HOLD — كانت ٥ والصفقة تعيش ٤٠ فتُحسب الحركة ثماني مرّات وتنتفخ t بـ√8)، وتنفيذٌ يُشترط لا يُفترض (ننتظر شمعةً يهبط أدناها إلى الدخول، وما لم يُنفَّذ لا يُحسب — كان يُحتسب في العائد ما لم يُشترَ)، ورفعُ كل شرطٍ على حدة ليُعرف بالرقم أيُّ الأحد عشر ينفع وأيُّها يستبعد الرابح'],
     ['v458', '💎 مختبر الإشارة الذهبية صار داخل لوحة الأدمن — كان في ملفٍّ منفصل يُفتح محلياً، والتشخيص لا يعمل على `file://` (قاعدة اتّفقنا عليها: يُشغَّل على markets-a.com لا على النسخة المحلّية). فبقي بلا تشغيل. وهو مقصورٌ على الأدمن الرئيسي، يُركّب نفسه بلا تعديل `renderAdminSection`، ولا يمسّ دالّةً واحدة. ويقيس بالدرجات ٨→١١ لأن الذهبية وحدها ≈١٠ إشارات سنوياً لا تكفي لحكم'],
@@ -22003,9 +22004,52 @@ switchTab = function (tab, btn) {
       if (+bars[k].h >= target) { exit = target; how = 'target'; break; }
     }
     if (exit === null) { exit = +bars[last].c; how = 'time'; used = HOLD; }
-    return { r: +(((exit * (1 - c)) - en) / R).toFixed(3), how: how, bars: used,
+    /* ══════════════════════════════════════════════════════════════════════
+       🚪 المحاولة الأولى — أربع صيغِ خروجٍ على **نفس** الدخول والوقف
+
+       الفرضية: العطل في الخروج لا في الدخول. ودليلها من التشخيص: الخاسرة
+       المتوسّطة ترتفع +1.51R ثمّ تعود فتضرب الوقف، والهدف على بُعد 8.37R
+       فلا يُبلَغ إلا 9٪ — أي يانصيبٌ تعادلُه عند 10.7٪.
+
+       ▸ ب : الأصل (هدف الخطة)
+       ▸ أ : هدفٌ عند 2R
+       ▸ ت : وقفٌ إلى التعادل بعد بلوغ +1R
+       ▸ ث : نصفٌ يخرج عند 1R + وقف تعادلٍ للباقي
+
+       ⚠️ وترتيب الفحص داخل الشمعة **الوقف أوّلاً** في الصيغ كلّها — فلا
+          تُمنح صفقةٌ ربحاً لم يكن ليقع لو ضُرب الوقف أوّل النهار.
+       ⚠️ والتسليح (نقل الوقف) لا يقع في نفس الشمعة التي يُفحص فيها وقفُها
+          القديم — وإلا افترضنا علماً بالمستقبل داخل الشمعة.
+       ══════════════════════════════════════════════════════════════════════ */
+    var T2 = en + 2 * R, SB = stop, SA = stop, SE = stop, SH = stop;
+    var dB = null, dA = null, dE = null, dH = null, armE = false, armH = false, accH = 0;
+    for (k = i + 1; k <= last; k++) {
+      var L2 = +bars[k].l, H2 = +bars[k].h;
+      if (dB === null) { if (L2 <= SB) dB = SB; else if (H2 >= target) dB = target; }
+      if (dA === null) { if (L2 <= SA) dA = SA; else if (H2 >= T2) dA = T2; }
+      if (dE === null) {
+        if (L2 <= SE) dE = SE;
+        else if (H2 >= target) dE = target;
+        else if (!armE && H2 >= en + R) { armE = true; SE = en; }
+      }
+      if (dH === null) {
+        if (L2 <= SH) dH = SH;
+        else {
+          if (!armH && H2 >= en + R) { armH = true; accH = 0.5; SH = en; }
+          if (H2 >= target) dH = target;
+        }
+      }
+      if (dB !== null && dA !== null && dE !== null && dH !== null) break;
+    }
+    var cl = +bars[last].c;
+    var rr = function (px) { return ((px * (1 - c)) - en) / R; };
+    if (dB === null) dB = cl; if (dA === null) dA = cl; if (dE === null) dE = cl; if (dH === null) dH = cl;
+    /* ث: نصفٌ قُبض عند 1R والباقي عند مخرجه */
+    var rH = armH ? (accH * 1 + (1 - accH) * rr(dH)) : rr(dH);
+    return { r: +rr(dB).toFixed(3), how: how, bars: used,
              mfe: +mfe.toFixed(3), mae: +mae.toFixed(3),
-             tgtR: +((target - en) / R).toFixed(2) };
+             tgtR: +((target - en) / R).toFixed(2),
+             rs: { b: +rr(dB).toFixed(3), a: +rr(dA).toFixed(3), e: +rr(dE).toFixed(3), h: +rH.toFixed(3) } };
   }
 
   var _T = null;
@@ -22066,7 +22110,7 @@ switchTab = function (tab, btn) {
           if (tr.immature) { immature++; continue; }
           matured++;
           var _rec = { sym: syms[q], t: String(bars[i].d).slice(0, 10), r: tr.r, how: tr.how, b: tr.bars,
-                       g: gp, cv: _cv, mfe: tr.mfe, mae: tr.mae, tgtR: tr.tgtR };
+                       g: gp, cv: _cv, mfe: tr.mfe, mae: tr.mae, tgtR: tr.tgtR, rs: tr.rs };
           ALL.push(_rec);
           for (var _g = 8; _g <= 11; _g++) if (gp >= _g) byG[_g].push(_rec);
           if (ff !== null) continue;                 // ما دون الذهبية لا يدخل الأساس ولا `trades`
@@ -22174,6 +22218,40 @@ switchTab = function (tab, btn) {
         L.push('  بلغت ≥70% من الطريق ثمّ ارتدّت: ' + near + ' (' + Math.round(near / lose.length * 100) + '%) ⇒ يُدين الهدف');
         L.push('  لم تتحرّك أصلاً (<0.2R): ' + dead + ' (' + Math.round(dead / lose.length * 100) + '%) ⇒ يُدين الدخول');
       }
+    })();
+    /* ══════════════════════════════════════════════════════════════════
+       🚪 المحاولة الأولى: أربع صيغِ خروج · ضبطٌ على ≤2024 وتحقّقٌ على ≥2025
+       والمعيار مكتوبٌ قبل النظر: موجبٌ **خارج العيّنة**، وموجبٌ في كل
+       سنةٍ فيها ١٥ صفقة فأكثر. ولا يُعدَّل المعيار بعد رؤية الرقم.
+       ══════════════════════════════════════════════════════════════════ */
+    (function () {
+      var A = (RES.all || []).filter(function (a) { return a.rs; });
+      if (!A.length) return;
+      var M = [['b', 'ب — الأصل (هدف الخطة)'], ['a', 'أ — هدف عند 2R'],
+               ['e', 'ت — وقف تعادل بعد +1R'], ['h', 'ث — نصف عند 1R + تعادل']];
+      var pick = function (arr, k) { return arr.map(function (x) { return { r: x.rs[k] }; }); };
+      var tr = A.filter(function (x) { return +String(x.t).slice(0, 4) <= 2024; });
+      var va = A.filter(function (x) { return +String(x.t).slice(0, 4) >= 2025; });
+      L.push('');
+      L.push('=== المحاولة ①: صيغ الخروج ===');
+      L.push('الصيغة | ضبط(≤2024) n=' + tr.length + ' | تحقّق(≥2025) n=' + va.length + ' | الكل');
+      M.forEach(function (m) {
+        var s1 = stat(pick(tr, m[0])), s2 = stat(pick(va, m[0])), s3 = stat(pick(A, m[0]));
+        L.push('  ' + m[1] + ' | ' + s1.expR + 'R (' + s1.winRate + '%)'
+          + ' | ' + s2.expR + 'R (' + s2.winRate + '%) t=' + (s2.t != null ? s2.t : '—')
+          + ' | ' + s3.expR + 'R');
+      });
+      L.push('');
+      L.push('--- كل صيغة سنوياً (R · n) ---');
+      var by = {}, x;
+      for (x = 0; x < A.length; x++) { var y = String(A[x].t).slice(0, 4); (by[y] = by[y] || []).push(A[x]); }
+      var ys = Object.keys(by).sort();
+      L.push('السنة | n | ' + M.map(function (m) { return m[0]; }).join(' | '));
+      ys.forEach(function (y) {
+        L.push('  ' + y + ' | ' + by[y].length + ' | '
+          + M.map(function (m) { return stat(pick(by[y], m[0])).expR; }).join(' | '));
+      });
+      L.push('(المعيار: موجبٌ في التحقّق، وموجبٌ في كل سنةٍ n≥15)');
     })();
     /* ══ 📅 سنوياً — على كل الخطط لا الذهبية وحدها ══ */
     (function () {

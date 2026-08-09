@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v460';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v460 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v461';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v461 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2363,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-09-v460 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v461', '🩺 تشخيصٌ قبل العلاج — المختبر صار يعرض **كيف** تخسر لا كم تخسر: توزيع المخارج (وقف · هدف · انتهاء مهلة) بمتوسّط R لكلٍّ، وتشريحُ الخاسرة بأقصى ربحٍ عائم (بلغت ٧٠٪ من الطريق ثمّ ارتدّت ⇒ يُدين الهدف · لم تتحرّك ⇒ يُدين الدخول)، وتفصيلٌ سنويّ لكل الخطط، ونسبةُ التنفيذ لكل شرط. ولا سطرَ واحد تغيّر في المحرّك'],
     ['v460', '🔬 المختبر صار يقيس بصرامة: عيّناتٌ غير متداخلة (STEP=HOLD — كانت ٥ والصفقة تعيش ٤٠ فتُحسب الحركة ثماني مرّات وتنتفخ t بـ√8)، وتنفيذٌ يُشترط لا يُفترض (ننتظر شمعةً يهبط أدناها إلى الدخول، وما لم يُنفَّذ لا يُحسب — كان يُحتسب في العائد ما لم يُشترَ)، ورفعُ كل شرطٍ على حدة ليُعرف بالرقم أيُّ الأحد عشر ينفع وأيُّها يستبعد الرابح'],
     ['v458', '💎 مختبر الإشارة الذهبية صار داخل لوحة الأدمن — كان في ملفٍّ منفصل يُفتح محلياً، والتشخيص لا يعمل على `file://` (قاعدة اتّفقنا عليها: يُشغَّل على markets-a.com لا على النسخة المحلّية). فبقي بلا تشغيل. وهو مقصورٌ على الأدمن الرئيسي، يُركّب نفسه بلا تعديل `renderAdminSection`، ولا يمسّ دالّةً واحدة. ويقيس بالدرجات ٨→١١ لأن الذهبية وحدها ≈١٠ إشارات سنوياً لا تكفي لحكم'],
     ['v457', '🎚️ شروط الذهبية الاثنا عشر في مصدرٍ واحد `_snGoldConds` — كانت مكتوبةً داخل دالّة الرسم وحدها، فمن أراد قياسها تاريخياً اضطُرّ إلى نسخها، ونسخةُ اختبارٍ تقيس غير ما يعمل تمنح ثقةً في ما لم يُقَس. ومعها `_snGoldGrade` (كم شرطاً اجتاز من ١١) وسطرُ تعريضٍ للاختبار. والسبب: الذهبية ≈١٠ إشارات في السنة — دون شرط النشر الذي وضعتَه (١٥ صفقة/سنة) — فلا تُقاس أبداً، والقياس يجب أن يكون بالدرجات'],
@@ -21990,14 +21991,21 @@ switchTab = function (tab, btn) {
     if (!(R > 0)) return null;
     var n = bars.length, last = i + HOLD;
     if (last > n - 1) return { immature: true };
-    var k, exit = null, how = null, used = 0;
+    var k, exit = null, how = null, used = 0, mfe = 0, mae = 0;
     for (k = i + 1; k <= last; k++) {
       used = k - i;
+      /* 📈📉 أقصى ربحٍ عائم وأقصى خسارةٍ عائمة — بوحدة R.
+         بهما نعرف **كيف** خسرت: اقتربت من الهدف ثمّ ارتدّت (يُدين الهدف)،
+         أم لم تتحرّك أصلاً (يُدين الدخول). ثلاثة أعطالٍ لا عطلٌ واحد. */
+      var up = ((+bars[k].h * (1 - c)) - en) / R; if (up > mfe) mfe = up;
+      var dn = ((+bars[k].l * (1 - c)) - en) / R; if (dn < mae) mae = dn;
       if (+bars[k].l <= stop) { exit = stop; how = 'stop'; break; }
       if (+bars[k].h >= target) { exit = target; how = 'target'; break; }
     }
     if (exit === null) { exit = +bars[last].c; how = 'time'; used = HOLD; }
-    return { r: +(((exit * (1 - c)) - en) / R).toFixed(3), how: how, bars: used };
+    return { r: +(((exit * (1 - c)) - en) / R).toFixed(3), how: how, bars: used,
+             mfe: +mfe.toFixed(3), mae: +mae.toFixed(3),
+             tgtR: +((target - en) / R).toFixed(2) };
   }
 
   var _T = null;
@@ -22021,7 +22029,7 @@ switchTab = function (tab, btn) {
     var byG = { 8: [], 9: [], 10: [], 11: [] };
     /* 📚 سجلٌّ لكل صفقةٍ نُفّذت — بدرجتها ومتّجه شروطها. منه تُحسب
        الدرجات ورفعُ كل شرطٍ على حدة، فلا يتكرّر المسح. */
-    var ALL = [], nofill = 0, CN = [];
+    var ALL = [], NF = [], nofill = 0, CN = [];
     try { CN = _T._snGoldConds().filter(function (c) { return !c.info; }).map(function (c) { return c.n; }); } catch (e) {}
     var rnd = function () { sx = (sx * 1103515245 + 12345) & 0x7fffffff; return sx / 0x7fffffff; };
 
@@ -22048,14 +22056,17 @@ switchTab = function (tab, btn) {
              إلى هنا. والحارس كان يقرأ `p.entry` قبل أن يسأل عن `p` نفسه. */
           var p = r.elPlan;
           if (!p || !(+p.entry > 0) || !(+p.stop > 0) || !(+p.target > 0)) continue;
-          var tr = runTrade(bars, i, +p.entry, +p.stop, +p.target);
-          if (!tr) continue;
-          if (tr.nofill) { nofill++; continue; }
-          if (tr.immature) { immature++; continue; }
-          matured++;
+          /* 🧮 المتّجه يُحسب قبل التنفيذ — لنعرف نسبة التنفيذ لكل شرط،
+             لا عائدَه وحده. فشرطٌ يُنتج خططاً لا تُنفَّذ أصلاً عيبٌ آخر. */
           var _cv = [];
           try { _T._snGoldConds().forEach(function (c) { if (c.info) return; var ok = false; try { ok = !!c.f(r); } catch (e) {} _cv.push(ok); }); } catch (e) {}
-          var _rec = { sym: syms[q], t: String(bars[i].d).slice(0, 10), r: tr.r, how: tr.how, b: tr.bars, g: gp, cv: _cv };
+          var tr = runTrade(bars, i, +p.entry, +p.stop, +p.target);
+          if (!tr) continue;
+          if (tr.nofill) { nofill++; NF.push({ cv: _cv, g: gp }); continue; }
+          if (tr.immature) { immature++; continue; }
+          matured++;
+          var _rec = { sym: syms[q], t: String(bars[i].d).slice(0, 10), r: tr.r, how: tr.how, b: tr.bars,
+                       g: gp, cv: _cv, mfe: tr.mfe, mae: tr.mae, tgtR: tr.tgtR };
           ALL.push(_rec);
           for (var _g = 8; _g <= 11; _g++) if (gp >= _g) byG[_g].push(_rec);
           if (ff !== null) continue;                 // ما دون الذهبية لا يدخل الأساس ولا `trades`
@@ -22075,7 +22086,7 @@ switchTab = function (tab, btn) {
     }
     BUSY = false;
     RES = { evals: evals, hits: hits, matured: matured, immature: immature, disagree: disagree,
-            fail: fail, trades: trades, base: base, byG: byG, all: ALL, nofill: nofill, CN: CN, secs: Math.round((Date.now() - t0) / 1000),
+            fail: fail, trades: trades, base: base, byG: byG, all: ALL, nf: NF, nofill: nofill, CN: CN, secs: Math.round((Date.now() - t0) / 1000),
             syms: syms.length, stopped: STOP, step: STEP };
     setP('✅ اكتمل · ' + evals + ' عيّنة · ' + hits + ' تحقّقت · ' + matured + ' مكتملة');
     render();
@@ -22134,6 +22145,61 @@ switchTab = function (tab, btn) {
           + ' | ' + (d != null ? (d > 0 ? '+' : '') + d : '—'));
       }
       L.push('(الفرق موجب ⇒ الشرط نافع · سالب ⇒ يستبعد الرابح)');
+    })();
+    /* ══ 🚪 كيف تخرج الصفقة؟ ثلاثة أعطالٍ لا عطلٌ واحد ══ */
+    (function () {
+      var A = RES.all || []; if (!A.length) return;
+      var g = { stop: [], target: [], time: [] }, x;
+      for (x = 0; x < A.length; x++) if (g[A[x].how]) g[A[x].how].push(A[x]);
+      L.push('');
+      L.push('--- توزيع المخارج ---');
+      ['stop', 'target', 'time'].forEach(function (k) {
+        var st = stat(g[k]), nm = k === 'stop' ? 'ضرب الوقف' : k === 'target' ? 'بلغ الهدف' : 'انتهت المهلة';
+        L.push('  ' + nm + ': ' + (st.n || 0) + ' (' + Math.round((st.n || 0) / A.length * 100) + '%) · متوسط R = '
+          + (st.expR != null ? st.expR : '—'));
+      });
+      /* 📈 أقصى ربحٍ عائم للخاسرة: هل اقتربت من الهدف ثمّ ارتدّت؟ */
+      var lose = A.filter(function (a) { return a.r <= 0; });
+      if (lose.length) {
+        var mf = 0, near = 0, dead = 0, tg = 0, i2;
+        for (i2 = 0; i2 < lose.length; i2++) {
+          mf += lose[i2].mfe || 0;
+          if (lose[i2].tgtR && (lose[i2].mfe || 0) >= lose[i2].tgtR * 0.7) near++;
+          if ((lose[i2].mfe || 0) < 0.2) dead++;
+          tg += lose[i2].tgtR || 0;
+        }
+        L.push('');
+        L.push('--- تشريح الخاسرة (n=' + lose.length + ') ---');
+        L.push('  متوسط أقصى ربحٍ عائم: ' + (mf / lose.length).toFixed(2) + 'R · متوسط بُعد الهدف: ' + (tg / lose.length).toFixed(2) + 'R');
+        L.push('  بلغت ≥70% من الطريق ثمّ ارتدّت: ' + near + ' (' + Math.round(near / lose.length * 100) + '%) ⇒ يُدين الهدف');
+        L.push('  لم تتحرّك أصلاً (<0.2R): ' + dead + ' (' + Math.round(dead / lose.length * 100) + '%) ⇒ يُدين الدخول');
+      }
+    })();
+    /* ══ 📅 سنوياً — على كل الخطط لا الذهبية وحدها ══ */
+    (function () {
+      var A = RES.all || []; if (!A.length) return;
+      var by = {}, x;
+      for (x = 0; x < A.length; x++) { var y = String(A[x].t).slice(0, 4); (by[y] = by[y] || []).push(A[x]); }
+      L.push('');
+      L.push('--- سنوياً (كل الخطط المنفَّذة) ---');
+      Object.keys(by).sort().forEach(function (y) {
+        var st = stat(by[y]);
+        L.push('  ' + y + '\tn=' + st.n + '\t' + st.expR + 'R\t' + st.winRate + '%\tt=' + (st.t != null ? st.t : '—'));
+      });
+    })();
+    /* ══ 🚧 نسبة التنفيذ لكل شرط ══ */
+    (function () {
+      var A = RES.all || [], N = RES.nf || [], CN = RES.CN || [];
+      if (!CN.length || (!A.length && !N.length)) return;
+      L.push('');
+      L.push('--- نسبة التنفيذ لكل شرط (نُفّذ / الكل) ---');
+      for (var c = 0; c < CN.length; c++) {
+        var f = 0, u = 0, x;
+        for (x = 0; x < A.length; x++) if (A[x].cv && A[x].cv[c]) f++;
+        for (x = 0; x < N.length; x++) if (N[x].cv && N[x].cv[c]) u++;
+        var tt = f + u;
+        L.push('  ' + CN[c] + ': ' + f + '/' + tt + (tt ? ' (' + Math.round(f / tt * 100) + '%)' : ''));
+      }
     })();
     L.push('رموز: ' + RES.syms + ' · عيّنات: ' + RES.evals + ' (كل ' + RES.step + ' شموع) · ' + RES.secs + ' ثانية');
     L.push('تحقّقت شروط _snGolden: ' + RES.hits);

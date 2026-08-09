@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v458';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v458 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v459';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v459 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -22017,8 +22017,12 @@ switchTab = function (tab, btn) {
           var gp = gr ? gr.pass : -1;
           if (gp < 8 && ff !== null) continue;      // دون الثامنة ولا ذهبية ⇒ لا تُقاس
           if (ff === null) hits++;
+          /* ⚠️ `p` قد يكون null: شرطان من الاثني عشر يقرآن `r.elPlan.entry`
+             فيرميان، ويلتقطهما try داخل `_snGoldGrade` فيُعدّان ساقطَين —
+             ومع ذلك تبلغ الدرجة ٨ من التسعة الباقية. فيمرّ سهمٌ بلا خطّة
+             إلى هنا. والحارس كان يقرأ `p.entry` قبل أن يسأل عن `p` نفسه. */
           var p = r.elPlan;
-          if (!(+p.entry > 0) || !(+p.stop > 0) || !(+p.target > 0)) continue;
+          if (!p || !(+p.entry > 0) || !(+p.stop > 0) || !(+p.target > 0)) continue;
           var tr = runTrade(bars, i, +p.entry, +p.stop, +p.target);
           if (!tr) continue;
           if (tr.immature) { immature++; continue; }

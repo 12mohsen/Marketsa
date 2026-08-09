@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v463';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v463 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v464';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v464 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2363,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-09-v463 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v464', '🎯 المحافظ المركَّزة بتكلفةٍ مقاسة — الخُمس الأعلى ٥١ سهماً لا يشتريها أحد، فأُضيف أعلى ٥ و١٠ و٢٠ بعائدٍ خام وصافٍ. والدوران يُقاس فعلاً (كم سهماً خرج ودخل بين إعادتين) لا يُفترض: محفظةٌ تُبقي نصف أسهمها تكلّف نصف ما تكلّفه محفظةٌ تُبدّل كلَّ شيء — وافتراضُ دورانٍ كامل يظلمها، وافتراضُ صفرٍ يخدعنا. والشرط المضاف: موجبٌ **بعد التكلفة** وإلا فلا يُبنى'],
     ['v463', '🏆 المحاولة ②: مختبر الترتيب المقطعيّ — يسأل «أيُّها الأفضل الآن؟» لا «متى أشتري؟»، فيقفز من ٩٩ مشاهدة إلى آلاف. وجدارُ العيّنة هو ما أسقط كل ما سبق. زخم ١٢-١ و٦-١ و٣-١ · ترتيبٌ إلى أخماس · والحكم بالعائد الفائض عن متوسّط السوق متساوي الأوزان (فلا يُنسب إلى المهارة صعودُ سوق) · نوافذ غير متداخلة · وبوّابةُ نظامٍ فوق متوسّط ٢٠٠'],
     ['v462', '🚪 المحاولة الأولى: أربع صيغِ خروجٍ على نفس الدخول والوقف — الأصل · هدف 2R · وقف تعادل بعد +1R · نصفٌ عند 1R. وفرضيّتها من التشخيص: الخاسرة المتوسّطة ترتفع +1.51R ثمّ تعود فتضرب الوقف، والهدف على بُعد 8.37R لا يُبلَغ إلا ٩٪ (تعادلُه ١٠٫٧٪) — يانصيبٌ يميل ضدّك. ومعها تقسيمٌ زمنيّ: ضبطٌ على ≤2024 وتحقّقٌ على ≥2025، والمعيار مكتوبٌ قبل النظر'],
     ['v461', '🩺 تشخيصٌ قبل العلاج — المختبر صار يعرض **كيف** تخسر لا كم تخسر: توزيع المخارج (وقف · هدف · انتهاء مهلة) بمتوسّط R لكلٍّ، وتشريحُ الخاسرة بأقصى ربحٍ عائم (بلغت ٧٠٪ من الطريق ثمّ ارتدّت ⇒ يُدين الهدف · لم تتحرّك ⇒ يُدين الدخول)، وتفصيلٌ سنويّ لكل الخطط، ونسبةُ التنفيذ لكل شرط. ولا سطرَ واحد تغيّر في المحرّك'],
@@ -22428,7 +22429,10 @@ switchTab = function (tab, btn) {
    ══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
+  /* 🎯 محافظُ مركَّزة — الخُمس ٥١ سهماً لا يشتريها أحد. وهذه ما يُشترى فعلاً.
+     💸 CPS = عمولة الوساطة لكل جانب (٪). والتكلفة = دورانٌ × جانبان × العمولة. */
   var STEP = 21, FWD = 21, LOOK = 252, SKIP = 21, MINB = 300, Q = 5;
+  var TOPN = [5, 10, 20], CPS = 0.155;
   var BUSY = false, STOP = false, RES = null, PROG = '';
   function vis() { try { return typeof isSuperAdmin === 'function' && isSuperAdmin(); } catch (e) { return false; } }
   var $ = function (id) { return document.getElementById(id); };
@@ -22505,7 +22509,11 @@ switchTab = function (tab, btn) {
     }
 
     var MODELS = [['m12', 'زخم 12-1', LOOK], ['m6', 'زخم 6-1', 126], ['m3', 'زخم 3-1', 63]];
-    var OUT = {}; MODELS.forEach(function (m) { OUT[m[0]] = { q: [], all: [], gate: [], byYear: {} }; for (var z = 0; z < Q; z++) OUT[m[0]].q.push([]); });
+    var OUT = {}; MODELS.forEach(function (m) {
+      OUT[m[0]] = { q: [], all: [], gate: [], byYear: {}, tn: {} };
+      for (var z = 0; z < Q; z++) OUT[m[0]].q.push([]);
+      TOPN.forEach(function (N) { OUT[m[0]].tn[N] = { g: [], nt: [], prev: null, byYear: {}, turn: [] }; });
+    });
     var reb = 0;
 
     for (di = LOOK + SKIP; di + FWD < CAL.length && !STOP; di += STEP) {
@@ -22531,6 +22539,25 @@ switchTab = function (tab, btn) {
         var av = rowsD.filter(function (x) { return x[m[0]] != null; });
         if (av.length < 30) return;
         av.sort(function (a, b) { return b[m[0]] - a[m[0]]; });
+        /* ══════════════════════════════════════════════════════════════
+           🎯 المحافظ المركَّزة — بتكلفةٍ حقيقية لا مفترَضة
+           الدوران يُقاس فعلاً: كم سهماً خرج ودخل بين إعادتين. فمحفظةٌ
+           تُبقي نصف أسهمها تكلّف نصف ما تكلّفه محفظةٌ تُبدّل كلَّ شيء.
+           وافتراضُ دورانٍ كامل يظلمها، وافتراضُ صفرٍ يخدعنا.
+           ══════════════════════════════════════════════════════════════ */
+        TOPN.forEach(function (N) {
+          if (av.length < N) return;
+          var T = OUT[m[0]].tn[N], seg = av.slice(0, N), ex = 0, cur = {}, y2;
+          for (y2 = 0; y2 < N; y2++) { ex += seg[y2].fwd - mkt; cur[seg[y2].sym] = 1; }
+          ex /= N;
+          var turn = 1;
+          if (T.prev) { var keep = 0, s3; for (s3 in cur) if (T.prev[s3]) keep++; turn = (N - keep) / N; }
+          T.prev = cur;
+          var cost = turn * 2 * (CPS / 100);
+          T.turn.push(turn); T.g.push(ex); T.nt.push(ex - cost);
+          var yA = D.slice(0, 4);
+          (T.byYear[yA] = T.byYear[yA] || []).push(ex - cost);
+        });
         var per = Math.floor(av.length / Q), qi;
         for (qi = 0; qi < Q; qi++) {
           var seg = av.slice(qi * per, (qi === Q - 1) ? av.length : (qi + 1) * per);
@@ -22576,10 +22603,30 @@ switchTab = function (tab, btn) {
       L.push('  ضبط ≤2024: ' + st1.mean + '% (n=' + st1.n + ')  |  تحقّق ≥2025: ' + st2.mean + '% (n=' + st2.n + ' · t=' + (st2.t != null ? st2.t : '—') + ')');
       L.push('  مع بوّابة النظام (فوق متوسّط 200): ' + g.mean + '% (n=' + g.n + ' · t=' + (g.t != null ? g.t : '—') + ')');
       var ys = Object.keys(O.byYear).sort();
-      L.push('  سنوياً: ' + ys.map(function (y) { var s = stat(O.byYear[y]); return y + '=' + s.mean + '%(n' + s.n + ')'; }).join(' · '));
+      L.push('  سنوياً (الخُمس الأعلى): ' + ys.map(function (y) { var s = stat(O.byYear[y]); return y + '=' + s.mean + '%(n' + s.n + ')'; }).join(' · '));
+      /* 🎯 ما يُشترى فعلاً */
+      L.push('  ── محافظ مركَّزة (فائض شهريّ) ──');
+      TOPN.forEach(function (N) {
+        var T = O.tn[N]; if (!T || !T.g.length) return;
+        var g = stat(T.g), nt = stat(T.nt);
+        var tv = 0, i4; for (i4 = 0; i4 < T.turn.length; i4++) tv += T.turn[i4]; tv = T.turn.length ? tv / T.turn.length : 0;
+        L.push('   أعلى ' + N + ': خام ' + g.mean + '% · صافي ' + nt.mean + '% (فوز ' + nt.win + '% · t=' + (nt.t != null ? nt.t : '—')
+          + ' · دوران ' + Math.round(tv * 100) + '%)');
+        var ysN = Object.keys(T.byYear).sort();
+        L.push('      سنوياً صافياً: ' + ysN.map(function (y) { var s = stat(T.byYear[y]); return y + '=' + s.mean + '%(n' + s.n + ')'; }).join(' · '));
+        var trn = [], van = [], i5;
+        for (i5 = 0; i5 < O.all.length && i5 < T.nt.length; i5++) {
+          (+O.all[i5].d.slice(0, 4) <= 2024 ? trn : van).push(T.nt[i5]);
+        }
+        var s1 = stat(trn), s2 = stat(van);
+        L.push('      ضبط ≤2024: ' + s1.mean + '% (n=' + s1.n + ')  |  تحقّق ≥2025: ' + s2.mean + '% (n=' + s2.n + ' · t=' + (s2.t != null ? s2.t : '—') + ')');
+      });
     });
     L.push('');
+    L.push('');
+    L.push('التكلفة المطبَّقة: ' + CPS + '% لكل جانب × دورانٍ مقاس. «صافي» = بعد التكلفة.');
     L.push('(المعيار المكتوب سلفاً: فائضٌ موجب في التحقّق ≥2025، وموجبٌ في كل سنةٍ n≥8)');
+    L.push('(وللمحافظ المركَّزة يُضاف: موجبٌ **بعد التكلفة** — وإلا فلا تُبنى)');
     return L.join('\n');
   }
   window.mrCopy = function () {

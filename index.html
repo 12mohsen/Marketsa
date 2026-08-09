@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v462';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v462 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v463';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v463 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2363,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-09-v462 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v463', '🏆 المحاولة ②: مختبر الترتيب المقطعيّ — يسأل «أيُّها الأفضل الآن؟» لا «متى أشتري؟»، فيقفز من ٩٩ مشاهدة إلى آلاف. وجدارُ العيّنة هو ما أسقط كل ما سبق. زخم ١٢-١ و٦-١ و٣-١ · ترتيبٌ إلى أخماس · والحكم بالعائد الفائض عن متوسّط السوق متساوي الأوزان (فلا يُنسب إلى المهارة صعودُ سوق) · نوافذ غير متداخلة · وبوّابةُ نظامٍ فوق متوسّط ٢٠٠'],
     ['v462', '🚪 المحاولة الأولى: أربع صيغِ خروجٍ على نفس الدخول والوقف — الأصل · هدف 2R · وقف تعادل بعد +1R · نصفٌ عند 1R. وفرضيّتها من التشخيص: الخاسرة المتوسّطة ترتفع +1.51R ثمّ تعود فتضرب الوقف، والهدف على بُعد 8.37R لا يُبلَغ إلا ٩٪ (تعادلُه ١٠٫٧٪) — يانصيبٌ يميل ضدّك. ومعها تقسيمٌ زمنيّ: ضبطٌ على ≤2024 وتحقّقٌ على ≥2025، والمعيار مكتوبٌ قبل النظر'],
     ['v461', '🩺 تشخيصٌ قبل العلاج — المختبر صار يعرض **كيف** تخسر لا كم تخسر: توزيع المخارج (وقف · هدف · انتهاء مهلة) بمتوسّط R لكلٍّ، وتشريحُ الخاسرة بأقصى ربحٍ عائم (بلغت ٧٠٪ من الطريق ثمّ ارتدّت ⇒ يُدين الهدف · لم تتحرّك ⇒ يُدين الدخول)، وتفصيلٌ سنويّ لكل الخطط، ونسبةُ التنفيذ لكل شرط. ولا سطرَ واحد تغيّر في المحرّك'],
     ['v460', '🔬 المختبر صار يقيس بصرامة: عيّناتٌ غير متداخلة (STEP=HOLD — كانت ٥ والصفقة تعيش ٤٠ فتُحسب الحركة ثماني مرّات وتنتفخ t بـ√8)، وتنفيذٌ يُشترط لا يُفترض (ننتظر شمعةً يهبط أدناها إلى الدخول، وما لم يُنفَّذ لا يُحسب — كان يُحتسب في العائد ما لم يُشترَ)، ورفعُ كل شرطٍ على حدة ليُعرف بالرقم أيُّ الأحد عشر ينفع وأيُّها يستبعد الرابح'],
@@ -22406,5 +22407,229 @@ switchTab = function (tab, btn) {
 
 </script>
 <!-- ══ SNTEST:END ══ -->
+
+<!-- ══ MRTEST:BEGIN ══ مختبر الترتيب المقطعيّ — نزعُه لا يمسّ شيئاً ══ -->
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   🏆 الترتيب المقطعيّ — المحاولة ② (المحاولة ① سقطت في التحقّق)
+
+   لماذا هذا بديلٌ لا تعديل؟ لأن السؤال نفسه تغيّر:
+     الإشارة الزمنية تسأل: «متى أشتري هذا السهم؟»  ⇒ ٩٩ صفقة في ٥ سنوات
+     الترتيب المقطعيّ يسأل: «أيُّها الأفضل الآن؟»   ⇒ آلاف المشاهدات
+
+   وجدارُ العيّنة هو ما قتل كل ما جرّبناه. فالبديل يجب أن يكسره أوّلاً.
+
+   ▸ المقياس: الزخم ١٢-١ (عائد سنةٍ عدا الشهر الأخير) — التعريف المعتمَد
+     في الأدبيات، وسبب استثناء الشهر الأخير أثرُ الارتداد القصير.
+   ▸ الحكم: العائد **الفائض** عن متوسّط السوق نفسه (متساوي الأوزان) —
+     فلا يُنسب إلى المهارة ما هو صعودُ سوقٍ عامّ.
+   ▸ نوافذ غير متداخلة: إعادة ترتيبٍ كل ٢١ جلسة وأفقٌ ٢١ جلسة.
+   ▸ وبوّابة نظام: نسخةٌ ثانية لا تشتري إلا والسوق فوق متوسّطه ٢٠٠.
+   ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var STEP = 21, FWD = 21, LOOK = 252, SKIP = 21, MINB = 300, Q = 5;
+  var BUSY = false, STOP = false, RES = null, PROG = '';
+  function vis() { try { return typeof isSuperAdmin === 'function' && isSuperAdmin(); } catch (e) { return false; } }
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function setP(t) { PROG = t; var e = $('mrProg'); if (e) e.textContent = t; }
+
+  async function loadC(sym) {
+    try {
+      if (typeof sb === 'undefined' || !sb) return null;
+      var all = [], from = 0;
+      while (from < 2600) {
+        var q = await sb.from('historical_prices').select('d,c').eq('symbol', sym)
+          .order('d', { ascending: false }).range(from, from + 999);
+        if (q.error || !q.data || !q.data.length) break;
+        all = all.concat(q.data);
+        if (q.data.length < 1000) break;
+        from += 1000;
+      }
+      if (all.length < MINB) return null;
+      all.reverse();
+      var d = [], c = [], ix = {}, i;
+      for (i = 0; i < all.length; i++) {
+        var px = +all[i].c; if (!(px > 0)) continue;
+        ix[String(all[i].d).slice(0, 10)] = d.length;
+        d.push(String(all[i].d).slice(0, 10)); c.push(px);
+      }
+      return { d: d, c: c, ix: ix };
+    } catch (e) { return null; }
+  }
+
+  function stat(a) {
+    if (!a || !a.length) return { n: 0 };
+    var w = 0, s = 0, i;
+    for (i = 0; i < a.length; i++) { if (a[i] > 0) w++; s += a[i]; }
+    var m = s / a.length, sd = 0;
+    if (a.length > 1) { for (i = 0; i < a.length; i++) sd += (a[i] - m) * (a[i] - m); sd = Math.sqrt(sd / (a.length - 1)); }
+    return { n: a.length, win: +(w / a.length * 100).toFixed(1), mean: +(m * 100).toFixed(2),
+             t: sd > 0 ? +(m / (sd / Math.sqrt(a.length))).toFixed(2) : null };
+  }
+
+  async function run() {
+    if (BUSY) return;
+    var syms = [], seen = {};
+    try { if (typeof rows !== 'undefined' && Array.isArray(rows))
+      rows.forEach(function (r) { if (r && r.sym && !seen[r.sym]) { seen[r.sym] = 1; syms.push(String(r.sym)); } }); } catch (e) {}
+    if (!syms.length) { setP('⚠️ افتح «🔮 رادار» أولاً لتُحمَّل الرموز'); render(); return; }
+
+    BUSY = true; STOP = false;
+    var t0 = Date.now(), S = {}, k;
+    for (k = 0; k < syms.length && !STOP; k++) {
+      var o = await loadC(syms[k]);
+      if (o) S[syms[k]] = o;
+      if (k % 10 === 0) { setP('⏳ تحميل ' + (k + 1) + '/' + syms.length + ' رمز · ' + Math.round((Date.now() - t0) / 1000) + ' ث'); await new Promise(function (r) { setTimeout(r, 0); }); }
+    }
+    var keys = Object.keys(S);
+    if (keys.length < 30) { BUSY = false; setP('⛔ رموزٌ غير كافية (' + keys.length + ')'); render(); return; }
+
+    /* 📅 تقويمٌ موحّد: تواريخ أطول رمزٍ لدينا */
+    var refSym = keys[0], i2;
+    for (i2 = 0; i2 < keys.length; i2++) if (S[keys[i2]].d.length > S[refSym].d.length) refSym = keys[i2];
+    var CAL = S[refSym].d;
+
+    /* 🌐 مؤشّر متساوي الأوزان من الرموز نفسها — مرجعٌ داخليّ لا خارجيّ */
+    var IDX = [], di;
+    for (di = 0; di < CAL.length; di++) {
+      var s2 = 0, n2 = 0, kk;
+      for (kk = 0; kk < keys.length; kk++) { var p2 = S[keys[kk]]; var j2 = p2.ix[CAL[di]]; if (j2 != null) { s2 += p2.c[j2]; n2++; } }
+      IDX.push(n2 ? s2 / n2 : null);
+    }
+    function idxMA(di, n) {
+      var s3 = 0, c3 = 0, x;
+      for (x = di - n + 1; x <= di; x++) if (x >= 0 && IDX[x] != null) { s3 += IDX[x]; c3++; }
+      return c3 >= n * 0.8 ? s3 / c3 : null;
+    }
+
+    var MODELS = [['m12', 'زخم 12-1', LOOK], ['m6', 'زخم 6-1', 126], ['m3', 'زخم 3-1', 63]];
+    var OUT = {}; MODELS.forEach(function (m) { OUT[m[0]] = { q: [], all: [], gate: [], byYear: {} }; for (var z = 0; z < Q; z++) OUT[m[0]].q.push([]); });
+    var reb = 0;
+
+    for (di = LOOK + SKIP; di + FWD < CAL.length && !STOP; di += STEP) {
+      var D = CAL[di], Df = CAL[di + FWD];
+      var ma = idxMA(di, 200), on = (ma != null && IDX[di] != null && IDX[di] > ma);
+      var rowsD = [], kk2;
+      for (kk2 = 0; kk2 < keys.length; kk2++) {
+        var P = S[keys[kk2]], j = P.ix[D], jf = P.ix[Df];
+        if (j == null || jf == null || j < LOOK + SKIP) continue;
+        var pj = P.c[j], pf = P.c[jf], pSkip = P.c[j - SKIP];
+        if (!(pj > 0) || !(pf > 0) || !(pSkip > 0)) continue;
+        var e = { sym: keys[kk2], fwd: pf / pj - 1 };
+        MODELS.forEach(function (m) {
+          var back = P.c[j - m[2]];
+          e[m[0]] = (back > 0) ? (pSkip / back - 1) : null;
+        });
+        rowsD.push(e);
+      }
+      if (rowsD.length < 30) continue;
+      reb++;
+      var mkt = 0, z2; for (z2 = 0; z2 < rowsD.length; z2++) mkt += rowsD[z2].fwd; mkt /= rowsD.length;
+      MODELS.forEach(function (m) {
+        var av = rowsD.filter(function (x) { return x[m[0]] != null; });
+        if (av.length < 30) return;
+        av.sort(function (a, b) { return b[m[0]] - a[m[0]]; });
+        var per = Math.floor(av.length / Q), qi;
+        for (qi = 0; qi < Q; qi++) {
+          var seg = av.slice(qi * per, (qi === Q - 1) ? av.length : (qi + 1) * per);
+          var ex = 0, y; for (y = 0; y < seg.length; y++) ex += seg[y].fwd - mkt;
+          ex /= seg.length;
+          OUT[m[0]].q[qi].push(ex);
+          if (qi === 0) {
+            OUT[m[0]].all.push({ d: D, ex: ex });
+            if (on) OUT[m[0]].gate.push(ex);
+            var yy = D.slice(0, 4);
+            (OUT[m[0]].byYear[yy] = OUT[m[0]].byYear[yy] || []).push(ex);
+          }
+        }
+      });
+      if (reb % 3 === 0) { setP('⏳ إعادة ترتيب ' + reb + ' · ' + D + ' · ' + Math.round((Date.now() - t0) / 1000) + ' ث'); await new Promise(function (r) { setTimeout(r, 0); }); }
+    }
+    BUSY = false;
+    RES = { OUT: OUT, MODELS: MODELS, reb: reb, syms: keys.length, secs: Math.round((Date.now() - t0) / 1000), stopped: STOP };
+    setP('✅ اكتمل · ' + keys.length + ' رمز · ' + reb + ' إعادة ترتيب · ' + RES.secs + ' ث');
+    render();
+  }
+  window.mrRun = function () { run(); };
+  window.mrStop = function () { STOP = true; };
+
+  function buildText() {
+    if (!RES) return '';
+    var L = ['=== المحاولة ②: الترتيب المقطعيّ (زخم) ==='];
+    L.push('رموز: ' + RES.syms + ' · إعادات ترتيب: ' + RES.reb + ' (كل ' + STEP + ' جلسة · أفق ' + FWD + ') · ' + RES.secs + ' ث');
+    L.push('الحكم: عائدٌ **فائض** عن متوسّط السوق متساوي الأوزان. النوافذ غير متداخلة.');
+    RES.MODELS.forEach(function (m) {
+      var O = RES.OUT[m[0]];
+      L.push('');
+      L.push('--- ' + m[1] + ' ---');
+      var qs = O.q.map(function (a, i) { var s = stat(a); return 'خ' + (i + 1) + '=' + (s.mean != null ? s.mean : '—') + '%'; });
+      L.push('  الأخماس (الأعلى→الأدنى زخماً): ' + qs.join(' | '));
+      var top = stat(O.q[0]), bot = stat(O.q[Q - 1]);
+      L.push('  الأعلى: ' + top.mean + '% (n=' + top.n + ' · فوز ' + top.win + '% · t=' + (top.t != null ? top.t : '—') + ')');
+      L.push('  الأدنى: ' + bot.mean + '% (n=' + bot.n + ')');
+      L.push('  الفارق (أعلى−أدنى): ' + (top.mean != null && bot.mean != null ? (top.mean - bot.mean).toFixed(2) : '—') + '%');
+      var tr = O.all.filter(function (x) { return +x.d.slice(0, 4) <= 2024; }).map(function (x) { return x.ex; });
+      var va = O.all.filter(function (x) { return +x.d.slice(0, 4) >= 2025; }).map(function (x) { return x.ex; });
+      var st1 = stat(tr), st2 = stat(va), g = stat(O.gate);
+      L.push('  ضبط ≤2024: ' + st1.mean + '% (n=' + st1.n + ')  |  تحقّق ≥2025: ' + st2.mean + '% (n=' + st2.n + ' · t=' + (st2.t != null ? st2.t : '—') + ')');
+      L.push('  مع بوّابة النظام (فوق متوسّط 200): ' + g.mean + '% (n=' + g.n + ' · t=' + (g.t != null ? g.t : '—') + ')');
+      var ys = Object.keys(O.byYear).sort();
+      L.push('  سنوياً: ' + ys.map(function (y) { var s = stat(O.byYear[y]); return y + '=' + s.mean + '%(n' + s.n + ')'; }).join(' · '));
+    });
+    L.push('');
+    L.push('(المعيار المكتوب سلفاً: فائضٌ موجب في التحقّق ≥2025، وموجبٌ في كل سنةٍ n≥8)');
+    return L.join('\n');
+  }
+  window.mrCopy = function () {
+    var txt = buildText();
+    try { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); setP('📋 نُسخ إلى الحافظة'); } catch (e) {}
+    return txt;
+  };
+
+  function render() {
+    var host = $('mrWrap'); if (!host) return;
+    if (!vis()) { host.innerHTML = ''; return; }
+    var h = '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px;margin-top:14px">'
+      + '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px">'
+      + '<div style="font-size:15px;font-weight:900">🏆 مختبر الترتيب المقطعيّ <span style="font-size:10px;color:var(--txt-m);font-weight:600">للأدمن — المحاولة ②</span></div>'
+      + '<button onclick="mrRun()" style="cursor:pointer;font-family:inherit;border:none;border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:800;color:#0b1220;background:linear-gradient(135deg,#a78bfa,#8b5cf6)">🏆 شغّل</button>'
+      + '<button onclick="mrStop()" style="cursor:pointer;font-family:inherit;border:1px solid rgba(248,113,113,.5);border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:800;color:#fca5a5;background:rgba(248,113,113,.12)">⏹️</button>'
+      + (RES ? '<button onclick="mrCopy()" style="cursor:pointer;font-family:inherit;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:800">📋 انسخ</button>' : '')
+      + '<span id="mrProg" style="flex:1 0 100%;font-size:11.5px;color:var(--txt-m);padding-top:3px">' + esc(PROG) + '</span></div>'
+      + '<div style="font-size:10.5px;color:var(--txt-m);line-height:1.9;margin-bottom:9px">'
+      + 'يسأل <b>«أيُّها الأفضل الآن؟»</b> لا «متى أشتري؟» — فيقفز من ٩٩ مشاهدة إلى آلاف.<br>'
+      + 'زخمٌ ١٢-١ · ترتيبٌ إلى خمسة أخماس · الحكم بالعائد <b>الفائض</b> عن متوسّط السوق · نوافذ غير متداخلة.</div>';
+    if (RES) {
+      h += '<div id="mrOut" style="font-family:ui-monospace,monospace;font-size:11px;white-space:pre-wrap;'
+        + 'line-height:1.85;background:var(--surf-alt);border-radius:10px;padding:10px;max-height:420px;overflow:auto"></div>';
+    }
+    h += '</div>';
+    host.innerHTML = h;
+    /* النصّ يُوضع بـtextContent لا innerHTML — فلا يُفسّر رمزٌ فيه وسماً */
+    if (RES) { var box = $('mrOut'); if (box) box.textContent = buildText(); }
+  }
+
+  function install() {
+    if (!vis()) { var o = $('mrCard'); if (o) o.remove(); return; }
+    var w = $('adminSectionWrap'); if (!w || !w.children.length) return;
+    if ($('mrCard')) return;
+    var d = document.createElement('div'); d.id = 'mrCard'; d.innerHTML = '<div id="mrWrap"></div>';
+    w.appendChild(d); render();
+  }
+  function boot() {
+    var w = $('adminSectionWrap');
+    if (w && typeof MutationObserver === 'function')
+      new MutationObserver(function () { try { install(); } catch (e) {} }).observe(w, { childList: true });
+    setInterval(function () { try { install(); } catch (e) {} }, 1500);
+    try { install(); } catch (e) {}
+  }
+  if (document.readyState !== 'loading') boot();
+  else document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
+<!-- ══ MRTEST:END ══ -->
+
 </body>
 </html>

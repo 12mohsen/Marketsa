@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v464';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v464 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v466';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v466 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2363,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-09-v464 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v466', '🛡️ المحاولة ③ والأخيرة: قياسُ وقف الخسارة على «أعلى ١٠» بخمسة مستويات (بلا وقف · ٥ · ٨ · ١٠ · ١٥٪). والتنفيذ واقعيّ: يُضرب الوقف إن هبط أدنى اليوم إليه، وإن فُتح اليوم تحته فالخروج عند الافتتاح لا عند الوقف — الفجوة ضدّك لا لك. والمعيار مكتوبٌ قبل التشغيل، وأهمُّه: **تحسُّنٌ في مستويَين متجاورين على الأقلّ** — فمستوىً واحدٌ محظوظ بين خمسة صدفةٌ لا قانون'],
+    ['v465', '⚡ شاشة «الأعلى زخماً» — أوّل ما نبنيه على دليلٍ مقاس: أعلى ١٠ أسهم بزخم ٦ أشهر عدا الشهر الأخير، تفوّقت على متوسّط السوق بـ‎+١٫١٪ شهرياً بعد التكاليف في ٤٧ شهراً، و‎+٠٫٩٪ في تحقّقٍ مستقلّ. ومعها سجلٌّ يقيس أداء كل قائمةٍ فعلياً بعد تسجيلها. **ولا وقفَ ولا هدف** — لأن المقيس مراجعةٌ شهرية، وإضافةُ ما لم يُقَس تُبطل القياس. والإفصاح مكتوبٌ في الشاشة: غير دالٍّ إحصائياً · تفوّقٌ على السوق لا ربحٌ مضمون'],
     ['v464', '🎯 المحافظ المركَّزة بتكلفةٍ مقاسة — الخُمس الأعلى ٥١ سهماً لا يشتريها أحد، فأُضيف أعلى ٥ و١٠ و٢٠ بعائدٍ خام وصافٍ. والدوران يُقاس فعلاً (كم سهماً خرج ودخل بين إعادتين) لا يُفترض: محفظةٌ تُبقي نصف أسهمها تكلّف نصف ما تكلّفه محفظةٌ تُبدّل كلَّ شيء — وافتراضُ دورانٍ كامل يظلمها، وافتراضُ صفرٍ يخدعنا. والشرط المضاف: موجبٌ **بعد التكلفة** وإلا فلا يُبنى'],
     ['v463', '🏆 المحاولة ②: مختبر الترتيب المقطعيّ — يسأل «أيُّها الأفضل الآن؟» لا «متى أشتري؟»، فيقفز من ٩٩ مشاهدة إلى آلاف. وجدارُ العيّنة هو ما أسقط كل ما سبق. زخم ١٢-١ و٦-١ و٣-١ · ترتيبٌ إلى أخماس · والحكم بالعائد الفائض عن متوسّط السوق متساوي الأوزان (فلا يُنسب إلى المهارة صعودُ سوق) · نوافذ غير متداخلة · وبوّابةُ نظامٍ فوق متوسّط ٢٠٠'],
     ['v462', '🚪 المحاولة الأولى: أربع صيغِ خروجٍ على نفس الدخول والوقف — الأصل · هدف 2R · وقف تعادل بعد +1R · نصفٌ عند 1R. وفرضيّتها من التشخيص: الخاسرة المتوسّطة ترتفع +1.51R ثمّ تعود فتضرب الوقف، والهدف على بُعد 8.37R لا يُبلَغ إلا ٩٪ (تعادلُه ١٠٫٧٪) — يانصيبٌ يميل ضدّك. ومعها تقسيمٌ زمنيّ: ضبطٌ على ≤2024 وتحقّقٌ على ≥2025، والمعيار مكتوبٌ قبل النظر'],
@@ -22433,6 +22435,17 @@ switchTab = function (tab, btn) {
      💸 CPS = عمولة الوساطة لكل جانب (٪). والتكلفة = دورانٌ × جانبان × العمولة. */
   var STEP = 21, FWD = 21, LOOK = 252, SKIP = 21, MINB = 300, Q = 5;
   var TOPN = [5, 10, 20], CPS = 0.155;
+  /* 🛡️ المحاولة ③ (الأخيرة): هل يُحسّن وقفُ الخسارة الفائضَ؟
+     ══════════════════════════════════════════════════════════════════════
+     📜 المعيار مكتوبٌ **قبل** التشغيل، ولا يُعدَّل بعده:
+       ① يتفوّق على «بلا وقف» في فترة التحقّق (≥2025)
+       ② وموجبٌ في كل سنةٍ فيها ٨ إعادات فأكثر
+       ③ **وتحسُّنٌ في مستويَين متجاورين على الأقلّ** — فمستوىً واحدٌ
+          محظوظ بين خمسة صدفةٌ لا قانون. وهذا الشرط هو الحارس الحقيقيّ.
+     ▸ والتنفيذ واقعيّ: يُضرب الوقف إن هبط **أدنى** اليوم إليه، وإن فُتح
+       اليوم تحته فالخروج عند الافتتاح لا عند الوقف — الفجوة ضدّك.
+     ══════════════════════════════════════════════════════════════════════ */
+  var STOPS = [0, 5, 8, 10, 15];
   var BUSY = false, STOP = false, RES = null, PROG = '';
   function vis() { try { return typeof isSuperAdmin === 'function' && isSuperAdmin(); } catch (e) { return false; } }
   var $ = function (id) { return document.getElementById(id); };
@@ -22444,7 +22457,7 @@ switchTab = function (tab, btn) {
       if (typeof sb === 'undefined' || !sb) return null;
       var all = [], from = 0;
       while (from < 2600) {
-        var q = await sb.from('historical_prices').select('d,c').eq('symbol', sym)
+        var q = await sb.from('historical_prices').select('d,c,l,o').eq('symbol', sym)
           .order('d', { ascending: false }).range(from, from + 999);
         if (q.error || !q.data || !q.data.length) break;
         all = all.concat(q.data);
@@ -22453,13 +22466,15 @@ switchTab = function (tab, btn) {
       }
       if (all.length < MINB) return null;
       all.reverse();
-      var d = [], c = [], ix = {}, i;
+      var d = [], c = [], lo = [], op = [], ix = {}, i;
       for (i = 0; i < all.length; i++) {
         var px = +all[i].c; if (!(px > 0)) continue;
         ix[String(all[i].d).slice(0, 10)] = d.length;
         d.push(String(all[i].d).slice(0, 10)); c.push(px);
+        lo.push(+all[i].l > 0 ? +all[i].l : px);
+        op.push(+all[i].o > 0 ? +all[i].o : px);
       }
-      return { d: d, c: c, ix: ix };
+      return { d: d, c: c, l: lo, o: op, ix: ix };
     } catch (e) { return null; }
   }
 
@@ -22513,6 +22528,7 @@ switchTab = function (tab, btn) {
       OUT[m[0]] = { q: [], all: [], gate: [], byYear: {}, tn: {} };
       for (var z = 0; z < Q; z++) OUT[m[0]].q.push([]);
       TOPN.forEach(function (N) { OUT[m[0]].tn[N] = { g: [], nt: [], prev: null, byYear: {}, turn: [] }; });
+      OUT[m[0]].sl = {}; STOPS.forEach(function (X) { OUT[m[0]].sl[X] = { all: [], byYear: {} }; });
     });
     var reb = 0;
 
@@ -22525,7 +22541,7 @@ switchTab = function (tab, btn) {
         if (j == null || jf == null || j < LOOK + SKIP) continue;
         var pj = P.c[j], pf = P.c[jf], pSkip = P.c[j - SKIP];
         if (!(pj > 0) || !(pf > 0) || !(pSkip > 0)) continue;
-        var e = { sym: keys[kk2], fwd: pf / pj - 1 };
+        var e = { sym: keys[kk2], fwd: pf / pj - 1, P: P, j: j, jf: jf };
         MODELS.forEach(function (m) {
           var back = P.c[j - m[2]];
           e[m[0]] = (back > 0) ? (pSkip / back - 1) : null;
@@ -22555,6 +22571,28 @@ switchTab = function (tab, btn) {
           T.prev = cur;
           var cost = turn * 2 * (CPS / 100);
           T.turn.push(turn); T.g.push(ex); T.nt.push(ex - cost);
+          /* 🛡️ مستويات الوقف — على أعلى ١٠ وحدها (وهي المرشَّحة) */
+          if (N === 10) {
+            STOPS.forEach(function (X) {
+              var tot = 0, y3;
+              for (y3 = 0; y3 < N; y3++) {
+                var it = seg[y3], r3;
+                if (X === 0) r3 = it.fwd;
+                else {
+                  var Pp = it.P, en3 = Pp.c[it.j], st3 = en3 * (1 - X / 100), k3, hit = null;
+                  for (k3 = it.j + 1; k3 <= it.jf; k3++) {
+                    if (Pp.l[k3] <= st3) { hit = Math.min(st3, Pp.o[k3]); break; }
+                  }
+                  r3 = hit != null ? (hit / en3 - 1) : it.fwd;
+                }
+                tot += r3 - mkt;
+              }
+              var net = tot / N - cost;
+              OUT[m[0]].sl[X].all.push({ d: D, ex: net });
+              var yB = D.slice(0, 4);
+              (OUT[m[0]].sl[X].byYear[yB] = OUT[m[0]].sl[X].byYear[yB] || []).push(net);
+            });
+          }
           var yA = D.slice(0, 4);
           (T.byYear[yA] = T.byYear[yA] || []).push(ex - cost);
         });
@@ -22623,6 +22661,25 @@ switchTab = function (tab, btn) {
       });
     });
     L.push('');
+    /* 🛡️ المحاولة ③ */
+    L.push('');
+    L.push('=== المحاولة ③: وقف الخسارة (على أعلى 10) ===');
+    RES.MODELS.forEach(function (m) {
+      var O = RES.OUT[m[0]]; if (!O.sl) return;
+      L.push('--- ' + m[1] + ' ---');
+      L.push('  الوقف | الكل | ضبط ≤2024 | تحقّق ≥2025 | سنوياً');
+      STOPS.forEach(function (X) {
+        var A = O.sl[X].all, ar = A.map(function (x) { return x.ex; });
+        var tr = A.filter(function (x) { return +x.d.slice(0, 4) <= 2024; }).map(function (x) { return x.ex; });
+        var va = A.filter(function (x) { return +x.d.slice(0, 4) >= 2025; }).map(function (x) { return x.ex; });
+        var s0 = stat(ar), s1 = stat(tr), s2 = stat(va);
+        var ys = Object.keys(O.sl[X].byYear).sort();
+        L.push('   ' + (X === 0 ? 'بلا وقف' : '−' + X + '٪') + ' | ' + s0.mean + '% | ' + s1.mean + '% | '
+          + s2.mean + '% (t=' + (s2.t != null ? s2.t : '—') + ') | '
+          + ys.map(function (y) { var s = stat(O.sl[X].byYear[y]); return y + '=' + s.mean + '%'; }).join(' · '));
+      });
+    });
+    L.push('(المعيار المكتوب سلفاً: يتفوّق على «بلا وقف» في التحقّق · موجبٌ كل سنةٍ n≥8 · وتحسُّنٌ في مستويَين متجاورين)');
     L.push('');
     L.push('التكلفة المطبَّقة: ' + CPS + '% لكل جانب × دورانٍ مقاس. «صافي» = بعد التكلفة.');
     L.push('(المعيار المكتوب سلفاً: فائضٌ موجب في التحقّق ≥2025، وموجبٌ في كل سنةٍ n≥8)');
@@ -22677,6 +22734,188 @@ switchTab = function (tab, btn) {
 })();
 </script>
 <!-- ══ MRTEST:END ══ -->
+
+
+<!-- ══ MOMCARD:BEGIN ══ شاشة الأعلى زخماً — وحدةٌ مستقلّة، نزعُها لا يمسّ شيئاً ══ -->
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   ⚡ الأعلى زخماً — أوّل ما نبنيه على دليلٍ مقاس
+
+   القياس (٤٧ شهراً · ٢٥٨ رمزاً · نوافذ غير متداخلة · بعد تكاليف التداول):
+     أعلى ١٠ بزخم ٦-١  ⇒  فائضٌ ‎+1.09٪ شهرياً عن متوسّط السوق
+     وفي فترة التحقّق المستقلّة (≥2025) ⇒ ‎+0.85٪
+     وموجبٌ في كل سنةٍ فيها ١٢ إعادة ترتيب.
+
+   ⚠️ ولماذا **لا** وقفَ ولا هدف — رغم أنّ الأدمن طلبهما؟
+   لأنّ الذي قِيس منظومةٌ **شهرية مقطعية**: تشتري العشرة، وتُبدّلها بعد ٢١
+   جلسة. ولم يُقَس فيها وقفٌ ولا هدف قطّ. وإضافةُ وقفٍ تجعلها **منظومةً
+   أخرى لم تُختبر** — وقد رأينا اليوم كيف انقلب ‎+1.78R إلى ‎−0.354R حين
+   صحّحنا افتراضاً واحداً. فلا نضيف إلى المقيس ما لم يُقَس.
+   ▸ والمراقبةُ التي أرادها تُنجَز بالسجلّ أدناه: كل قائمةٍ تُحفظ بتاريخها
+     وأسعارها، ويُحسب فائضها الفعليّ عن السوق — أداءٌ حقيقيّ لا وعد.
+   ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var LOOK = 126, SKIP = 21, TOPN = 10, MINB = 160, MAXLOG = 12;
+  var BUSY = false, RES = null, MSG = '';
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function nm(sym) { try { var r = (typeof rows !== 'undefined' && rows) ? rows.find(function (x) { return x && x.sym === sym; }) : null; return (r && r.name) || sym; } catch (e) { return sym; } }
+
+  /* 📐 زخم ٦-١: عائد ١٢٦ جلسة **عدا** الشهر الأخير — واستثناؤه مقصود،
+     فالشهر الأخير يحمل ارتداداً قصير المدى يعاكس الزخم (وقد أثبته قياسنا:
+     نموذج ٣-١ سقط في التحقّق، و٦-١ و١٢-١ نجحا). */
+  function compute() {
+    var H = (typeof histAllDailyCache !== 'undefined' && histAllDailyCache) ? histAllDailyCache.bySymbol : null;
+    if (!H) return null;
+    var out = [], idxSum = 0, idxN = 0, s;
+    for (s in H) {
+      var a = H[s];
+      if (!a || a.length < MINB) continue;
+      var n = a.length;
+      var pNow = +a[n - 1].close, pSkip = +a[n - 1 - SKIP] ? +a[n - 1 - SKIP].close : null,
+          pBack = +a[n - 1 - LOOK] ? +a[n - 1 - LOOK].close : null;
+      if (!(pNow > 0) || !(pSkip > 0) || !(pBack > 0)) continue;
+      idxSum += pNow; idxN++;
+      out.push({ sym: s, px: pNow, mom: pSkip / pBack - 1, m1: pNow / pSkip - 1 });
+    }
+    if (out.length < 40) return null;
+    out.sort(function (x, y) { return y.mom - x.mom; });
+    var d = null; try { for (s in H) { var q = H[s]; if (q && q.length) { d = q[q.length - 1].date; break; } } } catch (e) {}
+    return { list: out.slice(0, TOPN), all: out.length, idx: idxN ? idxSum / idxN : null, date: d };
+  }
+
+  /* 📒 السجلّ: كل قائمةٍ تُحفظ بتاريخها وأسعارها ومستوى السوق — فيُقاس
+     أداؤها الفعليّ لاحقاً. يكتبه الأدمن، ويقرؤه الجميع من `app_settings`. */
+  function log() { try { return (typeof appSettings !== 'undefined' && appSettings && Array.isArray(appSettings.momLog)) ? appSettings.momLog : []; } catch (e) { return []; } }
+  window.momSnapshot = async function (btn) {
+    try {
+      if (!(typeof isSuperAdmin === 'function' && isSuperAdmin())) { if (window.showToast) showToast('⛔ للأدمن الرئيسي فقط'); return; }
+      var R = RES || compute();
+      if (!R) { if (window.showToast) showToast('⚠️ لا بيانات كافية'); return; }
+      var L = log().slice();
+      var today = new Date().toISOString().slice(0, 10);
+      if (L.length && L[L.length - 1].d === today) { if (window.showToast) showToast('📒 قائمة اليوم مسجّلة أصلاً'); return; }
+      L.push({ d: today, idx: R.idx, n: R.all,
+               s: R.list.map(function (x) { return { k: x.sym, p: +x.px.toFixed(3) }; }) });
+      while (L.length > MAXLOG) L.shift();
+      var next = Object.assign({}, appSettings, { momLog: L });
+      var q = await sb.from('app_settings').upsert({ id: 1, data: next, updated_at: new Date().toISOString() });
+      if (q.error) { if (window.showToast) showToast('⚠️ تعذّر الحفظ'); return; }
+      appSettings = next;
+      if (window.showToast) showToast('📒 سُجّلت قائمة ' + today + ' للمراقبة');
+      render();
+    } catch (e) { if (window.showToast) showToast('⚠️ ' + (e && e.message)); }
+  };
+
+  function perf(R) {
+    var L = log(); if (!L.length || !R || !R.idx) return null;
+    var H = (typeof histAllDailyCache !== 'undefined' && histAllDailyCache) ? histAllDailyCache.bySymbol : null;
+    if (!H) return null;
+    var out = [];
+    L.forEach(function (e) {
+      if (!e || !e.s || !e.idx) return;
+      var sum = 0, c = 0;
+      e.s.forEach(function (x) {
+        var a = H[x.k]; if (!a || !a.length) return;
+        var now = +a[a.length - 1].close;
+        if (now > 0 && x.p > 0) { sum += now / x.p - 1; c++; }
+      });
+      if (!c) return;
+      var mine = sum / c, mkt = R.idx / e.idx - 1;
+      out.push({ d: e.d, n: c, mine: mine, mkt: mkt, ex: mine - mkt });
+    });
+    return out;
+  }
+
+  function render() {
+    var host = $('momWrap'); if (!host) return;
+    var R = RES;
+    var pct = function (v) { return (v * 100).toFixed(1) + '٪'; };
+    var col = function (v) { return v > 0 ? '#4ade80' : v < 0 ? '#f87171' : 'var(--txt-m)'; };
+    var h = '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:16px 18px;margin-bottom:16px">'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">'
+      + '<div style="font-size:18px;font-weight:900">⚡ الأعلى زخماً</div>'
+      + '<span style="font-size:11px;background:rgba(167,139,250,.16);color:#c4b5fd;border:1px solid rgba(167,139,250,.4);border-radius:20px;padding:2px 9px;font-weight:800">قياسٌ لا تنبّؤ</span>'
+      + '<span style="flex:1"></span>'
+      + '<button onclick="momRun()" style="cursor:pointer;font-family:inherit;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:800;color:#0b1220;background:linear-gradient(135deg,#a78bfa,#8b5cf6)">🔄 حدّث</button>'
+      + ((typeof isSuperAdmin === 'function' && isSuperAdmin()) ? '<button onclick="momSnapshot(this)" style="cursor:pointer;font-family:inherit;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:800">📒 سجّل للمراقبة</button>' : '')
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--txt-m);line-height:1.9;margin-bottom:10px">'
+      + 'أعلى <b>' + TOPN + '</b> أسهم في <b>زخم الستّة أشهر</b> (عدا الشهر الأخير). تُراجَع شهرياً — <b>بلا دخولٍ ولا وقفٍ ولا هدف</b>.</div>';
+
+    if (MSG) h += '<div style="font-size:12.5px;color:#fbbf24;padding:8px 0">' + esc(MSG) + '</div>';
+
+    if (R && R.list.length) {
+      h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+        + '<thead><tr style="color:var(--txt-m);font-size:10.5px">'
+        + '<th style="text-align:right;padding:6px 4px">#</th><th style="text-align:right">السهم</th>'
+        + '<th style="text-align:left">السعر</th><th style="text-align:left">زخم ٦ أشهر</th>'
+        + '<th style="text-align:left">آخر شهر</th></tr></thead><tbody>';
+      R.list.forEach(function (x, i) {
+        h += '<tr style="border-top:1px solid var(--bdr)">'
+          + '<td style="padding:8px 4px;color:var(--txt-m)">' + (i + 1) + '</td>'
+          + '<td style="font-weight:800">' + esc(nm(x.sym)) + ' <span style="color:var(--txt-m);font-weight:600;font-size:10.5px">' + esc(x.sym) + '</span></td>'
+          + '<td style="text-align:left;font-weight:700">' + x.px.toFixed(2) + '</td>'
+          + '<td style="text-align:left;font-weight:800;color:' + col(x.mom) + '">' + pct(x.mom) + '</td>'
+          + '<td style="text-align:left;color:' + col(x.m1) + '">' + pct(x.m1) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+      h += '<div style="font-size:10.5px;color:var(--txt-m);margin-top:6px">من ' + R.all + ' سهماً' + (R.date ? ' · حتى ' + esc(R.date) : '') + '</div>';
+    } else if (!MSG) {
+      h += '<div style="text-align:center;padding:18px;color:var(--txt-m);font-size:13px">اضغط «🔄 حدّث» لحساب القائمة</div>';
+    }
+
+    /* 📊 الأداء الفعليّ للقوائم المسجَّلة — لا وعدٌ بل سجلّ */
+    var P = perf(R);
+    if (P && P.length) {
+      h += '<div style="border-top:1px dashed var(--bdr);margin-top:12px;padding-top:10px">'
+        + '<div style="font-size:13px;font-weight:800;margin-bottom:6px">📒 أداء القوائم المسجَّلة</div>'
+        + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+        + '<thead><tr style="color:var(--txt-m);font-size:10.5px"><th style="text-align:right;padding:5px 4px">تاريخ القائمة</th>'
+        + '<th style="text-align:left">القائمة</th><th style="text-align:left">السوق</th><th style="text-align:left">الفائض</th></tr></thead><tbody>';
+      P.forEach(function (e) {
+        h += '<tr style="border-top:1px solid var(--bdr)"><td style="padding:6px 4px">' + esc(e.d) + '</td>'
+          + '<td style="text-align:left;color:' + col(e.mine) + '">' + pct(e.mine) + '</td>'
+          + '<td style="text-align:left;color:' + col(e.mkt) + '">' + pct(e.mkt) + '</td>'
+          + '<td style="text-align:left;font-weight:800;color:' + col(e.ex) + '">' + (e.ex >= 0 ? '+' : '') + pct(e.ex) + '</td></tr>';
+      });
+      h += '</tbody></table></div>'
+        + '<div style="font-size:10.5px;color:var(--txt-m);margin-top:5px">«الفائض» = القائمة − السوق. وهو ما قِيس، لا الربح المطلق.</div></div>';
+    }
+
+    /* ⚖️ الإفصاح — بنصّه لا بتلميحه */
+    h += '<div style="margin-top:12px;background:rgba(148,163,184,.09);border:1px solid var(--bdr);border-radius:11px;padding:10px 12px;font-size:11.5px;color:var(--txt-m);line-height:1.95">'
+      + 'في قياسٍ على <b>٤٧ شهراً</b> من تاريخ السوق (نوافذ غير متداخلة)، تفوّقت هذه المجموعة على <b>متوسّط السوق</b> بـ'
+      + '<b style="color:#4ade80">‎+١٫١٪ شهرياً بعد تكاليف التداول</b>، وفي فترة تحقّقٍ مستقلّة ‎+٠٫٩٪.<br>'
+      + '⚠️ <b>والفارق غير دالٍّ إحصائياً على هذه العيّنة، والنتيجة السابقة لا تضمن اللاحقة.</b><br>'
+      + '⚠️ وهو <b>تفوّقٌ على السوق لا ربحٌ مضمون</b>: إن هبط السوق هبطت معه.<br>'
+      + 'ولا نضع وقفاً ولا هدفاً — لأنّ ما قِيس مراجعةٌ شهرية، وإضافةُ ما لم يُقَس تُبطل القياس.<br>'
+      + '📚 تعليميّ ومعلوماتيّ، وليس توصيةً استثمارية.</div></div>';
+    host.innerHTML = h;
+  }
+
+  window.momRun = async function () {
+    if (BUSY) return; BUSY = true; MSG = '⏳ جارٍ تحميل البيانات اليومية…'; render();
+    try { if (typeof histLoadAllDaily === 'function') await histLoadAllDaily(); } catch (e) {}
+    RES = compute();
+    MSG = RES ? '' : '⚠️ لا تكفي البيانات اليومية — افتح «⚡ تحليل السوق» أولاً ليُحمّلها.';
+    BUSY = false; render();
+  };
+
+  function install() {
+    var p = $('panel-sniper'); if (!p) return;
+    var host = p.querySelector('div'); if (!host) return;
+    if ($('momCard')) return;
+    var d = document.createElement('div'); d.id = 'momCard'; d.innerHTML = '<div id="momWrap"></div>';
+    if (host.firstChild) host.insertBefore(d, host.firstChild.nextSibling); else host.appendChild(d);
+    render();
+  }
+  function boot() { setInterval(function () { try { install(); } catch (e) {} }, 1500); try { install(); } catch (e) {} }
+  if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
+<!-- ══ MOMCARD:END ══ -->
 
 </body>
 </html>

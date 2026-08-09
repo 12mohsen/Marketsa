@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v456';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v456 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v458';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v458 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2363,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-09-v456 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v458', '💎 مختبر الإشارة الذهبية صار داخل لوحة الأدمن — كان في ملفٍّ منفصل يُفتح محلياً، والتشخيص لا يعمل على `file://` (قاعدة اتّفقنا عليها: يُشغَّل على markets-a.com لا على النسخة المحلّية). فبقي بلا تشغيل. وهو مقصورٌ على الأدمن الرئيسي، يُركّب نفسه بلا تعديل `renderAdminSection`، ولا يمسّ دالّةً واحدة. ويقيس بالدرجات ٨→١١ لأن الذهبية وحدها ≈١٠ إشارات سنوياً لا تكفي لحكم'],
+    ['v457', '🎚️ شروط الذهبية الاثنا عشر في مصدرٍ واحد `_snGoldConds` — كانت مكتوبةً داخل دالّة الرسم وحدها، فمن أراد قياسها تاريخياً اضطُرّ إلى نسخها، ونسخةُ اختبارٍ تقيس غير ما يعمل تمنح ثقةً في ما لم يُقَس. ومعها `_snGoldGrade` (كم شرطاً اجتاز من ١١) وسطرُ تعريضٍ للاختبار. والسبب: الذهبية ≈١٠ إشارات في السنة — دون شرط النشر الذي وضعتَه (١٥ صفقة/سنة) — فلا تُقاس أبداً، والقياس يجب أن يكون بالدرجات'],
     ['v456', '📏 «مطابقة ضعيفة» صارت عيباً يُكتَم به لا سطراً يُقرأ — كان العدّ الذي مطابقته ٣٠٪ (ووصفُنا له: «مفروض على البيانات لا نابع منها») يُنتج خطةً حيّة بدخولٍ ووقفٍ وهدف، وبجانبها سطرٌ رماديّ. رُصد على ٥١ من ٢٦٩ سهماً (١٩٪) والمكتوم ٧ فقط (٣٪). وقولُ العيب دون العمل به أسوأ من السكوت — والمستخدم يأخذ الأرقام ويترك السطر. ومعه: التقرير يعرض أثر كل حدٍّ (٣٥/٤٥/٥٥٪) قبل تغييره'],
     ['v455', '⏱️ حارسُ المدّة القصيرة في «أسعار الخدمات» — شارةٌ تظهر متى كانت مدّة قسمٍ مدفوعٍ أقلّ من ٧ أيام. تُضبط المدّة على يومٍ أثناء التطوير لرؤية أثر الانتهاء بسرعة، فيأتي يوم الإطلاق والانشغال بالمفاتيح فتبقى `1`. وميسر تأخذ ريالاً ثابتاً على كل عملية ⇒ الاشتراك اليوميّ يلتهم ٧٢٪ من الإيراد رسوماً بدل ٣٫٥٪ للشهريّ. تذكيرٌ لا منع، و`0` (دائم) لا تُحذَّر'],
     ['v454', '🔒 شارة «اشترك لعرض المحتوى» كانت تطفو فوق أقسامٍ مفتوحة — رُصد على الجوال: القسم ظاهرٌ واضحاً وفوقه شارةُ حجب، فيظنّ المستخدم ما يراه محجوباً أو يظنّ الحجب مكسوراً. والسبب أنها تُدرَج **قبل** القسم لا داخله (وإلا طالها التظليل فصارت غير مقروءة)، فلا يطالها `display:none` عند تبديل التبويب ولأنها sticky تسبح فوق غيرها. رُبطت بحال قسمها بـ`:has()` وبحارسٍ في الشيفرة'],
@@ -13853,6 +13855,42 @@ document.addEventListener('keydown', e => {
     if (rrRef == null || rrRef < 1.5) return false;
     return true;
   }
+  /* ══════════════════════════════════════════════════════════════════════
+     💎 شروط الذهبية في **مكانٍ واحد** — تُقرأ وتُعرض وتُختبر من هنا
+
+     كانت مكتوبةً داخل دالّة الرسم وحدها. فمن أراد أن يقيسها تاريخياً
+     اضطُرّ إلى نسخها — ونسخةُ الاختبار التي تقيس غير ما يعمل تمنح ثقةً
+     في ما لم يُقَس. وقد كلّفنا هذا النمط أخطاءً اليوم أكثر من مرّة.
+     ▸ `info: true` ⇒ تُعرض للاطّلاع ولا تُحتسب شرطاً (VWAP).
+     ⚠️ وهي **شرحُ** `_snGolden` لا بديلُه: الحكم النهائي منه وحده، وفيه
+        حرّاسٌ إضافية (تطابق الأساس · صلاحية المدى السنوي · حالة التنفيذ).
+     ══════════════════════════════════════════════════════════════════════ */
+  function _snGoldConds() {
+    return [
+      { n: '💧 سيولة كافية (≥300 ألف/يوم)', f: r => !_snIlliquid(r) },
+      { n: '⚖️ فوق متوسط المشترين (VWAP) — معلومة لا شرط', f: r => _snAboveVwap(r), info: true },
+      { n: '🌱 ليس سهماً حديثاً', f: r => !(r.bars && r.bars < 240) },
+      { n: '🧩 توافق ≥ 3/5', f: r => _snConflCount(r) >= 3 },
+      { n: '🕯️ زناد صعودي', f: r => !!(r.elTrig && r.elTrig.dir === 'bull') },
+      { n: '📦 بعيد عن منطقة العرض', f: r => !(r.elZone && r.elZone.inSupply) },
+      { n: '📊 انحياز صاعد', f: r => !!(r.elCircle && r.elCircle.bias === 'صاعد') },
+      { n: '🕐 نافذة نشطة/قريبة', f: r => !!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5) },
+      { n: '💰 جراهام غير غالٍ', f: r => { const g = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null; return !(g && g.verdict === 'غالٍ'); } },
+      { n: '🚫 السعر قريب من الدخول (لا مطاردة)', f: r => { const e = r.elPlan.entry; return !(e > 0 && r.price > e * 1.08); } },
+      { n: '🛡️ الوقف بعيد بما يكفي (≥ مدى يوم)', f: r => { const k = _snRisk(r); return !!(k && !k.belowStop && !k.tight); } },
+      { n: '⚖️ ع/م ≥ 1.5', f: r => { const p = r.elPlan, k = _snRisk(r); if (!k || k.belowStop) return false; const ref = k.pending ? +p.entry : r.price; const rr = (ref > p.stop) ? (p.target - ref) / (ref - p.stop) : null; return rr != null && rr >= 1.5; } },
+    ];
+  }
+  /* 🔢 كم شرطاً اجتاز هذا السهم؟ (الشروط الحقيقية وحدها بلا `info`) */
+  function _snGoldGrade(r) {
+    let pass = 0, total = 0;
+    _snGoldConds().forEach(c => {
+      if (c.info) return;
+      total++;
+      try { if (c.f(r)) pass++; } catch (_) {}
+    });
+    return { pass, total };
+  }
   /* 🎯 معايرة النجاح: نسبة نجاح فعلية من تاريخك — حسب درجة التوافق (تتراكم) أو الاحتمال (متوفّرة الآن) */
   function snCalib(r, cN) {
     const MIN = 8;   // حدّ أدنى من الحالات المكتملة حتى نثق بالنسبة
@@ -15988,23 +16026,8 @@ document.addEventListener('keydown', e => {
         }
         /* 🔬 مشخِّص: أين الاختناق فعلاً؟ نعدّ كم سهماً اجتاز كل شرط */
         const base = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(r => r.elPlan && r.elPlan.rr);
-        let conds = [
-          { n: '💧 سيولة كافية (≥300 ألف/يوم)', f: r => !_snIlliquid(r) },
-          /* ℹ️ info:true = تُعرض في الخريطة للاطّلاع، ولا تُحتسب في «الأقرب للاكتمال»
-             ولا تُدرج في «ينقصه» — لأنها ليست شرطاً للذهبية أصلاً. خلطها بالشروط
-             كان يُنقص درجة أسهمٍ مكتملة فعلاً ويوهم بأن نقصها يمنعها. */
-          { n: '⚖️ فوق متوسط المشترين (VWAP) — معلومة لا شرط', f: r => _snAboveVwap(r), info: true },
-          { n: '🌱 ليس سهماً حديثاً', f: r => !(r.bars && r.bars < 240) },
-          { n: '🧩 توافق ≥ 3/5', f: r => _snConflCount(r) >= 3 },
-          { n: '🕯️ زناد صعودي', f: r => !!(r.elTrig && r.elTrig.dir === 'bull') },
-          { n: '📦 بعيد عن منطقة العرض', f: r => !(r.elZone && r.elZone.inSupply) },
-          { n: '📊 انحياز صاعد', f: r => !!(r.elCircle && r.elCircle.bias === 'صاعد') },
-          { n: '🕐 نافذة نشطة/قريبة', f: r => !!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5) },
-          { n: '💰 جراهام غير غالٍ', f: r => { const g = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null; return !(g && g.verdict === 'غالٍ'); } },
-          { n: '🚫 السعر قريب من الدخول (لا مطاردة)', f: r => { const e = r.elPlan.entry; return !(e > 0 && r.price > e * 1.08); } },
-          { n: '🛡️ الوقف بعيد بما يكفي (≥ مدى يوم)', f: r => { const k = _snRisk(r); return !!(k && !k.belowStop && !k.tight); } },
-          { n: '⚖️ ع/م ≥ 1.5', f: r => { const p = r.elPlan, k = _snRisk(r); if (!k || k.belowStop) return false; const ref = k.pending ? +p.entry : r.price; const rr = (ref > p.stop) ? (p.target - ref) / (ref - p.stop) : null; return rr != null && rr >= 1.5; } },
-        ];
+        /* 📋 من المصدر الواحد — لا نسخة هنا */
+        let conds = _snGoldConds();
         const condDefs = conds;
         /* ⚠️ يُحفظ وسم `info` عبر التحويل — كان يُسقَط هنا، فيرى حسابُ
            معدّل الندرة 12 شرطاً بينما «الأقرب للاكتمال» يقيّم على 11.
@@ -16461,6 +16484,19 @@ document.addEventListener('keydown', e => {
     } catch (e) {}
     return false;
   }
+  /* ══ SNTEST:EXPOSE ══ تعريضٌ للاختبار — لا يُغيّر منطقاً ولا يُعدّل دالّة.
+     يُعرَّض **الإنتاج نفسه** ليُقاس، لا نسخةٌ عنه. والبُناة التسع لازمة
+     لأن الاختبار يبني كائن النتيجة عند كل شمعة تاريخية — وبلاها يُبنى
+     كائنٌ ناقص فيُرفض على «لا زناد» ⇒ صفرٌ كاذب سببه الأداة لا الشروط. */
+  try { window._snTest = {
+    _snGolden: _snGolden, _snGoldConds: _snGoldConds, _snGoldGrade: _snGoldGrade,
+    _snConflCount: _snConflCount, _snRisk: _snRisk,
+    _snExecKey: _snExecKey, _rrNet: _rrNet, _snIlliquid: _snIlliquid, _snAboveVwap: _snAboveVwap,
+    _candleReversalRecent: _candleReversalRecent, _zones: _zones, _harmonic: _harmonic,
+    _timeWindow: _timeWindow, _gannLevels: _gannLevels, _digitalCircle: _digitalCircle,
+    _trigVolRatio: _trigVolRatio, _liq20: _liq20, _vwapAnchored: _vwapAnchored,
+  }; } catch (_) {}
+  /* ══ SNTEST:EXPOSE:END ══ */
   window.snSyncIfNewer = radarSyncIfNewer;
 
   /* ⚡ يضمن توفّر نتائج المسح مبكراً + يتحقّق من وجود أحدث */
@@ -21814,5 +21850,357 @@ switchTab = function (tab, btn) {
   else document.addEventListener('DOMContentLoaded', boot);
 })();
 </script>
+
+<!-- ══ SNTEST:BEGIN ══ مختبر الذهبية — نزعُه يُعيد الملفّ إلى v438 + سطر التعريض ══ -->
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   💎 مختبر الإشارة الذهبية — يقيس **الإنتاج نفسه** عبر `window._snTest`
+   وحدةٌ مستقلّة: لا تُعدّل دالّة، ولا تنسخ منطقاً، ولا تُغيّر سلوكاً.
+   نزعُها = حذف ما بين علامتي SNTEST.
+   ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var HOLD = 40, COST = 0.155, STEP = 5, MINBARS = 260;
+  var BUSY = false, STOP = false, RES = null, PROG = '';
+
+  function vis() { try { return typeof isSuperAdmin === 'function' && isSuperAdmin(); } catch (e) { return false; } }
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function setP(t) { PROG = t; var e = $('gtProg'); if (e) e.textContent = t; }
+
+  /* 📄 قراءة الشموع: تنازلياً بحدٍّ صريح ثم عكس — سقف PostgREST 1000 صفّ */
+  async function loadBars(sym) {
+    try {
+      if (typeof sb === 'undefined' || !sb) return null;
+      var all = [], from = 0;
+      while (from < 2600) {
+        var q = await sb.from('historical_prices').select('d,o,h,l,c,v').eq('symbol', sym)
+          .order('d', { ascending: false }).range(from, from + 999);
+        if (q.error || !q.data || !q.data.length) break;
+        all = all.concat(q.data);
+        if (q.data.length < 1000) break;
+        from += 1000;
+      }
+      if (!all.length) return null;
+      return all.map(function (r) { return { o: +r.o, h: +r.h, l: +r.l, c: +r.c, v: +r.v || 0, d: r.d }; }).reverse();
+    } catch (e) { return null; }
+  }
+
+  /* 🧩 كائن نتيجةٍ عند الشمعة i — بنفس ما يبنيه `predScanAll` */
+  function synthR(sym, name, bars, i) {
+    var sl = bars.slice(0, i + 1);
+    if (sl.length < MINBARS) return null;
+    var px = +sl[sl.length - 1].c; if (!(px > 0)) return null;
+    var r = { sym: sym, name: name, price: px, bars: sl.length };
+    try { var el = elliottCompute(sl, px); if (!el) return null;
+      r.elStage = el.stage; r.elWave = el.nowWave; r.elDir = el.dir;
+      r.elConf = el.confidence; r.elConfl = el.confluence; r.elPlan = el.plan; } catch (e) { return null; }
+    try { r.elTrig = _T._candleReversalRecent ? _T._candleReversalRecent(sl, 4) : null; } catch (e) {}
+    try { r.elZone = _T._zones ? _T._zones(sl, px) : null; } catch (e) {}
+    try { r.elHarm = _T._harmonic ? _T._harmonic(sl, px) : null; } catch (e) {}
+    try { r.elTime = _T._timeWindow ? _T._timeWindow(sl) : null; } catch (e) {}
+    try { r.elGann = _T._gannLevels ? _T._gannLevels(sl, px) : null; } catch (e) {}
+    try { r.elCircle = _T._digitalCircle ? _T._digitalCircle(sl, px) : null; } catch (e) {}
+    try { r.trigVol = (r.elTrig && _T._trigVolRatio) ? _T._trigVolRatio(sl, r.elTrig.age || 0) : null; } catch (e) {}
+    try { r.liq20 = _T._liq20 ? _T._liq20(sl) : null; } catch (e) {}
+    try { r.vwapA = _T._vwapAnchored ? _T._vwapAnchored(sl, 120) : null; } catch (e) {}
+    var hi = -Infinity, lo = Infinity, j;
+    for (j = Math.max(0, i - 251); j <= i; j++) { var H = +sl[j].h, L = +sl[j].l; if (H > hi) hi = H; if (L < lo) lo = L; }
+    r.high = hi; r.low = lo;
+    try { var atr = _atr14(sl); if (atr > 0) r.atrPct = (atr / px) * 100; } catch (e) {}
+    r.eps = null;   /* ⚠️ الأرباح لا تُستعاد تاريخياً — شرط جراهام يسقط (يُعلَن) */
+    return r;
+  }
+  function _atr14(c) {
+    var n = c.length, p = 14, prev = null, s = 0, i, tr;
+    if (n < p + 1) return null;
+    for (i = n - p; i < n; i++) {
+      tr = Math.max(+c[i].h - +c[i].l, Math.abs(+c[i].h - +c[i - 1].c), Math.abs(+c[i].l - +c[i - 1].c));
+      s += tr;
+    }
+    return s / p;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     🔎 أوّل شرطٍ يسقط — بترتيب `_snGolden` نفسه
+     الحكم النهائي يأتي من `_snTest._snGolden` (الإنتاج).
+     وهذه لتفصيل **أين** يسقط، ثم نتحقّق أن الاثنين لا يتناقضان.
+     ══════════════════════════════════════════════════════════════════ */
+  var COND = [
+    ['plan',    'لا خطّة إليوت (elPlan.rr)'],
+    ['liq',     'سيولة دون الحدّ'],
+    ['young',   'تاريخ أقصر من 240 شمعة'],
+    ['confl',   'توافق أقلّ من 3'],
+    ['trig',    'لا زناد صعودي'],
+    ['supply',  'داخل منطقة عرض'],
+    ['circle',  'الانحياز الرقمي ليس صاعداً'],
+    ['time',    'خارج نافذة الوقت'],
+    ['range',   'نطاق سنوي غير صالح'],
+    ['graham',  'جراهام: غالٍ'],
+    ['exec',    'ليست «عند الدخول الآن»'],
+    ['risk',    'الوقف ملتصق أو السعر تحته'],
+    ['rr',      'العائد/المخاطرة دون 1.5'],
+  ];
+  function firstFail(r) {
+    var T = _T;
+    if (!r.elPlan || !r.elPlan.rr) return 'plan';
+    if (T._snIlliquid(r)) return 'liq';
+    if (r.bars && r.bars < 240) return 'young';
+    if (T._snConflCount(r) < 3) return 'confl';
+    if (!(r.elTrig && r.elTrig.dir === 'bull')) return 'trig';
+    if (r.elZone && r.elZone.inSupply) return 'supply';
+    if (!(r.elCircle && r.elCircle.bias === 'صاعد')) return 'circle';
+    if (!(r.elTime && r.elTime.barsFromNow <= 25 && r.elTime.barsFromNow >= -5)) return 'time';
+    if (!(+r.high > 0) || !(+r.low > 0) || +r.high <= +r.low) return 'range';
+    var gr = (typeof grahamValue === 'function') ? grahamValue(r.eps, r.price) : null;
+    if (gr && gr.verdict === 'غالٍ') return 'graham';
+    if (T._snExecKey(r) !== 'now') return 'exec';
+    var rk = T._snRisk(r);
+    if (!rk || rk.belowStop || rk.tight) return 'risk';
+    var ref = rk.pending ? r.elPlan.entry : r.price;
+    var rr = T._rrNet(ref, r.elPlan.stop, r.elPlan.target);
+    if (rr == null || rr < 1.5) return 'rr';
+    return null;
+  }
+
+  function runTrade(bars, i, entry, stop, target) {
+    var c = COST / 100, en = entry * (1 + c), R = en - stop;
+    if (!(R > 0)) return null;
+    var n = bars.length, last = i + HOLD;
+    if (last > n - 1) return { immature: true };
+    var k, exit = null, how = null, used = 0;
+    for (k = i + 1; k <= last; k++) {
+      used = k - i;
+      if (+bars[k].l <= stop) { exit = stop; how = 'stop'; break; }
+      if (+bars[k].h >= target) { exit = target; how = 'target'; break; }
+    }
+    if (exit === null) { exit = +bars[last].c; how = 'time'; used = HOLD; }
+    return { r: +(((exit * (1 - c)) - en) / R).toFixed(3), how: how, bars: used };
+  }
+
+  var _T = null;
+  async function run() {
+    if (BUSY) return;
+    _T = window._snTest;
+    if (!_T || typeof _T._snGolden !== 'function') { setP('⛔ window._snTest غير متاح'); render(); return; }
+    if (typeof elliottCompute !== 'function') { setP('⛔ elliottCompute غير متاحة'); render(); return; }
+    var syms = [], seen = {};
+    try { if (typeof rows !== 'undefined' && Array.isArray(rows))
+      rows.forEach(function (r) { if (r && r.sym && !seen[r.sym]) { seen[r.sym] = 1; syms.push(String(r.sym)); } }); } catch (e) {}
+    if (!syms.length) { setP('⚠️ افتح «🔮 رادار» أولاً لتُحمَّل الرموز'); render(); return; }
+
+    BUSY = true; STOP = false;
+    var t0 = Date.now(), evals = 0, hits = 0, matured = 0, immature = 0, disagree = 0;
+    var fail = {}; COND.forEach(function (c) { fail[c[0]] = 0; });
+    var trades = [], base = [], sx = 20260806;
+    /* 🎚️ صفقاتٌ حسب الدرجة (كم شرطاً من ١١ اجتاز) — لأن الذهبية وحدها
+       ≈١٠ إشارات في السنة، وهي عيّنةٌ لا تُقاس بأيّ معيارٍ اتّفقنا عليه.
+       فنُقيس ٨/١١ و٩/١١ و١٠/١١ و١١/١١ معاً، ونرى أين يبدأ العائد. */
+    var byG = { 8: [], 9: [], 10: [], 11: [] };
+    var rnd = function () { sx = (sx * 1103515245 + 12345) & 0x7fffffff; return sx / 0x7fffffff; };
+
+    for (var q = 0; q < syms.length && !STOP; q++) {
+      var bars = await loadBars(syms[q]);
+      if (bars && bars.length >= MINBARS + HOLD) {
+        var n = bars.length;
+        for (var i = MINBARS; i < n; i += STEP) {
+          evals++;
+          var r = synthR(syms[q], syms[q], bars, i);
+          if (!r) { fail.plan++; continue; }
+          var ff = firstFail(r);
+          var gold = false;
+          try { gold = !!_T._snGolden(r); } catch (e) {}
+          if ((ff === null) !== gold) disagree++;      /* 🔍 تناقضٌ بين التفصيل والإنتاج */
+          if (ff !== null) fail[ff]++;
+          /* 🎚️ الدرجة: كم شرطاً اجتاز من ١١ — من المصدر الواحد `_snGoldConds` */
+          var gr = null; try { gr = _T._snGoldGrade ? _T._snGoldGrade(r) : null; } catch (e) {}
+          var gp = gr ? gr.pass : -1;
+          if (gp < 8 && ff !== null) continue;      // دون الثامنة ولا ذهبية ⇒ لا تُقاس
+          if (ff === null) hits++;
+          var p = r.elPlan;
+          if (!(+p.entry > 0) || !(+p.stop > 0) || !(+p.target > 0)) continue;
+          var tr = runTrade(bars, i, +p.entry, +p.stop, +p.target);
+          if (!tr) continue;
+          if (tr.immature) { immature++; continue; }
+          matured++;
+          var _rec = { sym: syms[q], t: String(bars[i].d).slice(0, 10), r: tr.r, how: tr.how, b: tr.bars };
+          for (var _g = 8; _g <= 11; _g++) if (gp >= _g) byG[_g].push(_rec);
+          if (ff !== null) continue;                 // ما دون الذهبية لا يدخل الأساس ولا `trades`
+          trades.push(_rec);
+          var rp = (+p.entry - +p.stop) / +p.entry, rt = (+p.target - +p.entry) / +p.entry;
+          for (var m = 0; m < 5; m++) {
+            var j = MINBARS + Math.floor(rnd() * Math.max(1, (n - HOLD - 1) - MINBARS));
+            if (Math.abs(j - i) < HOLD) continue;
+            var e2 = +bars[j].c, b2 = runTrade(bars, j, e2, e2 * (1 - rp), e2 * (1 + rt));
+            if (b2 && !b2.immature) base.push({ t: String(bars[j].d).slice(0, 10), r: b2.r, how: b2.how });
+          }
+        }
+      }
+      if (q % 2 === 0) setP('⏳ ' + (q + 1) + '/' + syms.length + ' رمز · ' + evals + ' عيّنة · '
+        + hits + ' تحقّقت شروطها · ' + matured + ' اكتمل أفقها · ' + Math.round((Date.now() - t0) / 1000) + ' ث');
+      await new Promise(function (rs) { setTimeout(rs, 0); });
+    }
+    BUSY = false;
+    RES = { evals: evals, hits: hits, matured: matured, immature: immature, disagree: disagree,
+            fail: fail, trades: trades, base: base, byG: byG, secs: Math.round((Date.now() - t0) / 1000),
+            syms: syms.length, stopped: STOP, step: STEP };
+    setP('✅ اكتمل · ' + evals + ' عيّنة · ' + hits + ' تحقّقت · ' + matured + ' مكتملة');
+    render();
+  }
+  window.gtRun = function () { run(); };
+  window.gtStop = function () { STOP = true; };
+
+  function stat(a) {
+    if (!a || !a.length) return { n: 0 };
+    var w = 0, s = 0, i;
+    for (i = 0; i < a.length; i++) { if (a[i].r > 0) w++; s += a[i].r; }
+    var m = s / a.length, sd = 0;
+    if (a.length > 1) { for (i = 0; i < a.length; i++) sd += (a[i].r - m) * (a[i].r - m); sd = Math.sqrt(sd / (a.length - 1)); }
+    return { n: a.length, winRate: +(w / a.length * 100).toFixed(1), expR: +m.toFixed(3),
+             t: sd > 0 ? +(m / (sd / Math.sqrt(a.length))).toFixed(2) : null };
+  }
+  window.gtCopy = function () {
+    if (!RES) return;
+    var L = ['=== اختبار الإشارة الذهبية — على window._snTest (الإنتاج) ==='];
+    /* 🎚️ الجدول الحاسم: العائد حسب الدرجة. الذهبية (١١/١١) نادرةٌ لا تُقاس،
+       فإن ظهر عائدٌ موجبٌ ثابت عند ٩ أو ١٠ فذاك هو المنتج القابل للبيع. */
+    (function () {
+      L.push('');
+      L.push('--- العائد حسب الدرجة (كم شرطاً من 11) ---');
+      L.push('الدرجة | صفقات | نجاح% | متوسط R | t');
+      for (var g = 8; g <= 11; g++) {
+        var st = stat(RES.byG && RES.byG[g]);
+        L.push('  ' + g + '/11 | ' + (st.n || 0) + ' | ' + (st.winRate != null ? st.winRate : '—')
+          + ' | ' + (st.expR != null ? st.expR : '—') + ' | ' + (st.t != null ? st.t : '—'));
+      }
+      L.push('(الدرجة تُراكم: صفقات 9/11 تشمل 10 و11)');
+    })();
+    L.push('رموز: ' + RES.syms + ' · عيّنات: ' + RES.evals + ' (كل ' + RES.step + ' شموع) · ' + RES.secs + ' ثانية');
+    L.push('تحقّقت شروط _snGolden: ' + RES.hits);
+    L.push('منها اكتمل أفقها 40 شمعة: ' + RES.matured + ' · لم يكتمل: ' + RES.immature);
+    L.push('تناقض بين التفصيل والإنتاج: ' + RES.disagree);
+    L.push('');
+    L.push('عدّاد أوّل شرطٍ يُسقط الحالة:');
+    COND.forEach(function (c) { L.push('  ' + c[1] + '\t' + (RES.fail[c[0]] || 0)); });
+    L.push('');
+    var st = stat(RES.trades), bs = stat(RES.base);
+    L.push('الذهبية: n=' + st.n + (st.n ? (' · ' + st.expR + 'R · ' + st.winRate + '% · t=' + st.t) : ''));
+    L.push('الأساس : n=' + bs.n + (bs.n ? (' · ' + bs.expR + 'R · ' + bs.winRate + '% · t=' + bs.t) : ''));
+    var yr = {}; RES.trades.forEach(function (t) { (yr[String(t.t).slice(0, 4)] = yr[String(t.t).slice(0, 4)] || []).push(t); });
+    L.push('');
+    L.push('لكل سنة:');
+    Object.keys(yr).sort().forEach(function (y) { var s2 = stat(yr[y]); L.push('  ' + y + '\tn=' + s2.n + '\t' + s2.expR + 'R\t' + s2.winRate + '%\tt=' + s2.t); });
+    var txt = L.join('\n');
+    try { navigator.clipboard.writeText(txt); if (typeof showToast === 'function') showToast('📋 نُسخ التقرير'); }
+    catch (e) { try { console.log(txt); } catch (_) {} }
+    return txt;
+  };
+
+  function render() {
+    var host = $('gtWrap'); if (!host) return;
+    if (!vis()) { host.innerHTML = ''; return; }
+    var h = '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px;margin-top:14px">'
+      + '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px">'
+      + '<div style="font-size:15px;font-weight:900">💎 اختبار الإشارة الذهبية <span style="font-size:10px;color:var(--txt-m);font-weight:600">للأدمن — غير منشور</span></div>'
+      + '<button onclick="gtRun()" style="cursor:pointer;font-family:inherit;border:none;border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:800;color:#0b1220;background:linear-gradient(135deg,#facc15,#fbbf24)">💎 شغّل الاختبار</button>'
+      + '<button onclick="gtStop()" style="cursor:pointer;font-family:inherit;border:1px solid rgba(248,113,113,.5);border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:800;color:#fca5a5;background:rgba(248,113,113,.12)">⏹️</button>'
+      + (RES ? '<button onclick="gtCopy()" style="cursor:pointer;font-family:inherit;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:800">📋 انسخ</button>' : '')
+      + '<span id="gtProg" style="flex:1 0 100%;font-size:11.5px;color:var(--txt-m);padding-top:3px">' + esc(PROG) + '</span></div>'
+      + '<div style="font-size:10.5px;color:var(--txt-m);line-height:1.9;margin-bottom:9px">'
+      + 'يُنادي <b><code>window._snTest._snGolden</code></b> — <b>دالّة الإنتاج نفسها</b>، لا نسخةً عنها.<br>'
+      + 'دخول عند الإشارة · وقف وهدف من <code>elPlan</code> · مهلة <b>' + HOLD + '</b> شمعة · عمولة <b>' + COST + '٪</b> لكل جانب · معاينة كل <b>' + STEP + '</b> شموع.<br>'
+      + '⚠️ الأرباح (EPS) لا تُستعاد تاريخياً ⇒ شرط جراهام يسقط، فالذهبية المُعادة <b>أوسع قليلاً</b> من الحقيقية.</div>';
+
+    if (RES) {
+      var st = stat(RES.trades), bs = stat(RES.base);
+      var rate = RES.evals ? (RES.hits / RES.evals * 100) : 0;
+      h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">'
+        + box('العيّنات', RES.evals, 'كل ' + RES.step + ' شموع')
+        + box('تحقّقت الشروط', RES.hits, rate.toFixed(3) + '٪ من العيّنات')
+        + box('اكتمل أفقها', RES.matured, RES.immature + ' لم يكتمل')
+        + box('تناقض', RES.disagree, RES.disagree ? '🚨 راجع' : '✅ لا شيء')
+        + '</div>';
+
+      /* 🎯 الحكم الصريح على الندرة */
+      if (RES.hits === 0 || RES.matured < 10) {
+        h += '<div style="background:rgba(248,113,113,.13);border:1px solid rgba(248,113,113,.5);border-radius:11px;padding:12px 14px;margin-bottom:10px;font-size:12.5px;color:#fca5a5;line-height:2">'
+          + '⛔ <b>النتيجة: الشروط لم تتحقّق تاريخياً إلا ' + RES.hits + ' مرّة'
+          + (RES.matured !== RES.hits ? ' (' + RES.matured + ' منها فقط اكتمل أفقها)' : '') + '.</b><br>'
+          + 'وهذا يعني أن <b>الذهبية تُعرض على المستخدمين بشروطٍ لا يكاد التاريخ يُنتجها</b> — '
+          + 'فلا عيّنة تكفي للحكم عليها، ولا سبيل لمعرفة هل تنفع أم تضرّ.<br>'
+          + '<b>وهذا قرارٌ لا تجميل:</b> إمّا تُخفَّف الشروط حتى تصير قابلةً للقياس، وإمّا يُرفع عنها وصف «ذهبية» '
+          + 'ولا تُبثّ في تلجرام على أنها فرصةٌ مؤكَّدة.</div>';
+      }
+
+      h += '<div style="font-size:12.5px;font-weight:800;margin-bottom:5px">🔎 أيّ شرطٍ يُسقط أكثر الحالات؟ (أوّل شرطٍ يفشل)</div>'
+        + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+        + '<thead><tr style="color:var(--txt-m);font-size:10px"><th style="text-align:right;padding:5px">الشرط</th><th>عدد الحالات</th><th>٪ من العيّنات</th></tr></thead><tbody>';
+      var arr = COND.map(function (c) { return { k: c[0], t: c[1], n: RES.fail[c[0]] || 0 }; })
+                    .sort(function (a, b2) { return b2.n - a.n; });
+      arr.forEach(function (x) {
+        var pc = RES.evals ? (x.n / RES.evals * 100) : 0;
+        h += '<tr style="border-bottom:1px solid var(--bdr)"><td style="padding:5px">' + esc(x.t) + '</td>'
+          + '<td style="padding:5px;text-align:center;font-weight:900">' + x.n + '</td>'
+          + '<td style="padding:5px;text-align:center;color:var(--txt-m)">' + pc.toFixed(2) + '٪'
+          + '<div style="height:4px;background:rgba(148,163,184,.15);border-radius:3px;margin-top:3px"><div style="height:4px;border-radius:3px;background:#f87171;width:' + Math.min(100, pc).toFixed(1) + '%"></div></div></td></tr>';
+      });
+      h += '</tbody></table></div>';
+
+      if (st.n) {
+        var yr = {}; RES.trades.forEach(function (t) { (yr[String(t.t).slice(0, 4)] = yr[String(t.t).slice(0, 4)] || []).push(t); });
+        h += '<div style="font-size:12.5px;font-weight:800;margin:10px 0 5px">📅 النتيجة لكل سنة</div>'
+          + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+          + '<thead><tr style="color:var(--txt-m);font-size:10px"><th style="text-align:right;padding:5px">السنة</th><th>n</th><th>التوقّع</th><th>نجاح</th><th>t</th></tr></thead><tbody>';
+        Object.keys(yr).sort().forEach(function (y) {
+          var s2 = stat(yr[y]);
+          h += '<tr style="border-bottom:1px solid var(--bdr)"><td style="padding:5px;font-weight:800">' + y + '</td>'
+            + '<td style="padding:5px;text-align:center">' + s2.n + '</td>'
+            + '<td style="padding:5px;text-align:center;font-weight:900;color:' + (s2.expR > 0 ? '#4ade80' : '#f87171') + '">' + (s2.expR > 0 ? '+' : '') + s2.expR + '</td>'
+            + '<td style="padding:5px;text-align:center">' + s2.winRate + '٪</td>'
+            + '<td style="padding:5px;text-align:center;color:var(--txt-m)">' + (s2.t == null ? '—' : s2.t) + '</td></tr>';
+        });
+        h += '<tr style="background:rgba(148,163,184,.1);font-weight:900"><td style="padding:5px">الكل</td>'
+          + '<td style="padding:5px;text-align:center">' + st.n + '</td>'
+          + '<td style="padding:5px;text-align:center;color:' + (st.expR > 0 ? '#4ade80' : '#f87171') + '">' + (st.expR > 0 ? '+' : '') + st.expR + '</td>'
+          + '<td style="padding:5px;text-align:center">' + st.winRate + '٪</td>'
+          + '<td style="padding:5px;text-align:center">' + (st.t == null ? '—' : st.t) + '</td></tr>'
+          + '<tr style="color:var(--txt-m)"><td style="padding:5px">🎲 خطّ الأساس (يومٌ عشوائي · نفس الهندسة)</td>'
+          + '<td style="padding:5px;text-align:center">' + bs.n + '</td>'
+          + '<td style="padding:5px;text-align:center;font-weight:900">' + (bs.n ? ((bs.expR > 0 ? '+' : '') + bs.expR) : '—') + '</td>'
+          + '<td style="padding:5px;text-align:center">' + (bs.n ? bs.winRate + '٪' : '—') + '</td>'
+          + '<td style="padding:5px;text-align:center">' + (bs.t == null ? '—' : bs.t) + '</td></tr></tbody></table></div>';
+      }
+    }
+    h += '</div>';
+    host.innerHTML = h;
+  }
+  function box(l, v, s) {
+    return '<div style="background:var(--surf-alt);border-radius:10px;padding:9px;text-align:center">'
+      + '<div style="font-size:10px;color:var(--txt-m)">' + l + '</div>'
+      + '<div style="font-size:18px;font-weight:900">' + v + '</div>'
+      + '<div style="font-size:9.5px;color:var(--txt-m)">' + s + '</div></div>';
+  }
+
+  /* 🧩 تركيبٌ ذاتيّ في لوحة الأدمن — بلا تعديل `renderAdminSection` */
+  function install() {
+    if (!vis()) { var o = $('gtCard'); if (o) o.remove(); return; }
+    var w = $('adminSectionWrap'); if (!w || !w.children.length) return;
+    if ($('gtCard')) return;
+    var d = document.createElement('div'); d.id = 'gtCard'; d.innerHTML = '<div id="gtWrap"></div>';
+    w.appendChild(d); render();
+  }
+  function boot() {
+    var w = $('adminSectionWrap');
+    if (w && typeof MutationObserver === 'function')
+      new MutationObserver(function () { try { install(); } catch (e) {} }).observe(w, { childList: true });
+    setInterval(function () { try { install(); } catch (e) {} }, 1500);
+    try { install(); } catch (e) {}
+  }
+  if (document.readyState !== 'loading') boot();
+  else document.addEventListener('DOMContentLoaded', boot);
+})();
+
+</script>
+<!-- ══ SNTEST:END ══ -->
 </body>
 </html>

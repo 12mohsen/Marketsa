@@ -2357,8 +2357,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-10-v474';
-console.log('%c[تداول بلس] البناء: 2026-08-10-v474 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v475';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v475 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2368,6 +2368,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-10-v474 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v475', '🛡️ الكابتشا كانت تكسر إعادة توثيق الأدمن — رصده الاختبار: بعد تفعيلها صار كلُّ نداءٍ لـ`signInWithPassword` يحتاج رمزاً، ومنه تأكيدُ حذف الحساب. فيُردّ بلا رمز، والشيفرة تقول «كلمة المرور غير صحيحة» — اتّهامٌ كاذب يجعل الأدمن يشكّ في كلمةٍ صحيحة. الآن: ودجةٌ في نافذة الحذف، ورسالةٌ تُفرّق بين فشل الكابتشا وخطأ كلمة المرور. وعُمّمت الودجة لتُرسم في أيّ حاوية بمعرّفها'],
     ['v474', '🔐 شروط كلمة المرور تُقال بالعربية وقبل المحاولة لا بعد رفضها — رُصد في أوّل تجربة تسجيل: رسالة Supabase إنجليزيّة تسرد الأبجدية كلَّها فيراها المستخدم جداراً من الحروف. صارت تُترجَم إلى «تشمل حرفاً كبيراً وصغيراً ورقماً»، وأُضيف سطرُ شروطٍ ظاهرٌ تحت الحقل عند إنشاء الحساب. ومعها ترجمةُ رسائل الكابتشا وحدّ الطول أياً كان رقمه'],
     ['v473', '⏳ رمز الكابتشا يُجدَّد تلقائياً عند فساده — يفسد بعد نحو خمس دقائق، ومن يفتح نافذة الدخول ثمّ ينشغل ثمّ يعود فيضغط «دخول» كان سيُردّ بخطأٍ لا يفهمه. وهو أسوأ ما يقع لمن يحاول الدخول أصلاً. ومعه إعادةُ محاولةٍ تلقائية عند تعثّر الشبكة'],
     ['v472', '🔑 ضُبط مفتاح موقع Turnstile — فالودجة تظهر الآن في نموذج الدخول والتسجيل. ولا أثر لها حتى تُفعَّل الكابتشا في Supabase بالمفتاح السرّي: الرمز يُرسَل ويُهمَل. فالرفع لا يكسر شيئاً، والتفعيل خطوةٌ مستقلّة بيدك — ومفتاح الإيقاف إطفاؤها في Supabase'],
@@ -3434,7 +3435,16 @@ const SUPPORT_FORM_ID = SUPPORT_FORM_IDS[0];   // الأساسيّ (لمسار A
    ▸ وما دام هذا الثابت فارغاً، لا ودجة ولا رمز — والسلوك كما هو تماماً.
    ══════════════════════════════════════════════════════════════════════════ */
 const TURNSTILE_SITE_KEY = '0x4AAAAAAEMV64HySksVR3mV';   /* مفتاح الموقع — عامٌّ بطبيعته، يظهر في المصدر لكل زائر */
-let _tsWidget = null, _tsLoading = null;
+/* ══════════════════════════════════════════════════════════════════════════
+   🗺️ ودجةٌ لكل حاوية — لا واحدةٌ للتطبيق كلّه
+
+   العلّة التي كشفها الاختبار: بعد تفعيل الكابتشا صار **كلُّ** نداءٍ لـ
+   `signInWithPassword` يحتاج رمزاً — ومنها إعادةُ توثيق الأدمن قبل حذف
+   حساب. فكان يُردّ بلا رمز، والشيفرة تقول «كلمة المرور غير صحيحة» —
+   **اتّهامٌ كاذب** يجعل الأدمن يشكّ في كلمته وهي صحيحة.
+   ▸ فصارت الودجة تُرسم في أيّ حاوية بمعرّفها، ولكلٍّ رمزُها المستقلّ.
+   ══════════════════════════════════════════════════════════════════════════ */
+let _tsWidgets = {}, _tsLoading = null;
 
 function _tsOn() { return !!(TURNSTILE_SITE_KEY && String(TURNSTILE_SITE_KEY).trim()); }
 
@@ -3454,16 +3464,18 @@ function _tsLoad() {
   return _tsLoading;
 }
 
-async function _tsRender() {
+async function _tsRenderIn(boxId) {
   if (!_tsOn()) return;
-  const box = document.getElementById('authCaptcha');
+  const box = document.getElementById(boxId);
   if (!box) return;
   const ok = await _tsLoad();
   if (!ok || !window.turnstile) { box.style.display = 'none'; return; }
   box.style.display = 'flex';
   try {
-    if (_tsWidget !== null) { window.turnstile.reset(_tsWidget); return; }
-    _tsWidget = window.turnstile.render(box, {
+    if (_tsWidgets[boxId] != null && document.body.contains(box)) {
+      window.turnstile.reset(_tsWidgets[boxId]); return;
+    }
+    _tsWidgets[boxId] = window.turnstile.render(box, {
       sitekey: TURNSTILE_SITE_KEY,
       theme: (document.documentElement.classList.contains('dark') ? 'dark' : 'light'),
       language: 'ar',
@@ -3478,13 +3490,19 @@ async function _tsRender() {
 }
 
 /* 🎟️ الرمز — وفراغُه ليس خطأً إن كانت الكابتشا مطفأة */
-function _tsToken() {
+function _tsTokenIn(boxId) {
   try {
-    if (!_tsOn() || !window.turnstile || _tsWidget === null) return null;
-    return window.turnstile.getResponse(_tsWidget) || null;
+    if (!_tsOn() || !window.turnstile || _tsWidgets[boxId] == null) return null;
+    return window.turnstile.getResponse(_tsWidgets[boxId]) || null;
   } catch (e) { return null; }
 }
-function _tsReset() { try { if (window.turnstile && _tsWidget !== null) window.turnstile.reset(_tsWidget); } catch (e) {} }
+function _tsResetIn(boxId) {
+  try { if (window.turnstile && _tsWidgets[boxId] != null) window.turnstile.reset(_tsWidgets[boxId]); } catch (e) {}
+}
+/* اختصاراتٌ لنافذة الدخول (الحاوية الأصلية) */
+function _tsRender() { return _tsRenderIn('authCaptcha'); }
+function _tsToken()  { return _tsTokenIn('authCaptcha'); }
+function _tsReset()  { return _tsResetIn('authCaptcha'); }
 /* 🌐 عنوان الموقع المعتمد — يُرسَل في الحقل `_url` الذي يطلبه FormSubmit.
    بلاه يردّ: «Make sure you open this page through a web server».
    والسبب ليس خادمك: المتصفّحات صارت تتشدّد في ترويسة Referer
@@ -7127,6 +7145,8 @@ function adminDeleteUser(email) {
         style="width:100%;box-sizing:border-box;margin-bottom:14px;padding:11px 12px;border-radius:10px;
                border:1.5px solid rgba(248,113,113,.4);background:var(--surf-alt);color:var(--txt);
                font-size:13px;outline:none;text-align:center;font-family:inherit">
+      <!-- 🛡️ الكابتشا لازمةٌ هنا: إعادة التوثيق تمرّ بـsignInWithPassword -->
+      <div id="admDelCaptcha" style="display:none;justify-content:center;margin-bottom:12px"></div>
       <div style="display:flex;gap:8px">
         <button onclick="document.getElementById('admDelUserPanel').remove()"
           style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--bdr);
@@ -7138,6 +7158,7 @@ function adminDeleteUser(email) {
       </div>
     </div>`;
   document.body.appendChild(el);
+  try { _tsRenderIn('admDelCaptcha'); } catch (e) {}
 }
 
 async function adminDeleteUserConfirmed(email) {
@@ -7147,9 +7168,18 @@ async function adminDeleteUserConfirmed(email) {
   if (!pass) { showToast('⚠️ أدخل كلمة مرور الأدمن للتأكيد'); if (passEl) passEl.focus(); return; }
   /* التحقق الفعلي من كلمة المرور بإعادة توثيق جلسة الأدمن */
   showToast('⏳ جارٍ التحقق من كلمة المرور...');
-  const { error: vErr } = await sb.auth.signInWithPassword({ email: sbUser.email, password: pass });
+  const { error: vErr } = await sb.auth.signInWithPassword({
+    email: sbUser.email, password: pass,
+    options: { captchaToken: _tsTokenIn('admDelCaptcha') || undefined },
+  });
   if (vErr) {
-    showToast('❌ كلمة المرور غير صحيحة');
+    /* ⚠️ لا تتّهم كلمة المرور بما ليس فيها: فشلُ الكابتشا خطأٌ آخر تماماً،
+       والرسالة الخاطئة تجعل الأدمن يُبدّل كلمةً صحيحة بلا داعٍ. */
+    const _m = String(vErr.message || '');
+    showToast(_m.toLowerCase().includes('captcha')
+      ? '🛡️ تعذّر التحقّق من الكابتشا — انتظر ظهور «تمّ بنجاح» ثمّ أعد المحاولة'
+      : '❌ كلمة المرور غير صحيحة');
+    _tsResetIn('admDelCaptcha');
     if (passEl) { passEl.value = ''; passEl.focus(); }
     return;
   }
@@ -16775,7 +16805,16 @@ document.addEventListener('keydown', e => {
            فينتحر تنظيفُ العميل المؤقّت بجلستك الحقيقيّة. و`local`
            يمحو هذا العميل وحده — وهو كل ما نريد. */
         try { await _probe.auth.signOut({ scope: 'local' }); } catch (_) {}
-        if (error) { toast('⚠️ كلمة مرور الحساب خاطئة — لم يُصفَّر شيء'); return; }
+        /* ⚠️ الكابتشا تحرس `signInWithPassword` كذلك، وهذا المسار بلا ودجة
+           (يجري في نافذةٍ صغيرة بلا حاوية). فلا نتّهم كلمة المرور بما ليس
+           فيها — بل نقول الحقيقة ونُعطي المخرج. */
+        if (error) {
+          const _em = String(error.message || '');
+          toast(_em.toLowerCase().includes('captcha')
+            ? '🛡️ الكابتشا تمنع التحقّق هنا — صفّر الرقم من الكونسول: localStorage.removeItem("' + _pk + '")'
+            : '⚠️ كلمة مرور الحساب خاطئة — لم يُصفَّر شيء');
+          return;
+        }
       } catch (e) { toast('⚠️ تعذّر التحقّق — حاول مرّةً أخرى'); return; }
       try { localStorage.removeItem(_pk); } catch (e) {}
       toast('🔑 صُفّر الرقم — اضغط الإعدادات لإنشاء واحدٍ جديد');

@@ -2352,8 +2352,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-09-v466';
-console.log('%c[تداول بلس] البناء: 2026-08-09-v466 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-09-v467';
+console.log('%c[تداول بلس] البناء: 2026-08-09-v467 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2363,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-09-v466 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v467', '📦 شاشة الزخم تقرأ من `historical_prices` مباشرةً — كانت تقرأ الكاش اليوميّ المشترك، وهو مبنيٌّ لتحليل اليوم لا للزخم فمداه أقصر من ١٤٧ جلسة المطلوبة، فقالت «لا تكفي البيانات». والأهمّ: القياس الذي بنينا عليه كل شيء قرأ من `historical_prices` — فلتقرأ الشاشة من **نفس المصدر** الذي قِيس عليه، وإلا عرضنا قائمةً مبنيّةً على بياناتٍ غير التي اختُبرت. واستعلامٌ واحد بصفحاتٍ من ألف صفّ لا ٢٦٠ استعلاماً'],
     ['v466', '🛡️ المحاولة ③ والأخيرة: قياسُ وقف الخسارة على «أعلى ١٠» بخمسة مستويات (بلا وقف · ٥ · ٨ · ١٠ · ١٥٪). والتنفيذ واقعيّ: يُضرب الوقف إن هبط أدنى اليوم إليه، وإن فُتح اليوم تحته فالخروج عند الافتتاح لا عند الوقف — الفجوة ضدّك لا لك. والمعيار مكتوبٌ قبل التشغيل، وأهمُّه: **تحسُّنٌ في مستويَين متجاورين على الأقلّ** — فمستوىً واحدٌ محظوظ بين خمسة صدفةٌ لا قانون'],
     ['v465', '⚡ شاشة «الأعلى زخماً» — أوّل ما نبنيه على دليلٍ مقاس: أعلى ١٠ أسهم بزخم ٦ أشهر عدا الشهر الأخير، تفوّقت على متوسّط السوق بـ‎+١٫١٪ شهرياً بعد التكاليف في ٤٧ شهراً، و‎+٠٫٩٪ في تحقّقٍ مستقلّ. ومعها سجلٌّ يقيس أداء كل قائمةٍ فعلياً بعد تسجيلها. **ولا وقفَ ولا هدف** — لأن المقيس مراجعةٌ شهرية، وإضافةُ ما لم يُقَس تُبطل القياس. والإفصاح مكتوبٌ في الشاشة: غير دالٍّ إحصائياً · تفوّقٌ على السوق لا ربحٌ مضمون'],
     ['v464', '🎯 المحافظ المركَّزة بتكلفةٍ مقاسة — الخُمس الأعلى ٥١ سهماً لا يشتريها أحد، فأُضيف أعلى ٥ و١٠ و٢٠ بعائدٍ خام وصافٍ. والدوران يُقاس فعلاً (كم سهماً خرج ودخل بين إعادتين) لا يُفترض: محفظةٌ تُبقي نصف أسهمها تكلّف نصف ما تكلّفه محفظةٌ تُبدّل كلَّ شيء — وافتراضُ دورانٍ كامل يظلمها، وافتراضُ صفرٍ يخدعنا. والشرط المضاف: موجبٌ **بعد التكلفة** وإلا فلا يُبنى'],
@@ -22756,8 +22757,43 @@ switchTab = function (tab, btn) {
    ══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  var LOOK = 126, SKIP = 21, TOPN = 10, MINB = 160, MAXLOG = 12;
-  var BUSY = false, RES = null, MSG = '';
+  var LOOK = 126, SKIP = 21, TOPN = 10, MINB = 150, MAXLOG = 12;
+  var BUSY = false, RES = null, MSG = '', DATA = null;
+
+  /* ══════════════════════════════════════════════════════════════════════
+     📦 المصدر: `historical_prices` مباشرةً — لا الكاش اليوميّ المشترك
+
+     العلّة المرصودة: الشاشة قالت «لا تكفي البيانات اليومية». والسبب أن
+     `histAllDailyCache` مبنيٌّ لتحليل اليوم لا للزخم، فمداه أقصر من
+     المطلوب (١٢٦ + ٢١ جلسة). والقياس الذي بنينا عليه كل شيء قرأ من
+     `historical_prices` — فلتقرأ الشاشة من **نفس المصدر** الذي قِيس عليه،
+     وإلا عرضنا قائمةً مبنيّةً على بياناتٍ غير التي اختُبرت.
+
+     ▸ واستعلامٌ واحد لكل الرموز لا ٢٦٠ استعلاماً: نطاق تاريخيّ واحد،
+       وصفحاتٌ بألف صفّ (سقف PostgREST) حتى تنتهي.
+     ══════════════════════════════════════════════════════════════════════ */
+  async function loadAll() {
+    if (typeof sb === 'undefined' || !sb) return null;
+    var cut = new Date(Date.now() - 300 * 864e5).toISOString().slice(0, 10);
+    var by = {}, from = 0, guard = 0;
+    while (guard++ < 80) {
+      var q = await sb.from('historical_prices').select('symbol,d,c')
+        .gte('d', cut).order('d', { ascending: true }).range(from, from + 999);
+      if (q.error) { console.warn('[momentum] تعذّر الجلب:', q.error.message); break; }
+      if (!q.data || !q.data.length) break;
+      for (var i = 0; i < q.data.length; i++) {
+        var r = q.data[i], px = +r.c;
+        if (!(px > 0)) continue;
+        (by[r.symbol] = by[r.symbol] || []).push(px);
+      }
+      if (q.data.length < 1000) break;
+      from += 1000;
+      MSG = '⏳ جلب البيانات… ' + from + ' صفّ';
+      render();
+      await new Promise(function (rs) { setTimeout(rs, 0); });
+    }
+    return Object.keys(by).length ? by : null;
+  }
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
   function nm(sym) { try { var r = (typeof rows !== 'undefined' && rows) ? rows.find(function (x) { return x && x.sym === sym; }) : null; return (r && r.name) || sym; } catch (e) { return sym; } }
@@ -22766,23 +22802,21 @@ switchTab = function (tab, btn) {
      فالشهر الأخير يحمل ارتداداً قصير المدى يعاكس الزخم (وقد أثبته قياسنا:
      نموذج ٣-١ سقط في التحقّق، و٦-١ و١٢-١ نجحا). */
   function compute() {
-    var H = (typeof histAllDailyCache !== 'undefined' && histAllDailyCache) ? histAllDailyCache.bySymbol : null;
+    var H = DATA;
     if (!H) return null;
     var out = [], idxSum = 0, idxN = 0, s;
     for (s in H) {
-      var a = H[s];
-      if (!a || a.length < MINB) continue;
-      var n = a.length;
-      var pNow = +a[n - 1].close, pSkip = +a[n - 1 - SKIP] ? +a[n - 1 - SKIP].close : null,
-          pBack = +a[n - 1 - LOOK] ? +a[n - 1 - LOOK].close : null;
+      var a = H[s], n = a ? a.length : 0;
+      if (n < MINB) continue;
+      var pNow = a[n - 1], pSkip = a[n - 1 - SKIP], pBack = a[n - 1 - LOOK];
       if (!(pNow > 0) || !(pSkip > 0) || !(pBack > 0)) continue;
       idxSum += pNow; idxN++;
       out.push({ sym: s, px: pNow, mom: pSkip / pBack - 1, m1: pNow / pSkip - 1 });
     }
     if (out.length < 40) return null;
     out.sort(function (x, y) { return y.mom - x.mom; });
-    var d = null; try { for (s in H) { var q = H[s]; if (q && q.length) { d = q[q.length - 1].date; break; } } } catch (e) {}
-    return { list: out.slice(0, TOPN), all: out.length, idx: idxN ? idxSum / idxN : null, date: d };
+    return { list: out.slice(0, TOPN), all: out.length, idx: idxN ? idxSum / idxN : null,
+             date: new Date().toISOString().slice(0, 10) };
   }
 
   /* 📒 السجلّ: كل قائمةٍ تُحفظ بتاريخها وأسعارها ومستوى السوق — فيُقاس
@@ -22810,15 +22844,14 @@ switchTab = function (tab, btn) {
 
   function perf(R) {
     var L = log(); if (!L.length || !R || !R.idx) return null;
-    var H = (typeof histAllDailyCache !== 'undefined' && histAllDailyCache) ? histAllDailyCache.bySymbol : null;
-    if (!H) return null;
+    var H = DATA; if (!H) return null;
     var out = [];
     L.forEach(function (e) {
       if (!e || !e.s || !e.idx) return;
       var sum = 0, c = 0;
       e.s.forEach(function (x) {
         var a = H[x.k]; if (!a || !a.length) return;
-        var now = +a[a.length - 1].close;
+        var now = +a[a.length - 1];
         if (now > 0 && x.p > 0) { sum += now / x.p - 1; c++; }
       });
       if (!c) return;
@@ -22896,10 +22929,10 @@ switchTab = function (tab, btn) {
   }
 
   window.momRun = async function () {
-    if (BUSY) return; BUSY = true; MSG = '⏳ جارٍ تحميل البيانات اليومية…'; render();
-    try { if (typeof histLoadAllDaily === 'function') await histLoadAllDaily(); } catch (e) {}
+    if (BUSY) return; BUSY = true; MSG = '⏳ جارٍ جلب أسعار ٦ أشهر لكل الرموز…'; render();
+    try { DATA = await loadAll(); } catch (e) { DATA = null; console.warn('[momentum]', e && e.message); }
     RES = compute();
-    MSG = RES ? '' : '⚠️ لا تكفي البيانات اليومية — افتح «⚡ تحليل السوق» أولاً ليُحمّلها.';
+    MSG = RES ? '' : '⚠️ تعذّر بناء القائمة — تأكّد أن «📈 البيانات التاريخية» ممتلئة (لوحة الأدمن).';
     BUSY = false; render();
   };
 

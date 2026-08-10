@@ -2127,6 +2127,9 @@ canvas#mdChart{display:block;width:100% !important}
         <span>أوافق على <a href="#" onclick="showTermsModal();return false" style="color:#4ade80;font-weight:700;text-decoration:underline">شروط الاستخدام وإخلاء المسؤولية</a></span>
       </label>
 
+      <!-- 🛡️ الكابتشا — لا تظهر إلا إن ضُبط المفتاح -->
+      <div id="authCaptcha" style="display:none;justify-content:center;margin-bottom:10px"></div>
+
       <div id="authMsg" style="display:none;font-size:12px;line-height:1.7;border-radius:9px;
            padding:9px 12px;margin-bottom:10px"></div>
 
@@ -2352,8 +2355,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-10-v470';
-console.log('%c[تداول بلس] البناء: 2026-08-10-v470 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-10-v472';
+console.log('%c[تداول بلس] البناء: 2026-08-10-v472 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2363,6 +2366,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-10-v470 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v472', '🔑 ضُبط مفتاح موقع Turnstile — فالودجة تظهر الآن في نموذج الدخول والتسجيل. ولا أثر لها حتى تُفعَّل الكابتشا في Supabase بالمفتاح السرّي: الرمز يُرسَل ويُهمَل. فالرفع لا يكسر شيئاً، والتفعيل خطوةٌ مستقلّة بيدك — ومفتاح الإيقاف إطفاؤها في Supabase'],
+    ['v471', '🛡️ الكابتشا (Cloudflare Turnstile) في نموذج الدخول والتسجيل واستعادة كلمة المرور — ضدّ التسجيل الآليّ الذي رُصد. والسكربت يُحمَّل عند فتح النافذة لا عند فتح الصفحة، فلا يُبطئ الزائر. **وما دام `TURNSTILE_SITE_KEY` فارغاً فلا ودجة ولا رمز والسلوك كما هو تماماً** — فالرفع آمنٌ قبل التفعيل. وترتيب التشغيل حاسم: الكود أوّلاً ثمّ Supabase، ومفتاحُ الإيقاف عند أيّ عطل هو إطفاؤها في Supabase (فوريّ بلا رفع)'],
     ['v470', '📐 كرت «الأعلى زخماً» كان يُدرَج فوق عنوان القسم فيبدو معلّقاً بلا سياق — والسبب أن `firstChild` عقدةُ نصٍّ (مسافة) لا عنصر، فوقع الإدراج قبل العنوان. صار بـ`firstElementChild` الذي يتخطّى عقد النصّ'],
     ['v469', '📉 الإفصاح صار يطابق القياس بعد التنقية: ‎+١٫١٪ شهرياً على ٤٧ شهراً، و‎+٠٫٥٪ في التحقّق (كان ‎+٠٫٩٪ قبل استبعاد إجراءات رأس المال — فالتنقية أخذت نصف الفائض المُعلَن، وهذا وحده يُبرّر بناءها). وأُضيف صراحةً: t=0.5 أي لا يُميَّز عن الصفر · و٢٠٢٦ سالبٌ ‎−١٫٢٪ وهو أحدث ما لدينا. **والمحاولة ③ (وقف الخسارة) رُفضت قاطعاً**: ١٥ تركيبة، وكلُّها أسوأ من «بلا وقف» في التحقّق — والزخم ظاهرةُ استمرارٍ يقطعها الوقف عند أوّل تذبذب'],
     ['v468', '🏢 حارس إجراءات رأس المال — رُصد «كيمانول» بزخم ٤٦٠٪ في ستّة أشهر، وسوق تداول عليه حدُّ تذبذبٍ يوميّ ±١٠٪ فقفزةٌ كهذه تحتاج ١٧ يوماً عند الحدّ. والأرجح تجزئةٌ أو زيادةُ رأس مال — وأسعارنا اسميّة غير معدَّلة (اختيارٌ صحيح ليطابق السعر الحيّ) فيظهر الإجراء قفزةً وهمية. فأيُّ تغيّرٍ يوميّ فوق ٢٠٪ (ضعف حدّ السوق) يُستبعد صاحبه. **وطُبّق في الشاشة والمختبر معاً** — فوجودُه في إحداهما دون الأخرى قياسٌ على غير ما يُعرض. وقد يتغيّر رقم الفائض المقاس'],
@@ -2722,7 +2727,7 @@ async function authForgotPassword() {
   if (!sb) { authShowMsg('⚙️ لم يُربط Supabase بعد.', 'warn'); return; }
   const email = document.getElementById('authEmail').value.trim();
   if (!email) { authShowMsg('اكتب بريدك الإلكتروني أولاً في الخانة أعلاه ثم اضغط «نسيت كلمة المرور»', 'error'); return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0], captchaToken: _tsToken() || undefined });
   if (error) { authShowMsg(authTranslateError(error.message), 'error'); return; }
   authShowMsg('📧 أُرسل رابط استعادة كلمة المرور إلى بريدك — افتحه وسيعيدك للتطبيق لتعيين كلمة جديدة.', 'ok');
 }
@@ -2942,6 +2947,7 @@ function authSwitchTab(mode) {
   document.getElementById('authForgotRow').style.display = mode === 'login' ? 'block' : 'none';
   const cr = document.getElementById('authConsentRow');
   if (cr) { cr.style.display = mode === 'signup' ? 'flex' : 'none'; const cb = document.getElementById('authConsent'); if (cb) cb.checked = false; }
+  try { _tsRender(); } catch (e) {}
   authHideMsg();
 }
 
@@ -3174,8 +3180,11 @@ async function authSubmit() {
         options: {
           emailRedirectTo: location.origin + location.pathname,
           data: { agreed_terms: true, agreed_terms_at: new Date().toISOString(), terms_version: 'v1' },
+          /* 🛡️ رمز الكابتشا — يُهمَل إن كانت مطفأة في Supabase */
+          captchaToken: _tsToken() || undefined,
         },
       });
+      _tsReset();
       if (error) { authShowMsg(authTranslateError(error.message), 'error'); return; }
       if (data.session) {
         authShowMsg('✅ تم إنشاء الحساب وتسجيل الدخول!', 'ok');
@@ -3184,7 +3193,11 @@ async function authSubmit() {
         authShowMsg('📧 تم إنشاء الحساب — أُرسلت رسالة تأكيد إلى بريدك، افتحها واضغط الرابط ثم عد وسجّل الدخول.', 'ok');
       }
     } else {
-      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      const { error } = await sb.auth.signInWithPassword({
+        email, password: pass,
+        options: { captchaToken: _tsToken() || undefined },
+      });
+      _tsReset();
       if (error) {
         if (/Invalid login credentials/i.test(error.message)) {
           /* نفحص فعلياً: هل هذا البريد مسجّل أصلاً؟ (عبر دالة email_exists) */
@@ -3378,6 +3391,68 @@ const SUPPORT_FORM_IDS = [
   'b7fb385405d52f4b1cee2779482a0fd8',
 ];
 const SUPPORT_FORM_ID = SUPPORT_FORM_IDS[0];   // الأساسيّ (لمسار AJAX إن استُعمل بريدٌ صريح)
+
+/* ══════════════════════════════════════════════════════════════════════════
+   🛡️ الكابتشا (Cloudflare Turnstile) — ضدّ التسجيل الآليّ
+
+   الحاجة: رُصد حسابٌ باسم `mass_cxiybbxr_…` وفيه أوّل ثمانية أحرف من
+   معرّف مشروعك — أي أن آلةً قرأت رابط Supabase من صفحتك وسجّلت به.
+   وحدُّ المعدّل يُبطئ آلةً من عنوانٍ واحد، ولا يمنع من يُبدّل عناوينه.
+
+   ⚠️ **ترتيب التشغيل حاسم** — وعكسُه يُعطّل تسجيل الدخول لكل مستخدميك:
+     ① الصق مفتاح الموقع أدناه وارفع الملفّ
+     ② ثمّ فعّل الكابتشا في Supabase (Attack Protection) وضع السرّ هناك
+     ③ واختبر التسجيل فوراً من نافذة تصفّحٍ متخفٍّ
+   ▸ ومفتاح الإيقاف السريع عند أيّ عطل: **أطفئها في Supabase** — يعمل
+     فوراً بلا رفعِ ملفّ. ولهذا كان الترتيب هكذا لا عكسه.
+   ▸ وما دام هذا الثابت فارغاً، لا ودجة ولا رمز — والسلوك كما هو تماماً.
+   ══════════════════════════════════════════════════════════════════════════ */
+const TURNSTILE_SITE_KEY = '0x4AAAAAAEMV64HySksVR3mV';   /* مفتاح الموقع — عامٌّ بطبيعته، يظهر في المصدر لكل زائر */
+let _tsWidget = null, _tsLoading = null;
+
+function _tsOn() { return !!(TURNSTILE_SITE_KEY && String(TURNSTILE_SITE_KEY).trim()); }
+
+/* ⏳ يُحمَّل السكربت عند فتح النافذة لا عند فتح الصفحة — فلا يُبطئ الزائر */
+function _tsLoad() {
+  if (!_tsOn()) return Promise.resolve(false);
+  if (window.turnstile) return Promise.resolve(true);
+  if (_tsLoading) return _tsLoading;
+  _tsLoading = new Promise(function (res) {
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    s.async = true; s.defer = true;
+    s.onload = function () { res(true); };
+    s.onerror = function () { console.warn('[captcha] تعذّر تحميل Turnstile'); res(false); };
+    document.head.appendChild(s);
+  });
+  return _tsLoading;
+}
+
+async function _tsRender() {
+  if (!_tsOn()) return;
+  const box = document.getElementById('authCaptcha');
+  if (!box) return;
+  const ok = await _tsLoad();
+  if (!ok || !window.turnstile) { box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  try {
+    if (_tsWidget !== null) { window.turnstile.reset(_tsWidget); return; }
+    _tsWidget = window.turnstile.render(box, {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: (document.documentElement.classList.contains('dark') ? 'dark' : 'light'),
+      language: 'ar',
+    });
+  } catch (e) { console.warn('[captcha]', e && e.message); box.style.display = 'none'; }
+}
+
+/* 🎟️ الرمز — وفراغُه ليس خطأً إن كانت الكابتشا مطفأة */
+function _tsToken() {
+  try {
+    if (!_tsOn() || !window.turnstile || _tsWidget === null) return null;
+    return window.turnstile.getResponse(_tsWidget) || null;
+  } catch (e) { return null; }
+}
+function _tsReset() { try { if (window.turnstile && _tsWidget !== null) window.turnstile.reset(_tsWidget); } catch (e) {} }
 /* 🌐 عنوان الموقع المعتمد — يُرسَل في الحقل `_url` الذي يطلبه FormSubmit.
    بلاه يردّ: «Make sure you open this page through a web server».
    والسبب ليس خادمك: المتصفّحات صارت تتشدّد في ترويسة Referer

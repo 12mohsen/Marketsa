@@ -2110,11 +2110,13 @@ canvas#mdChart{display:block;width:100% !important}
         style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;margin-bottom:10px;
                border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
                font-size:13.5px;outline:none;direction:ltr;text-align:left">
-      <input id="authPass" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)"
+      <input id="authPass" type="password" placeholder="كلمة المرور"
         name="password" autocomplete="current-password" data-testid="login-password" aria-label="كلمة المرور"
         style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;margin-bottom:10px;
                border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
                font-size:13.5px;outline:none;direction:ltr;text-align:left">
+      <div id="authPassHint" style="display:none;font-size:10.5px;color:var(--txt-m);line-height:1.8;
+           margin:-4px 0 10px;padding-right:2px">🔐 تشمل: <b>حرفاً كبيراً</b> · <b>حرفاً صغيراً</b> · <b>رقماً</b></div>
       <input id="authPass2" type="password" placeholder="تأكيد كلمة المرور"
         name="password-confirm" autocomplete="new-password" aria-label="تأكيد كلمة المرور"
         style="display:none;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;margin-bottom:10px;
@@ -2355,8 +2357,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-10-v473';
-console.log('%c[تداول بلس] البناء: 2026-08-10-v473 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-10-v474';
+console.log('%c[تداول بلس] البناء: 2026-08-10-v474 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2366,6 +2368,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-10-v473 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v474', '🔐 شروط كلمة المرور تُقال بالعربية وقبل المحاولة لا بعد رفضها — رُصد في أوّل تجربة تسجيل: رسالة Supabase إنجليزيّة تسرد الأبجدية كلَّها فيراها المستخدم جداراً من الحروف. صارت تُترجَم إلى «تشمل حرفاً كبيراً وصغيراً ورقماً»، وأُضيف سطرُ شروطٍ ظاهرٌ تحت الحقل عند إنشاء الحساب. ومعها ترجمةُ رسائل الكابتشا وحدّ الطول أياً كان رقمه'],
     ['v473', '⏳ رمز الكابتشا يُجدَّد تلقائياً عند فساده — يفسد بعد نحو خمس دقائق، ومن يفتح نافذة الدخول ثمّ ينشغل ثمّ يعود فيضغط «دخول» كان سيُردّ بخطأٍ لا يفهمه. وهو أسوأ ما يقع لمن يحاول الدخول أصلاً. ومعه إعادةُ محاولةٍ تلقائية عند تعثّر الشبكة'],
     ['v472', '🔑 ضُبط مفتاح موقع Turnstile — فالودجة تظهر الآن في نموذج الدخول والتسجيل. ولا أثر لها حتى تُفعَّل الكابتشا في Supabase بالمفتاح السرّي: الرمز يُرسَل ويُهمَل. فالرفع لا يكسر شيئاً، والتفعيل خطوةٌ مستقلّة بيدك — ومفتاح الإيقاف إطفاؤها في Supabase'],
     ['v471', '🛡️ الكابتشا (Cloudflare Turnstile) في نموذج الدخول والتسجيل واستعادة كلمة المرور — ضدّ التسجيل الآليّ الذي رُصد. والسكربت يُحمَّل عند فتح النافذة لا عند فتح الصفحة، فلا يُبطئ الزائر. **وما دام `TURNSTILE_SITE_KEY` فارغاً فلا ودجة ولا رمز والسلوك كما هو تماماً** — فالرفع آمنٌ قبل التفعيل. وترتيب التشغيل حاسم: الكود أوّلاً ثمّ Supabase، ومفتاحُ الإيقاف عند أيّ عطل هو إطفاؤها في Supabase (فوريّ بلا رفع)'],
@@ -2948,6 +2951,9 @@ function authSwitchTab(mode) {
   document.getElementById('authForgotRow').style.display = mode === 'login' ? 'block' : 'none';
   const cr = document.getElementById('authConsentRow');
   if (cr) { cr.style.display = mode === 'signup' ? 'flex' : 'none'; const cb = document.getElementById('authConsent'); if (cb) cb.checked = false; }
+  /* 🔐 الشروط تُقال **قبل** المحاولة لا بعد رفضها — ومن يعرفها لا يُخطئ */
+  const ph = document.getElementById('authPassHint');
+  if (ph) ph.style.display = mode === 'signup' ? 'block' : 'none';
   try { _tsRender(); } catch (e) {}
   authHideMsg();
 }
@@ -3076,7 +3082,26 @@ function authTranslateError(msg) {
   const m = String(msg || '');
   if (m.includes('Invalid login credentials')) return 'البريد أو كلمة المرور غير صحيحة';
   if (m.includes('already registered'))        return 'هذا البريد مسجّل مسبقاً — جرّب تسجيل الدخول';
+  /* 🔐 متطلّبات كلمة المرور — رسالة Supabase إنجليزيّة وتسرد الأبجدية
+     كلَّها («abcdefghijklmnopqrstuvwxyz, ABCDEF…, 0123456789»)، فيراها
+     المستخدم العربيّ جداراً من الحروف لا يفهم منه ما المطلوب. رُصد فعلاً
+     في أوّل تجربة تسجيل. والشرط بسيطٌ يُقال في سطر. */
+  if (m.includes('should contain at least one character of each')
+      || m.includes('Password should contain')) {
+    let need = [];
+    if (m.includes('abcdefghijklmnopqrstuvwxyz')) need.push('حرفاً صغيراً (a-z)');
+    if (m.includes('ABCDEFGHIJKLMNOPQRSTUVWXYZ')) need.push('حرفاً كبيراً (A-Z)');
+    if (m.includes('0123456789')) need.push('رقماً (0-9)');
+    if (/[!@#$%^&*]/.test(m)) need.push('رمزاً (!@#$…)');
+    return '🔐 كلمة المرور يجب أن تحوي ' + (need.length ? need.join(' و') : 'حروفاً وأرقاماً') + '.';
+  }
+  const _sh = m.match(/at least (\d+) characters/);
+  if (_sh) return '🔐 كلمة المرور يجب أن تكون ' + _sh[1] + ' أحرف على الأقلّ';
   if (m.includes('at least 6'))                return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+  /* 🛡️ الكابتشا — لا تُترك رسالتها إنجليزيّة، فالمستخدم لا يعرف ما «captcha» */
+  if (m.toLowerCase().includes('captcha')) {
+    return '🛡️ تعذّر التحقّق من أنك لست برنامجاً آلياً — حدّث الصفحة وأعد المحاولة.';
+  }
   if (m.includes('Email not confirmed'))       return 'البريد لم يُؤكد بعد — افتح رسالة التأكيد في بريدك';
   if (m.includes('valid email'))               return 'اكتب بريداً إلكترونياً صحيحاً';
   if (m.includes('rate limit') || m.includes('Too many')) return 'تجاوزت حد المحاولات المسموح — رسائل البريد محدودة بعدد قليل في الساعة، انتظر قرابة ساعة أو جرّب تسجيل الدخول مباشرة إن كان حسابك أُنشئ';

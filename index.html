@@ -2382,8 +2382,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-11-v482';
-console.log('%c[تداول بلس] البناء: 2026-08-11-v482 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v483';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v483 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2393,6 +2393,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v482 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v483', '🛡️ حارسان على بيانات المستخدم بعد فقدٍ حقيقيّ — صفّ `user_data` لحسابٍ فيه أسهم محفظة ومراقبة صار 0/0. ولم أستطع تحديد الكتابة التي أفرغته من قراءة الشيفرة، فبنيتُ الحارسَين على ما يجب ألّا يقع لا على تشخيصٍ لم أتأكّد منه: ① `cloudLoadUserData` غير متزامنة وكانت تقرأ `sbUser.id` **بعد** الانتظار — و`sbUser` يتبدّل أثناءه (تبديل حساب · تأكيد بريد · تجديد جلسة) فتختلط الحسابات. الآن المعرّف يُلتقط قبل الانتظار، والنتيجة تُهمَل إن تبدّل، وكلّ كتابةٍ تُطابَق بـ`_cloudOwnerId`. ② مسحٌ من ≥٢ عنصراً إلى صفر دفعةً واحدة يُرفض ويُعلَن — فالمستخدم يحذف واحداً واحداً، والقفزة إلى لا شيء خللٌ لا فعلُ إنسان'],
     ['v482', '🚨 تصعيد الشكاوى إلى الإدارة — المشرف يقرأ شكوى تفوق صلاحيته (استرداد · اتّهام بخصمٍ مضاعف · تهديد بشكوى رسمية) فلا يملك إلا ردّاً لا يُغني أو تركها، وكلاهما يُفقد العميل. الآن زرّ «⚡ تصعيد» بسببٍ إلزاميّ (١٠ أحرف): يصل تلجرام فوراً، وتقفز البطاقة إلى أعلى القائمة بحدٍّ أحمر وامض، وعدّادٌ «⚡ مُصعَّدة» فوق الصندوق، ونافذةٌ للأدمن الرئيسيّ عند فتح اللوحة تُعرض مرّةً لكل تصعيدٍ جديد لا كلّما حُمّلت القائمة. والسبب إلزاميّ عمداً: يوفّر قراءة المحادثة كلّها، ويجعل المشرف يزن قبل أن يرفع — وزرٌّ بلا سبب يُضغط بلا تفكير فتموت الإشارة في أسبوع. ⚠️ نفّذ `تصعيد_الشكاوى.sql` وانشر `notify-new-users` أولاً'],
     ['v481', '🐛 زرّ الحذف كان يبقى معطَّلاً مهما كُتب البريد — خطأٌ أدخلتُه في v480: وُضع البريد داخل خاصيّة oninput بعلامتَي تنصيص مزدوجتين، فانقطعت الخاصيّة عند أوّلهما ولم تُنفَّذ المقارنة قط. الآن البريد في data-t والمقارنة تقرؤه منه — ولا علامةَ تنصيصٍ داخل أيّ خاصيّة'],
     ['v480', '🗑️ حذف الحساب: تأكيدٌ بكتابة البريد بدل كلمة المرور — أثبته سجلّ Supabase حرفياً: «400 captcha protection: request disallowed (no captcha_token found)». إعادةُ التوثيق كانت تمرّ بـsignInWithPassword وهو مسارٌ تحرسه الكابتشا، فإن تأخّرت الودجة أو لم تُرسَم سقط الحذف وقيل للأدمن «كلمة المرور غير صحيحة» — وهي صحيحة. وv475/v476 عالجا العرَض لا العلّة. الآن: اكتب البريد كاملاً فيُفتح الزرّ — بلا نداءٍ خارجيّ ولا طرفٍ ثالث ولا شيءَ يُعطَّل. والحراسة الحقيقية في `admin-users` على الخادم كما كانت'],
@@ -3708,6 +3709,26 @@ async function loadAppSettings() {
 let _cloudPushTimer = null;
 let _cloudLastPushed = '';
 let _cloudReady = false;   // لا نرفع شيئاً قبل أول جلب ناجح (حماية من الكتابة فوق بيانات السحابة)
+/* ══════════════════════════════════════════════════════════════════════
+   🛡️ حارسان أُضيفا بعد فقدٍ حقيقيّ لبيانات مستخدم
+
+   وقع: صفّ `user_data` لحسابٍ فيه أسهمُ محفظةٍ ومراقبة صار 0/0.
+   ولم أستطع تحديد الكتابة التي أفرغته من قراءة الشيفرة — فبنيتُ
+   الحارسَين على **ما يجب ألّا يقع** لا على تشخيصٍ لم أتأكّد منه.
+
+   ① `_cloudOwnerId` — لا نكتب إلا لمن جُلبت بياناته فعلاً.
+      `cloudLoadUserData` دالّةٌ غير متزامنة، و`sbUser` قد يتبدّل أثناء
+      انتظارها (تبديل حساب · تأكيد بريد · تجديد جلسة). فمن يقرأ
+      `sbUser.id` **بعد** الانتظار قد يقرأ حساباً آخر. الآن: المعرّف
+      يُلتقط قبل الانتظار، وكلُّ كتابةٍ تُطابَق به.
+
+   ② حارس المسح الجماعيّ — من ≥٢ إلى صفر دفعةً واحدة ليس فعلَ مستخدم.
+      المستخدم يحذف واحداً واحداً، فيمرّ بـ١ ثمّ ٠. أمّا القفزة من
+      عدّةٍ إلى لا شيء فهي خللٌ في الشيفرة أو حالةٌ ضائعة — تُرفض،
+      ويُقال له لماذا بدل أن يُمحى صامتاً.
+   ══════════════════════════════════════════════════════════════════════ */
+let _cloudOwnerId  = null;   // صاحب البيانات المحمّلة في الذاكرة الآن
+let _cloudLastLoad = 0;      // كم عنصراً كان في آخر حالةٍ معروفة (محفظة + مراقبة)
 
 /* مسح بيانات المستخدم من المتصفح (عند الخروج أو تبديل الحساب) */
 function clearLocalUserData() {
@@ -3717,6 +3738,8 @@ function clearLocalUserData() {
   sbPerms = null;
   _cloudReady = false;
   _cloudLastPushed = '';
+  _cloudOwnerId = null;
+  _cloudLastLoad = 0;
   clearTimeout(_cloudPushTimer);
   try {
     localStorage.removeItem('pf_v1');
@@ -3729,9 +3752,22 @@ function clearLocalUserData() {
 
 function cloudSaveUserData() {
   if (!sb || !sbUser || !_cloudReady) return;
+  /* ① لا تكتب لحسابٍ غير الذي جُلبت بياناته */
+  if (_cloudOwnerId && _cloudOwnerId !== sbUser.id) {
+    console.warn('[cloud] 🛡️ مُنعت كتابةٌ لحسابٍ غير صاحب البيانات المحمّلة — تبدّل الحساب أثناء الجلب');
+    return;
+  }
+  /* ② لا تمحُ عدّة عناصر دفعةً واحدة */
+  const _cnt = (portfolio ? portfolio.length : 0) + (watchlist ? watchlist.length : 0);
+  if (_cloudLastLoad >= 2 && _cnt === 0) {
+    console.error('[cloud] 🛡️ رُفض مسحٌ جماعيّ: كانت ' + _cloudLastLoad + ' عنصراً وصارت صفراً دفعةً واحدة — لم يُكتب شيء');
+    try { showToast('🛡️ مُنع مسحٌ مفاجئ لبياناتك — أعِد تحميل الصفحة'); } catch (_) {}
+    return;
+  }
   clearTimeout(_cloudPushTimer);
   _cloudPushTimer = setTimeout(async () => {
     try {
+      if (!sbUser || (_cloudOwnerId && _cloudOwnerId !== sbUser.id)) return;   // تبدّل أثناء التأخير
       const payload = JSON.stringify({ p: portfolio, w: watchlist });
       if (payload === _cloudLastPushed) return;   // لا تغيير حقيقي
       const { error } = await sb.from('user_data').upsert({
@@ -3740,7 +3776,7 @@ function cloudSaveUserData() {
         watchlist: watchlist,
         updated_at: new Date().toISOString(),
       });
-      if (!error) _cloudLastPushed = payload;
+      if (!error) { _cloudLastPushed = payload; _cloudLastLoad = _cnt; }
       else console.warn('[cloud] فشل رفع البيانات:', error.message);
     } catch (e) { console.warn('[cloud] فشل رفع البيانات:', e.message); }
   }, 2500);
@@ -3748,18 +3784,28 @@ function cloudSaveUserData() {
 
 async function cloudLoadUserData() {
   if (!sb || !sbUser) { _cloudReady = false; return; }
+  /* 🔐 المعرّف يُلتقط **قبل** الانتظار. فبعده قد يكون `sbUser` حساباً آخر
+     (تبديل حساب · تأكيد بريد · تجديد جلسة)، ومن يقرأه بعدئذٍ يخلط الحسابين. */
+  const uid = sbUser.id;
   try {
     const { data, error } = await sb.from('user_data').select('*')
-      .eq('user_id', sbUser.id).maybeSingle();
+      .eq('user_id', uid).maybeSingle();
     if (error) { console.warn('[cloud] فشل جلب البيانات:', error.message); return; }
+    /* تبدّل الحساب أثناء الجلب ⇒ هذه ليست بياناته، فلا تُطبَّق ولا تُرفع */
+    if (!sbUser || sbUser.id !== uid) {
+      console.warn('[cloud] 🛡️ تبدّل الحساب أثناء الجلب — أُهملت نتيجةٌ لا تخصّه');
+      return;
+    }
     if (data) {
       /* السحابة هي المرجع: استبدل المحلي وأعد الرسم */
       portfolio = Array.isArray(data.portfolio) ? data.portfolio : [];
       watchlist = Array.isArray(data.watchlist) ? data.watchlist : [];
       try { localStorage.setItem('pf_v1', JSON.stringify(portfolio)); } catch (e) {}
       try { localStorage.setItem('wl_v1', JSON.stringify(watchlist)); } catch (e) {}
-      try { localStorage.setItem('tp_data_owner', sbUser.id); } catch (e) {}
+      try { localStorage.setItem('tp_data_owner', uid); } catch (e) {}
       _cloudLastPushed = JSON.stringify({ p: portfolio, w: watchlist });
+      _cloudOwnerId  = uid;
+      _cloudLastLoad = portfolio.length + watchlist.length;
       _cloudReady = true;
       if (typeof pfRender === 'function') pfRender();
       if (typeof wlRender === 'function') wlRender();
@@ -3769,7 +3815,7 @@ async function cloudLoadUserData() {
          فعلاً بياناته هو أو بيانات زائر — لا بيانات حساب سابق على نفس الجهاز */
       let owner = null;
       try { owner = localStorage.getItem('tp_data_owner'); } catch (e) {}
-      if (owner && owner !== sbUser.id) {
+      if (owner && owner !== uid) {
         /* البيانات المحلية لحساب آخر — ابدأ له نظيفاً */
         portfolio = [];
         watchlist = [];
@@ -3778,7 +3824,9 @@ async function cloudLoadUserData() {
         if (typeof wlRender === 'function') wlRender();
         console.info('[cloud] 🧹 بيانات المتصفح تعود لحساب آخر — بدأنا لهذا الحساب بسجل نظيف');
       }
-      try { localStorage.setItem('tp_data_owner', sbUser.id); } catch (e) {}
+      try { localStorage.setItem('tp_data_owner', uid); } catch (e) {}
+      _cloudOwnerId  = uid;
+      _cloudLastLoad = (portfolio ? portfolio.length : 0) + (watchlist ? watchlist.length : 0);
       _cloudReady = true;
       if ((portfolio && portfolio.length) || (watchlist && watchlist.length)) {
         cloudSaveUserData();

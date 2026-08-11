@@ -2382,8 +2382,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-11-v480';
-console.log('%c[تداول بلس] البناء: 2026-08-11-v480 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v481';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v481 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2393,6 +2393,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v480 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v481', '🐛 زرّ الحذف كان يبقى معطَّلاً مهما كُتب البريد — خطأٌ أدخلتُه في v480: وُضع البريد داخل خاصيّة oninput بعلامتَي تنصيص مزدوجتين، فانقطعت الخاصيّة عند أوّلهما ولم تُنفَّذ المقارنة قط. الآن البريد في data-t والمقارنة تقرؤه منه — ولا علامةَ تنصيصٍ داخل أيّ خاصيّة'],
     ['v480', '🗑️ حذف الحساب: تأكيدٌ بكتابة البريد بدل كلمة المرور — أثبته سجلّ Supabase حرفياً: «400 captcha protection: request disallowed (no captcha_token found)». إعادةُ التوثيق كانت تمرّ بـsignInWithPassword وهو مسارٌ تحرسه الكابتشا، فإن تأخّرت الودجة أو لم تُرسَم سقط الحذف وقيل للأدمن «كلمة المرور غير صحيحة» — وهي صحيحة. وv475/v476 عالجا العرَض لا العلّة. الآن: اكتب البريد كاملاً فيُفتح الزرّ — بلا نداءٍ خارجيّ ولا طرفٍ ثالث ولا شيءَ يُعطَّل. والحراسة الحقيقية في `admin-users` على الخادم كما كانت'],
     ['v479', '🚫 المحجوب لا يُباع — كان القسم يُخفى من شريط التنقّل ويبقى معروضاً للشراء في صفحة الدفع، فيدفع المستخدم ثمن ما لا يستطيع فتحه. السبب أن صفحة الدفع كانت تقرأ `ADMIN_TAB_DEFS` كاملةً ولا تسأل عن الإخفاء. الآن دالّةٌ واحدة `_hiddenTabsNow()` يقرأها الشريطُ وصفحةُ الدفع معاً — تشمل الإخفاء العام والإخفاء الفرديّ لكل مستخدم. والأدمن وحده يرى المحجوب معلَّماً بـ🚫 ليعاينه'],
     ['v478', '✅ تأكيد البريد بمسار `token_hash` — السجلّ كان يقول «303 ثمّ 403: One-time token not found»: الرمز يُستهلك مرّتين لأن فاحص الروابط في خدمة البريد يفتحه قبل صاحبه ليتأكّد أنّه آمن، فيبتلع رمزاً يُستعمل مرّةً واحدة. الآن يحمل الرابط `token_hash` إلى صفحتنا وتُناديه `verifyOtp` بجافاسكربت — والفاحصُ الآليّ لا يُنفّذها. ومعه: أخطاءُ الرابط تُعرض بالعربية بدل أن تُبتلع — كان المستخدم يرى الموقع يُفتح كأن شيئاً لم يكن'],
@@ -7274,9 +7275,12 @@ function adminDeleteUser(email) {
            صحيحة» وهي صحيحة. والحارس الحقيقيّ في الخادم (admin-users) لا هنا؛
            وهذا التأكيد يمنع الضغط الخاطئ بلا شبكةٍ ولا طرفٍ ثالث. -->
       <div style="font-size:11px;color:var(--txt-m);margin-bottom:6px">اكتب البريد كاملاً لتأكيد الحذف:</div>
+      <!-- ⚠️ البريد في data-t لا داخل الشيفرة: وضعُه في oninput بعلامتَي
+           تنصيص مزدوجتين يقطع الخاصيّة عند أوّلهما فلا تُنفَّذ المقارنة
+           أبداً — ويبقى الزرّ معطَّلاً مهما كتب الأدمن. وقع فعلاً. -->
       <input id="admDelUserPass" type="text" autocomplete="off" spellcheck="false" dir="ltr"
-        placeholder="${email}"
-        oninput="(function(v){var b=document.getElementById('admDelGo');if(!b)return;var ok=v.trim().toLowerCase()===${JSON.stringify(String(email).toLowerCase())};b.disabled=!ok;b.style.opacity=ok?'1':'.45';b.style.cursor=ok?'pointer':'not-allowed';})(this.value)"
+        placeholder="اكتب البريد هنا" data-t="${email}"
+        oninput="var b=document.getElementById('admDelGo');if(b){var ok=this.value.trim().toLowerCase()===(this.dataset.t||'').trim().toLowerCase();b.disabled=!ok;b.style.opacity=ok?'1':'.45';b.style.cursor=ok?'pointer':'not-allowed';}"
         onkeypress="if(event.key==='Enter')adminDeleteUserConfirmed('${email}')"
         style="width:100%;box-sizing:border-box;margin-bottom:14px;padding:11px 12px;border-radius:10px;
                border:1.5px solid rgba(248,113,113,.4);background:var(--surf-alt);color:var(--txt);

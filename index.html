@@ -2382,8 +2382,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-11-v481';
-console.log('%c[تداول بلس] البناء: 2026-08-11-v481 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v482';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v482 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2393,6 +2393,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v481 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v482', '🚨 تصعيد الشكاوى إلى الإدارة — المشرف يقرأ شكوى تفوق صلاحيته (استرداد · اتّهام بخصمٍ مضاعف · تهديد بشكوى رسمية) فلا يملك إلا ردّاً لا يُغني أو تركها، وكلاهما يُفقد العميل. الآن زرّ «⚡ تصعيد» بسببٍ إلزاميّ (١٠ أحرف): يصل تلجرام فوراً، وتقفز البطاقة إلى أعلى القائمة بحدٍّ أحمر وامض، وعدّادٌ «⚡ مُصعَّدة» فوق الصندوق، ونافذةٌ للأدمن الرئيسيّ عند فتح اللوحة تُعرض مرّةً لكل تصعيدٍ جديد لا كلّما حُمّلت القائمة. والسبب إلزاميّ عمداً: يوفّر قراءة المحادثة كلّها، ويجعل المشرف يزن قبل أن يرفع — وزرٌّ بلا سبب يُضغط بلا تفكير فتموت الإشارة في أسبوع. ⚠️ نفّذ `تصعيد_الشكاوى.sql` وانشر `notify-new-users` أولاً'],
     ['v481', '🐛 زرّ الحذف كان يبقى معطَّلاً مهما كُتب البريد — خطأٌ أدخلتُه في v480: وُضع البريد داخل خاصيّة oninput بعلامتَي تنصيص مزدوجتين، فانقطعت الخاصيّة عند أوّلهما ولم تُنفَّذ المقارنة قط. الآن البريد في data-t والمقارنة تقرؤه منه — ولا علامةَ تنصيصٍ داخل أيّ خاصيّة'],
     ['v480', '🗑️ حذف الحساب: تأكيدٌ بكتابة البريد بدل كلمة المرور — أثبته سجلّ Supabase حرفياً: «400 captcha protection: request disallowed (no captcha_token found)». إعادةُ التوثيق كانت تمرّ بـsignInWithPassword وهو مسارٌ تحرسه الكابتشا، فإن تأخّرت الودجة أو لم تُرسَم سقط الحذف وقيل للأدمن «كلمة المرور غير صحيحة» — وهي صحيحة. وv475/v476 عالجا العرَض لا العلّة. الآن: اكتب البريد كاملاً فيُفتح الزرّ — بلا نداءٍ خارجيّ ولا طرفٍ ثالث ولا شيءَ يُعطَّل. والحراسة الحقيقية في `admin-users` على الخادم كما كانت'],
     ['v479', '🚫 المحجوب لا يُباع — كان القسم يُخفى من شريط التنقّل ويبقى معروضاً للشراء في صفحة الدفع، فيدفع المستخدم ثمن ما لا يستطيع فتحه. السبب أن صفحة الدفع كانت تقرأ `ADMIN_TAB_DEFS` كاملةً ولا تسأل عن الإخفاء. الآن دالّةٌ واحدة `_hiddenTabsNow()` يقرأها الشريطُ وصفحةُ الدفع معاً — تشمل الإخفاء العام والإخفاء الفرديّ لكل مستخدم. والأدمن وحده يرى المحجوب معلَّماً بـ🚫 ليعاينه'],
@@ -5558,6 +5559,23 @@ function renderAdminSection() {
         #adminSectionWrap .admUserRow .admUserInfo{flex:1 1 100%;min-width:0}
         #adminSectionWrap .admUserRow .admUserBtns{width:100%;justify-content:flex-start;margin-top:6px}
       }
+      /* 🚨 الشكوى المُصعَّدة — وميضٌ يلفت العين بلا أن يُتعبها.
+         الحدّ والخلفية يتنفّسان في ثانيتين، ولا يومض النصّ نفسه: النصّ
+         الوامض لا يُقرأ، والغرض أن تُقرأ لا أن تُلاحَظ فقط. */
+      @keyframes admEscPulse{
+        0%,100%{border-color:rgba(248,113,113,.45);background:rgba(127,29,29,.12);box-shadow:0 0 0 0 rgba(239,68,68,0)}
+        50%    {border-color:rgba(248,113,113,1);  background:rgba(127,29,29,.30);box-shadow:0 0 0 4px rgba(239,68,68,.14)}
+      }
+      #adminSectionWrap .admEsc{
+        border:1.5px solid rgba(248,113,113,.45);border-radius:11px;padding:9px 10px;margin:6px 0;
+        animation:admEscPulse 2s ease-in-out infinite;
+      }
+      @keyframes admEscBadge{0%,100%{opacity:1}50%{opacity:.35}}
+      .admEscBadge{animation:admEscBadge 1.4s ease-in-out infinite}
+      /* ♿ من طلب تقليل الحركة يراها ثابتةً بلونها الصارخ — الإشارة تبقى، والوميض يذهب */
+      @media (prefers-reduced-motion:reduce){
+        #adminSectionWrap .admEsc,.admEscBadge{animation:none;border-color:rgba(248,113,113,1);background:rgba(127,29,29,.3)}
+      }
     </style>
     <div class="admGrid">
 
@@ -6713,16 +6731,28 @@ async function adminLoadSupport() {
     if (error) throw error;
     /* المسجلون: ردّ داخل التطبيق · الزوار: ردّ عبر الإيميل */
     const registered = new Set((profs || []).map(p => (p.email || '').toLowerCase()));
-    const list = data || [];
+    /* 🚨 المُصعَّدة أوّلاً — ولا معنى لتصعيدٍ يُدفن في آخر ثلاثين طلباً.
+       والترتيب الأصليّ (الأحدث أوّلاً) محفوظٌ داخل كلّ مجموعة. */
+    const list = (data || []).slice().sort((a, b) => (b.escalated ? 1 : 0) - (a.escalated ? 1 : 0));
     _admSupportList = list;   /* 🛡️ لتحديد إيميل المستخدم عند تسجيل الرد/الحذف */
     /* فتحُ الصندوق يعتبر الطلبات «مُطَّلعاً عليها» — فلا يتكرر التنبيه المنبثق لنفسها */
     if (list.length > 0) {
       try { localStorage.setItem('tp_admin_sup_seen', list[0].created_at); } catch (e) {}
     }
     const newCount = list.filter(r => r.status === 'new').length;
+    const escList  = list.filter(r => r.escalated);
     const badge = document.getElementById('admSupNew');
-    if (badge) badge.innerHTML = newCount
-      ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 8px;font-size:10px">${newCount} جديد</span>` : '';
+    if (badge) badge.innerHTML =
+      (escList.length ? `<span class="admEscBadge" style="background:#dc2626;color:#fff;border-radius:20px;padding:1px 8px;font-size:10px;margin-inline-end:4px">⚡ ${escList.length} مُصعَّدة</span>` : '') +
+      (newCount ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 8px;font-size:10px">${newCount} جديد</span>` : '');
+    /* 🔔 نافذةٌ للأدمن الرئيسيّ وحده — المشرف هو من صعّد، فلا تُنبّهه بما فعله.
+       وتُعرض مرّةً لكلّ مجموعةٍ مُصعَّدة: تصعيدٌ جديد ⇒ نافذةٌ جديدة، وإعادةُ
+       تحميل القائمة بعد ردٍّ لا تُعيدها. فالتنبيه الذي يتكرّر بلا جديد يُغلَق
+       بلا قراءة، ثمّ يُغلق الحقيقيُّ معه. */
+    if (typeof isSuperAdmin === 'function' && isSuperAdmin() && escList.length) {
+      const sig = escList.map(r => r.id).sort().join(',');
+      if (sig !== _admEscShown) { _admEscShown = sig; _admEscPopup(escList); }
+    } else if (!escList.length) { _admEscShown = ''; }
     if (list.length === 0) {
       box.innerHTML = '<div style="padding:10px;text-align:center">لا طلبات دعم بعد</div>';
       return;
@@ -6737,11 +6767,29 @@ async function adminLoadSupport() {
              style="padding:5px 10px;border-radius:8px;border:1px solid rgba(96,165,250,.4);
                     background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;
                     cursor:pointer">✉️ رد بالإيميل</button>`;
+      /* 🚨 التصعيد: المشرف يرفعها، والأدمن الرئيسيّ وحده يُنزلها.
+         ولا يُصعَّد ما أُغلق — المغلقة لا تنتظر أحداً. */
+      const canEsc = (typeof can === 'function' && can('support')) && r.status !== 'closed' && !r.escalated
+                     && !(typeof isSuperAdmin === 'function' && isSuperAdmin());
+      const escBox = r.escalated ? `
+        <div class="admEsc">
+          <div style="font-size:11.5px;font-weight:800;color:#fca5a5">🚨 مُصعَّدة إلى الإدارة</div>
+          <div style="font-size:11px;color:#fca5a5;opacity:.85;margin-top:2px">
+            بواسطة <span style="direction:ltr;display:inline-block">${esc(r.escalated_by || '—')}</span>
+            ${r.escalated_at ? ' · ' + new Date(r.escalated_at).toLocaleString('ar', { dateStyle: 'short', timeStyle: 'short' }) : ''}
+          </div>
+          ${r.escalate_note ? `<div style="font-size:11.5px;color:#fff;line-height:1.8;margin-top:6px;white-space:pre-wrap;
+               background:rgba(0,0,0,.3);border-radius:8px;padding:7px 9px">📝 ${String(r.escalate_note).replace(/</g, '&lt;')}</div>` : ''}
+          ${(typeof isSuperAdmin === 'function' && isSuperAdmin()) ? `<button onclick="adminDeescalate(${r.id})"
+            style="margin-top:7px;padding:6px 12px;border-radius:8px;border:1px solid rgba(74,222,128,.45);
+                   background:rgba(74,222,128,.12);color:#86efac;font-size:11px;font-weight:800;cursor:pointer">✔️ عولجت — أزل التصعيد</button>` : ''}
+        </div>` : '';
       return `
       <!-- 🔎 الإخفات كان .6 فيُطفئ سطر المعلومات مرّتين: لونٌ باهتٌ على
-           بطاقةٍ مُخفتة. و.85 يكفي للتمييز بين المُجاب والجديد بلا إتعاب العين. -->
+           بطاقةٍ مُخفتة. و.85 يكفي للتمييز بين المُجاب والجديد بلا إتعاب العين.
+           ⚠️ والمُصعَّدة لا تُخفَت أبداً مهما كانت حالتها — الإخفاتُ نقيضُ الغرض. -->
       <div style="padding:9px 2px;border-bottom:1px solid var(--bdr);
-                  ${r.status === 'new' ? '' : 'opacity:.85'}">
+                  ${(r.status === 'new' || r.escalated) ? '' : 'opacity:.85'}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div style="min-width:0">
             <div style="font-size:11px;direction:ltr;text-align:left;color:var(--txt);
@@ -6761,6 +6809,9 @@ async function adminLoadSupport() {
               style="padding:5px 10px;border-radius:8px;border:1px solid var(--bdr);
                      background:var(--surf-alt);color:var(--txt);font-size:10.5px;font-weight:700;cursor:pointer">📋</button>
             ${replyBtn}
+            ${canEsc ? `<button onclick="adminToggleEscalate(${r.id})" title="رفعُ الشكوى إلى الأدمن الرئيسيّ مع سبب"
+              style="padding:5px 10px;border-radius:8px;border:1px solid rgba(251,146,60,.5);
+                     background:rgba(251,146,60,.12);color:#fdba74;font-size:10.5px;font-weight:700;cursor:pointer">⚡ تصعيد</button>` : ''}
             <button onclick="adminSupportDelete(${r.id}, '${r.email}')"
               style="padding:5px 10px;border-radius:8px;border:1px solid rgba(248,113,113,.4);
                      background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">🗑️</button>
@@ -6776,7 +6827,19 @@ async function adminLoadSupport() {
                     word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">${String(r.subject || '').replace(/</g,'&lt;')}</div>
         ${r.reply ? `<div style="font-size:11px;color:#86efac;margin-top:4px;line-height:1.7;
                     word-break:break-word;overflow-wrap:anywhere">↩️ ردك: ${String(r.reply).replace(/</g,'&lt;')}</div>` : ''}
+        ${escBox}
         ${_threadHTML(r.thread)}
+        <div id="admEsc-${r.id}" style="display:none;margin-top:6px">
+          <textarea id="admEscTxt-${r.id}" rows="2" maxlength="300"
+            placeholder="لماذا تُصعَّد؟ (إلزامي — اذكر ما يحتاجه الأدمن ليقرّر بلا قراءة المحادثة كلّها)"
+            style="width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;resize:none;
+                   border:1.5px solid rgba(251,146,60,.45);background:var(--surf-alt);color:var(--txt);
+                   font-size:12px;outline:none;font-family:inherit"></textarea>
+          <button onclick="adminEscalate(${r.id})"
+            style="width:100%;margin-top:5px;padding:9px;border-radius:9px;border:none;cursor:pointer;
+                   font-weight:800;font-size:12px;color:#fff;
+                   background:linear-gradient(135deg,#9a3412,#f97316)">⚡ صعّد إلى الإدارة</button>
+        </div>
         <div id="admRep-${r.id}" style="display:none;margin-top:6px">
           <textarea id="admRepTxt-${r.id}" rows="3" maxlength="500" placeholder="اكتب ردك للمستخدم..."
             style="width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;resize:none;
@@ -6803,6 +6866,118 @@ async function adminLoadSupport() {
      done   ⇒ ↩️ رُدَّ عليها · وللمستخدم أن يستوضح
      closed ⇒ 🔒 مغلقة · ويُدعى لبدء محادثةٍ جديدة
    ══════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   🚨 تصعيد شكوى إلى الإدارة
+
+   الحاجة: المشرف يقرأ شكوى تفوق صلاحيته — استرداد، أو اتّهامٌ بخصم
+   مضاعف، أو تهديدٌ بشكوى رسمية — فلا يملك إلا أن يردّ ردّاً لا يُغني،
+   أو يتركها. وكلاهما يُفقد العميل.
+
+   ▸ **والسبب إلزاميّ** لسببين: يوفّر على الأدمن قراءة المحادثة كلّها،
+     ويجعل المشرف يزن الأمر قبل أن يرفعه. وزرٌّ بلا سبب يُضغط بلا تفكير،
+     فتفقد الإشارة معناها في أسبوع.
+   ▸ والإخطار مزدوج: تلجرام + نافذةٌ في اللوحة. فمن لا يفتح تلجرام يراها
+     عند دخوله، ومن لا يدخل اللوحة تصله في جيبه.
+   ▸ ومسار تلجرام هو نفسه مسار بقيّة الإجراءات: من استطاع أرسل وعلّم صفّه
+     بـ`_TG_MARK`، ومن عجز (جهاز المشرف بلا رمز البوت) تكفّل به الخادم.
+   ══════════════════════════════════════════════════════════════════════ */
+let _admEscShown = '';
+
+function adminToggleEscalate(id) {
+  const d = document.getElementById('admEsc-' + id);
+  if (!d) return;
+  const open = d.style.display === 'none';
+  d.style.display = open ? 'block' : 'none';
+  if (open) { const t = document.getElementById('admEscTxt-' + id); if (t) t.focus(); }
+}
+
+async function adminEscalate(id) {
+  if (!can('support')) { showToast('⛔ لا تملك صلاحية الدعم'); return; }
+  const txtEl = document.getElementById('admEscTxt-' + id);
+  const note  = (txtEl ? txtEl.value : '').trim();
+  if (note.length < 10) {
+    showToast('⚠️ اكتب سبب التصعيد (١٠ أحرف على الأقل)');
+    if (txtEl) txtEl.focus();
+    return;
+  }
+  const row   = (_admSupportList || []).find(r => String(r.id) === String(id)) || {};
+  const who   = (sbUser && sbUser.email) ? sbUser.email : '—';
+  const { error } = await sb.from('support_requests').update({
+    escalated: true, escalated_by: who,
+    escalated_at: new Date().toISOString(), escalate_note: note.slice(0, 300),
+  }).eq('id', id);
+  if (error) { _admErr(error, 'فشل التصعيد'); return; }
+
+  /* 📱 أرسل إن استطاع هذا الجهاز؛ وإلا فالخادم يقرأ سجلّ الإشراف ويُرسل. */
+  let mark = '';
+  try {
+    if (typeof window.tgNotify === 'function' && _tgDeviceReady()) {
+      const res = await window.tgNotify(
+        '🚨 <b>تصعيد شكوى إلى الإدارة</b>\n' +
+        '🛡️ المشرف: ' + who + '\n' +
+        '👤 العميل: ' + (row.email || '—') + '\n' +
+        '📂 ' + (row.req_type || '—') + '\n' +
+        '📝 ' + note.slice(0, 300) + '\n\n' +
+        '<i>افتح لوحة الأدمن ← 📨 طلبات الدعم</i>');
+      if (res && res.ok) mark = _TG_MARK;
+    }
+  } catch (_) { /* الإخطار لا يُسقط التصعيد */ }
+  logAdminAction('escalate', row.email || String(id), mark + note.slice(0, 300));
+
+  showToast('🚨 صُعِّدت إلى الإدارة — وصل الإخطار');
+  adminLoadSupport();
+}
+
+async function adminDeescalate(id) {
+  if (!isSuperAdmin()) { showToast('⛔ إزالة التصعيد للأدمن الرئيسي فقط'); return; }
+  const { error } = await sb.from('support_requests').update({
+    escalated: false, escalated_at: null,
+  }).eq('id', id);
+  if (error) { _admErr(error, 'فشل تحديث التصعيد'); return; }
+  /* 🧾 `escalated_by` و`escalate_note` يبقيان: التصعيد وقع، وسجلُّه لا يُمحى بمعالجته. */
+  const row = (_admSupportList || []).find(r => String(r.id) === String(id)) || {};
+  logAdminAction('deescalate', row.email || String(id), 'عولجت');
+  showToast('✔️ أُزيل التصعيد');
+  adminLoadSupport();
+}
+
+/* 🔔 النافذة — تُعرض للأدمن الرئيسيّ عند وجود شكاوى مُصعَّدة */
+function _admEscPopup(rows) {
+  const old = document.getElementById('admEscPanel');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'admEscPanel';
+  el.style.cssText = 'position:fixed;inset:0;z-index:997;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto';
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+  el.innerHTML = `
+    <div style="background:var(--surf);border:1.5px solid rgba(248,113,113,.6);border-radius:18px;
+                width:100%;max-width:440px;padding:22px;max-height:88vh;overflow-y:auto">
+      <div style="font-size:34px;text-align:center;margin-bottom:6px">🚨</div>
+      <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:4px">
+        ${rows.length === 1 ? 'شكوى مُصعَّدة إليك' : rows.length + ' شكاوى مُصعَّدة إليك'}
+      </div>
+      <div style="font-size:11.5px;color:var(--txt-m);text-align:center;line-height:1.8;margin-bottom:16px">
+        رفعها المشرفون لأنّها تتجاوز صلاحيتهم — تحتاج قرارك أنت.
+      </div>
+      ${rows.map(r => `
+        <div style="border:1px solid rgba(248,113,113,.4);border-radius:12px;padding:11px 13px;margin-bottom:10px;
+                    background:rgba(127,29,29,.14)">
+          <div style="font-size:11.5px;direction:ltr;text-align:left;color:var(--txt);font-weight:700">${esc(r.email)}</div>
+          <div style="font-size:10.5px;color:var(--txt-m);margin-top:2px">
+            ${esc(r.req_type || '—')} · 🛡️ <span style="direction:ltr;display:inline-block">${esc(r.escalated_by || '—')}</span>
+            ${r.escalated_at ? ' · ' + new Date(r.escalated_at).toLocaleString('ar', { dateStyle: 'short', timeStyle: 'short' }) : ''}
+          </div>
+          ${r.escalate_note ? `<div style="font-size:12px;color:#fff;line-height:1.8;margin-top:7px;white-space:pre-wrap;
+               background:rgba(0,0,0,.32);border-radius:8px;padding:8px 10px">📝 ${String(r.escalate_note).replace(/</g, '&lt;')}</div>` : ''}
+        </div>`).join('')}
+      <button onclick="document.getElementById('admEscPanel').remove();var b=document.getElementById('admSupportBox');if(b)b.scrollIntoView({behavior:'smooth',block:'center'})"
+        style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;
+               font-size:13px;font-weight:800;color:#fff;
+               background:linear-gradient(135deg,#b91c1c,#ef4444)">📨 اذهب إلى طلبات الدعم</button>
+    </div>`;
+  document.body.appendChild(el);
+}
+
 async function adminSupportDone(id) {
   if (!can('support')) { showToast('⛔ لا تملك صلاحية الدعم'); return; }
   const { error } = await sb.from('support_requests').update({ status: 'closed' }).eq('id', id);

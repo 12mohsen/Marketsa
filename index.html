@@ -2382,8 +2382,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-11-v478';
-console.log('%c[تداول بلس] البناء: 2026-08-11-v478 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v479';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v479 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2393,6 +2393,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v478 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v479', '🚫 المحجوب لا يُباع — كان القسم يُخفى من شريط التنقّل ويبقى معروضاً للشراء في صفحة الدفع، فيدفع المستخدم ثمن ما لا يستطيع فتحه. السبب أن صفحة الدفع كانت تقرأ `ADMIN_TAB_DEFS` كاملةً ولا تسأل عن الإخفاء. الآن دالّةٌ واحدة `_hiddenTabsNow()` يقرأها الشريطُ وصفحةُ الدفع معاً — تشمل الإخفاء العام والإخفاء الفرديّ لكل مستخدم. والأدمن وحده يرى المحجوب معلَّماً بـ🚫 ليعاينه'],
     ['v478', '✅ تأكيد البريد بمسار `token_hash` — السجلّ كان يقول «303 ثمّ 403: One-time token not found»: الرمز يُستهلك مرّتين لأن فاحص الروابط في خدمة البريد يفتحه قبل صاحبه ليتأكّد أنّه آمن، فيبتلع رمزاً يُستعمل مرّةً واحدة. الآن يحمل الرابط `token_hash` إلى صفحتنا وتُناديه `verifyOtp` بجافاسكربت — والفاحصُ الآليّ لا يُنفّذها. ومعه: أخطاءُ الرابط تُعرض بالعربية بدل أن تُبتلع — كان المستخدم يرى الموقع يُفتح كأن شيئاً لم يكن'],
     ['v477', '📡 مصدران بديلان لمكتبة Supabase — رُصد: تعذّر التسجيل ورسالةٌ تقول «الصق المفاتيح» والمفاتيح مضبوطة. العلّة أن jsDelivr تعثّرت لحظتها فبقي `supabase` غير معرَّف و`sb` فارغاً. أي أن تعثّر شبكةٍ خارجية يُسقط الحساب والدفع والقاعدة معاً — وأشدُّ ما فيه أن الرسالة تتّهم إعدادك وهو سليم فتبحث حيث لا عطل. الآن: unpkg ثمّ esm.sh احتياطاً، والرسالة تقول «تعذّر الاتصال — حدّث الصفحة»'],
     ['v476', '♻️ الودجة لم تكن تظهر في المرّة الثانية إلا بتحديث الصفحة — نافذة الحذف تُبنى من جديد كلَّ مرّة فالحاوية عنصرٌ جديدٌ فارغ، وشيفرتي احتفظت بمعرّف الودجة القديمة فحاولت تصفير ودجةٍ مات عنصرُها. صارت العبرة بمحتوى الحاوية لا بالذاكرة عنها: فارغةٌ ⇒ تُزال القديمة وتُرسم جديدة'],
@@ -4375,6 +4376,20 @@ async function syncProfileAndRestrictions() {
   if (typeof authUpdateUI === 'function') authUpdateUI();
 }
 
+/* 🧩 الأقسام المخفيّة عن المستخدم الحالي — مصدرٌ واحد يستعمله شريطُ التنقّل وصفحةُ الدفع معاً.
+   وبغيره كان القسم يُخفى من الشريط ويبقى معروضاً للبيع في صفحة الدفع، فيشتري ما لا يراه. */
+function _hiddenTabsNow() {
+  const s  = (typeof appSettings !== 'undefined' && appSettings) || {};
+  const gs = !(typeof sbUser !== 'undefined' && sbUser);
+  const gm = s.guestTabMode || {};
+  return new Set(
+    gs
+      ? Object.keys(gm).filter(k => gm[k] === 'hide').concat(s.guestHiddenTabs || [])
+      : [...(s.hiddenTabs || []),
+         ...((typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.hidden_tabs) || [])]
+  );
+}
+
 function applyAppSettings() {
   const s = appSettings || {};
   /* إظهار/إخفاء الأقسام: القيود العامة + الفردية معاً */
@@ -4382,11 +4397,7 @@ function applyAppSettings() {
      فلا يؤثّر إخفاء قسم عن المسجّلين على ما يراه الزائر (والعكس). */
   const _isGuest = !(typeof sbUser !== 'undefined' && sbUser);
   const _gMode = (s.guestTabMode || {});
-  const hidden = new Set(
-    _isGuest
-      ? Object.keys(_gMode).filter(k => _gMode[k] === 'hide').concat(s.guestHiddenTabs || [])
-      : [...(s.hiddenTabs || []), ...((userRestrictions && userRestrictions.hidden_tabs) || [])]
-  );
+  const hidden = _hiddenTabsNow();
   /* 💳 بعد انتهاء الاشتراك: لا تُحجب الأقسام — تبقى ظاهرة، وتُظلَّل «الأهداف ووقف الخسارة»
      فقط تلقائياً حسب الاشتراك (عبر _targetsLocked). لذا لا نضيف الأقسام المنتهية للمخفيّة. */
   /* 👑 الأدمن مُستثنى: يرى كل الأقسام دائماً، مع علامة 🚫 تنبّهه أن القسم محجوب عن العامة */
@@ -5223,9 +5234,14 @@ function openPayModal(secKey) {
     : [{ k: 'watchlist', t: '📁 المحفظة' }, { k: 'monitor', t: '👁️ المراقبة' },
        { k: 'returns', t: '📈 العوائد' }, { k: 'all', t: '🔮 رادار' },
        { k: 'analysis', t: '⚡ تحليل السوق' }];
-  const payItems = defs.map(d => {
+  /* 🚫 لا نبيع ما أخفاه الأدمن: القسم المحجوب عن هذا المستخدم يسقط من قائمة الشراء كلّها.
+     (وكان يُعرض للبيع وهو محجوب — فيدفع ثمن ما لا يستطيع فتحه.) الأدمن مستثنى ليعاين. */
+  const _hidNow = (typeof _hiddenTabsNow === 'function') ? _hiddenTabsNow() : new Set();
+  const _admSee = (typeof isAdmin === 'function' && isAdmin());
+  const payItems = defs.filter(d => _admSee || !_hidNow.has(d.k)).map(d => {
     const p = _svcPrice(d.k);
-    return { k: d.k, label: _payLabel(d.k), price: p.price, base: p.base, off: p.off,
+    return { k: d.k, label: (_hidNow.has(d.k) ? '🚫 ' : '') + _payLabel(d.k),
+             price: p.price, base: p.base, off: p.off,
              offMsLeft: p.offMsLeft, offUsed: !!p.offUsed, days: p.days, expired: p.expired };
   });
   const priced = payItems.filter(it => it.price > 0);

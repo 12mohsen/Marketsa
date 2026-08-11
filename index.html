@@ -2382,8 +2382,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-11-v477';
-console.log('%c[تداول بلس] البناء: 2026-08-11-v477 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v478';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v478 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2393,6 +2393,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v477 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v478', '✅ تأكيد البريد بمسار `token_hash` — السجلّ كان يقول «303 ثمّ 403: One-time token not found»: الرمز يُستهلك مرّتين لأن فاحص الروابط في خدمة البريد يفتحه قبل صاحبه ليتأكّد أنّه آمن، فيبتلع رمزاً يُستعمل مرّةً واحدة. الآن يحمل الرابط `token_hash` إلى صفحتنا وتُناديه `verifyOtp` بجافاسكربت — والفاحصُ الآليّ لا يُنفّذها. ومعه: أخطاءُ الرابط تُعرض بالعربية بدل أن تُبتلع — كان المستخدم يرى الموقع يُفتح كأن شيئاً لم يكن'],
     ['v477', '📡 مصدران بديلان لمكتبة Supabase — رُصد: تعذّر التسجيل ورسالةٌ تقول «الصق المفاتيح» والمفاتيح مضبوطة. العلّة أن jsDelivr تعثّرت لحظتها فبقي `supabase` غير معرَّف و`sb` فارغاً. أي أن تعثّر شبكةٍ خارجية يُسقط الحساب والدفع والقاعدة معاً — وأشدُّ ما فيه أن الرسالة تتّهم إعدادك وهو سليم فتبحث حيث لا عطل. الآن: unpkg ثمّ esm.sh احتياطاً، والرسالة تقول «تعذّر الاتصال — حدّث الصفحة»'],
     ['v476', '♻️ الودجة لم تكن تظهر في المرّة الثانية إلا بتحديث الصفحة — نافذة الحذف تُبنى من جديد كلَّ مرّة فالحاوية عنصرٌ جديدٌ فارغ، وشيفرتي احتفظت بمعرّف الودجة القديمة فحاولت تصفير ودجةٍ مات عنصرُها. صارت العبرة بمحتوى الحاوية لا بالذاكرة عنها: فارغةٌ ⇒ تُزال القديمة وتُرسم جديدة'],
     ['v475', '🛡️ الكابتشا كانت تكسر إعادة توثيق الأدمن — رصده الاختبار: بعد تفعيلها صار كلُّ نداءٍ لـ`signInWithPassword` يحتاج رمزاً، ومنه تأكيدُ حذف الحساب. فيُردّ بلا رمز، والشيفرة تقول «كلمة المرور غير صحيحة» — اتّهامٌ كاذب يجعل الأدمن يشكّ في كلمةٍ صحيحة. الآن: ودجةٌ في نافذة الحذف، ورسالةٌ تُفرّق بين فشل الكابتشا وخطأ كلمة المرور. وعُمّمت الودجة لتُرسم في أيّ حاوية بمعرّفها'],
@@ -2676,6 +2677,69 @@ if (_authFromConfirm) {
    وهذا المُعالِج يفتح نافذة الدخول عند /login أو #login ثم ينظّف الرابط.
    يفيد الروابط المشتركة، وأدوات الاختبار التلقائي، ومن يكتب العنوان يدوياً.
    ══════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════
+   ✅ تأكيد البريد — بمسار `token_hash` لا برابط `/verify` المباشر
+
+   العلّة المرصودة في السجلّ:
+       303 GET /verify — Request completed
+       403 GET /verify — One-time token not found
+   الرمز يُستهلك مرّتين. والسبب المعتاد أنّ **فاحص الروابط في خدمة البريد**
+   (Safe Links وأمثاله) يفتح الرابط قبل المستخدم ليتأكّد أنّه آمن — فيبتلع
+   رمزاً يُستعمل مرّةً واحدة، ثمّ يضغط صاحبه فلا يجد شيئاً.
+
+   ▸ العلاج: لا يُفتح `/verify` بنقرة. بل يحمل الرابط `token_hash` إلى
+     صفحتنا، وتُناديه `verifyOtp` **بجافاسكربت** — والفاحصُ الآليّ لا
+     يُنفّذ جافاسكربت، فلا يستهلك شيئاً.
+   ▸ وثانيةٌ لا تقلّ: التطبيق كان يستقبل الخطأ في العنوان **ولا يعرضه** —
+     فيرى المستخدم الموقع يُفتح كأن شيئاً لم يكن، ولا يدري لماذا لم يُؤكَّد.
+   ══════════════════════════════════════════════════════════════════════════ */
+async function _authConfirmFromUrl() {
+  try {
+    const q = new URLSearchParams(location.search);
+    const h = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const pick = (k) => q.get(k) || h.get(k);
+
+    /* ⚠️ الخطأ يُقال، لا يُبتلع */
+    const err = pick('error') || pick('error_code');
+    if (err) {
+      const d = String(pick('error_description') || '').toLowerCase();
+      const isExp = /expired|invalid|not found/.test(d + ' ' + String(err).toLowerCase());
+      const msg = isExp
+        ? '⏳ انتهت صلاحية رابط التأكيد أو استُعمل من قبل — اطلب رسالةً جديدة بتسجيل الدخول ثمّ «أعد إرسال التأكيد».'
+        : '⚠️ تعذّر تأكيد البريد — حاول من جديد أو راسل الدعم.';
+      try { history.replaceState(null, '', location.pathname); } catch (_) {}
+      setTimeout(() => { if (typeof showToast === 'function') showToast(msg); }, 900);
+      console.warn('[auth] رابط التأكيد:', err, pick('error_description'));
+      return;
+    }
+
+    const th = pick('token_hash');
+    if (!th || !sb) return;
+    const type = pick('type') || 'email';
+    const { error } = await sb.auth.verifyOtp({ token_hash: th, type });
+    try { history.replaceState(null, '', location.pathname); } catch (_) {}
+    if (error) {
+      console.warn('[auth] verifyOtp:', error.message);
+      setTimeout(() => { if (typeof showToast === 'function')
+        showToast('⏳ رابط التأكيد لم يعد صالحاً — سجّل الدخول واطلب رسالةً جديدة'); }, 900);
+      return;
+    }
+    /* ✅ نجح: تُحدَّث الجلسة والواجهة، ثمّ تظهر شاشة الترحيب المعتادة */
+    try {
+      const { data } = await sb.auth.getSession();
+      sbUser = (data && data.session) ? data.session.user : null;
+      _sbToken = (data && data.session) ? data.session.access_token : null;
+      if (typeof authUpdateUI === 'function') authUpdateUI();
+      if (typeof syncProfileAndRestrictions === 'function') syncProfileAndRestrictions();
+    } catch (_) {}
+    setTimeout(() => { try { _authShowWelcome(); } catch (_) {
+      if (typeof showToast === 'function') showToast('🎉 تم تأكيد بريدك — أهلاً بك'); } }, 600);
+  } catch (e) { console.warn('[auth] تأكيد البريد:', e && e.message); }
+}
+(document.readyState === 'loading')
+  ? document.addEventListener('DOMContentLoaded', () => setTimeout(_authConfirmFromUrl, 700))
+  : setTimeout(_authConfirmFromUrl, 700);
+
 function _authRouteCheck() {
   try {
     const p = (location.pathname || '').toLowerCase().replace(/\/+$/, '');

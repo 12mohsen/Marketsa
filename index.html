@@ -2382,8 +2382,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-11-v479';
-console.log('%c[تداول بلس] البناء: 2026-08-11-v479 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v480';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v480 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2393,6 +2393,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v479 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v480', '🗑️ حذف الحساب: تأكيدٌ بكتابة البريد بدل كلمة المرور — أثبته سجلّ Supabase حرفياً: «400 captcha protection: request disallowed (no captcha_token found)». إعادةُ التوثيق كانت تمرّ بـsignInWithPassword وهو مسارٌ تحرسه الكابتشا، فإن تأخّرت الودجة أو لم تُرسَم سقط الحذف وقيل للأدمن «كلمة المرور غير صحيحة» — وهي صحيحة. وv475/v476 عالجا العرَض لا العلّة. الآن: اكتب البريد كاملاً فيُفتح الزرّ — بلا نداءٍ خارجيّ ولا طرفٍ ثالث ولا شيءَ يُعطَّل. والحراسة الحقيقية في `admin-users` على الخادم كما كانت'],
     ['v479', '🚫 المحجوب لا يُباع — كان القسم يُخفى من شريط التنقّل ويبقى معروضاً للشراء في صفحة الدفع، فيدفع المستخدم ثمن ما لا يستطيع فتحه. السبب أن صفحة الدفع كانت تقرأ `ADMIN_TAB_DEFS` كاملةً ولا تسأل عن الإخفاء. الآن دالّةٌ واحدة `_hiddenTabsNow()` يقرأها الشريطُ وصفحةُ الدفع معاً — تشمل الإخفاء العام والإخفاء الفرديّ لكل مستخدم. والأدمن وحده يرى المحجوب معلَّماً بـ🚫 ليعاينه'],
     ['v478', '✅ تأكيد البريد بمسار `token_hash` — السجلّ كان يقول «303 ثمّ 403: One-time token not found»: الرمز يُستهلك مرّتين لأن فاحص الروابط في خدمة البريد يفتحه قبل صاحبه ليتأكّد أنّه آمن، فيبتلع رمزاً يُستعمل مرّةً واحدة. الآن يحمل الرابط `token_hash` إلى صفحتنا وتُناديه `verifyOtp` بجافاسكربت — والفاحصُ الآليّ لا يُنفّذها. ومعه: أخطاءُ الرابط تُعرض بالعربية بدل أن تُبتلع — كان المستخدم يرى الموقع يُفتح كأن شيئاً لم يكن'],
     ['v477', '📡 مصدران بديلان لمكتبة Supabase — رُصد: تعذّر التسجيل ورسالةٌ تقول «الصق المفاتيح» والمفاتيح مضبوطة. العلّة أن jsDelivr تعثّرت لحظتها فبقي `supabase` غير معرَّف و`sb` فارغاً. أي أن تعثّر شبكةٍ خارجية يُسقط الحساب والدفع والقاعدة معاً — وأشدُّ ما فيه أن الرسالة تتّهم إعدادك وهو سليم فتبحث حيث لا عطل. الآن: unpkg ثمّ esm.sh احتياطاً، والرسالة تقول «تعذّر الاتصال — حدّث الصفحة»'],
@@ -7265,48 +7266,44 @@ function adminDeleteUser(email) {
       <div style="font-size:11.5px;color:#fca5a5;line-height:1.7;margin-bottom:12px">
         سيُحذف الحساب وقيوده وملفه ولن يستطيع الدخول مجدداً — لا تراجع عن هذا الإجراء.
       </div>
-      <input id="admDelUserPass" type="password" autocomplete="current-password"
-        placeholder="🔑 كلمة مرور الأدمن للتأكيد"
+      <!-- ✍️ تأكيدٌ بكتابة البريد بدل كلمة المرور.
+           السبب مُسجَّل في سجلّ Supabase حرفياً: 400 captcha protection —
+           request disallowed (no captcha_token found). فإعادة التوثيق كانت
+           تمرّ بـsignInWithPassword، وSupabase تفرض الكابتشا على هذا المسار،
+           فإن لم تُرسَم الودجة سقط الحذف — وقيل للأدمن «كلمة المرور غير
+           صحيحة» وهي صحيحة. والحارس الحقيقيّ في الخادم (admin-users) لا هنا؛
+           وهذا التأكيد يمنع الضغط الخاطئ بلا شبكةٍ ولا طرفٍ ثالث. -->
+      <div style="font-size:11px;color:var(--txt-m);margin-bottom:6px">اكتب البريد كاملاً لتأكيد الحذف:</div>
+      <input id="admDelUserPass" type="text" autocomplete="off" spellcheck="false" dir="ltr"
+        placeholder="${email}"
+        oninput="(function(v){var b=document.getElementById('admDelGo');if(!b)return;var ok=v.trim().toLowerCase()===${JSON.stringify(String(email).toLowerCase())};b.disabled=!ok;b.style.opacity=ok?'1':'.45';b.style.cursor=ok?'pointer':'not-allowed';})(this.value)"
         onkeypress="if(event.key==='Enter')adminDeleteUserConfirmed('${email}')"
         style="width:100%;box-sizing:border-box;margin-bottom:14px;padding:11px 12px;border-radius:10px;
                border:1.5px solid rgba(248,113,113,.4);background:var(--surf-alt);color:var(--txt);
                font-size:13px;outline:none;text-align:center;font-family:inherit">
-      <!-- 🛡️ الكابتشا لازمةٌ هنا: إعادة التوثيق تمرّ بـsignInWithPassword -->
-      <div id="admDelCaptcha" style="display:none;justify-content:center;margin-bottom:12px"></div>
       <div style="display:flex;gap:8px">
         <button onclick="document.getElementById('admDelUserPanel').remove()"
           style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--bdr);
                  background:var(--surf-alt);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer">إلغاء</button>
-        <button onclick="adminDeleteUserConfirmed('${email}')"
-          style="flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;
+        <button id="admDelGo" disabled onclick="adminDeleteUserConfirmed('${email}')"
+          style="flex:1;padding:11px;border-radius:10px;border:none;cursor:not-allowed;opacity:.45;
                  font-size:13px;font-weight:800;color:#fff;
                  background:linear-gradient(135deg,#b91c1c,#ef4444)">🗑️ حذف نهائي</button>
       </div>
     </div>`;
   document.body.appendChild(el);
-  try { _tsRenderIn('admDelCaptcha'); } catch (e) {}
+  setTimeout(() => { const i = document.getElementById('admDelUserPass'); if (i) i.focus(); }, 60);
 }
 
 async function adminDeleteUserConfirmed(email) {
   if (!isSuperAdmin()) { showToast('⛔ حذف الحسابات للأدمن الرئيسي فقط'); return; }
   const passEl = document.getElementById('admDelUserPass');
-  const pass = passEl ? passEl.value : '';
-  if (!pass) { showToast('⚠️ أدخل كلمة مرور الأدمن للتأكيد'); if (passEl) passEl.focus(); return; }
-  /* التحقق الفعلي من كلمة المرور بإعادة توثيق جلسة الأدمن */
-  showToast('⏳ جارٍ التحقق من كلمة المرور...');
-  const { error: vErr } = await sb.auth.signInWithPassword({
-    email: sbUser.email, password: pass,
-    options: { captchaToken: _tsTokenIn('admDelCaptcha') || undefined },
-  });
-  if (vErr) {
-    /* ⚠️ لا تتّهم كلمة المرور بما ليس فيها: فشلُ الكابتشا خطأٌ آخر تماماً،
-       والرسالة الخاطئة تجعل الأدمن يُبدّل كلمةً صحيحة بلا داعٍ. */
-    const _m = String(vErr.message || '');
-    showToast(_m.toLowerCase().includes('captcha')
-      ? '🛡️ تعذّر التحقّق من الكابتشا — انتظر ظهور «تمّ بنجاح» ثمّ أعد المحاولة'
-      : '❌ كلمة المرور غير صحيحة');
-    _tsResetIn('admDelCaptcha');
-    if (passEl) { passEl.value = ''; passEl.focus(); }
+  /* ✍️ التأكيد بمطابقة البريد — بلا نداءٍ خارجيّ، فلا شيء يُعطّله.
+     ولا يُغني عن حراسة الخادم؛ هو يمنع الضغط الخاطئ لا المتسلّل. */
+  const typed = (passEl ? passEl.value : '').trim().toLowerCase();
+  if (typed !== String(email).toLowerCase()) {
+    showToast('⚠️ اكتب البريد كاملاً ومطابقاً لتأكيد الحذف');
+    if (passEl) passEl.focus();
     return;
   }
   const p = document.getElementById('admDelUserPanel');

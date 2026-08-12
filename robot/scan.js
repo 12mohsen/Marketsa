@@ -6,8 +6,12 @@
 const { chromium } = require('playwright');
 
 const SITE  = 'https://markets-a.com';
-const EMAIL = process.env.BOT_EMAIL;   // بريد حساب الروبوت (أدمن)
-const PASS  = process.env.BOT_PASS;    // كلمة مروره
+const EMAIL = process.env.BOT_EMAIL;   // بريد حساب الروبوت (أدمن) — احتياطيّ
+const PASS  = process.env.BOT_PASS;    // كلمة مروره — احتياطيّ
+/* 🔑 المسار الأساسيّ: رمزُ دخولٍ لمرّةٍ واحدة من دالّة `bot-login`.
+   لا كلمة مرور ولا كابتشا. والاثنان أعلاه يبقيان شبكةَ أمانٍ فقط. */
+const SB_URL       = process.env.SB_URL;        // https://xxxx.supabase.co
+const BOT_LINK_KEY = process.env.BOT_LINK_KEY;  // نفس السرّ في أسرار Supabase
 const TG_TOKEN = process.env.TG_TOKEN; // توكن بوت تلجرام (للإبلاغ)
 const TG_CHAT  = process.env.TG_CHAT;  // مجموعة الإشعارات
 
@@ -26,16 +30,51 @@ async function tg(msg) {
   const page = await browser.newPage();
   page.setDefaultTimeout(30000);
   try {
-    // 1) افتح الموقع وانتظر إقلاع التطبيق
-    await page.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await page.waitForTimeout(5000);
+    /* ══════════════════════════════════════════════════════════════════
+       🔑 الدخول — رابطٌ سحريّ أوّلاً، وكلمة المرور احتياطاً
 
-    // 2) افتح نافذة الدخول وسجّل دخولاً بحساب الروبوت
-    await page.click('#btnAuth', { timeout: 15000 });
-    await page.fill('[data-testid="login-email"]', EMAIL);
-    await page.fill('[data-testid="login-password"]', PASS);
-    await page.click('[data-testid="login-submit"]');
-    await page.waitForTimeout(7000);   // الجلسة + تحميل بيانات الأدمن
+       العلّة: كابتشا Turnstile تحرس `signInWithPassword`، ولا يستطيع
+       متصفّحٌ آليّ إنتاج رمزها. فسقط دخول الروبوت صامتاً وتوقّف المسح.
+
+       ▸ و`verifyOtp` بـ`token_hash` لا تحرسها الكابتشا. فنطلب رمزاً من
+         دالّة `bot-login` (تُصدره لبريد الروبوت وحده) ثمّ نفتح الموقع
+         به — وشيفرة `_authConfirmFromUrl` في التطبيق تتولّى الباقي.
+       ▸ ونُبقي مسار كلمة المرور احتياطاً: إن أُطفئت الكابتشا يوماً أو
+         تعثّرت الدالّة، لا يتوقّف المسح لأجل ذلك.
+       ══════════════════════════════════════════════════════════════════ */
+    let via = 'كلمة المرور';
+    let tokenHash = '';
+    if (SB_URL && BOT_LINK_KEY) {
+      try {
+        const r = await fetch(SB_URL.replace(/\/+$/, '') + '/functions/v1/bot-login', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-bot-key': BOT_LINK_KEY },
+          body: '{}',
+        });
+        const j = await r.json().catch(() => ({}));
+        if (r.ok && j && j.token_hash) { tokenHash = j.token_hash; via = 'الرابط السحريّ'; }
+        else console.log('[bot] تعذّر جلب الرمز:', r.status, (j && j.error) || '');
+      } catch (e) { console.log('[bot] استثناء عند جلب الرمز:', e && e.message); }
+    }
+
+    if (tokenHash) {
+      // 1) افتح الموقع بالرمز — التطبيق يُنشئ الجلسة بنفسه
+      await page.goto(SITE + '/?token_hash=' + encodeURIComponent(tokenHash) + '&type=magiclink',
+        { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.waitForTimeout(9000);   // الإقلاع + verifyOtp + تحميل بيانات الأدمن
+    } else {
+      // 1) افتح الموقع وانتظر إقلاع التطبيق
+      await page.goto(SITE, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.waitForTimeout(5000);
+
+      // 2) افتح نافذة الدخول وسجّل دخولاً بحساب الروبوت
+      await page.click('#btnAuth', { timeout: 15000 });
+      await page.fill('[data-testid="login-email"]', EMAIL);
+      await page.fill('[data-testid="login-password"]', PASS);
+      await page.click('[data-testid="login-submit"]');
+      await page.waitForTimeout(7000);   // الجلسة + تحميل بيانات الأدمن
+    }
+    console.log('[bot] مسار الدخول:', via);
 
     /* 3) تأكّد أن الروبوت أدمن (وإلا لن يُرفع المسح)
        ⚠️ ولا تقل «ليس أدمن» قبل أن تتأكّد أنّه **دخل** أصلاً.
@@ -54,8 +93,12 @@ async function tg(msg) {
       build: (typeof window !== 'undefined' && window.APP_BUILD) || '?',
     }));
     if (!st.signedIn) {
-      throw new Error('لم يُسجَّل الدخول أصلاً' + (st.msg ? ' — قالت النافذة: «' + st.msg + '»' : ' (بلا رسالة)')
-        + '. الأرجح: الكابتشا تحرس تسجيل الدخول. البناء: ' + st.build);
+      throw new Error('لم يُسجَّل الدخول (عبر ' + via + ')'
+        + (st.msg ? ' — قالت النافذة: «' + st.msg + '»' : ' (بلا رسالة)')
+        + (via === 'كلمة المرور'
+            ? '. الأرجح: الكابتشا تحرس تسجيل الدخول — اضبط SB_URL و BOT_LINK_KEY لتفعيل الرابط السحريّ.'
+            : '. الرمز صُرف لكنّ التطبيق لم يُنشئ جلسة — تحقّق أن البناء ≥ v478.')
+        + ' البناء: ' + st.build);
     }
     if (!st.admin) {
       throw new Error('دخل بـ' + st.who + ' لكنّه ليس أدمن — أضف بصمة بريده إلى ADMIN_EMAIL_HASHES.');

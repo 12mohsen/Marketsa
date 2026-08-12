@@ -19,6 +19,7 @@ jobs:
     # ⏱️ 20 بدل 15: تثبيت Playwright يأخذ ~3 دقائق، وانتظار المسح صار 10.
     #    فالحدّ القديم لا يترك هامشاً لإرسال الإخطار إن تأخّر المسح.
     timeout-minutes: 20
+
     steps:
       - name: جلب الملفات
         # ⬆️ v4 ← v7: كان GitHub يُحذّر «Node.js 20 is deprecated» ويُجبر
@@ -40,6 +41,10 @@ jobs:
 
       - name: تشغيل الروبوت
         env:
+          # 🔑 المسار الأساسيّ — رمزُ دخولٍ لمرّةٍ واحدة (لا كابتشا عليه)
+          SB_URL:       ${{ secrets.SB_URL }}
+          BOT_LINK_KEY: ${{ secrets.BOT_LINK_KEY }}
+          # 🛟 احتياطيّ — يُستعمل فقط إن تعذّر الرمز
           BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
           BOT_PASS:  ${{ secrets.BOT_PASS }}
           TG_TOKEN:  ${{ secrets.TG_TOKEN }}

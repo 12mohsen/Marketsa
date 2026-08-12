@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v483 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v487', '⭐ باقة «كلّ الأقسام» بسقف سعرٍ لا بخدمةٍ سابعة — الطريق المعتاد أن نخترع مفتاحاً اسمه «الباقة»، فيحتاج التفعيل أن يفكّه ويحتاج الاسترداد أن يعرف ما بداخله ويظهر في الإيصال سطراً غامضاً: أربعة مواضع تتفرّق. فبُنيت سقفاً على المجموع بدلاً من ذلك: إن بلغ مجموعُ ما اختاره سعرَ الباقة أو تجاوزه، أخذ الأقسام كلَّها بسعر الباقة — و`sections` تبقى أسماء أقسامٍ حقيقية فيعمل التفعيل والاسترداد والإيصال بلا سطرٍ يتغيّر. وهو أعدلُ للعميل: من اختار أربعة مجموعها ١٥٦ لا يدفعها ونحن نبيع الكلّ بـ٧٩ — يأخذ الكلّ بالأقلّ ويُقال له ذلك. والسعر يُضبط من «💵 أسعار الخدمات ← ⭐ كلّ الأقسام»، والقاعدة مكرّرةٌ حرفياً في `priceOf` بالخادم لأن الفاتورة تُصدَر من هناك'],
     ['v486', '✉️ ردود الدعم تخرج من عنوانٍ واحدٍ ثابت — كان `authuser` في رابط Gmail يأخذ بريد **من سجّل دخوله في التطبيق**، فتخرج الردود من حسابٍ مختلف كلّما اختلف من يجلس أمام الشاشة (أدمناً كان أم مشرفاً). والعميل يرى مرّةً بريداً ومرّةً غيره فلا يعرف أيّها «تداول بلس» — وهويّةٌ تتبدّل لا يُوثق بها. الآن ثابت `SUPPORT_FROM` واحدٌ معلن. ⚠️ و`authuser` تلميحٌ لا أمر: إن لم تكن داخلاً بذلك الحساب في المتصفّح اختار Gmail حسابك الافتراضيّ'],
     ['v485', '🚦 إغلاق التسجيل للحسابات الجديدة — مفتاحٌ في «🔐 التحكم بالوصول» يوقف **إنشاء الحسابات وحده**؛ والمسجّلون يدخلون ويستعملون التطبيق بلا أيّ تغيير (شرطٌ صريح من المالك، وهو الصواب: من دفع لا يُحبس بسبب طاقةٍ لم يتسبّب فيها). ومن جاء ليسجّل يرى «اكتملت أماكن هذه الدفعة» ويترك بريده، فيصلك في 📨 طلبات الدعم بنوع «📋 قائمة الانتظار» — بلا جدولٍ جديد ولا هجرة. والصياغة تجنّبت «ظروف خارجة عن إرادتنا» عمداً: تُقرأ على أنّ شيئاً تعطّل فيمضي الزائر ولا يعود، والنصّ المختار يقول الحقيقة من موضع قوّة. وحارسان: إخفاء النموذج، وفحصٌ عند الإرسال لمن بقيت نافذته مفتوحةً قبل الإغلاق. ⚠️ وحدُّه معلوم: حارسٌ في المتصفّح لا في الخادم — إدارةُ طاقة لا منعُ متسلّل'],
     ['v484', '🔍 بحثٌ سَلِس في «⚡ أفضل فرص التداول» — الاسم العربيّ يُكتب بصورٍ لا يعرف الباحثُ أيَّها في القاعدة: «اسمنت القصيم» · «أسمنت القصيم» · «الاسمنت-القصيم» · «اسمنتالقصيم». والبحث الحرفيّ يُخفق في ثلاثٍ من الأربع فيظنّ المستخدم أنّ سهمه غائب. الآن يتجاهل الهمزات والتشكيل والتطويل و«ة/ه» و«ى/ي» (عبر `arNormalize` — المصدر الواحد، بلا نسخةٍ ثانية تفترق عند أوّل تعديل) والشرطات والمسافات والفواصل، ويحوّل الأرقام العربية (٢٠٣٠ ⇐ 2030) فمن كتب رمز سهمه بلوحةٍ عربية وجده. ويُطبَّق **بعد** الفلتر و**قبل** القصّ على عشرين — ولو قُصّ قبله لبحثنا في عشرين سهماً لا في السوق كلّه. وعند البحث يرتفع السقف إلى ٦٠: من بحث باسمٍ بعينه يريد سهمه لا «أفضل عشرين». ومع الزرّ ✕ ومفتاح Escape وعدّاد النتائج'],
@@ -4975,6 +4976,33 @@ window.admOffPreview = function (k) {
   } catch (e) {}
 };
 
+/* ══════════════════════════════════════════════════════════════════════
+   ⭐ سقف الباقة — «كلّ الأقسام» بلا مفتاحٍ جديد ولا بيانات جديدة
+
+   الحاجة: يبقى بيع القسم المفرد لمن أراده، ويوجد سعرٌ واحدٌ لكلّ شيء.
+   والطريق المعتاد أن نخترع خدمةً سابعة اسمها «الباقة» — فيصير لها
+   مفتاحٌ في `metadata`، ويحتاج التفعيل أن يفكّه، ويحتاج الاسترداد أن
+   يعرف ما بداخله، وتظهر في الإيصال سطراً غامضاً. أربعة مواضع تتفرّق.
+
+   ▸ فالأبسط والأمتن: **لا خدمة جديدة، بل سقفٌ على المجموع**. إن بلغ
+     مجموعُ ما اختاره سعرَ الباقة أو تجاوزه، **أخذ الأقسام كلَّها بسعر
+     الباقة**. فتبقى `sections` أسماء أقسامٍ حقيقية، ويعمل التفعيل
+     والاسترداد والإيصال بلا سطرٍ واحدٍ يتغيّر فيها.
+
+   ▸ وهو **أعدلُ للعميل** أيضاً: من اختار أربعة أقسامٍ مجموعها ١٥٦ لا
+     يدفعها ونحن نبيع الكلّ بـ٧٩. يأخذ الكلّ بالأقلّ، ويُقال له ذلك.
+
+   ⚠️ والقاعدة مكرّرةٌ حرفياً في `priceOf` بالخادم — والفاتورة تُصدَر من
+      هناك. فتغييرُ إحداهما دون الأخرى يُري العميل رقماً ويخصم غيره.
+   ══════════════════════════════════════════════════════════════════════ */
+const BUNDLE_KEY = 'bundle';
+function _bundlePrice() {
+  try {
+    const g = (appSettings && appSettings.servicePrices && appSettings.servicePrices[BUNDLE_KEY]) || {};
+    return Number(g.price) || 0;
+  } catch (_) { return 0; }
+}
+
 /* اسم القسم المعروض في صفحة الدفع */
 function _payLabel(secKey) {
   if (!secKey || secKey === 'account') return 'اشتراك المنصة';
@@ -5507,6 +5535,11 @@ function openPayModal(secKey) {
                </b>`
             : `<b style="font-size:14px;color:${avail ? '#4ade80' : 'var(--txt-m)'};white-space:nowrap">${avail ? it.price + ' ر.س' : 'غير مُسعّر'}</b>`}
         </label>`; }).join('')}
+        <!-- ⭐ سطر الباقة — يظهر حين يكون سقفُها أرخص من مجموع المختار -->
+        <div id="payBundleNote" style="display:none;margin:10px 0 2px;padding:9px 11px;border-radius:10px;
+             background:linear-gradient(135deg,rgba(120,53,15,.35),rgba(245,158,11,.14));
+             border:1px solid rgba(245,158,11,.5);font-size:12px;font-weight:800;color:#fcd34d;
+             text-align:center;line-height:1.7"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px">
           <span style="font-size:13px;font-weight:800;color:var(--txt)">الإجمالي</span>
           <span id="payTotal" style="font-size:22px;font-weight:900;color:#4ade80">0 ر.س</span>
@@ -5584,8 +5617,32 @@ function _paySelected() {
 /* إعادة حساب الإجمالي وحالة «كل الخدمات» */
 function payRecalc() {
   const all = [...document.querySelectorAll('#payModal .paySvc')];
-  const sel = all.filter(c => c.checked);
-  const total = sel.reduce((s, c) => s + (Number(c.dataset.price) || 0), 0);
+  const avail = all.filter(c => !c.disabled);
+  let sel = all.filter(c => c.checked);
+  let total = sel.reduce((s, c) => s + (Number(c.dataset.price) || 0), 0);
+
+  /* ⭐ سقف الباقة — يُطبَّق قبل العرض، فما يراه هو ما يُخصم */
+  const bp = _bundlePrice();
+  const bEl = document.getElementById('payBundleNote');
+  const capped = bp > 0 && sel.length > 0 && sel.length < avail.length && total >= bp;
+  if (capped) {
+    /* بلغ سقف الباقة ⇒ أعطِه الكلّ بنفس المبلغ، ولا تأخذ أكثر ممّا نبيع به كلَّ شيء */
+    avail.forEach(c => { c.checked = true; });
+    sel = avail;
+    total = bp;
+  } else if (bp > 0 && sel.length === avail.length && avail.length > 1) {
+    total = Math.min(total, bp);
+  }
+  const full = avail.length > 1 && sel.length === avail.length;
+  if (bEl) {
+    const sum = avail.reduce((s, c) => s + (Number(c.dataset.price) || 0), 0);
+    if (bp > 0 && full && sum > bp) {
+      bEl.style.display = 'block';
+      bEl.innerHTML = '⭐ <b>باقة كلّ الأقسام</b> — ' + bp + ' ر.س بدل ' + Math.round(sum * 100) / 100
+        + ' ر.س' + (capped ? '<div style="font-size:10.5px;font-weight:400;margin-top:3px;opacity:.9">بلغ اختيارك سعر الباقة، فأُضيفت لك <b>الأقسام كلّها</b> بنفس المبلغ.</div>' : '');
+    } else bEl.style.display = 'none';
+  }
+
   const tEl = document.getElementById('payTotal');
   if (tEl) tEl.textContent = total + ' ر.س';
   /* 🎁 وفّرتَ كذا — على المختار وحده، ويختفي السطر إن لم يُختَر مخفَّض.
@@ -5941,8 +5998,8 @@ function renderAdminSection() {
           <span style="width:72px;text-align:center">⏳ مدّته</span>
           <span style="width:132px;text-align:center">بعد الخصم</span>
         </div>
-        ${tabs.map(t => { const g = ((s.servicePrices || {})[t.k]) || {}; return `
-          <div class="adm-svc-row">
+        ${[...tabs, { k: 'bundle', t: '⭐ كلّ الأقسام (باقة)' }].map(t => { const g = ((s.servicePrices || {})[t.k]) || {}; return `
+          <div class="adm-svc-row"${t.k === 'bundle' ? ' style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:6px 8px;margin-top:10px"' : ''}>
             <span class="adm-svc-name">${t.t}</span>
             <label class="adm-svc-f wp">
               <span class="adm-svc-lbl">السعر ر.س</span>
@@ -6836,9 +6893,11 @@ async function adminSaveServicePrices(btn) {
   if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
   const _o = _btnBusy(btn, '⏳ جارٍ حفظ الأسعار…');
   /* 🧩 مصدر واحد للأقسام — يشمل قنّاص الفرص وأي قسم جديد */
-  const keys = (typeof ADMIN_TAB_DEFS !== 'undefined' && ADMIN_TAB_DEFS.length)
+  /* ⭐ `bundle` ليس قسماً بل سقفُ سعرٍ — يُحفظ مع الأسعار ولا يظهر في أيّ
+     قائمة أقسام (لا التنقّل ولا الإخفاء ولا صفحة الدفع كخدمة). */
+  const keys = ((typeof ADMIN_TAB_DEFS !== 'undefined' && ADMIN_TAB_DEFS.length)
     ? ADMIN_TAB_DEFS.map(t => t.k)
-    : ['watchlist', 'monitor', 'returns', 'all', 'sniper', 'analysis'];
+    : ['watchlist', 'monitor', 'returns', 'all', 'sniper', 'analysis']).concat(['bundle']);
   const sp = {};
   keys.forEach(k => {
     const pEl = document.getElementById('admSvc-' + k + '-price');

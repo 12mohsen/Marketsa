@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v483 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v488', '⭐ صفُّ الباقة صار **مرئياً دائماً** — وهذا تصحيحُ خطأٍ في تصميمي: بنيتُ الباقة في v487 سقفاً يظهر بعد أن يختار المستخدم ما يكفي لبلوغه، أي أنّ العرض لا يُراه إلا من اهتدى إليه وحده. **وعرضٌ لا يُرى ليس عرضاً.** الآن صفٌّ ذهبيّ أعلى القائمة يُعرض أوّل ما تُفتح الصفحة: السعر مشطوباً بجانب سعر الباقة، وكم يوفّر، وضغطةٌ واحدة تختاره. 🐛 ومعه عطلٌ رُصد بالقراءة: «كل الخدمات» كان يؤشّر حتى الأقسام **المعطَّلة غير المسعّرة** — والصندوق المعطَّل يبقى `:checked` في نظر المتصفّح فتلتقطه `_paySelected`، فتُرسَل أقسامٌ بلا سعرٍ إلى الخادم فيردّ «غير معروض للبيع» ويسقط الشراء كلُّه'],
     ['v487', '⭐ باقة «كلّ الأقسام» بسقف سعرٍ لا بخدمةٍ سابعة — الطريق المعتاد أن نخترع مفتاحاً اسمه «الباقة»، فيحتاج التفعيل أن يفكّه ويحتاج الاسترداد أن يعرف ما بداخله ويظهر في الإيصال سطراً غامضاً: أربعة مواضع تتفرّق. فبُنيت سقفاً على المجموع بدلاً من ذلك: إن بلغ مجموعُ ما اختاره سعرَ الباقة أو تجاوزه، أخذ الأقسام كلَّها بسعر الباقة — و`sections` تبقى أسماء أقسامٍ حقيقية فيعمل التفعيل والاسترداد والإيصال بلا سطرٍ يتغيّر. وهو أعدلُ للعميل: من اختار أربعة مجموعها ١٥٦ لا يدفعها ونحن نبيع الكلّ بـ٧٩ — يأخذ الكلّ بالأقلّ ويُقال له ذلك. والسعر يُضبط من «💵 أسعار الخدمات ← ⭐ كلّ الأقسام»، والقاعدة مكرّرةٌ حرفياً في `priceOf` بالخادم لأن الفاتورة تُصدَر من هناك'],
     ['v486', '✉️ ردود الدعم تخرج من عنوانٍ واحدٍ ثابت — كان `authuser` في رابط Gmail يأخذ بريد **من سجّل دخوله في التطبيق**، فتخرج الردود من حسابٍ مختلف كلّما اختلف من يجلس أمام الشاشة (أدمناً كان أم مشرفاً). والعميل يرى مرّةً بريداً ومرّةً غيره فلا يعرف أيّها «تداول بلس» — وهويّةٌ تتبدّل لا يُوثق بها. الآن ثابت `SUPPORT_FROM` واحدٌ معلن. ⚠️ و`authuser` تلميحٌ لا أمر: إن لم تكن داخلاً بذلك الحساب في المتصفّح اختار Gmail حسابك الافتراضيّ'],
     ['v485', '🚦 إغلاق التسجيل للحسابات الجديدة — مفتاحٌ في «🔐 التحكم بالوصول» يوقف **إنشاء الحسابات وحده**؛ والمسجّلون يدخلون ويستعملون التطبيق بلا أيّ تغيير (شرطٌ صريح من المالك، وهو الصواب: من دفع لا يُحبس بسبب طاقةٍ لم يتسبّب فيها). ومن جاء ليسجّل يرى «اكتملت أماكن هذه الدفعة» ويترك بريده، فيصلك في 📨 طلبات الدعم بنوع «📋 قائمة الانتظار» — بلا جدولٍ جديد ولا هجرة. والصياغة تجنّبت «ظروف خارجة عن إرادتنا» عمداً: تُقرأ على أنّ شيئاً تعطّل فيمضي الزائر ولا يعود، والنصّ المختار يقول الحقيقة من موضع قوّة. وحارسان: إخفاء النموذج، وفحصٌ عند الإرسال لمن بقيت نافذته مفتوحةً قبل الإغلاق. ⚠️ وحدُّه معلوم: حارسٌ في المتصفّح لا في الخادم — إدارةُ طاقة لا منعُ متسلّل'],
@@ -5513,6 +5514,37 @@ function openPayModal(secKey) {
           </span>
           <span style="font-size:11px;color:var(--txt-m)">حدّد ما تريد</span>
         </label>
+        <!-- ══════════════════════════════════════════════════════════════
+             ⭐ صفُّ الباقة — **يُعرض دائماً**، لا حين يبلغها المستخدم
+             العلّة التي وقعت: بنيتُ الباقة سقفاً يظهر بعد أن يختار ما
+             يكفي — أي أنّ العرض لا يُرى إلا لمن اهتدى إليه وحده. وعرضٌ
+             لا يُرى ليس عرضاً. فالآن يراه أوّل ما يفتح الصفحة، بسعره
+             وبكم يوفّر، وبضغطةٍ واحدةٍ يأخذه.
+             ══════════════════════════════════════════════════════════════ -->
+        ${(function () {
+          const bp  = _bundlePrice();
+          const sum = Math.round(priced.reduce((s, it) => s + (Number(it.price) || 0), 0) * 100) / 100;
+          if (!(bp > 0 && priced.length > 1 && sum > bp)) return '';
+          const bd = (function () { try { return Number((appSettings.servicePrices || {}).bundle.days) || 0; } catch (_) { return 0; } })();
+          return `
+        <div onclick="payPickBundle()" style="cursor:pointer;margin:10px 0 4px;padding:12px 13px;border-radius:12px;
+             background:linear-gradient(135deg,rgba(120,53,15,.4),rgba(245,158,11,.14));
+             border:1.5px solid rgba(245,158,11,.6);display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span style="min-width:0">
+            <span style="font-size:13.5px;font-weight:900;color:#fcd34d">⭐ كلّ الأقسام</span>
+            <span style="display:inline-block;margin-inline-start:6px;background:rgba(34,197,94,.2);color:#86efac;
+                  border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:1px 7px;font-size:9.5px;font-weight:900">الأوفر</span>
+            <span style="display:block;font-size:10.5px;color:#fcd34d;opacity:.85;margin-top:3px">
+              ${priced.length} أقسام${bd ? ' · المدة: ' + bd + ' يوم' : ''} · وفّر ${Math.round((sum - bp) * 100) / 100} ر.س
+            </span>
+          </span>
+          <span style="text-align:left;white-space:nowrap">
+            <span style="color:var(--txt-m);text-decoration:line-through;font-size:11.5px;font-weight:700">${sum}</span>
+            <b style="color:#4ade80;font-size:15px"> ${bp} ر.س</b>
+            <span style="display:block;font-size:9.5px;color:#fcd34d;font-weight:800;margin-top:2px">اضغط للاختيار ←</span>
+          </span>
+        </div>`;
+        })()}
         ${payItems.map(it => { const avail = it.price > 0; return `
         <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;
                       border-bottom:1px solid rgba(255,255,255,.06);cursor:${avail ? 'pointer' : 'default'};opacity:${avail ? '1' : '.55'}">
@@ -5664,11 +5696,22 @@ function payRecalc() {
   try { const a = document.getElementById('payCardAmt'); if (a) a.textContent = total > 0 ? ('· ' + total + ' ر.س') : ''; } catch (e) {}
 }
 
-/* تفعيل/إلغاء كل الخدمات */
+/* تفعيل/إلغاء كل الخدمات
+   ⚠️ المعطَّلة تُستثنى: صندوقٌ معطَّل يبقى `:checked` في نظر المتصفّح،
+   و`_paySelected` تلتقطه — فتُرسَل أقسامٌ بلا سعرٍ إلى الخادم، فيردّ
+   «غير معروض للبيع» ويسقط الشراء كلُّه. رُصد بالقراءة لا بالتجربة. */
 function payToggleAll() {
   const on = document.getElementById('paySelAll').checked;
-  document.querySelectorAll('#payModal .paySvc').forEach(c => { c.checked = on; });
+  document.querySelectorAll('#payModal .paySvc').forEach(c => { if (!c.disabled) c.checked = on; });
   payRecalc();
+}
+
+/* ⭐ اختيار الباقة بضغطةٍ واحدة */
+function payPickBundle() {
+  document.querySelectorAll('#payModal .paySvc').forEach(c => { if (!c.disabled) c.checked = true; });
+  payRecalc();
+  try { document.getElementById('payTotal').animate(
+    [{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 420 }); } catch (_) {}
 }
 
 /* تمييز بطاقة البنك المختار بصرياً */

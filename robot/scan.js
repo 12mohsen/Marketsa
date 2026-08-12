@@ -10,8 +10,10 @@ const EMAIL = process.env.BOT_EMAIL;   // بريد حساب الروبوت (أد
 const PASS  = process.env.BOT_PASS;    // كلمة مروره — احتياطيّ
 /* 🔑 المسار الأساسيّ: رمزُ دخولٍ لمرّةٍ واحدة من دالّة `bot-login`.
    لا كلمة مرور ولا كابتشا. والاثنان أعلاه يبقيان شبكةَ أمانٍ فقط. */
-const SB_URL       = process.env.SB_URL;        // https://xxxx.supabase.co
-const BOT_LINK_KEY = process.env.BOT_LINK_KEY;  // نفس السرّ في أسرار Supabase
+/* ✂️ `trim`: أسرار GitHub تحتفظ بما لُصق فيها — ومسافةٌ أو سطرٌ جديدٌ
+   في آخر السرّ لا يُرى بالعين ويُسقط التطابق. */
+const SB_URL       = (process.env.SB_URL || '').trim();        // https://xxxx.supabase.co
+const BOT_LINK_KEY = (process.env.BOT_LINK_KEY || '').trim();  // نفس السرّ في أسرار Supabase
 const TG_TOKEN = process.env.TG_TOKEN; // توكن بوت تلجرام (للإبلاغ)
 const TG_CHAT  = process.env.TG_CHAT;  // مجموعة الإشعارات
 
@@ -138,6 +140,8 @@ async function tg(msg) {
       if (s && s.skipped) syncMsg = '\n🌙 الشموع: تُخطّيت (' + s.skipped + ')';
       else if (s) syncMsg = '\n🌙 الشموع: ' + s.ok + '/' + (s.total || '?') + ' رمز · ' + s.rows + ' صف'
         + (s.fail ? ' · ' + s.fail + ' فشل' : '')
+        /* 🔎 والسبب معها — عددٌ بلا سببٍ لا يُشخَّص، وقد كلّفنا ذلك جولةً كاملة */
+        + (s.why ? '\n   ↳ ' + s.why : '')
         + (s.cut ? ' · ⏱️ بلغت السقف (٤ د) وتُستكمل غداً' : '');
       else syncMsg = '\n🌙 الشموع: الدالّة غير موجودة في هذا البناء';
     } catch (e) {

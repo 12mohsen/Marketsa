@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v483 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v489', '🐛 الخصم على الباقة لم يكن يظهر — وسببه خطأٌ في شيفرتي: قرأتُ `servicePrices.bundle.price` **خاماً** وتجاهلتُ العرض. فلمّا ضُبط الأساس ٧٦٤ (وهو مجموع الأقسام بالضبط) بخصم ٨٩٪ — أي ٨٤٫٠٤ فعلياً — صار شرطُ العرض «٧٦٤ أكبر من ٧٦٤» فاختفى صفُّ الباقة كلُّه. الآن يمرّ سعرُ الباقة بـ`_svcPrice` كأيّ قسم: الخصمُ ومدّتُه و«مرّةً واحدة لكل مشترك». والمشطوب هو **الأعلى** بين مجموع الأقسام وأساس الباقة، فيبقى التوفير ظاهراً ولو تساويا. ⚠️ والأخطر أنّ الخادم كان يقرؤه خاماً كذلك — فيُصدر فاتورةً بتسعة أضعاف ما يراه العميل. أُصلح في `priceOf` بنفس المعادلة حرفاً بحرف'],
     ['v488', '⭐ صفُّ الباقة صار **مرئياً دائماً** — وهذا تصحيحُ خطأٍ في تصميمي: بنيتُ الباقة في v487 سقفاً يظهر بعد أن يختار المستخدم ما يكفي لبلوغه، أي أنّ العرض لا يُراه إلا من اهتدى إليه وحده. **وعرضٌ لا يُرى ليس عرضاً.** الآن صفٌّ ذهبيّ أعلى القائمة يُعرض أوّل ما تُفتح الصفحة: السعر مشطوباً بجانب سعر الباقة، وكم يوفّر، وضغطةٌ واحدة تختاره. 🐛 ومعه عطلٌ رُصد بالقراءة: «كل الخدمات» كان يؤشّر حتى الأقسام **المعطَّلة غير المسعّرة** — والصندوق المعطَّل يبقى `:checked` في نظر المتصفّح فتلتقطه `_paySelected`، فتُرسَل أقسامٌ بلا سعرٍ إلى الخادم فيردّ «غير معروض للبيع» ويسقط الشراء كلُّه'],
     ['v487', '⭐ باقة «كلّ الأقسام» بسقف سعرٍ لا بخدمةٍ سابعة — الطريق المعتاد أن نخترع مفتاحاً اسمه «الباقة»، فيحتاج التفعيل أن يفكّه ويحتاج الاسترداد أن يعرف ما بداخله ويظهر في الإيصال سطراً غامضاً: أربعة مواضع تتفرّق. فبُنيت سقفاً على المجموع بدلاً من ذلك: إن بلغ مجموعُ ما اختاره سعرَ الباقة أو تجاوزه، أخذ الأقسام كلَّها بسعر الباقة — و`sections` تبقى أسماء أقسامٍ حقيقية فيعمل التفعيل والاسترداد والإيصال بلا سطرٍ يتغيّر. وهو أعدلُ للعميل: من اختار أربعة مجموعها ١٥٦ لا يدفعها ونحن نبيع الكلّ بـ٧٩ — يأخذ الكلّ بالأقلّ ويُقال له ذلك. والسعر يُضبط من «💵 أسعار الخدمات ← ⭐ كلّ الأقسام»، والقاعدة مكرّرةٌ حرفياً في `priceOf` بالخادم لأن الفاتورة تُصدَر من هناك'],
     ['v486', '✉️ ردود الدعم تخرج من عنوانٍ واحدٍ ثابت — كان `authuser` في رابط Gmail يأخذ بريد **من سجّل دخوله في التطبيق**، فتخرج الردود من حسابٍ مختلف كلّما اختلف من يجلس أمام الشاشة (أدمناً كان أم مشرفاً). والعميل يرى مرّةً بريداً ومرّةً غيره فلا يعرف أيّها «تداول بلس» — وهويّةٌ تتبدّل لا يُوثق بها. الآن ثابت `SUPPORT_FROM` واحدٌ معلن. ⚠️ و`authuser` تلميحٌ لا أمر: إن لم تكن داخلاً بذلك الحساب في المتصفّح اختار Gmail حسابك الافتراضيّ'],
@@ -4997,12 +4998,23 @@ window.admOffPreview = function (k) {
       هناك. فتغييرُ إحداهما دون الأخرى يُري العميل رقماً ويخصم غيره.
    ══════════════════════════════════════════════════════════════════════ */
 const BUNDLE_KEY = 'bundle';
-function _bundlePrice() {
+/* ⚠️ سعر الباقة **بعد العرض** لا قبله.
+   عطلٌ وقع: كنتُ أقرأ `servicePrices.bundle.price` خاماً، فلمّا ضُبط
+   الأساس ٧٦٤ بخصم ٨٩٪ (أي ٨٤٫٠٤ فعلياً) صار الشرط «٧٦٤ < ٧٦٤» فاختفى
+   صفُّ الباقة كلُّه. و`_svcPrice` تحسب العرض ومدّته و«مرّةً لكل مستخدم»
+   بالفعل — فلا داعي لحسابٍ ثانٍ يفترق عنها. */
+function _bundleInfo() {
   try {
+    if (typeof _svcPrice === 'function') {
+      const p = _svcPrice(BUNDLE_KEY) || {};
+      return { price: Number(p.price) || 0, base: Number(p.base) || 0, off: Number(p.off) || 0,
+               days: Number(p.days) || 0, offMsLeft: p.offMsLeft, offUsed: !!p.offUsed };
+    }
     const g = (appSettings && appSettings.servicePrices && appSettings.servicePrices[BUNDLE_KEY]) || {};
-    return Number(g.price) || 0;
-  } catch (_) { return 0; }
+    return { price: Number(g.price) || 0, base: Number(g.price) || 0, off: 0, days: Number(g.days) || 0 };
+  } catch (_) { return { price: 0, base: 0, off: 0, days: 0 }; }
 }
+function _bundlePrice() { return _bundleInfo().price; }
 
 /* اسم القسم المعروض في صفحة الدفع */
 function _payLabel(secKey) {
@@ -5522,10 +5534,13 @@ function openPayModal(secKey) {
              وبكم يوفّر، وبضغطةٍ واحدةٍ يأخذه.
              ══════════════════════════════════════════════════════════════ -->
         ${(function () {
-          const bp  = _bundlePrice();
+          const bi  = _bundleInfo();
+          const bp  = bi.price;
           const sum = Math.round(priced.reduce((s, it) => s + (Number(it.price) || 0), 0) * 100) / 100;
-          if (!(bp > 0 && priced.length > 1 && sum > bp)) return '';
-          const bd = (function () { try { return Number((appSettings.servicePrices || {}).bundle.days) || 0; } catch (_) { return 0; } })();
+          /* المرجع للمقارنة: الأعلى بين مجموع الأقسام وسعر الباقة الأصليّ —
+             فلو ضُبط الأساس مساوياً للمجموع بقي التوفير ظاهراً بفضل الخصم. */
+          const ref = Math.max(sum, Number(bi.base) || 0);
+          if (!(bp > 0 && priced.length > 1 && ref > bp)) return '';
           return `
         <div onclick="payPickBundle()" style="cursor:pointer;margin:10px 0 4px;padding:12px 13px;border-radius:12px;
              background:linear-gradient(135deg,rgba(120,53,15,.4),rgba(245,158,11,.14));
@@ -5534,12 +5549,15 @@ function openPayModal(secKey) {
             <span style="font-size:13.5px;font-weight:900;color:#fcd34d">⭐ كلّ الأقسام</span>
             <span style="display:inline-block;margin-inline-start:6px;background:rgba(34,197,94,.2);color:#86efac;
                   border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:1px 7px;font-size:9.5px;font-weight:900">الأوفر</span>
-            <span style="display:block;font-size:10.5px;color:#fcd34d;opacity:.85;margin-top:3px">
-              ${priced.length} أقسام${bd ? ' · المدة: ' + bd + ' يوم' : ''} · وفّر ${Math.round((sum - bp) * 100) / 100} ر.س
+            ${bi.off > 0 ? `<span style="display:inline-block;margin-inline-start:5px;background:rgba(239,68,68,.2);color:#fca5a5;
+                  border:1px solid rgba(239,68,68,.55);border-radius:20px;padding:1px 7px;font-size:9.5px;font-weight:900">🎁 −${bi.off}%</span>` : ''}
+            <span style="display:block;font-size:10.5px;color:#fcd34d;opacity:.9;margin-top:3px">
+              ${priced.length} أقسام${bi.days ? ' · المدة: ' + bi.days + ' يوم' : ''} · وفّر ${Math.round((ref - bp) * 100) / 100} ر.س
+              ${bi.off > 0 && bi.offMsLeft != null ? ' · ⏳ ' + _offLeftTxt(bi.offMsLeft) : ''}
             </span>
           </span>
           <span style="text-align:left;white-space:nowrap">
-            <span style="color:var(--txt-m);text-decoration:line-through;font-size:11.5px;font-weight:700">${sum}</span>
+            <span style="color:var(--txt-m);text-decoration:line-through;font-size:11.5px;font-weight:700">${ref}</span>
             <b style="color:#4ade80;font-size:15px"> ${bp} ر.س</b>
             <span style="display:block;font-size:9.5px;color:#fcd34d;font-weight:800;margin-top:2px">اضغط للاختيار ←</span>
           </span>

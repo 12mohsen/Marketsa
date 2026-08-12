@@ -43,7 +43,15 @@ async function tg(msg) {
          تعثّرت الدالّة، لا يتوقّف المسح لأجل ذلك.
        ══════════════════════════════════════════════════════════════════ */
     let via = 'كلمة المرور';
+    let why = '';                 // ← لماذا لم يُستعمل الرابط السحريّ؟ قُلها بالاسم.
     let tokenHash = '';
+    if (!SB_URL || !BOT_LINK_KEY) {
+      /* ⚠️ لا تقل «اضبط المتغيّرين» وأحدهما مضبوط. سمّ الناقص بعينه —
+         وإلا راجع صاحبُه سرّاً صحيحاً وترك الفارغ كما هو. */
+      const miss = [!SB_URL ? 'SB_URL' : null, !BOT_LINK_KEY ? 'BOT_LINK_KEY' : null].filter(Boolean);
+      why = 'السرّ الناقص في أسرار GitHub: ' + miss.join(' و');
+      console.log('[bot] ' + why);
+    }
     if (SB_URL && BOT_LINK_KEY) {
       try {
         const r = await fetch(SB_URL.replace(/\/+$/, '') + '/functions/v1/bot-login', {
@@ -53,8 +61,12 @@ async function tg(msg) {
         });
         const j = await r.json().catch(() => ({}));
         if (r.ok && j && j.token_hash) { tokenHash = j.token_hash; via = 'الرابط السحريّ'; }
-        else console.log('[bot] تعذّر جلب الرمز:', r.status, (j && j.error) || '');
-      } catch (e) { console.log('[bot] استثناء عند جلب الرمز:', e && e.message); }
+        else {
+          why = 'ردّت bot-login بـ' + r.status + (j && j.error ? ': ' + j.error : '')
+              + (r.status === 401 ? ' (السرّان مختلفان بين Supabase وGitHub، أو Verify JWT ما زال مفعّلاً)' : '');
+          console.log('[bot] ' + why);
+        }
+      } catch (e) { why = 'استثناء عند جلب الرمز: ' + (e && e.message); console.log('[bot] ' + why); }
     }
 
     if (tokenHash) {
@@ -96,7 +108,7 @@ async function tg(msg) {
       throw new Error('لم يُسجَّل الدخول (عبر ' + via + ')'
         + (st.msg ? ' — قالت النافذة: «' + st.msg + '»' : ' (بلا رسالة)')
         + (via === 'كلمة المرور'
-            ? '. الأرجح: الكابتشا تحرس تسجيل الدخول — اضبط SB_URL و BOT_LINK_KEY لتفعيل الرابط السحريّ.'
+            ? '. الكابتشا تحرس تسجيل الدخول، ولم يُستعمل الرابط السحريّ لأن: ' + (why || 'سببٍ غير معروف') + '.'
             : '. الرمز صُرف لكنّ التطبيق لم يُنشئ جلسة — تحقّق أن البناء ≥ v478.')
         + ' البناء: ' + st.build);
     }

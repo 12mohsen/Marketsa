@@ -37,9 +37,30 @@ async function tg(msg) {
     await page.click('[data-testid="login-submit"]');
     await page.waitForTimeout(7000);   // الجلسة + تحميل بيانات الأدمن
 
-    // 3) تأكّد أن الروبوت أدمن (وإلا لن يُرفع المسح)
-    const admin = await page.evaluate(() => (typeof isAdmin === 'function' && isAdmin()));
-    if (!admin) throw new Error('حساب الروبوت ليس أدمن — أضف بريده لقائمة الأدمن.');
+    /* 3) تأكّد أن الروبوت أدمن (وإلا لن يُرفع المسح)
+       ⚠️ ولا تقل «ليس أدمن» قبل أن تتأكّد أنّه **دخل** أصلاً.
+       الرسالة القديمة كانت تتّهم قائمةَ الأدمن مهما كان السبب، فأرسلت
+       يومين متتاليين «أضف بريده لقائمة الأدمن» وبريدُه مضافٌ منذ شهر.
+       ▸ والسبب الأرجح اليوم: الكابتشا. فُعّلت في v472، و`signInWithPassword`
+         صار يحتاج رمزاً لا يستطيع متصفّحٌ آليّ إنتاجه — فيسقط الدخول
+         صامتاً ويبدو كأنّه نقصُ صلاحية.
+       ▸ فنقرأ الحالة الحقيقية: هل توجد جلسة؟ وماذا قالت النافذة؟ */
+    const st = await page.evaluate(() => ({
+      signedIn: !!(typeof sbUser !== 'undefined' && sbUser),
+      who: (typeof sbUser !== 'undefined' && sbUser) ? sbUser.email : null,
+      admin: (typeof isAdmin === 'function' && isAdmin()),
+      msg: (function () { const e = document.getElementById('authMsg');
+        return (e && e.offsetParent !== null) ? (e.textContent || '').trim().slice(0, 200) : ''; })(),
+      build: (typeof window !== 'undefined' && window.APP_BUILD) || '?',
+    }));
+    if (!st.signedIn) {
+      throw new Error('لم يُسجَّل الدخول أصلاً' + (st.msg ? ' — قالت النافذة: «' + st.msg + '»' : ' (بلا رسالة)')
+        + '. الأرجح: الكابتشا تحرس تسجيل الدخول. البناء: ' + st.build);
+    }
+    if (!st.admin) {
+      throw new Error('دخل بـ' + st.who + ' لكنّه ليس أدمن — أضف بصمة بريده إلى ADMIN_EMAIL_HASHES.');
+    }
+    const admin = true;
 
     // 4) افتح رادار (يُهيّئ البيانات) — لازمٌ قبل المزامنة، فهي تقرأ `rows`
     await page.click('.nav-btn[data-tab="all"]', { timeout: 15000 }).catch(() => {});

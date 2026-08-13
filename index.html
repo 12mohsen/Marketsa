@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-13-v500';
-console.log('%c[تداول بلس] البناء: 2026-08-13-v500 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-13-v501';
+console.log('%c[تداول بلس] البناء: 2026-08-13-v501 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-13-v500 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v501', '🔓 استثناءُ شخصٍ من الحجب العامّ — بلا اشتراك. كان الأدمن يُخفي قسماً عن الجميع، ثمّ لا يستطيع فتحه لشخصٍ واحد إلا ببيعه اشتراكاً: فإمّا أن يفتحه للسوق كلِّه أو يأخذ مالاً لا يريده. الآن التأشير على القسم في بطاقة المستخدم **يستثنيه وحده**، ومعه شارة «🚫 محجوب عن الجميع — التأشير يستثنيه» فلا يؤشّر الأدمن ولا يفهم لماذا لا يظهر. ▸ ويُخزَّن العلَم داخل `subs[k].show_anyway` عمداً: بلا عمودٍ جديد ولا هجرة، ومسارات الدفع والاسترداد تنسخ `...prevSubs[k]` فيبقى حيّاً عبرها كلِّها. ▸ ولا يفتح البيع: القسم مسحوبٌ من العرض، والاستثناء منحةٌ لا سلعة'],
     ['v500', '⚠️ الاسترداد عند ميسر فعلٌ **لمرّةٍ واحدة** — ولو كان جزئياً. اكتُشف بالدليل لا بالوثائق: عمليةٌ بـ٧٩٫٥٠ استُردّ منها ٣٩٫٧٦ وبقي ٣٩٫٧٤، فطُلب ردُّ الباقي فردّت ميسر «[400] Payment is already refunded». أي أنّها تُعلّم العملية «مستردّة» عند أوّل ردٍّ مهما صغر مبلغُه. ▸ فالحارس صار على **وقوع ردٍّ سابق** لا على المتبقّي، والمنعُ عندنا لا عندهم — فالرفض من الطرف الآخر يبدو عطلاً في نظر الأدمن ويُخفي القاعدة. ▸ وزرّ «استرداد» يختفي عن أيّ عمليةٍ رُدّ منها شيء. ▸ **والأهمّ: التحذير يظهر قبل الضغط لا بعد الرفض** — «إن اخترتَ النسبيّ فالفرق لا يمكن ردُّه أبداً». فمن يعرف يختار بوعي، ومن يعرف بعد الرفض يكون قد أضاع الفرق بلا رجعة'],
     ['v499', '💸 المبلغ المستردّ صار رقماً لا نصّاً — كنّا نكتبه في `message` («استُردّ 39.76 ر.س») ونضع الحالة. **ورقمٌ في نصٍّ ليس رقماً**: لا يُطرح فتقول اللوحة «مدفوع 79.5» وقد بقي منه 39.74، ولا يُحرَس به فتمرّ محاولةُ استردادٍ ثانية على المستردّ **جزئياً** إلى ميسر فتردّها بـ400 «Payment is already refunded» — والمالُ سلِم لأن ميسر منعته، وذلك حظٌّ لا حراسة. الآن عمود `refunded_total`: الحارس يفحص المتبقّي، والسقف هو المتبقّي لا الأصل، ولوحة الأدمن تعرض **الصافي** — والرقم الذي يُبنى عليه قرارُ تسعيرٍ يجب أن يكون صافياً. ⚠️ نفّذ `مبلغ_الاسترداد.sql` أوّلاً (يُنشئ العمود ويُصحّح ما مضى)'],
     ['v498', '🐛 حارسٌ منع الإصلاح من الوصول — وضعتُ في v496 شرطاً: «لا تُعِد رفع القائمة إن كان تاريخ اليوم موجوداً». فلمّا أضفتُ الأسماء في v497 وضُغط «حدّث»، رأى الحارسُ تاريخ اليوم فانصرف — **والأسماء لا تصل إلا بعد منتصف الليل**. و«حدّث» فعلٌ صريحٌ من الأدمن لا نداءٌ دوريّ يُخشى ضجيجه: **من ضغط يريد الرفع، فارفع**. أُسقط الحارس. ▸ ومعه: النشر صار مُعلَناً برسالة «🌐 نُشرت القائمة للمستخدمين (١٠ أسهم · وتحذير ٥٢ سهم)» — فرفعٌ صامتٌ لا يُعرف أوقع أم لا، وقد أضاع جولةً كاملة'],
@@ -4601,7 +4602,14 @@ function _hiddenTabsNow() {
       return u && u.plan === 'paid' && !u.expired;
     } catch (_) { return false; }
   };
-  const glob = (s.hiddenTabs || []).filter(k => !paidNow(k));
+  /* 🔓 واستثناءٌ صريح من الأدمن يرفع الحجب العامّ كذلك — بلا اشتراك.
+     الحاجة: يُخفي الأدمن قسماً عن الجميع ثمّ يريد فتحه لشخصٍ واحد
+     (تجربة · دعم · تعويض). وقبلها لم يكن يستطيع إلا ببيعه اشتراكاً. */
+  const shownOK = (k) => {
+    try { return !!(userRestrictions && userRestrictions.subs && userRestrictions.subs[k]
+                    && userRestrictions.subs[k].show_anyway); } catch (_) { return false; }
+  };
+  const glob = (s.hiddenTabs || []).filter(k => !paidNow(k) && !shownOK(k));
   const solo = (typeof userRestrictions !== 'undefined' && userRestrictions && userRestrictions.hidden_tabs) || [];
   return new Set([...glob, ...solo]);
 }
@@ -9227,7 +9235,13 @@ function adminEditUser(email) {
       ${ADMIN_TAB_DEFS.map(t => { const fl = _secFlags(r, t.k); const hot = hiSecs.includes(t.k); return `
         <div style="${hot ? 'border:2px solid #22c55e;border-radius:12px;padding:8px 10px;margin-bottom:10px;box-shadow:0 0 10px rgba(34,197,94,.35)' : ''}">
         <label style="${row};cursor:pointer;border-bottom:none">
-          <span>${t.t} ${hot ? '<span style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:1px 8px;font-size:9.5px;font-weight:800">✅ فُعّل الآن</span>' : ''}</span>
+          <span>${t.t} ${hot ? '<span style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:1px 8px;font-size:9.5px;font-weight:800">✅ فُعّل الآن</span>' : ''}${
+            /* 🚫 محجوبٌ عن الجميع؟ قُلها هنا — وإلا أشّر الأدمن ولم يفهم لماذا لا يظهر.
+               والتأشير على قسمٍ محجوبٍ عامّاً = استثناءٌ صريح لهذا الشخص. */
+            ((appSettings.hiddenTabs || []).includes(t.k)
+              ? ' <span title="هذا القسم محجوبٌ عن جميع المستخدمين من «🧩 الأقسام الظاهرة». والتأشير هنا يستثني هذا الشخص وحده — بلا اشتراك." style="background:rgba(251,146,60,.16);color:#fdba74;border:1px solid rgba(251,146,60,.5);border-radius:20px;padding:1px 8px;font-size:9.5px;font-weight:800">🚫 محجوب عن الجميع — التأشير يستثنيه</span>'
+              : '')
+          }</span>
           <input type="checkbox" id="admU-${t.k}" ${(r.hidden_tabs || []).includes(t.k) ? '' : 'checked'}
                  style="width:18px;height:18px;cursor:pointer">
         </label>
@@ -9471,7 +9485,14 @@ async function adminSaveUser() {
     if (plan === 'paid' && days <= 0) { showToast('⚠️ حدد عدد أيام اشتراك «' + d.t + '»'); return; }
     /* 🏷️ `custom` = «هذا السعر ضبطتُه أنا لهذا الشخص» — وهو وحده ما يدوم
        عبر التجديدات. وما يكتبه الخادم بعد الدفع سجلُّ عمليةٍ لا سعرَ تجديد. */
-    secIn[k] = { plan, price, days, show_pay, custom: (plan === 'paid' && price > 0) };
+    /* 🔓 استثناءٌ فرديّ من الحجب العامّ — يُخزَّن داخل `subs[k]` عمداً:
+       لا عمودَ جديد ولا هجرة، ومسارات الدفع والاسترداد تنسخ `...prevSubs[k]`
+       فيبقى العلَم حيّاً عبرها كلِّها. */
+    const _globHid = ((appSettings.hiddenTabs || []).includes(k));
+    const _tickEl  = document.getElementById('admU-' + k);
+    const _ticked  = _tickEl ? _tickEl.checked : true;
+    secIn[k] = { plan, price, days, show_pay, custom: (plan === 'paid' && price > 0),
+                 show_anyway: !!(_globHid && _ticked) };
   }
   const now = new Date().toISOString();
   const rows = _admBulkTargets.map(email => {

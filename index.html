@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-13-v495';
-console.log('%c[تداول بلس] البناء: 2026-08-13-v495 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-13-v496';
+console.log('%c[تداول بلس] البناء: 2026-08-13-v496 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-13-v495 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v496', '👥 قائمة الزخم تُحسب مرّةً وتُقرأ للجميع — كان زرّ «حدّث» معروضاً لكل مستخدم، وكلُّ ضغطةٍ تسحب ~٣٠٠ يومٍ × ٢٧٠ رمزاً من `historical_prices`. وسقف صادر Supabase خمسة جيجا شهرياً: **مئة مستخدمٍ يضغطون يستهلكونه في يومين، فيتوقّف التطبيق عن الجميع لا عنهم**. الآن يحسبها الأدمن وتُرفع كاملةً إلى `app_settings` — الجدول والخُمس الأدنى معاً — ويقرؤها المستخدم من الإعدادات التي يجلبها عند الإقلاع أصلاً، بلا استعلامٍ واحدٍ زائد. ▸ ويرى تاريخ القياس صريحاً فلا يظنّ قائمة الأمس قائمةَ اليوم. ▸ والزرّ اختفى عمّن لا يملك أن يضغطه — ورسالةُ «اضغط حدّث» صارت «تُحدَّث شهرياً»'],
     ['v495', '⚠️ تحذير «أضعف خُمس زخماً» على أسهم المستخدم — نعرض أمتنَ ما قِسناه لا أجملَه. الأخماس على ٤٧ نافذة غير متداخلة: خ١=+1.06٪ · خ٢=−0.08٪ · خ٣=−0.16٪ · خ٤=−0.38٪ · خ٥=−0.40٪ — رتابةٌ تامّة، t=3.91، فوز ٧٢٪. بينما «أعلى ١٠» في التحقّق t=0.51 وحده، وWalk-Forward t=0.53. **فالحكم على خُمسٍ فيه خمسون سهماً أثبتُ إحصائياً من الحكم على عشرة.** ▸ ودفاعيّة لا هجومية: تُنبّه على ضعفٍ مقيس ولا تَعِد بربح، وموضعُها محفظة المستخدم ومراقبته — على أسهمه هو لا على قائمةٍ تُملى عليه. ▸ وتُحسب مرّةً عند الأدمن وتُرفع إلى `app_settings` فيقرؤها الجميع بلا كلفة: حسابُها يحتاج ٣٠٠ يومٍ × ٢٧٠ رمزاً، وحسابُه عند كل زائر يلتهم صادر Supabase وحده'],
     ['v494', '🚶 المختبر: Walk-Forward والتراجع الأقصى — البندان الوحيدان اللذان يُغيّران الحكم. ① **التراجع** كان مذكوراً في قائمة المعايير بلا رقمٍ له، ومقارنةٌ بمعيارٍ لا تملك قيمته ليست مقارنة. وسُمّي «تراجع الفائض» صراحةً لا «التراجع»: سلسلتنا فائضٌ عن السوق، فالرقم يقول «كم تخلّفتَ عنه في أسوأ فترة» لا «كم خسرت» — وخلطُهما يُعطي طمأنينةً كاذبة. ② **Walk-Forward**: نظرنا في تسع تركيبات واخترنا أفضلها بعد رؤية نتائجها كلّها بما فيها فترة التحقّق، فالرقم متفائلٌ بمقدارٍ مجهول. والاختبار يسأل السؤال الصحيح: «لو اخترتُ في كل شهرٍ أفضلَ ما ظهر حتى ذلك الشهر، ماذا كنتُ سأجني؟» — بلا نظرةٍ واحدة إلى المستقبل. والحكم مكتوبٌ قبل التشغيل: موجبٌ ⇒ تصمد للاختيار الحيّ · سالبٌ ⇒ انتقاءٌ بأثرٍ رجعيّ لا ميزة'],
     ['v493', '💰 اللوحة تُفرّق بين من دفع ومن مُنح — كانت تقول «✅ وصول كامل» لثلاثة أصنافٍ مختلفين تماماً: من دفع، ومن مُنح مجّاناً، ومن هو من فريق الإشراف. فينظر المالك في قائمته ولا يعرف كم عميلاً حقيقياً عنده، وهو أوّل رقمٍ يحتاجه. الآن شارةٌ بجانب كل بريد: 💰 مدفوع (بالمبلغ وعدد العمليات) · 🎁 مجّاني مُمنَح · 🆓 مجّاني · والفريق مستثنى فلا معنى لتصنيفه بالمال. ▸ والمصدر جدول `payments` لا حقول الاشتراك: الأخيرة يضبطها الأدمن بيده، فاشتراكٌ «مدفوع» قد يكون منحةً لم يدخل مقابلَها ريال — **والمال يُثبته سجلُّ المال**. والمستردّ يُطرح: من رُدّ إليه ماله ليس دافعاً اليوم. ▸ ومعها فلتر تصنيفٍ وخلاصةٌ فوق القائمة (كم دافع · كم مُمنَح · الإجمالي المحصَّل) تُحسب على كل المستخدمين لا على المعروض، فلا يتغيّر رقمُ عملائك لأنك بحثتَ عن اسم'],
@@ -24040,14 +24041,45 @@ switchTab = function (tab, btn) {
       if (!R || !R.weak || !R.weak.length) return;
       if (!(typeof isSuperAdmin === 'function' && isSuperAdmin())) return;
       if (typeof sb === 'undefined' || !sb) return;
+      /* 📦 القائمة كاملةً لا الضعف وحده — فيقرأ المستخدم الجدول جاهزاً
+         بلا أن يحسب شيئاً. وهو نفس نمط `analysis_daily`. */
+      var pack = {
+        d: R.date, s: R.weak, n: R.all, skipped: R.skipped, idx: R.idx,
+        top: R.list.map(function (x) {
+          return { k: x.sym, px: +x.px.toFixed(3), m: +(x.mom * 100).toFixed(1), m1: +(x.m1 * 100).toFixed(1) };
+        }),
+      };
       var prev = (appSettings && appSettings.momWeak) || {};
-      if (prev.d === R.date && (prev.s || []).length === R.weak.length) return;   // لا جديد
-      var next = Object.assign({}, appSettings, { momWeak: { d: R.date, s: R.weak, n: R.all } });
+      if (prev.d === R.date && (prev.s || []).length === R.weak.length && (prev.top || []).length) return;
+      var next = Object.assign({}, appSettings, { momWeak: pack });
       var q = await sb.from('app_settings').upsert({ id: 1, data: next, updated_at: new Date().toISOString() });
-      if (q.error) { console.warn('[زخم] لم تُرفع قائمة الضعف:', q.error.message); return; }
+      if (q.error) { console.warn('[زخم] لم تُرفع القائمة المشتركة:', q.error.message); return; }
       appSettings = next;
-      console.info('[زخم] ✓ رُفعت قائمة الخُمس الأدنى: ' + R.weak.length + ' سهم من ' + R.all);
-    } catch (e) { console.warn('[زخم] رفع قائمة الضعف تعذّر:', e && e.message); }
+      console.info('[زخم] ✓ رُفعت القائمة المشتركة: أعلى ' + pack.top.length + ' · أضعف ' + R.weak.length + ' من ' + R.all);
+    } catch (e) { console.warn('[زخم] رفع القائمة تعذّر:', e && e.message); }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     👥 المستخدم يقرأ ولا يحسب
+
+     العلّة التي كادت تقع: زرّ «حدّث» كان معروضاً للجميع، وكلُّ ضغطةٍ
+     تسحب ~٣٠٠ يومٍ × ٢٧٠ رمزاً من `historical_prices`. وسقف صادر
+     Supabase خمسة جيجا شهرياً — **فمئة مستخدمٍ يضغطون يستهلكونه في
+     يومين**، ويتوقّف التطبيق عن الجميع لا عنهم وحدهم.
+
+     ▸ فالحساب عند الأدمن مرّةً (أو الروبوت)، والنتيجة في `app_settings`
+       التي يجلبها كلُّ مستخدمٍ أصلاً عند الإقلاع — بلا استعلامٍ زائد.
+     ▸ ويرى تاريخ القياس صريحاً، فلا يظنّ قائمةَ الأمس قائمةَ اليوم.
+     ══════════════════════════════════════════════════════════════════════ */
+  function shared() {
+    try {
+      var w = (appSettings && appSettings.momWeak) || null;
+      if (!w || !Array.isArray(w.top) || !w.top.length) return null;
+      return {
+        list: w.top.map(function (x) { return { sym: x.k, px: +x.px, mom: (+x.m) / 100, m1: (+x.m1) / 100 }; }),
+        all: w.n || 0, skipped: w.skipped || 0, idx: w.idx || null, date: w.d, fromShared: true,
+      };
+    } catch (e) { return null; }
   }
 
   /* 🔎 يقرؤها أيّ جزءٍ من التطبيق — بلا حساب ولا جلب */
@@ -24106,7 +24138,9 @@ switchTab = function (tab, btn) {
 
   function render() {
     var host = $('momWrap'); if (!host) return;
-    var R = RES;
+    var _adm = (typeof isSuperAdmin === 'function' && isSuperAdmin());
+    /* 👥 غير الأدمن يقرأ المشتركة دائماً — ولا يحسب شيئاً */
+    var R = RES || (!_adm ? shared() : shared());
     var pct = function (v) { return (v * 100).toFixed(1) + '٪'; };
     var col = function (v) { return v > 0 ? '#4ade80' : v < 0 ? '#f87171' : 'var(--txt-m)'; };
     var h = '<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:16px 18px;margin-bottom:16px">'
@@ -24114,8 +24148,11 @@ switchTab = function (tab, btn) {
       + '<div style="font-size:18px;font-weight:900">⚡ الأعلى زخماً</div>'
       + '<span style="font-size:11px;background:rgba(167,139,250,.16);color:#c4b5fd;border:1px solid rgba(167,139,250,.4);border-radius:20px;padding:2px 9px;font-weight:800">قياسٌ لا تنبّؤ</span>'
       + '<span style="flex:1"></span>'
-      + '<button onclick="momRun()" style="cursor:pointer;font-family:inherit;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:800;color:#0b1220;background:linear-gradient(135deg,#a78bfa,#8b5cf6)">🔄 حدّث</button>'
-      + ((typeof isSuperAdmin === 'function' && isSuperAdmin()) ? '<button onclick="momSnapshot(this)" style="cursor:pointer;font-family:inherit;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:800">📒 سجّل للمراقبة</button>' : '')
+      /* 🔄 «حدّث» للأدمن وحده — الحساب ثقيلٌ على الصادر، ونتيجتُه واحدةٌ للجميع */
+      + (_adm
+          ? '<button onclick="momRun()" style="cursor:pointer;font-family:inherit;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:800;color:#0b1220;background:linear-gradient(135deg,#a78bfa,#8b5cf6)">🔄 حدّث</button>'
+            + '<button onclick="momSnapshot(this)" style="cursor:pointer;font-family:inherit;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:800">📒 سجّل للمراقبة</button>'
+          : ((R && R.date) ? '<span style="font-size:11px;color:var(--txt-m)">🗓️ قياس ' + esc(R.date) + '</span>' : ''))
       + '</div>'
       + '<div style="font-size:12px;color:var(--txt-m);line-height:1.9;margin-bottom:10px">'
       + 'أعلى <b>' + TOPN + '</b> أسهم في <b>زخم الستّة أشهر</b> (عدا الشهر الأخير). تُراجَع شهرياً — <b>بلا دخولٍ ولا وقفٍ ولا هدف</b>.</div>';
@@ -24141,7 +24178,10 @@ switchTab = function (tab, btn) {
         + (R.skipped ? ' · استُبعد <b>' + R.skipped + '</b> لإجراءِ رأس مال (قفزةٌ يومية >٢٠٪ تتجاوز حدّ السوق ±١٠٪)' : '')
         + (R.date ? ' · حتى ' + esc(R.date) : '') + '</div>';
     } else if (!MSG) {
-      h += '<div style="text-align:center;padding:18px;color:var(--txt-m);font-size:13px">اضغط «🔄 حدّث» لحساب القائمة</div>';
+      /* 👤 ولا نقول للمستخدم «اضغط حدّث» — لا زرّ عنده، ولا ينبغي أن يكون */
+      h += _adm
+        ? '<div style="text-align:center;padding:18px;color:var(--txt-m);font-size:13px">اضغط «🔄 حدّث» لحساب القائمة ورفعها للجميع</div>'
+        : '<div style="text-align:center;padding:18px;color:var(--txt-m);font-size:12.5px;line-height:1.9">⏳ القائمة تُحدَّث شهرياً.<br>لم تُنشَر بعد — عُد قريباً.</div>';
     }
 
     /* 📊 الأداء الفعليّ للقوائم المسجَّلة — لا وعدٌ بل سجلّ */

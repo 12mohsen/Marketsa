@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-11-v492';
-console.log('%c[تداول بلس] البناء: 2026-08-11-v492 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-11-v493';
+console.log('%c[تداول بلس] البناء: 2026-08-11-v493 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-11-v492 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v493', '💰 اللوحة تُفرّق بين من دفع ومن مُنح — كانت تقول «✅ وصول كامل» لثلاثة أصنافٍ مختلفين تماماً: من دفع، ومن مُنح مجّاناً، ومن هو من فريق الإشراف. فينظر المالك في قائمته ولا يعرف كم عميلاً حقيقياً عنده، وهو أوّل رقمٍ يحتاجه. الآن شارةٌ بجانب كل بريد: 💰 مدفوع (بالمبلغ وعدد العمليات) · 🎁 مجّاني مُمنَح · 🆓 مجّاني · والفريق مستثنى فلا معنى لتصنيفه بالمال. ▸ والمصدر جدول `payments` لا حقول الاشتراك: الأخيرة يضبطها الأدمن بيده، فاشتراكٌ «مدفوع» قد يكون منحةً لم يدخل مقابلَها ريال — **والمال يُثبته سجلُّ المال**. والمستردّ يُطرح: من رُدّ إليه ماله ليس دافعاً اليوم. ▸ ومعها فلتر تصنيفٍ وخلاصةٌ فوق القائمة (كم دافع · كم مُمنَح · الإجمالي المحصَّل) تُحسب على كل المستخدمين لا على المعروض، فلا يتغيّر رقمُ عملائك لأنك بحثتَ عن اسم'],
     ['v492', '🔇 سببُ فشل مزامنة الشموع كان يُبتلع — الروبوت يُبلّغ «0/269 رمز · 269 فشل» ولا شيء في السجلّ يقول لماذا، لأن `fail++` تعدّ ولا تصف. فيبقى المرء بين احتمالَين لا سبيل للفصل بينهما: أحَجبٌ من المصدر (خوادم GitHub تُحجب أحياناً) أم خطأُ كتابةٍ في القاعدة؟ الآن عدّادان منفصلان ونصُّ أوّل خطأ: «بلا شموع من المصدر» يعني أن الجلب رجع فارغاً، و«خطأ: …» يعني أن الجلب نجح والكتابة سقطت — علّتان مختلفتان وعلاجهما مختلف. ويُرفع الوصف إلى الكونسول وسجلّ الإشراف ورسالة تلجرام معاً'],
     ['v491', '🛡️ من دفع لا يُحجب عنه ما دفع ثمنه — وقعت: عميلٌ اشترى «قنّاص الفرص» وبقيت له يومان، ثمّ أُخفي القسم عن المستخدمين كافّة، فصار يدفع ولا يرى. والإخفاء العامّ قرارُ **تسويقٍ عن المستقبل** (لا نعرض ما لم يُختبر، أو نسحبه حتى يُحسَّن) — ومن دفع أمس اشترى حقّاً لا وعداً. فالقاعدة الآن: الإخفاء العامّ **يمنع البيع ولا يمنع من اشترى**؛ يُتمّ أيامه ثمّ يُغلق كغيره. فتستطيع إخفاء أيّ قسمٍ في أيّ لحظة بلا أن تظلم أحداً. ▸ والإخفاء **الفرديّ** من بطاقة المستخدم يبقى نافذاً مهما دفع — قرارٌ في شخصٍ بعينه لا تغييرٌ في المعروض، وخلطُهما يُبطل أداة الإيقاف. ▸ وللبيع قائمةٌ منفصلة `_hiddenForSale` بلا استثناء: من اشترى قبل الإخفاء يُتمّ ولا يُجدّد — والخادم يرفض شراء المحجوب على كل حال، فزرٌّ يُعرض ثمّ يُردّ أسوأ من زرٍّ لا يُعرض'],
     ['v490', '🐛 رقمان لعمليةٍ واحدة — الشاشة تعرض ٧٩٫٥ والزرّ يحمل ٧٦٤. السبب أن `payCardOpen` كانت تجمع `data-price` بنفسها فتتجاهل سقف الباقة الذي طُبّق في `payRecalc`. ورقمان أحدهما كاذبٌ أسوأ من رقمٍ خاطئ، لأنّه لا يُعرف أيّهما. الآن `_payTotalNow` مصدرٌ واحد يكتبه `payRecalc` ويقرؤه الزرّ — ويُعاد الحساب قبل الإرسال فلا يُبنى على حالةٍ قديمة'],
@@ -6214,7 +6215,20 @@ function renderAdminSection() {
             style="flex:2;min-width:180px;box-sizing:border-box;padding:9px 12px;border-radius:9px;
                    border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);
                    font-size:12px;outline:none;font-family:inherit">
+          <!-- 💰 تصنيفٌ بالمال — «كم عميلاً حقيقياً عندي؟» سؤالٌ يستحقّ ضغطةً لا عدّاً يدوياً -->
+          <select id="admKindFilter" title="تصفية حسب حالة الدفع"
+            onchange="adminRenderUsers((document.getElementById('admUserSearch')||{}).value||'')"
+            style="min-width:132px;padding:9px 10px;border-radius:9px;border:1.5px solid var(--bdr);
+                   background:var(--surf-alt);color:var(--txt);font-size:11.5px;font-family:inherit;cursor:pointer">
+            <option value="all">👥 الكل</option>
+            <option value="paid">💰 مدفوع</option>
+            <option value="gift">🎁 مجّاني مُمنَح</option>
+            <option value="free">🆓 مجّاني</option>
+            <option value="staff">🛡️ الأدمن والمشرفون</option>
+          </select>
         </div>
+        <!-- 📊 خلاصةٌ فورية فوق القائمة -->
+        <div id="admKindSummary" style="font-size:11px;color:var(--txt-m);margin-bottom:8px;line-height:1.9"></div>
         <div id="admUsersBox" style="max-height:640px;overflow-y:auto;border:1px solid var(--bdr);
              border-radius:10px;padding:4px 10px;font-size:12px;color:var(--txt-m)">⏳ جارٍ تحميل المستخدمين...</div>
         </div>
@@ -6370,6 +6384,12 @@ async function adminLoadPayments(loud) {
     ]);
     if (error) throw error;
     _admPayments = data || [];
+    /* 🔁 المدفوعات تصل بعد المستخدمين أحياناً — فأعِد رسم القائمة لتظهر
+       شارة المال. وبدونها تبقى «🆓 مجّاني» على من دفع، حتى تُحدَّث الصفحة. */
+    try { if (typeof adminRenderUsers === 'function' && (_admUsers || []).length) {
+      const _s = document.getElementById('admUserSearch');
+      adminRenderUsers(_s ? _s.value : '');
+    } } catch (_) {}
     /* اربط رد الدعم بكل عملية عبر (الإيميل + نص الرسالة المطابق) */
     const repMap = {};
     (repRes && repRes.data || []).forEach(r => {
@@ -7891,21 +7911,92 @@ async function adminDeleteUserConfirmed(email) {
 }
 
 /* عرض قائمة المستخدمين مع تصفية البحث */
+/* ══════════════════════════════════════════════════════════════════════
+   💰 دافعٌ أم ممنوح؟ — سؤالٌ لم تكن اللوحة تُجيبه
+
+   كانت البطاقة تقول «✅ وصول كامل» لثلاثة أصنافٍ مختلفين تماماً: من دفع،
+   ومن مُنح مجاناً، ومن هو من فريق الإشراف. فينظر المالك في قائمته ولا
+   يعرف كم عميلاً حقيقياً عنده — وهو أوّل رقمٍ يحتاجه.
+
+   ▸ ومصدر الحقيقة جدول `payments` لا حقول الاشتراك: الأخيرة يضبطها
+     الأدمن بيده، فاشتراكٌ «مدفوع» قد يكون منحةً لم يدخل مقابلَها ريال.
+     **المال يُثبته سجلُّ المال.**
+   ▸ والمستردّ يُطرح: من دُفع له ثمّ رُدّ إليه ليس دافعاً اليوم.
+   ══════════════════════════════════════════════════════════════════════ */
+function _admPaidInfo(email) {
+  const e = String(email || '').toLowerCase();
+  let paid = 0, back = 0, n = 0, last = null;
+  try {
+    (_admPayments || []).forEach(p => {
+      if (String(p.email || '').toLowerCase() !== e) return;
+      const amt = Number(p.total) || 0;
+      if (p.status === 'refunded') { back += amt; return; }
+      if (p.status === 'partially_refunded') { paid += amt; n++; }
+      else if (p.status === 'paid') { paid += amt; n++; }
+      else return;
+      const t = p.paid_at || p.created_at;
+      if (t && (!last || new Date(t) > last)) last = new Date(t);
+    });
+  } catch (_) {}
+  return { paid: Math.round(paid * 100) / 100, back: Math.round(back * 100) / 100, n, last };
+}
+
+/* 🏷️ صنفُ المستخدم في كلمة — يُحسب مرّةً ويُستعمل في الشارة والفلتر */
+function _admUserKind(u) {
+  const r = (_admRestr && _admRestr[u.email]) || {};
+  if (_isAdminEmail((u.email || '').toLowerCase())) return 'staff';
+  if (u.role === 'supervisor') return 'staff';
+  const pi = _admPaidInfo(u.email);
+  if (pi.n > 0) return 'paid';
+  /* اشتراكٌ ساري بلا أيّ دفعة ⇒ منحة (تجربة · إعفاء · تفعيلٌ يدويّ) */
+  let active = !!r.sub_exempt;
+  try {
+    ADMIN_TAB_DEFS.forEach(d => {
+      const s = _subInfo(r, d.k);
+      if (s && s.plan === 'paid' && !s.expired) active = true;
+    });
+  } catch (_) {}
+  return active ? 'gift' : 'free';
+}
+
 function adminRenderUsers(query) {
   const box = document.getElementById('admUsersBox');
   if (!box) return;
   const q = String(query || '').trim().toLowerCase();
-  const list = q
+  const kindSel = (function () { const e = document.getElementById('admKindFilter'); return e ? e.value : 'all'; })();
+  let list = q
     ? _admUsers.filter(u =>
         (u.email || '').toLowerCase().includes(q) ||
         (u.display_name || '').toLowerCase().includes(q))
     : _admUsers;
+  if (kindSel !== 'all') list = list.filter(u => _admUserKind(u) === kindSel);
+  /* 📊 الخلاصة تُحسب على **كل** المستخدمين لا على المعروض — رقمُ عملائك
+     لا يتغيّر لأنك بحثتَ عن اسم. */
+  try {
+    const sumEl = document.getElementById('admKindSummary');
+    if (sumEl) {
+      let nP = 0, nG = 0, nF = 0, nS = 0, money = 0, back = 0;
+      _admUsers.forEach(u => {
+        const k = _admUserKind(u);
+        if (k === 'paid') { nP++; const i = _admPaidInfo(u.email); money += i.paid; back += i.back; }
+        else if (k === 'gift') nG++; else if (k === 'staff') nS++; else nF++;
+      });
+      sumEl.innerHTML =
+        '<b style="color:#4ade80">💰 ' + nP + ' دافع</b> · ' +
+        '<b style="color:#fcd34d">🎁 ' + nG + ' مُمنَح</b> · ' +
+        '<span>🆓 ' + nF + ' مجّاني</span> · ' +
+        '<span style="color:#c4b5fd">🛡️ ' + nS + ' فريق</span>' +
+        (money ? '<br><b style="color:#4ade80">الإجمالي المحصَّل: ' + (Math.round(money * 100) / 100) + ' ر.س</b>'
+               + (back ? ' <span style="color:#fca5a5">· استُردّ ' + (Math.round(back * 100) / 100) + ' ر.س</span>' : '')
+               + ' <span style="opacity:.7">(من آخر ٣٠٠ عملية)</span>' : '');
+    }
+  } catch (_) {}
   if (_admUsers.length === 0) {
     box.innerHTML = '<div style="padding:10px;text-align:center">لا مستخدمين مسجلين بعد</div>';
     return;
   }
   if (list.length === 0) {
-    box.innerHTML = `<div style="padding:10px;text-align:center">لا نتائج لـ«${q}»</div>`;
+    box.innerHTML = `<div style="padding:10px;text-align:center">لا نتائج${q ? ' لـ«' + q + '»' : ' بهذا التصنيف'}</div>`;
     return;
   }
   const _prioIdx = u => {
@@ -7985,6 +8076,18 @@ function adminRenderUsers(query) {
         : (_isStaffRow && anyExpired
           ? ' <span title="اشتراكه منتهٍ في القاعدة، لكن عضو فريق الإشراف يتجاوز كل القيود — فلا حاجة لتجديده" style="display:inline-block;background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:700;direction:rtl;white-space:nowrap">🛡️ لا تسري عليه</span>'
           : '');
+      /* 💰 شارةُ المال — تُجيب «هل هذا عميلٌ أم ضيف؟» بلا قراءة السطر */
+      const _kind = _admUserKind(u);
+      const _pi   = _admPaidInfo(u.email);
+      const moneyBadge = ({
+        paid: ' <span title="دفع فعلاً — المبلغ من سجلّ المدفوعات' + (_pi.back ? ' · واستُردّ له ' + _pi.back + ' ر.س' : '') + '"'
+            + ' style="display:inline-block;background:rgba(34,197,94,.18);color:#4ade80;border:1px solid rgba(34,197,94,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:900;direction:rtl;white-space:nowrap">💰 مدفوع '
+            + _pi.paid + ' ر.س' + (_pi.n > 1 ? ' · ' + _pi.n + ' عمليات' : '') + '</span>',
+        gift: ' <span title="اشتراكٌ ساري بلا أيّ دفعة — منحةٌ أو تجربة أو تفعيلٌ يدويّ"'
+            + ' style="display:inline-block;background:rgba(245,158,11,.16);color:#fcd34d;border:1px solid rgba(245,158,11,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:900;direction:rtl;white-space:nowrap">🎁 مجّاني مُمنَح</span>',
+        free: ' <span title="لا اشتراك ولا دفعة" style="display:inline-block;background:rgba(148,163,184,.14);color:#cbd5e1;border:1px solid rgba(148,163,184,.4);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:700;direction:rtl;white-space:nowrap">🆓 مجّاني</span>',
+        staff: '',   /* الأدمن والمشرف لهما شارتهما أصلاً — ولا معنى لتصنيفهما بالمال */
+      })[_kind] || '';
       /* 🔒 شارتان بجانب البريد — لمحةٌ تُغني عن قراءة السطر كلّه */
       const lockBadge = _lockBadgeN
         ? ' <span title="الأهداف ووقف الخسارة مقفلة في ' + _lockBadgeN + ' قسم" style="display:inline-block;background:rgba(245,158,11,.16);color:#fcd34d;border:1px solid rgba(245,158,11,.5);border-radius:20px;padding:1px 8px;font-size:9px;font-weight:800;direction:rtl;white-space:nowrap">🔒 أهداف مقفلة ' + _lockBadgeN + '</span>'
@@ -8010,7 +8113,7 @@ function adminRenderUsers(query) {
                         overflow:hidden;text-overflow:ellipsis">
               <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
                     background:${_isOnline(u.last_seen) ? '#22c55e' : 'rgba(255,255,255,.2)'};
-                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${esc(u.email)}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !_isAdminEmail(u.email)) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${expiredBadge}${lockBadge}${blurBadge}${consentBadge}</div>
+                    ${_isOnline(u.last_seen) ? 'box-shadow:0 0 5px #22c55e;' : ''}margin-left:4px"></span>${esc(u.email)}${isMe ? ' 👑' : ''}${(u.role === 'supervisor' && !_isAdminEmail(u.email)) ? ' <span style="display:inline-block;background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;direction:rtl">🛡️ مشرف</span>' : ''}${moneyBadge}${expiredBadge}${lockBadge}${blurBadge}${consentBadge}</div>
             <div style="font-size:10px;color:${r.blocked ? '#f87171' : (subExpired ? '#fca5a5' : 'var(--txt-m)')}">${status}</div>
             <div style="font-size:9.5px;color:${_isOnline(u.last_seen) ? '#4ade80' : 'var(--txt-m)'}">${_lastSeenText(u.last_seen)}</div>
             ${u.created_at ? `<div style="font-size:9px;color:var(--txt-m)">📅 سجّل: ${new Date(u.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { year:'numeric', month:'short', day:'numeric' })} · ${_accountAge(u.created_at)}</div>` : ''}

@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-13-v496';
-console.log('%c[تداول بلس] البناء: 2026-08-13-v496 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-13-v497';
+console.log('%c[تداول بلس] البناء: 2026-08-13-v497 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-13-v496 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v497', '🏷️ أسماء الشركات تُرفع مع القائمة — كان المستخدم يرى «2380 2380» بدل «بترو رابغ»، لأن دالّة الاسم تقرأ من `rows` وهي غير محمّلةٍ عنده في هذا السياق. **وما يعتمد على حالةٍ قد لا توجد يجب أن يُحمل معه لا أن يُطلب.** الآن الاسم يُرفع في الحزمة مع الرمز والسعر، والقارئ لا يحتاج شيئاً سوى الإعدادات — والترتيب: المرفوع أوّلاً، ثمّ `rows` إن وُجدت، ثمّ الرمز'],
     ['v496', '👥 قائمة الزخم تُحسب مرّةً وتُقرأ للجميع — كان زرّ «حدّث» معروضاً لكل مستخدم، وكلُّ ضغطةٍ تسحب ~٣٠٠ يومٍ × ٢٧٠ رمزاً من `historical_prices`. وسقف صادر Supabase خمسة جيجا شهرياً: **مئة مستخدمٍ يضغطون يستهلكونه في يومين، فيتوقّف التطبيق عن الجميع لا عنهم**. الآن يحسبها الأدمن وتُرفع كاملةً إلى `app_settings` — الجدول والخُمس الأدنى معاً — ويقرؤها المستخدم من الإعدادات التي يجلبها عند الإقلاع أصلاً، بلا استعلامٍ واحدٍ زائد. ▸ ويرى تاريخ القياس صريحاً فلا يظنّ قائمة الأمس قائمةَ اليوم. ▸ والزرّ اختفى عمّن لا يملك أن يضغطه — ورسالةُ «اضغط حدّث» صارت «تُحدَّث شهرياً»'],
     ['v495', '⚠️ تحذير «أضعف خُمس زخماً» على أسهم المستخدم — نعرض أمتنَ ما قِسناه لا أجملَه. الأخماس على ٤٧ نافذة غير متداخلة: خ١=+1.06٪ · خ٢=−0.08٪ · خ٣=−0.16٪ · خ٤=−0.38٪ · خ٥=−0.40٪ — رتابةٌ تامّة، t=3.91، فوز ٧٢٪. بينما «أعلى ١٠» في التحقّق t=0.51 وحده، وWalk-Forward t=0.53. **فالحكم على خُمسٍ فيه خمسون سهماً أثبتُ إحصائياً من الحكم على عشرة.** ▸ ودفاعيّة لا هجومية: تُنبّه على ضعفٍ مقيس ولا تَعِد بربح، وموضعُها محفظة المستخدم ومراقبته — على أسهمه هو لا على قائمةٍ تُملى عليه. ▸ وتُحسب مرّةً عند الأدمن وتُرفع إلى `app_settings` فيقرؤها الجميع بلا كلفة: حسابُها يحتاج ٣٠٠ يومٍ × ٢٧٠ رمزاً، وحسابُه عند كل زائر يلتهم صادر Supabase وحده'],
     ['v494', '🚶 المختبر: Walk-Forward والتراجع الأقصى — البندان الوحيدان اللذان يُغيّران الحكم. ① **التراجع** كان مذكوراً في قائمة المعايير بلا رقمٍ له، ومقارنةٌ بمعيارٍ لا تملك قيمته ليست مقارنة. وسُمّي «تراجع الفائض» صراحةً لا «التراجع»: سلسلتنا فائضٌ عن السوق، فالرقم يقول «كم تخلّفتَ عنه في أسوأ فترة» لا «كم خسرت» — وخلطُهما يُعطي طمأنينةً كاذبة. ② **Walk-Forward**: نظرنا في تسع تركيبات واخترنا أفضلها بعد رؤية نتائجها كلّها بما فيها فترة التحقّق، فالرقم متفائلٌ بمقدارٍ مجهول. والاختبار يسأل السؤال الصحيح: «لو اخترتُ في كل شهرٍ أفضلَ ما ظهر حتى ذلك الشهر، ماذا كنتُ سأجني؟» — بلا نظرةٍ واحدة إلى المستقبل. والحكم مكتوبٌ قبل التشغيل: موجبٌ ⇒ تصمد للاختيار الحيّ · سالبٌ ⇒ انتقاءٌ بأثرٍ رجعيّ لا ميزة'],
@@ -23967,7 +23968,15 @@ switchTab = function (tab, btn) {
   }
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
-  function nm(sym) { try { var r = (typeof rows !== 'undefined' && rows) ? rows.find(function (x) { return x && x.sym === sym; }) : null; return (r && r.name) || sym; } catch (e) { return sym; } }
+  /* 🏷️ الاسم: المرفوعُ مع القائمة أوّلاً، ثمّ `rows` إن كانت محمّلة، ثمّ الرمز.
+     والترتيب مقصود: المرفوع لا يعتمد على حالةٍ قد لا توجد عند القارئ. */
+  function nm(sym, packed) {
+    try {
+      if (packed) return packed;
+      var r = (typeof rows !== 'undefined' && rows) ? rows.find(function (x) { return x && x.sym === sym; }) : null;
+      return (r && r.name) || sym;
+    } catch (e) { return sym; }
+  }
 
   /* 📐 زخم ٦-١: عائد ١٢٦ جلسة **عدا** الشهر الأخير — واستثناؤه مقصود،
      فالشهر الأخير يحمل ارتداداً قصير المدى يعاكس الزخم (وقد أثبته قياسنا:
@@ -24045,8 +24054,12 @@ switchTab = function (tab, btn) {
          بلا أن يحسب شيئاً. وهو نفس نمط `analysis_daily`. */
       var pack = {
         d: R.date, s: R.weak, n: R.all, skipped: R.skipped, idx: R.idx,
+        /* 🏷️ والاسم يُرفع مع الرمز — لا يُترك ليُستنبط عند القارئ.
+           رُصد: المستخدم يرى «2380 2380» بدل «بترو رابغ»، لأن `nm()`
+           تقرأ من `rows` وهي غير محمّلةٍ عنده في هذا السياق. وما يعتمد
+           على حالةٍ قد لا توجد يجب أن يُحمل معه لا أن يُطلب. */
         top: R.list.map(function (x) {
-          return { k: x.sym, px: +x.px.toFixed(3), m: +(x.mom * 100).toFixed(1), m1: +(x.m1 * 100).toFixed(1) };
+          return { k: x.sym, t: nm(x.sym), px: +x.px.toFixed(3), m: +(x.mom * 100).toFixed(1), m1: +(x.m1 * 100).toFixed(1) };
         }),
       };
       var prev = (appSettings && appSettings.momWeak) || {};
@@ -24076,7 +24089,7 @@ switchTab = function (tab, btn) {
       var w = (appSettings && appSettings.momWeak) || null;
       if (!w || !Array.isArray(w.top) || !w.top.length) return null;
       return {
-        list: w.top.map(function (x) { return { sym: x.k, px: +x.px, mom: (+x.m) / 100, m1: (+x.m1) / 100 }; }),
+        list: w.top.map(function (x) { return { sym: x.k, nm: x.t || '', px: +x.px, mom: (+x.m) / 100, m1: (+x.m1) / 100 }; }),
         all: w.n || 0, skipped: w.skipped || 0, idx: w.idx || null, date: w.d, fromShared: true,
       };
     } catch (e) { return null; }
@@ -24168,7 +24181,7 @@ switchTab = function (tab, btn) {
       R.list.forEach(function (x, i) {
         h += '<tr style="border-top:1px solid var(--bdr)">'
           + '<td style="padding:8px 4px;color:var(--txt-m)">' + (i + 1) + '</td>'
-          + '<td style="font-weight:800">' + esc(nm(x.sym)) + ' <span style="color:var(--txt-m);font-weight:600;font-size:10.5px">' + esc(x.sym) + '</span></td>'
+          + '<td style="font-weight:800">' + esc(nm(x.sym, x.nm)) + ' <span style="color:var(--txt-m);font-weight:600;font-size:10.5px">' + esc(x.sym) + '</span></td>'
           + '<td style="text-align:left;font-weight:700">' + x.px.toFixed(2) + '</td>'
           + '<td style="text-align:left;font-weight:800;color:' + col(x.mom) + '">' + pct(x.mom) + '</td>'
           + '<td style="text-align:left;color:' + col(x.m1) + '">' + pct(x.m1) + '</td></tr>';

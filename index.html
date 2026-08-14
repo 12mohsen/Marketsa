@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-14-v504';
-console.log('%c[تداول بلس] البناء: 2026-08-14-v504 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-14-v505';
+console.log('%c[تداول بلس] البناء: 2026-08-14-v505 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-14-v504 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v505', '✍️ تسويةٌ يدوية — لتسجيل مالٍ رُدّ خارج البوّابة. كشفتها حالةٌ حقيقية: ميسر لا تقبل ردّاً ثانياً، فيبقى المتبقّي (٣٩٫٧٤ ر.س) في الحساب ولو أردتَ ردَّه. وإن رددتَه بتحويلٍ بنكيّ **لم يكن في النظام ما يُسجّله** — فيبقى «💰 مدفوع ٣٩٫٧٤» إلى الأبد وهو مالٌ خرج فعلاً. **ودفترٌ يخالف الواقع أسوأ من لا دفتر.** الآن زرّ «✍️ ردٌّ يدويّ» يظهر على العمليات التي أُغلق بابُ استردادها: يسجّل المبلغ في `refunded_total`، ويُلحق النصّ بتاريخ العملية بلا محوٍ، ويُكتب في سجلّ الإشراف. ▸ ولا يُنادي ميسر إطلاقاً — تسجيلُ واقعٍ لا أمرُ ردّ. ▸ ولا يمسّ الأقسام: أُقفلت عند الاسترداد الأصليّ، وهذه محاسبةٌ بحتة'],
     ['v504', '🩹 معرّفٌ قديمٌ ببريدٍ حيّ — العلّة الحقيقية وراء «آخر ظهور قبل يومين» ومستخدمُه حاضر. حسابٌ حُذف من المصادقة وأُعيد تسجيله، فبقي صفُّه في `profiles` بمعرّفه القديم. والـ`upsert` يوفّق على `id` فيرى المعرّف الجديد صفّاً جديداً ⇒ 409 `profiles_email_key`. **والأثر مضاعف**: الملفّ لا يُحدَّث، ونبضة الحضور تكتب على معرّفٍ لا وجود له فتُطابق **صفراً من الصفوف — وهذا نجاحٌ في نظر القاعدة**، فلا خطأ ولا تحذير. الآن: عند 409 يُحاذى الصفُّ القديم إلى المعرّف الجديد تلقائياً، والنبضة تعدّ الصفوف بـ`.select()` فتكتشف الصفر وتُصحّح بالبريد. ▸ والدرس: **«لا خطأ» لا تعني «وقع الأثر»** — وهذا ثامنُ فشلٍ صامتٍ نكسره'],
     ['v503', '💓 «آخر ظهور» جامدٌ ومستخدمُه حاضر — عطلان صامتان في نبضة الحضور: ① الخطأ كان يُبتلع بـ`.then(()=>{}, ()=>{})`، فلو ردّت السياسة الكتابة بقي التاريخ جامداً بلا أثرٍ في أيّ سجلّ، ويظنّ الأدمن أنّ عميله هجره وهو يستعمل التطبيق أمامه. ② ولا نبضةَ عند الدخول — أوّل واحدة بعد دقيقتين، فمن دخل وأغلق قبلهما لم يُسجَّل حضورُه قطّ. الآن: نبضةٌ فورية عند الدخول، وأخرى عند العودة إلى التبويب، والفشل يُطبع في الكونسول مرّةً واحدة لا في كل نبضة (فتحذيرٌ كلَّ دقيقتين ضجيجٌ يُخفي غيره)'],
     ['v502', '🚫 سطرُ المستخدم كان يقول «✅ وصول كامل» وقسمٌ محجوبٌ عنه — لأنّه يُحسب من قيود **هذا المستخدم** وحدها ولا ينظر إلى «🧩 الأقسام الظاهرة» إطلاقاً. وهي نفس علّة v435 من بابٍ آخر: شاشةٌ بُنيت ليطمئنّ بها الأدمن فطمأنته على غير حقّه. الآن يُذكر الحجب العامّ صراحةً: «🚫 محجوب عامّاً: قنّاص الفرص»، ومعه «🔓 مستثنى له من الحجب» لمن فُتح له — فلا يظنّه الأدمن محجوباً فيُعيد فتحه. والأدمن والمشرف مستثنيان فالحجب لا يسري عليهما أصلاً'],
@@ -6604,6 +6605,76 @@ async function payRefund(provId, total, who) {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   ✍️ تسويةٌ يدوية — لتسجيل مالٍ رُدّ خارج البوّابة
+
+   الحاجة التي كشفتها الحالة الحقيقية: ميسر لا تقبل ردّاً ثانياً على
+   العملية، فيبقى المتبقّي في حسابك ولو أردتَ ردَّه. وإن رددتَه بتحويلٍ
+   بنكيّ، **لم يكن في النظام ما يُسجّله** — فيبقى «مدفوع 39.74» إلى الأبد
+   وهو مالٌ خرج من عندك. ودفترٌ يخالف الواقع أسوأ من لا دفتر.
+
+   ▸ ولا يُنادى ميسر هنا إطلاقاً — هذا **تسجيلٌ لواقعٍ وقع**، لا أمرُ ردّ.
+   ▸ ولا تُمسّ الأقسام: أُقفلت عند الاسترداد الأصليّ، وهذه محاسبةٌ بحتة.
+   ▸ ويُكتب في نصّ العملية وفي سجلّ الإشراف — فمن راجع بعد سنةٍ عرف
+     أنّ يداً بشرية سوّت هذا، لا البوّابة.
+   ══════════════════════════════════════════════════════════════════════ */
+async function payManualSettle(provId, total, already) {
+  if (!isSuperAdmin()) { showToast('⛔ للأدمن الرئيسي فقط'); return; }
+  const left = Math.round((Number(total) - Number(already)) * 100) / 100;
+  if (!(left > 0)) { showToast('لا متبقّي في هذه العملية'); return; }
+  const old = document.getElementById('msOverlay'); if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'msOverlay';
+  el.style.cssText = 'position:fixed;inset:0;z-index:1004;background:rgba(0,0,0,.86);display:flex;align-items:center;justify-content:center;padding:16px';
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+  el.innerHTML = `
+    <div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:18px;width:100%;max-width:360px;padding:20px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:6px">✍️ تسجيل ردٍّ يدويّ</div>
+      <div style="font-size:11.5px;color:var(--txt-m);line-height:1.9;margin-bottom:12px">
+        هذا <b>تسجيلٌ محاسبيّ</b> لمالٍ أرسلتَه بنفسك (تحويل بنكيّ مثلاً) —
+        <b>ولا يُرسل شيئاً ولا يُنادي بوّابة الدفع</b>.
+      </div>
+      <div style="font-size:12px;color:var(--txt-m);margin-bottom:6px">المتبقّي في هذه العملية: <b style="color:#fcd34d">${left} ر.س</b></div>
+      <input id="msAmt" type="number" step="0.01" min="0.01" max="${left}" value="${left}"
+        style="width:100%;box-sizing:border-box;padding:11px 12px;border-radius:10px;margin-bottom:10px;
+               border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:14px;outline:none;text-align:center">
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('msOverlay').remove()"
+          style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:12.5px;font-weight:700;cursor:pointer">إلغاء</button>
+        <button onclick="payManualSettleGo('${esc(provId)}', ${Number(total) || 0}, ${Number(already) || 0})"
+          style="flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;font-size:12.5px;font-weight:800;color:#0b1220;background:linear-gradient(135deg,#fbbf24,#f59e0b)">✍️ سجّل</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => { const i = document.getElementById('msAmt'); if (i) i.select(); }, 60);
+}
+
+async function payManualSettleGo(provId, total, already) {
+  const el = document.getElementById('msAmt');
+  const amt = Math.round((parseFloat(el && el.value) || 0) * 100) / 100;
+  const left = Math.round((Number(total) - Number(already)) * 100) / 100;
+  if (!(amt > 0) || amt > left) { showToast('⚠️ المبلغ خارج المتبقّي (' + left + ' ر.س)'); return; }
+  const next = Math.round((Number(already) + amt) * 100) / 100;
+  const who = (sbUser && sbUser.email) || '—';
+  const { error } = await sb.from('payments').update({
+    refunded_total: next,
+    status: next >= Math.round(Number(total) * 100) / 100 ? 'refunded' : 'partially_refunded',
+    message: null,   /* يُستبدل أدناه بالنصّ الكامل */
+  }).eq('provider_id', provId);
+  if (error) { _admErr(error, 'تعذّر التسجيل'); return; }
+  /* 🧾 والنصّ يُلحق لا يُستبدل — فتاريخ العملية لا يُمحى */
+  try {
+    const { data: r0 } = await sb.from('payments').select('message').eq('provider_id', provId).maybeSingle();
+    await sb.from('payments').update({
+      message: String((r0 && r0.message) || '') + `\n✍️ رُدّ يدوياً ${amt.toFixed(2)} ر.س خارج البوّابة بواسطة ${who}`,
+    }).eq('provider_id', provId);
+  } catch (_) {}
+  logAdminAction('manual_settle', provId, amt.toFixed(2) + ' ر.س خارج البوّابة');
+  const ov = document.getElementById('msOverlay'); if (ov) ov.remove();
+  showToast('✍️ سُجّل ردٌّ يدويّ بـ' + amt.toFixed(2) + ' ر.س');
+  try { await adminLoadPayments(true); } catch (_) {}
+}
+
 /* 🪟 نافذة الاختيار: كامل أم نسبيّ — بالأرقام لا بالوصف */
 function _payRefundChoose(provId, who, q) {
   const full = Number(q.full) || 0;
@@ -6830,6 +6901,8 @@ function adminRenderPayments() {
         <button onclick="_payConfirmAction(${p.id},'confirmed')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✅ تأكيد</button>
         <button onclick="_payConfirmAction(${p.id},'rejected')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">❌ رفض</button>
         <button onclick="_payConfirmAction(${p.id},'pending')" style="padding:5px 11px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt-m);font-size:10.5px;font-weight:700;cursor:pointer">⏳ إعادة</button>`}
+        ${(card && isSuperAdmin() && (Number(p.refunded_total) > 0) && (Number(p.refunded_total) < Number(p.total)) && p.provider_id) ? `
+        <button onclick="payManualSettle('${esc(p.provider_id)}', ${Number(p.total) || 0}, ${Number(p.refunded_total) || 0})" title="ميسر لا تقبل ردّاً ثانياً — سجّل هنا ما رددتَه بتحويلٍ بنكيّ" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.1);color:#fcd34d;font-size:10.5px;font-weight:700;cursor:pointer">✍️ ردٌّ يدويّ</button>` : ''}
         <button onclick="adminTogglePayReply(${p.id})" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;cursor:pointer">↩️ رد</button>
         ${isSuperAdmin() ? `<button onclick="_payConfirmAction(${p.id},'delete')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.06);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">🗑️ حذف</button>` : ''}
       </div>

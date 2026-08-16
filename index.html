@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-16-v510';
-console.log('%c[تداول بلس] البناء: 2026-08-16-v510 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-16-v511';
+console.log('%c[تداول بلس] البناء: 2026-08-16-v511 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-16-v510 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v511', '💧 فلتر السيولة طُبِّق على الشاشة الحيّة — فصارت القائمة المعروضة هي المقيسة بالضبط. والمحاولة ⑥ قاست: ٧٪ فقط من اختيارات النموذج كانت في أدنى ربع السوق سيولةً، والفائض صمد بعد استبعادها (0.47٪ → 0.68٪ في التحقّق). **واعتُمد لا لأنّه يرفع العائد** — فرقُه على ١٨ نافذة ضجيجٌ لا نتيجة، والدليل أنّه أضرّ بنماذج أخرى ورفع تراجع المرشَّح من 8.3٪ إلى 8.9٪ — **بل لأنّ ما يُعرض يجب أن يكون قابلاً للتنفيذ بالتكلفة التي نفترضها**. ▸ ونفس المقياس والنافذة اللذين قِيسا (وسيط القيمة المتداولة · ٦٠ جلسة)، فأيّ اختلافٍ يجعل المعروض غير المقيس. ▸ والعتبة تُحسب من مشاهدات اليوم لا من ثابتٍ محفوظ. ▸ ويُعلن العدد المستبعَد في حاشية البطاقة'],
     ['v510', '💧 المحاولة ⑥ — فلتر السيولة، وهو **تصحيحُ واقعٍ لا بحثٌ عن ألفا**. نفترض تكلفةً ٠٫١٥٥٪ لكل جانب، وهي صحيحةٌ لسهمٍ سائل ومتفائلةٌ جداً لسهمٍ رقيق: الفارقُ بين العرض والطلب وحده قد يبتلع أضعافها، ثمّ لا تجد الكمّية أصلاً. **فالسؤال ليس «هل تُحسّن السيولة العائد؟» بل: كم من الفائض الذي قِسناه جاء من أسهمٍ ما كنّا لنشتريها فعلاً؟** ▸ والمقياس وسيطُ القيمة المتداولة (سعر×كمّية) على ٦٠ جلسة — وسيطٌ لا متوسّط فيومٌ استثنائيّ لا يرفع رقيقاً إلى مصافّ السائل، وقيمةٌ لا كمّية فسهمٌ بريالٍ وكمّيةٍ مليون أرقُّ من سهمٍ بثلاثمئة. ▸ والعتبة تُحسب في **كل تاريخٍ على حدة** — فعتبةٌ ثابتة تُدخل نظرةً إلى المستقبل من بابٍ خلفيّ. ▸ والمعيار مكتوبٌ سلفاً: يحتفظ المفلتَر بـ≥٧٠٪ من فائض التحقّق ⇒ صامدةٌ للتنفيذ · ودونه ⇒ الرقم الأصليّ مُبالغٌ فيه بتلك النسبة'],
     ['v509', '🧪 المحاولة ⑤ — فرضيةٌ واحدة بمعيارٍ مكتوبٍ قبل الرقم: «زخم ٢١ جلسة بلا تخطّي الشهر الأخير». وهي منطقةُ **الارتداد القصير** في الأدبيات لا الزخم، وكلُّ ما اختبرناه كان يتخطّى الشهر الأخير عمداً لهذا. فالاختبار قابلٌ للدحض بمعنىً حقيقيّ: موجبٌ دالّ ⇒ نتيجةٌ تخالف الأدبيات وتستحقّ النشر · سالبٌ ⇒ يؤكّد أن التخطّي شرطٌ لا تفصيل · حول الصفر ⇒ التعقيد هو من يصنع النتيجة. ▸ وخمسةُ معايير تُطبع مع الحكم آلياً (فائض ≥+0.30٪ · موجبٌ كل سنةٍ n≥8 · تراجع ≤12٪ · دوران ≤60٪ · ويتفوّق على 6-1 أعلى 10 لا على الصفر) — **والحكم بمقارنة الأرقام لا بتقديرٍ بشريٍّ بعد الاطّلاع، فمن يقرأ الرقم أوّلاً يجد له عذراً**. ▸ وصيغة النموذج صارت [مفتاح, اسم, نافذة, تخطٍّ] فلم تتغيّر النماذج الثلاثة بحرف'],
     ['v508', '🔇 سطرٌ كلَّ دقيقة ليس سجلّاً — هو ستارٌ على السجلّ. `[fill]` كان يُكتب مع كل تحديثٍ للأسعار بنفس المضمون تقريباً، فيدفع الأخطاء الحقيقية خارج الشاشة: من يفتح «📒 السجل» ليبحث عن عطلٍ يجد عشرين سطراً روتينياً فيُغلقه. الآن لا يُكتب إلا إن تغيّر شيء (عددُ ما سُدّ · ما بقي بلا سعر · مصدر البيانات)، وتكرارُ نفس الحال يُبتلع. ▸ والتحذيرات تبقى كما هي — تلك تُقرأ'],
@@ -24365,14 +24366,17 @@ switchTab = function (tab, btn) {
     var cut = new Date(Date.now() - 300 * 864e5).toISOString().slice(0, 10);
     var by = {}, from = 0, guard = 0;
     while (guard++ < 80) {
-      var q = await sb.from('historical_prices').select('symbol,d,c')
+      /* 💧 والحجم معها — لفلتر السيولة الذي أثبته القياس (المحاولة ⑥) */
+      var q = await sb.from('historical_prices').select('symbol,d,c,v')
         .gte('d', cut).order('d', { ascending: true }).range(from, from + 999);
       if (q.error) { console.warn('[momentum] تعذّر الجلب:', q.error.message); break; }
       if (!q.data || !q.data.length) break;
       for (var i = 0; i < q.data.length; i++) {
         var r = q.data[i], px = +r.c;
         if (!(px > 0)) continue;
-        (by[r.symbol] = by[r.symbol] || []).push(px);
+        var o = (by[r.symbol] = by[r.symbol] || { c: [], dv: [] });
+        o.c.push(px);
+        o.dv.push((+r.v > 0 ? +r.v : 0) * px);   /* القيمة المتداولة لا الكمّية */
       }
       if (q.data.length < 1000) break;
       from += 1000;
@@ -24417,20 +24421,55 @@ switchTab = function (tab, btn) {
     }
     return false;
   }
+  /* ══════════════════════════════════════════════════════════════════════
+     💧 فلتر السيولة — القائمة المعروضة هي المقيسة بالضبط
+
+     المحاولة ⑥ قاست: ٧٪ فقط من اختيارات النموذج كانت في أدنى ربع السوق
+     سيولةً، والفائض صمد بعد استبعادها. فاعتُمد الفلتر — **لا لأنّه يرفع
+     العائد** (فرقُه على ١٨ نافذة ضجيجٌ لا نتيجة)، بل لأنّ ما يُعرض يجب
+     أن يكون **قابلاً للتنفيذ بالتكلفة التي نفترضها**.
+     ▸ وسيطُ القيمة المتداولة على ٦٠ جلسة — نفس المقياس والنافذة اللذين
+       قِيسا. وأيّ اختلافٍ بينهما يجعل المعروض غير المقيس.
+     ══════════════════════════════════════════════════════════════════════ */
+  var LIQ_WIN = 60, LIQ_CUT = 0.25;
+  function _medDV(dv) {
+    if (!dv || !dv.length) return 0;
+    var a = [], i, from = Math.max(0, dv.length - LIQ_WIN);
+    for (i = from; i < dv.length; i++) if (dv[i] > 0) a.push(dv[i]);
+    if (a.length < LIQ_WIN * 0.5) return 0;
+    a.sort(function (x, y) { return x - y; });
+    var m = a.length >> 1;
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
   function compute() {
     var H = DATA;
     if (!H) return null;
     var out = [], idxSum = 0, idxN = 0, s, skipped = 0;
     for (s in H) {
-      var a = H[s], n = a ? a.length : 0;
+      /* 🔁 توافقٌ خلفيّ: الصيغة القديمة مصفوفةُ أسعار، والجديدة {c, dv} */
+      var o = H[s], a = (o && o.c) ? o.c : o, dv = (o && o.dv) ? o.dv : null;
+      var n = a ? a.length : 0;
       if (n < MINB) continue;
       var pNow = a[n - 1], pSkip = a[n - 1 - SKIP], pBack = a[n - 1 - LOOK];
       if (!(pNow > 0) || !(pSkip > 0) || !(pBack > 0)) continue;
       if (corpAction(a, n - 1 - LOOK)) { skipped++; continue; }
       idxSum += pNow; idxN++;
-      out.push({ sym: s, px: pNow, mom: pSkip / pBack - 1, m1: pNow / pSkip - 1 });
+      out.push({ sym: s, px: pNow, mom: pSkip / pBack - 1, m1: pNow / pSkip - 1, liq: _medDV(dv) });
     }
     if (out.length < 40) return null;
+
+    /* 💧 استبعد أدنى ربعٍ سيولةً — والعتبة من مشاهدات اليوم لا من ثابتٍ محفوظ */
+    var thin = 0;
+    (function () {
+      var L = out.map(function (x) { return x.liq; }).filter(function (v) { return v > 0; });
+      if (L.length < 40) return;                       /* بلا بيانات حجمٍ كافية ⇒ لا فلتر */
+      L.sort(function (x, y) { return x - y; });
+      var thr = L[Math.floor((L.length - 1) * LIQ_CUT)];
+      var keep = out.filter(function (x) { return x.liq > 0 && x.liq >= thr; });
+      if (keep.length >= 40) { thin = out.length - keep.length; out = keep; }
+    })();
+
     out.sort(function (x, y) { return y.mom - x.mom; });
     /* ══════════════════════════════════════════════════════════════════
        ⚠️ الخُمس الأدنى — أمتنُ رقمٍ في القياس كلِّه
@@ -24446,7 +24485,7 @@ switchTab = function (tab, btn) {
        ══════════════════════════════════════════════════════════════════ */
     var wStart = Math.floor(out.length * 0.8);
     var weak = out.slice(wStart).map(function (x) { return x.sym; });
-    return { list: out.slice(0, TOPN), all: out.length, skipped: skipped,
+    return { list: out.slice(0, TOPN), all: out.length, skipped: skipped, thin: thin,
              weak: weak,
              idx: idxN ? idxSum / idxN : null,
              date: new Date().toISOString().slice(0, 10) };
@@ -24469,7 +24508,7 @@ switchTab = function (tab, btn) {
       /* 📦 القائمة كاملةً لا الضعف وحده — فيقرأ المستخدم الجدول جاهزاً
          بلا أن يحسب شيئاً. وهو نفس نمط `analysis_daily`. */
       var pack = {
-        d: R.date, s: R.weak, n: R.all, skipped: R.skipped, idx: R.idx,
+        d: R.date, s: R.weak, n: R.all, skipped: R.skipped, thin: R.thin, idx: R.idx,
         /* 🏷️ والاسم يُرفع مع الرمز — لا يُترك ليُستنبط عند القارئ.
            رُصد: المستخدم يرى «2380 2380» بدل «بترو رابغ»، لأن `nm()`
            تقرأ من `rows` وهي غير محمّلةٍ عنده في هذا السياق. وما يعتمد
@@ -24518,7 +24557,7 @@ switchTab = function (tab, btn) {
       if (!w || !Array.isArray(w.top) || !w.top.length) return null;
       return {
         list: w.top.map(function (x) { return { sym: x.k, nm: x.t || '', px: +x.px, mom: (+x.m) / 100, m1: (+x.m1) / 100 }; }),
-        all: w.n || 0, skipped: w.skipped || 0, idx: w.idx || null, date: w.d, fromShared: true,
+        all: w.n || 0, skipped: w.skipped || 0, thin: w.thin || 0, idx: w.idx || null, date: w.d, fromShared: true,
       };
     } catch (e) { return null; }
   }
@@ -24651,6 +24690,7 @@ switchTab = function (tab, btn) {
       });
       h += '</tbody></table></div>';
       h += '<div style="font-size:10.5px;color:var(--txt-m);margin-top:6px">من ' + R.all + ' سهماً'
+        + (R.thin ? ' · 💧 استُبعد <b>' + R.thin + '</b> لضعف السيولة (أدنى ربعٍ تداولاً — قياسٌ أثبت أن الفائض يصمد بعده)' : '')
         + (R.skipped ? ' · استُبعد <b>' + R.skipped + '</b> لإجراءِ رأس مال (قفزةٌ يومية >٢٠٪ تتجاوز حدّ السوق ±١٠٪)' : '')
         + (R.date ? ' · حتى ' + esc(R.date) : '') + '</div>';
     } else if (!MSG) {

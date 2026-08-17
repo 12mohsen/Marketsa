@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-17-v516';
-console.log('%c[تداول بلس] البناء: 2026-08-17-v516 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-17-v517';
+console.log('%c[تداول بلس] البناء: 2026-08-17-v517 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-17-v516 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v517', '📡 الحلّ كان في التطبيق ونائماً — `sahmk_shared` وتعليقُه يقول حرفياً: «الأدمن يجلب ويرفع · والجميع يقرأ من القاعدة مجاناً وبلا حدّ». لكنّه معلّقٌ على `USE_SAHMK_API` وهو مطفأ، **وأُضيفت «الميزات المجانية» بعده فتجاوزته**: نداءٌ لكلّ مستخدمٍ ولكلّ فتحةِ سهم. الآن أُعيدت إلى مسارها: **المستخدم لا يُنادي الباقة أبداً**، والأدمن يملأ البثّ بدفعاتٍ جماعية — `quotes` تأخذ ٥٠ رمزاً في الطلب، فـ٢٧١ رمزاً = **٦ طلبات تخدم الجميع** بدل طلبين لكلّ فتحةٍ لكلّ واحد. ▸ وتعبئةٌ كلّ نصف ساعة، وعرضٌ يقبل ٩٠ دقيقة (الأسعار متأخّرةٌ أصلاً بإقرار الشاشة). ▸ ونظرةُ السوق تُبثّ في نفس الحزمة فلا جدولَ جديد. ▸ والسيولةُ تُلتقط من فتحات الأدمن وتُضمّ إلى البثّ — فتغطيةُ اليوم تبني تغطية الغد، بلا طلبٍ من أحد. ▸ **والمستخدم يرى كلَّ شيءٍ كما كان: سعرٌ رسميّ وتدفّقُ سيولة، تلقائياً وبلا زرّ**'],
     ['v516', '↩️ **رُجوعٌ كامل** عن تعديلات «سهمك» (v512–v515) بطلب المالك — عادت كما كانت قبلها حرفاً بحرف: نظرةُ السوق تُجلب مباشرةً، والسعر الرسميّ وتدفّقُ السيولة يُجلبان تلقائياً لكلّ من يفتح سهماً، بلا حرّاسٍ ولا أزرارٍ ولا مشاركة. ▸ والسبب أنّ تلك التعديلات — وإن وفّرت الباقة — غيّرت سلوكاً مألوفاً أربع مرّات في يومٍ واحد، وكلُّ مرّةٍ كشفت أثراً لم يُتوقَّع. **وتوفيرُ مئة طلبٍ لا يساوي إرباك من يستعمل التطبيق.** ▸ ويبقى القيد قائماً: ١٠٠ طلبٍ يومياً، والاستهلاك يتبع عدد المستخدمين. وحين يقترب السقف، يُحسم بترقية الباقة أو بمراجعةٍ واحدة مدروسة — لا بأربع محاولات متتابعة'],
     ['v515', '👑 «الأدمن يجلب والمستخدم يقرأ» — طُبِّقت على أسعار الأسهم أخيراً. اتُّفق عليها ثمّ نُفِّذت على نظرة السوق وحدها ونُسيت هنا، فبقي كلُّ مستخدمٍ يفتح سهماً يُنفق طلباً من باقةٍ سقفُها ١٠٠ — ورُصد حيّاً: مستخدمٌ فتح سهماً فارتفع العدّاد. ▸ الآن `quoteOnce` **ترفض النداء لغير الأدمن** رفضاً صريحاً، وما يجلبه الأدمن يُنشر في `app_settings.sahmkPx` (سعرٌ وتغيّرٌ وتدفّقُ سيولة) فيقرؤه الجميع بلا كلفة — نفسُ نمط `analysis_daily` ونظرةِ السوق. ▸ وكتابةٌ واحدة كلّ عشر ثوانٍ مهما فُتح من أسهم، وخريطةٌ محدودةٌ بـ٢٠٠ رمز يسقط أقدمُها — فلا ينتفخ صفُّ الإعدادات الذي يجلبه كلُّ زائر. ▸ وصلاحيةُ ست ساعات: سعرُ السهم يُقرأ بجانب سعرنا الحيّ لا وحده، فقِدَمُه أهونُ من إنفاق الباقة'],
     ['v514', '🩹 المنعُ كان يحذف السطر مع الطلب — وهو خطأٌ في v512: أوقفتُ نداء «سهمك» بـ`return` مبكّر، فذهب معه **سطرُ السعر كلُّه** وإن كان السعر عندنا. والصواب إبقاء المعلومة ومنعُ التكلفة، لا حذفُهما معاً. الآن ثلاث حالات: ① سعرٌ رسميٌّ محصودٌ سابقاً ⇒ يُعرض مجّاناً مع «محفوظٌ من فتحةٍ سابقة» · ② سعرٌ عندنا من مصدرٍ آخر ⇒ يُعرض **بمصدره الصادق** («السعر لدينا») وزرٌّ «🏛️ اجلب الرسميّ» لمن أراده — فينفق طلباً **بإرادته لا بغفلته** · ③ لا سعرَ عندنا (صناديق الريت غالباً) ⇒ يُجلب فوراً فهو مبرَّر. ▸ ودرسٌ يتكرّر: **حين تُقلّل تكلفةً، اسأل ماذا فقد المستخدم — لا ماذا وفّرتَ أنت**'],
@@ -22950,11 +22951,22 @@ switchTab = function (tab, btn) {
     /* 🏛️ مخفية افتراضياً — تظهر فقط عند تفعيل الأدمن «إظهار نظرة السوق الرسمية» */
     if (!(appSettings && appSettings.showMarketOverview)) { box.style.display = 'none'; box.innerHTML = ''; return; }
     try {
-      const [m, g, l] = await Promise.all([
-        api('market/summary/', { index: IDX }),
-        api('market/gainers/', { limit: 5, index: IDX }),
-        api('market/losers/',  { limit: 5, index: IDX }),
-      ]);
+      /* 📡 نظرةُ السوق تُبثّ أيضاً: محتواها متطابقٌ لكلّ عين، فلا يدفع
+         ثمنَها كلُّ زائر. تُحفظ داخل نفس حزمة البثّ فلا جدولَ جديد. */
+      let m, g, l;
+      const _ov = (_sfPack && _sfPack.ov && (Date.now() - _sfPackAt) < SF_SHOW_MS) ? _sfPack.ov : null;
+      if (_ov) { m = _ov.m; g = _ov.g; l = _ov.l; }
+      else if (!_sfAdm()) { box.style.display = 'none'; box.innerHTML = ''; return; }
+      else {
+        [m, g, l] = await Promise.all([
+          api('market/summary/', { index: IDX }),
+          api('market/gainers/', { limit: 5, index: IDX }),
+          api('market/losers/',  { limit: 5, index: IDX }),
+        ]);
+        if (!_sfPack) { _sfPack = { quotes: [] }; _sfPackAt = Date.now(); }
+        _sfPack.ov = { m: m, g: g, l: l };
+        sfPush();
+      }
       const up = (m.index_change_percent || 0) >= 0;
       const clr = up ? '#16a34a' : '#dc2626';
       const movers = (arr, key) => (arr[key] || []).map(x => {
@@ -23026,13 +23038,55 @@ switchTab = function (tab, btn) {
     return html;
   }
 
+  /* 🖼️ الرسم — مصدرٌ واحدٌ للعرض، سواءٌ جاء من البثّ أو من نداءٍ مباشر */
+  function sfPaint(q, el, liq) {
+    if (q && q.price != null) {
+      const chg = q.change_percent;
+      el.innerHTML = '🏛️ السعر الرسمي (سهمك): <b>' + Number(q.price).toFixed(2) + ' ر.س</b>' +
+        (chg != null ? ' · <span style="color:' + (chg >= 0 ? '#4ade80' : '#f87171') + '">' + (chg >= 0 ? '+' : '') + chg + '%</span>' : '') +
+        (q.is_delayed ? ' · مؤخّر' : ' · لحظي');
+      el.style.display = 'block';
+    }
+    const L = q && q.liquidity;
+    if (liq && L && (L.net_value != null || L.inflow_value != null)) {
+      const h = sfLiquidityBox(q);
+      if (h) { liq.innerHTML = h; liq.style.display = 'block'; return; }
+    }
+    if (liq) liq.style.display = 'none';
+  }
+
   function sfInjectOfficial(sym) {
     const el  = document.getElementById('mdOfficialPrice');
     const liq = document.getElementById('mdLiquidity');
     if (!el || !sym) return;
     el.style.display = 'none';
     if (liq) liq.style.display = 'none';
+    /* 📡 من البثّ أوّلاً — بصفر استهلاك، وللجميع */
+    const _sh = sfGet(sym);
+    if (_sh) {
+      sfPaint(_sh, el, liq);
+      /* 🎁 واحصده في الجدول كما كان — بلا طلب */
+      try {
+        if (typeof rows !== 'undefined' && Array.isArray(rows)) {
+          const _r = rows.find(x => x && String(x.sym) === String(sym));
+          const _p = (typeof toNum === 'function') ? toNum(_sh.price) : +_sh.price;
+          if (_r && _p > 0) {
+            _r.price = _p; _r._derived = false; _r._derivedAt = null; _r._official = true;
+            if (_sh.change_percent != null) _r.chg = +_sh.change_percent;
+            if (_sh.volume != null && +_sh.volume > 0) _r.vol = +_sh.volume;
+          }
+        }
+      } catch (_) {}
+      /* 💧 السيولة ناقصةٌ في البثّ؟ الأدمن وحده يُكملها — وتصير للجميع */
+      if (!(_sh.liquidity) && _sfAdm()) {
+        api('quote/' + encodeURIComponent(sym) + '/').then(q => { sfMerge(sym, q); sfPaint(q, el, liq); }).catch(() => {});
+      }
+      return;
+    }
+    /* 🚫 لا بثّ ولستَ أدمن ⇒ لا نداء. (وهو ما كان يحدث حين يفشل الطلب) */
+    if (!_sfAdm()) return;
     api('quote/' + encodeURIComponent(sym) + '/').then(q => {
+      sfMerge(sym, q);
       /* ══════════════════════════════════════════════════════════════
          🎁 حصادٌ بلا ثمن — الطلب مدفوعٌ سلفاً فلا نرمِ ثمرته
          هذا الطلب يقع **أصلاً** كلّما فتح المستخدم سهماً (ميزة مجانية
@@ -23116,10 +23170,18 @@ switchTab = function (tab, btn) {
             const anchor = ov.querySelector('[id^="histQuickBlock-"]');
             if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(box, anchor);
             else { const modal = ov.querySelector('.market-analysis-modal'); if (modal) modal.appendChild(box); }
-            api('quote/' + encodeURIComponent(String(sym).trim()) + '/').then(q => {
-              const html = sfLiquidityBox(q);
+            /* 📡 من البثّ أوّلاً — بصفر استهلاك. والأدمن وحده يُكمل الناقص. */
+            const _shq = sfGet(sym);
+            if (_shq && _shq.liquidity) {
+              const html = sfLiquidityBox(_shq);
               if (html) { box.innerHTML = html; box.style.display = 'block'; }
-            }).catch(() => {});
+            } else if (_sfAdm()) {
+              api('quote/' + encodeURIComponent(String(sym).trim()) + '/').then(q => {
+                sfMerge(sym, q);
+                const html = sfLiquidityBox(q);
+                if (html) { box.innerHTML = html; box.style.display = 'block'; }
+              }).catch(() => {});
+            }
           }
         }
       } catch (e) {}
@@ -23141,7 +23203,117 @@ switchTab = function (tab, btn) {
   const _qCache = new Map();   /* sym → { t, p:Promise } */
   const QUOTE_TTL = 10 * 60 * 1000;
 
-  const boot = () => setTimeout(sfOverview, 1500);
+  /* ══════════════════════════════════════════════════════════════════════
+     📡 البثّ المشترك — الحلّ الذي كان في التطبيق ونام
+
+     `sahmk_shared` موجودٌ منذ v-قديم، وتعليقُه يقول: «الأدمن يجلب ويرفع ·
+     والجميع يقرأ من القاعدة (مجاناً وبلا حدّ)». لكنّه معلّقٌ على
+     `USE_SAHMK_API` وهو مطفأ — فبقي نائماً، **وأُضيفت «الميزات المجانية»
+     بعده فتجاوزته**: نداءٌ لكل مستخدمٍ ولكل فتحةِ سهم.
+
+     ▸ فنُعيدها إلى مسارها: **المستخدم لا يُنادي الباقة أبداً**، والأدمن
+       يملأ البثّ بدفعاتٍ جماعية — `quotes` تأخذ ٥٠ رمزاً في الطلب، فـ٢٧١
+       رمزاً = **٦ طلبات تخدم الجميع** بدل طلبين لكلّ فتحةٍ لكلّ واحد.
+     ▸ والتعبئة كلّ نصف ساعة على الأكثر: ٦ × ١٠ نوافذ ≈ ٦٠ طلباً في يومٍ
+       كامل من التصفّح المتواصل — وفي الغالب أقلّ بكثير.
+     ▸ والعرض يقبل ما عمرُه ٩٠ دقيقة: الأسعار **متأخّرة أصلاً** بإقرار
+       الشاشة، فدقائق القِدَم أهونُ من إسقاط الخدمة على الجميع.
+     ▸ والسيولة تُلتقط من فتحات الأدمن وتُضمّ إلى البثّ — فتغطية اليوم
+       تبني تغطية الغد، بلا طلبٍ واحدٍ من أحد.
+     ══════════════════════════════════════════════════════════════════════ */
+  const SF_FILL_MS = 30 * 60 * 1000, SF_SHOW_MS = 90 * 60 * 1000;
+  let _sfPack = null, _sfPackAt = 0, _sfFilling = false, _sfUpTimer = null;
+  const _sfAdm = () => { try { return typeof isAdmin === 'function' && isAdmin(); } catch (e) { return false; } };
+
+  function _sfMap() {
+    const m = {};
+    ((_sfPack && _sfPack.quotes) || []).forEach(q => { if (q && q.symbol) m[String(q.symbol)] = q; });
+    return m;
+  }
+  function sfGet(sym) {
+    if (!_sfPack || (Date.now() - _sfPackAt) > SF_SHOW_MS) return null;
+    return _sfMap()[String(sym).trim()] || null;
+  }
+
+  /* 📥 اقرأ البثّ — للجميع، بلا استهلاك */
+  async function sfPull() {
+    try {
+      if (typeof sb === 'undefined' || !sb) return null;
+      const { data, error } = await sb.from('sahmk_shared').select('data, fetched_at').eq('id', 1).maybeSingle();
+      if (error || !data || !data.data) return null;
+      _sfPack = data.data;
+      _sfPackAt = new Date(data.fetched_at).getTime() || 0;
+      const age = Math.round((Date.now() - _sfPackAt) / 60000);
+      console.info('[sahmk] 📡 بثٌّ مشترك: ' + ((_sfPack.quotes || []).length) + ' سهم · عمره ' + age + ' دقيقة · بلا استهلاك');
+      return _sfPack;
+    } catch (e) { return null; }
+  }
+
+  /* 📤 ادفع إلى البثّ — الأدمن وحده، ومؤجَّلاً فلا صفٌّ يُكتب لكل نقرة */
+  function sfPush() {
+    if (!_sfAdm() || !_sfPack) return;
+    clearTimeout(_sfUpTimer);
+    _sfUpTimer = setTimeout(async () => {
+      try {
+        if (typeof sb === 'undefined' || !sb) return;
+        const r = await sb.from('sahmk_shared').upsert({
+          id: 1, data: _sfPack,
+          fetched_at: new Date(_sfPackAt || Date.now()).toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        if (r.error) console.warn('[sahmk] ✗ لم يُرفع البثّ:', r.error.message);
+        else console.info('[sahmk] 📡 رُفع البثّ للجميع (' + ((_sfPack.quotes || []).length) + ' سهم)');
+      } catch (_) {}
+    }, 8000);
+  }
+
+  /* 🔄 املأ البثّ بدفعاتٍ جماعية — الأدمن وحده */
+  async function sfFill() {
+    if (_sfFilling || !_sfAdm()) return;
+    if (_sfPack && (Date.now() - _sfPackAt) < SF_FILL_MS) return;   /* طازجٌ يكفي */
+    if (typeof rows === 'undefined' || !Array.isArray(rows) || !rows.length) return;
+    _sfFilling = true;
+    try {
+      const syms = [...new Set(rows.map(r => r && r.sym).filter(Boolean))];
+      const B = (typeof SAHMK_BATCH !== 'undefined') ? SAHMK_BATCH : 50;
+      const out = [];
+      for (let i = 0; i < syms.length; i += B) {
+        try {
+          const r = await api('quotes', { symbols: syms.slice(i, i + B).join(',') });
+          (r && r.quotes || []).forEach(q => { if (q && q.symbol) out.push(q); });
+        } catch (e) { console.warn('[sahmk] دفعة فشلت:', e && e.message); }
+      }
+      if (out.length) {
+        /* 🧬 ادمج: احفظ سيولةَ ما جُلب مفرداً من قبل — الدفعة قد لا تحملها */
+        const prev = _sfMap();
+        out.forEach(q => { const o = prev[q.symbol]; if (o && o.liquidity && !q.liquidity) q.liquidity = o.liquidity; });
+        _sfPack = { quotes: out, n: out.length };
+        _sfPackAt = Date.now();
+        console.info('[sahmk] 🔄 مُلئ البثّ: ' + out.length + ' سهم في ' + Math.ceil(syms.length / B) + ' طلبات');
+        sfPush();
+      }
+    } finally { _sfFilling = false; }
+  }
+
+  /* 🧬 ضمُّ اقتباسٍ مفرد (بسيولته) إلى البثّ — يقع عند فتح الأدمن سهماً */
+  function sfMerge(sym, q) {
+    if (!_sfAdm() || !q || q.price == null) return;
+    if (!_sfPack) { _sfPack = { quotes: [] }; _sfPackAt = Date.now(); }
+    const k = String(sym).trim();
+    const arr = _sfPack.quotes || (_sfPack.quotes = []);
+    const i = arr.findIndex(x => x && String(x.symbol) === k);
+    const rec = Object.assign({}, q, { symbol: k });
+    if (i >= 0) arr[i] = rec; else arr.push(rec);
+    sfPush();
+  }
+
+  const boot = () => setTimeout(async function () {
+    try { await sfPull(); } catch (_) {}
+    try { sfOverview(); } catch (_) {}
+    /* 🔄 الأدمن يملأ البثّ عند الإقلاع وكلّ نصف ساعة — والمستخدم لا يفعل شيئاً */
+    if (_sfAdm()) { setTimeout(function () { sfFill().catch(function () {}); }, 4000);
+      setInterval(function () { sfFill().catch(function () {}); }, SF_FILL_MS); }
+  }, 1500);
   if (document.readyState !== 'loading') boot();
   else document.addEventListener('DOMContentLoaded', boot);
 })();

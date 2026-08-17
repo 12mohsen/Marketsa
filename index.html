@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-17-v514';
-console.log('%c[تداول بلس] البناء: 2026-08-17-v514 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-17-v515';
+console.log('%c[تداول بلس] البناء: 2026-08-17-v515 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-17-v514 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v515', '👑 «الأدمن يجلب والمستخدم يقرأ» — طُبِّقت على أسعار الأسهم أخيراً. اتُّفق عليها ثمّ نُفِّذت على نظرة السوق وحدها ونُسيت هنا، فبقي كلُّ مستخدمٍ يفتح سهماً يُنفق طلباً من باقةٍ سقفُها ١٠٠ — ورُصد حيّاً: مستخدمٌ فتح سهماً فارتفع العدّاد. ▸ الآن `quoteOnce` **ترفض النداء لغير الأدمن** رفضاً صريحاً، وما يجلبه الأدمن يُنشر في `app_settings.sahmkPx` (سعرٌ وتغيّرٌ وتدفّقُ سيولة) فيقرؤه الجميع بلا كلفة — نفسُ نمط `analysis_daily` ونظرةِ السوق. ▸ وكتابةٌ واحدة كلّ عشر ثوانٍ مهما فُتح من أسهم، وخريطةٌ محدودةٌ بـ٢٠٠ رمز يسقط أقدمُها — فلا ينتفخ صفُّ الإعدادات الذي يجلبه كلُّ زائر. ▸ وصلاحيةُ ست ساعات: سعرُ السهم يُقرأ بجانب سعرنا الحيّ لا وحده، فقِدَمُه أهونُ من إنفاق الباقة'],
     ['v514', '🩹 المنعُ كان يحذف السطر مع الطلب — وهو خطأٌ في v512: أوقفتُ نداء «سهمك» بـ`return` مبكّر، فذهب معه **سطرُ السعر كلُّه** وإن كان السعر عندنا. والصواب إبقاء المعلومة ومنعُ التكلفة، لا حذفُهما معاً. الآن ثلاث حالات: ① سعرٌ رسميٌّ محصودٌ سابقاً ⇒ يُعرض مجّاناً مع «محفوظٌ من فتحةٍ سابقة» · ② سعرٌ عندنا من مصدرٍ آخر ⇒ يُعرض **بمصدره الصادق** («السعر لدينا») وزرٌّ «🏛️ اجلب الرسميّ» لمن أراده — فينفق طلباً **بإرادته لا بغفلته** · ③ لا سعرَ عندنا (صناديق الريت غالباً) ⇒ يُجلب فوراً فهو مبرَّر. ▸ ودرسٌ يتكرّر: **حين تُقلّل تكلفةً، اسأل ماذا فقد المستخدم — لا ماذا وفّرتَ أنت**'],
     ['v513', '💰 مصدرٌ ثالثٌ للاستهلاك لم يُغلق أمس: **فتحةُ السهم الواحدة كانت تُطلق طلبين** — واحدٌ للسعر الرسميّ وآخر لصندوق تدفّق السيولة، لنفس الرمز في نفس الثانية من نفس الواجهة. وطلبان لبيانٍ واحد ليس ضعفَ الكلفة فقط، بل دليلٌ على أن كلَّ مكوّنٍ يجلب لنفسه بلا أن يسأل: أليس هذا معنا أصلاً؟ ▸ فكاشٌ واحدٌ بمهلة عشر دقائق يقرؤه المكوّنان (والوعدُ نفسُه يُعاد لمن سأل أثناء الجلب، فلا طلبان متوازيان). ▸ **و«تدفّق السيولة» صار زرّاً لا جلباً تلقائياً**: كان يُجلب مع كل فتحةِ سهم فمن يتصفّح عشرين سهماً ينفق عشرين طلباً وهو لم ينظر إليه. والقيمة لم تُنقَص — نُقل موضعُ القرار إلى صاحبه'],
     ['v512', '💰 باقة «سهمك» المجانية كانت تُستهلك بعدد المستخدمين لا بعدد الحاجات — ١٠٠ طلبٍ في اليوم، ومستخدمٌ واحدٌ استهلك ١٨ في جلسة. ومصدران: ① **نظرة السوق الرسمية** ٣ طلباتٍ لكلّ زائر، ومحتواها **متطابقٌ حرفياً** للجميع — أي أن ٣٣ زائراً يُنفدون اليوم كلَّه ثمّ تتعطّل عن الجميع بمن فيهم من دفع. صارت تُجلب من الأدمن وتُخزَّن في `app_settings` بصلاحية ساعتين، ويقرؤها الجميع بلا طلبٍ واحد. ② **السعر الرسميّ عند فتح أيّ سهم** — طلبٌ كامل لكل فتحة. وقيمتُه محصورةٌ فيما لا نملك سعرَه (صناديق الريت خاصّةً)، أمّا سهمٌ عندنا سعرُه حيّاً فطلبُه شراءُ ما نملك. صار يُسأل أوّلاً: هل ينقصنا سعر؟ ▸ ونفس نمط `analysis_daily` و«الأعلى زخماً»: يُجلب مرّةً ويقرؤه الجميع'],
@@ -23112,22 +23113,37 @@ switchTab = function (tab, btn) {
       console.info('[sahmk free] 💰 لم يُنفَق طلب — سعرٌ رسميٌّ محفوظٌ لـ' + sym);
       return;
     }
+    /* ② سعرٌ منشورٌ من الأدمن — يقرؤه الجميع بلا طلب */
+    var _sh = pxShared(sym);
+    if (_sh) {
+      var _sc = (_sh.c != null)
+        ? ' · <span style="color:' + (_sh.c >= 0 ? '#4ade80' : '#f87171') + '">' + (_sh.c >= 0 ? '+' : '') + _sh.c + '%</span>' : '';
+      el.innerHTML = '🏛️ السعر الرسمي (سهمك): <b>' + Number(_sh.p).toFixed(2) + ' ر.س</b>' + _sc
+        + (_sh.d ? ' · مؤخّر' : ' · لحظي');
+      el.style.display = 'block';
+      if (liq && _sh.L) { var _h = sfLiquidityBox({ liquidity: _sh.L }); if (_h) { liq.innerHTML = _h; liq.style.display = 'block'; } }
+      return;
+    }
+    /* ③ سعرٌ عندنا من مصدرٍ آخر — يُعرض بمصدره الصادق. والزرّ للأدمن وحده. */
     if (_px > 0 && _r0 && !_r0._derived) {
       el.innerHTML = '💹 السعر لدينا: <b>' + _px.toFixed(2) + ' ر.س</b>' + _chgHtml
-        + ' <button type="button" id="sfAskOfficial" style="margin-inline-start:8px;cursor:pointer;font-family:inherit;'
-        + 'border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.12);color:#7dd3fc;'
-        + 'border-radius:8px;padding:3px 9px;font-size:10.5px;font-weight:800">🏛️ اجلب الرسميّ</button>';
+        + (_isAdm()
+            ? ' <button type="button" id="sfAskOfficial" style="margin-inline-start:8px;cursor:pointer;font-family:inherit;'
+              + 'border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.12);color:#7dd3fc;'
+              + 'border-radius:8px;padding:3px 9px;font-size:10.5px;font-weight:800">🏛️ اجلب وانشر</button>'
+            : '');
       el.style.display = 'block';
       var _ask = document.getElementById('sfAskOfficial');
       if (_ask) _ask.addEventListener('click', function () {
         _ask.disabled = true; _ask.textContent = '⏳';
         sfFetchOfficial(sym, el, liq);
       });
-      console.info('[sahmk free] 💰 لم يُنفَق طلب — السعر متوفّرٌ أصلاً لـ' + sym + ' (الرسميّ بزرّ)');
       return;
     }
-    /* ③ لا سعرَ عندنا — الطلب هنا مبرَّرٌ تماماً */
-    sfFetchOfficial(sym, el, liq);
+    /* ④ لا سعرَ عندنا إطلاقاً — والأدمن وحده يملأ هذا الفراغ للجميع */
+    if (_isAdm()) { sfFetchOfficial(sym, el, liq); return; }
+    el.style.display = 'none';
+    if (liq) liq.style.display = 'none';
   }
 
   function sfFetchOfficial(sym, el, liq) {
@@ -23224,6 +23240,7 @@ switchTab = function (tab, btn) {
                ▸ فصار زرّاً: من أراده ضغط، ومن لم يُرِده لم يُكلّفنا شيئاً.
                  والقيمة لم تُنقَص — نُقل موضعُ القرار إلى صاحبه.
                ══════════════════════════════════════════════════════════════ */
+            if (!_isAdm()) { box.style.display = 'none'; return; }
             box.innerHTML = '<button type="button" style="width:100%;cursor:pointer;font-family:inherit;'
               + 'border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.1);color:#7dd3fc;'
               + 'border-radius:9px;padding:9px;font-size:12px;font-weight:800">💧 اعرض تدفّق السيولة</button>';
@@ -23256,8 +23273,65 @@ switchTab = function (tab, btn) {
      ══════════════════════════════════════════════════════════════════════ */
   const _qCache = new Map();   /* sym → { t, p:Promise } */
   const QUOTE_TTL = 10 * 60 * 1000;
+
+  /* ══════════════════════════════════════════════════════════════════════
+     👑 الأدمن يجلب · والمستخدم يقرأ — القاعدة نفسها، بلا استثناء
+
+     اتُّفق عليها ثمّ طُبّقت على نظرة السوق وحدها، ونُسيت في أسعار الأسهم:
+     فبقي كلُّ مستخدمٍ يفتح سهماً يُنفق طلباً من باقةٍ سقفُها ١٠٠ في اليوم.
+     ورُصد حيّاً: مستخدمٌ فتح سهماً فارتفع العدّاد.
+
+     ▸ فالآن: **لا يُنادي غيرُ الأدمن الباقةَ أبداً.** ما يجلبه الأدمن
+       يُخزَّن في `app_settings.sahmkPx` ويقرؤه الجميع بلا كلفة — وهو
+       نفسُ نمط `analysis_daily` و«الأعلى زخماً» ونظرةِ السوق.
+     ▸ وصلاحيةُ ستّ ساعات: أطولُ من نظرة السوق لأن سعر السهم يُقرأ
+       بجانب سعرنا الحيّ لا وحده، فقِدَمُه أهونُ من إنفاق الباقة.
+     ▸ والخريطة محدودةٌ بـ٢٠٠ رمز: أحدثُ ما فُتح يبقى، والأقدم يسقط —
+       فلا ينتفخ صفُّ الإعدادات الذي يجلبه كلُّ زائرٍ عند الإقلاع.
+     ══════════════════════════════════════════════════════════════════════ */
+  const PX_TTL = 6 * 3600 * 1000, PX_MAX = 200;
+  function _isAdm() { try { return typeof isSuperAdmin === 'function' && isSuperAdmin(); } catch (e) { return false; } }
+  function pxShared(sym) {
+    try {
+      const m = (appSettings && appSettings.sahmkPx) || null;
+      const o = m && m[String(sym).trim()];
+      if (o && o.t && (Date.now() - o.t) < PX_TTL) return o;
+    } catch (_) {}
+    return null;
+  }
+  let _pxTimer = null;
+  function pxPublish(sym, q) {
+    if (!_isAdm() || !q || q.price == null) return;
+    try {
+      const m = Object.assign({}, (appSettings && appSettings.sahmkPx) || {});
+      m[String(sym).trim()] = { t: Date.now(), p: +q.price,
+        c: (q.change_percent != null ? +q.change_percent : null),
+        d: !!q.is_delayed, L: q.liquidity || null };
+      /* ✂️ أبقِ الأحدث فقط */
+      const ks = Object.keys(m);
+      if (ks.length > PX_MAX) {
+        ks.sort(function (a, b) { return (m[b].t || 0) - (m[a].t || 0); });
+        const keep = {}; ks.slice(0, PX_MAX).forEach(function (k) { keep[k] = m[k]; });
+        for (const k in m) if (!keep[k]) delete m[k];
+      }
+      appSettings = Object.assign({}, appSettings, { sahmkPx: m });
+      /* 🕒 كتابةٌ واحدة كلّ عشر ثوانٍ مهما فُتح من أسهم — لا صفٌّ يُكتب لكل نقرة */
+      clearTimeout(_pxTimer);
+      _pxTimer = setTimeout(async function () {
+        try {
+          if (typeof sb === 'undefined' || !sb) return;
+          const r = await sb.from('app_settings').upsert({ id: 1, data: appSettings, updated_at: new Date().toISOString() });
+          if (r.error) console.warn('[sahmk free] لم تُنشر الأسعار:', r.error.message);
+          else console.info('[sahmk free] 🌐 نُشرت أسعار ' + Object.keys(appSettings.sahmkPx || {}).length + ' رمزاً للجميع');
+        } catch (_) {}
+      }, 10000);
+    } catch (_) {}
+  }
+
   function quoteOnce(sym) {
     const k = String(sym).trim();
+    /* 🚫 غير الأدمن لا يُنادي الباقة — يُرفض بلا طلب */
+    if (!_isAdm()) return Promise.reject(new Error('لا يُنادى غير الأدمن'));
     const hit = _qCache.get(k);
     if (hit && (Date.now() - hit.t) < QUOTE_TTL) {
       console.info('[sahmk free] ♻️ من الكاش — بلا طلبٍ جديد: ' + k);
@@ -23265,6 +23339,7 @@ switchTab = function (tab, btn) {
     }
     const p = api('quote/' + encodeURIComponent(k) + '/');
     _qCache.set(k, { t: Date.now(), p: p });
+    p.then(function (q) { pxPublish(k, q); }).catch(function () {});
     /* فشلٌ لا يُخزَّن: وإلا حرمنا أنفسنا من إعادة المحاولة عشر دقائق */
     p.catch(function () { const c = _qCache.get(k); if (c && c.p === p) _qCache.delete(k); });
     return p;

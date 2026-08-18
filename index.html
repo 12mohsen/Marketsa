@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-18-v527';
-console.log('%c[تداول بلس] البناء: 2026-08-18-v527 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-18-v528';
+console.log('%c[تداول بلس] البناء: 2026-08-18-v528 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-18-v527 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v528', '📜 تذكيرُ وثيقة العمل الحرّ — التاريخ معلنٌ في التذييل والشروط، **ووثيقةٌ منتهيةٌ معلنةٌ أسوأ من عدم إعلانها**: الأولى إقرارٌ مكتوبٌ بالعمل بلا ترخيصٍ ساري، والثانية سكوت. ▸ فبطاقةٌ في أعلى لوحة الأدمن تقول الحال بلونها: 🟢 سارية · 🟡 تنتهي بعد أقلّ من ٦٠ يوماً · 🔴 انتهت. ▸ وتنبيهٌ عابر مرّةً واحدة كلّ يوم عند الاقتراب — للأدمن وحده، فهو شأنٌ إداريّ لا يعني المستخدم. ▸ **وعند التجديد يُغيَّر `LICENSE_EXPIRY` وحده ويُرفع الملف** — لا شيء غيره. ▸ وإن ساء التاريخ أو غاب صمتت ومضت، فلا يُكسر شيء'],
     ['v527', '⚖️ التنويه التعليميّ — نافذةٌ تُعرض لكلّ زائر عند فتح التطبيق وتبقى تُعرض في كلّ دخولٍ حتى يُؤشّر «قرأتُ ولا تُظهره مرّة أخرى». ▸ **وغايتها البيّنة لا الإخبار:** أن يشهد المستخدم أنّه قرأ؛ فلو اختفت بعد أوّل ظهورٍ بلا فعلٍ منه لم يبقَ دليلٌ على أنّه رآها. ▸ ونصُّها يُقرّر أنّ المنصّة تعليمية تعرض ما تُقرّره مدارسُ التحليل، وأنّ ما فيها ليس توصيةً ولا استشارةً مرخّصة، وأنّ الماضي لا يضمن المستقبل، والقرارُ ومسؤوليّتُه على متّخذه. ▸ ولا تُزاحم نافذة الدخول ولا استعادة كلمة المرور — تنتظر وتُعيد المحاولة. ▸ ولا تُغلق بالنقر خارجها: تنويهٌ يُغلق بالخطأ لم يُقرأ. ▸ والمفتاح مرقّم `v1` فترقيتُه تُعيد العرض على الجميع — إذ إقرارٌ بنصٍّ قديم ليس إقراراً بالجديد'],
     ['v526', '🩺 رصدنا وضعَ القيد ولم نرصد رفعه — `_secSubRaw` تشترط `plan` في أوّل سطر، وأعلامُ القيد (الأهداف · الضبابيّ · المنبثقات) توضع على أقسامٍ **بلا اشتراك**. فتُقرأ الحالةُ السابقة فارغةً، ويُرى رفعُ القيد «لا شيء ⇐ لا شيء». ولذلك وصل `تلقائي ← مفتوحة` ولم يصل عكسُه. ▸ **ونصفُ الرصد أسوأ من انعدامه: يورث ثقةً في سجلٍّ ناقص.** ▸ والقراءة صارت خاماً أولاً و`_secSubRaw` للصيغة القديمة. ▸ وعُرِّب سطرُ شبكة الأمان: «📁 الرئيسية · 🎯 أهداف السهم: 🔓 مفتوحة ← ⚙️ تلقائي» — فالرسالة تُقرأ على الجوّال لا في مُنقِّح الأخطاء'],
     ['v525', '📁 القسمُ الوهميّ الذي تتخطّاه كلُّ حلقة — «الرئيسية» ليست قسماً: لا صفحةَ لها ولا اشتراك، وُجدت لتحمل خياراً واحداً هو قفلُ أهداف السهم في نافذة التفاصيل. ولأنّها ليست في `ADMIN_TAB_DEFS` فحلقةُ المقارنة تمرّ على الأقسام المعرَّفة ولا تمرّ عليها، فكان ضبطُها لا يُنتج فرقاً ولا رسالة. ▸ **وهذه علّةُ الوهميّ عامّةً: يُخزَّن كقسمٍ ويُعامَل كاستثناء، فتتخطّاه كلُّ حلقةٍ تُكتب بعده** — فذُكر صراحةً. ▸ وشبكةُ v524 صارت تُسمّي القسم بالعربية: `📁 الرئيسية · lock_targets: null → lock` بدل المسار الخام'],
@@ -2899,6 +2900,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
     /* 💳 عائدٌ من بوّابة الدفع؟ (?id=…) — بعد أن صارت الجلسة والتوكن جاهزين */
     try { if (typeof payCheckReturn === 'function') payCheckReturn(); } catch (e) {}
     try { eduNoticeMaybe(1600); } catch (e) {}
+    try { setTimeout(licNudgeMaybe, 4000); } catch (e) {}
   });
   sb.auth.onAuthStateChange((event, session) => {
     sbUser = session ? session.user : null;
@@ -3023,6 +3025,67 @@ function eduNoticeShow() {
   var ok = document.getElementById('eduNoticeOk');
   if (ok) ok.onclick = close;
   /* والنقر خارج الصندوق لا يُغلق: تنويهٌ يُغلق بالخطأ لم يُقرأ */
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   📜 وثيقة العمل الحرّ — تذكيرٌ بالتجديد قبل أن تنتهي
+
+   الوثيقة معلنةٌ في تذييل الموقع وشروطه، وهي سندُ الترخيص أمام ميسر
+   والعميل. **ووثيقةٌ منتهيةٌ معلنةٌ أسوأ من عدم إعلانها**: الأولى إقرارٌ
+   مكتوبٌ بأنّك تعمل بلا ترخيصٍ ساري، والثانية سكوت.
+
+   ▸ ولا تُنبّه إلا الأدمن: شأنٌ إداريّ لا يعني المستخدم.
+   ▸ ولا تكسر شيئاً إن غاب التاريخ أو ساء تنسيقه — تصمت وتمضي.
+   ▸ وعند التجديد: غيّر LICENSE_EXPIRY وحده وارفع. لا شيء غيره.
+   ══════════════════════════════════════════════════════════════════════ */
+var LICENSE_NO     = 'FL-378928062';
+var LICENSE_EXPIRY = '2027-06-07';   /* ← 📌 غيّرهُ عند التجديد ثمّ ارفع */
+var LICENSE_WARN_DAYS = 60;          /* متى يبدأ التنبيه */
+
+function licDaysLeft() {
+  try {
+    var d = new Date(LICENSE_EXPIRY + 'T23:59:59');
+    if (isNaN(d.getTime())) return null;
+    var now = (typeof nowTrusted === 'function') ? nowTrusted() : Date.now();
+    return Math.ceil((d.getTime() - now) / 86400000);
+  } catch (e) { return null; }
+}
+
+function licStatus() {
+  var n = licDaysLeft();
+  if (n === null) return null;
+  var ar = '';
+  try { ar = new Date(LICENSE_EXPIRY + 'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (_) { ar = LICENSE_EXPIRY; }
+  if (n < 0)  return { n: n, lvl: 'bad',  co: '#f87171', bg: 'rgba(248,113,113,.10)', bd: 'rgba(248,113,113,.45)', ic: '⛔', txt: 'انتهت الوثيقة منذ ' + Math.abs(n) + ' يوماً — جدّدها فوراً', ar: ar };
+  if (n <= LICENSE_WARN_DAYS) return { n: n, lvl: 'warn', co: '#fbbf24', bg: 'rgba(245,158,11,.10)', bd: 'rgba(245,158,11,.45)', ic: '⏳', txt: 'تنتهي الوثيقة بعد ' + n + ' يوماً — جدّدها قبل ذلك', ar: ar };
+  return { n: n, lvl: 'ok', co: '#4ade80', bg: 'rgba(34,197,94,.08)', bd: 'rgba(34,197,94,.35)', ic: '✅', txt: 'الوثيقة سارية — باقٍ ' + n + ' يوماً', ar: ar };
+}
+
+function licCardHtml() {
+  try {
+    var st = licStatus();
+    if (!st) return '';
+    return '<div style="background:' + st.bg + ';border:1px solid ' + st.bd + ';border-radius:14px;' +
+           'padding:11px 14px;margin-bottom:14px;font-size:12px;color:' + st.co + ';font-weight:700;line-height:1.9">' +
+             st.ic + ' وثيقة العمل الحرّ <span style="direction:ltr;display:inline-block">' + LICENSE_NO + '</span> — ' + st.txt +
+             '<div style="font-size:10.5px;color:var(--txt-m);font-weight:600;margin-top:2px">تاريخ الانتهاء: ' + st.ar +
+             (st.lvl === 'ok' ? '' : ' · بعد التجديد غيّر <code>LICENSE_EXPIRY</code> في الملف وارفعه') + '</div>' +
+           '</div>';
+  } catch (e) { return ''; }
+}
+
+/* 🔔 وتنبيهٌ مرّةً واحدة كلّ يوم — للأدمن وحده، وعند الاقتراب فقط */
+function licNudgeMaybe() {
+  try {
+    if (typeof isAdmin !== 'function' || !isAdmin()) return;
+    var st = licStatus();
+    if (!st || st.lvl === 'ok') return;
+    var today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem('tp_lic_nudge') === today) return;
+    localStorage.setItem('tp_lic_nudge', today);
+    if (typeof showToast === 'function') showToast(st.ic + ' ' + st.txt);
+    console.warn('[license] ' + st.txt + ' (' + LICENSE_NO + ' · ' + LICENSE_EXPIRY + ')');
+  } catch (e) {}
 }
 
 /* ── وضع استعادة كلمة المرور: بعد فتح رابط البريد ── */
@@ -6123,6 +6186,7 @@ function renderAdminSection() {
         onmousedown="this.style.transform='scale(.94)'" onmouseup="this.style.transform=''"
         onmouseleave="this.style.transform=''">🔄 تحديث البيانات</button>
     </div>
+    ${owner ? licCardHtml() : ''}
     ${supBanner}
 
     <style>

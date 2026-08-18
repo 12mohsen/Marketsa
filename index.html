@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-18-v526';
-console.log('%c[تداول بلس] البناء: 2026-08-18-v526 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-18-v527';
+console.log('%c[تداول بلس] البناء: 2026-08-18-v527 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-18-v526 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v527', '⚖️ التنويه التعليميّ — نافذةٌ تُعرض لكلّ زائر عند فتح التطبيق وتبقى تُعرض في كلّ دخولٍ حتى يُؤشّر «قرأتُ ولا تُظهره مرّة أخرى». ▸ **وغايتها البيّنة لا الإخبار:** أن يشهد المستخدم أنّه قرأ؛ فلو اختفت بعد أوّل ظهورٍ بلا فعلٍ منه لم يبقَ دليلٌ على أنّه رآها. ▸ ونصُّها يُقرّر أنّ المنصّة تعليمية تعرض ما تُقرّره مدارسُ التحليل، وأنّ ما فيها ليس توصيةً ولا استشارةً مرخّصة، وأنّ الماضي لا يضمن المستقبل، والقرارُ ومسؤوليّتُه على متّخذه. ▸ ولا تُزاحم نافذة الدخول ولا استعادة كلمة المرور — تنتظر وتُعيد المحاولة. ▸ ولا تُغلق بالنقر خارجها: تنويهٌ يُغلق بالخطأ لم يُقرأ. ▸ والمفتاح مرقّم `v1` فترقيتُه تُعيد العرض على الجميع — إذ إقرارٌ بنصٍّ قديم ليس إقراراً بالجديد'],
     ['v526', '🩺 رصدنا وضعَ القيد ولم نرصد رفعه — `_secSubRaw` تشترط `plan` في أوّل سطر، وأعلامُ القيد (الأهداف · الضبابيّ · المنبثقات) توضع على أقسامٍ **بلا اشتراك**. فتُقرأ الحالةُ السابقة فارغةً، ويُرى رفعُ القيد «لا شيء ⇐ لا شيء». ولذلك وصل `تلقائي ← مفتوحة` ولم يصل عكسُه. ▸ **ونصفُ الرصد أسوأ من انعدامه: يورث ثقةً في سجلٍّ ناقص.** ▸ والقراءة صارت خاماً أولاً و`_secSubRaw` للصيغة القديمة. ▸ وعُرِّب سطرُ شبكة الأمان: «📁 الرئيسية · 🎯 أهداف السهم: 🔓 مفتوحة ← ⚙️ تلقائي» — فالرسالة تُقرأ على الجوّال لا في مُنقِّح الأخطاء'],
     ['v525', '📁 القسمُ الوهميّ الذي تتخطّاه كلُّ حلقة — «الرئيسية» ليست قسماً: لا صفحةَ لها ولا اشتراك، وُجدت لتحمل خياراً واحداً هو قفلُ أهداف السهم في نافذة التفاصيل. ولأنّها ليست في `ADMIN_TAB_DEFS` فحلقةُ المقارنة تمرّ على الأقسام المعرَّفة ولا تمرّ عليها، فكان ضبطُها لا يُنتج فرقاً ولا رسالة. ▸ **وهذه علّةُ الوهميّ عامّةً: يُخزَّن كقسمٍ ويُعامَل كاستثناء، فتتخطّاه كلُّ حلقةٍ تُكتب بعده** — فذُكر صراحةً. ▸ وشبكةُ v524 صارت تُسمّي القسم بالعربية: `📁 الرئيسية · lock_targets: null → lock` بدل المسار الخام'],
     ['v524', '🔬 «بلا تفصيل» صارت تُسمّي الحقل — شبكةُ الأمان أنقذت الرسالة في v523 لكنّها قالت «حقلٌ غير مدرَج» بلا اسم، فبقي المجهول مجهولاً. الآن تُوازَن الحالتان **حقلاً حقلاً آلياً** ويُذكر ما تبدّل بمساره وقيمتيه: `subs.watchlist.show_pay: true → false`. ▸ **والوصفُ المكتوب بيدٍ ينسى، والموازنةُ الآلية لا تنسى شيئاً** — فصارت القائمة اليدوية تحسيناً للصياغة لا شرطاً للإخطار. ▸ وتُستثنى الطوابع الزمنية (`start` · `off_used`) فهي أثرُ القرار لا القرار. ▸ وأربعةُ حقولٍ في الرسالة على الأكثر، والباقي في الكونسول'],
@@ -2897,6 +2898,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
     } catch (e) {}
     /* 💳 عائدٌ من بوّابة الدفع؟ (?id=…) — بعد أن صارت الجلسة والتوكن جاهزين */
     try { if (typeof payCheckReturn === 'function') payCheckReturn(); } catch (e) {}
+    try { eduNoticeMaybe(1600); } catch (e) {}
   });
   sb.auth.onAuthStateChange((event, session) => {
     sbUser = session ? session.user : null;
@@ -2905,6 +2907,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
        حتى لا يرثها الحساب التالي أو يراها زائر على نفس الجهاز */
     if (event === 'SIGNED_OUT') { clearLocalUserData(); _lastSyncUid = null; }
     authUpdateUI();
+    if (event === 'SIGNED_IN') { try { eduNoticeMaybe(900); } catch (e) {} }
     /* 🛡️ مزامنة ذكية: TOKEN_REFRESHED وSIGNED_IN المتكررة لنفس المستخدم
        كانت تعيد المزامنة الكاملة كل مرة (عاصفة طلبات تستهلك حدود Supabase
        فيرد 429 وتسقط الجلسة ويُطرد المستخدم) — الآن نزامن فقط عند تغيّر
@@ -2920,6 +2923,106 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
   });
   /* إعدادات الأدمن العامة (إخفاء أقسام/صيانة/إعلان...) */
   loadAppSettings();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ⚖️ التنويه التعليميّ — يُعرض لكلّ زائر حتى يُقرّ به مرّةً واحدة
+
+   لماذا يبقى ظاهراً حتى الإقرار؟ لأنّ غايته ليست الإخبار بل **البيّنة**:
+   أن يشهد المستخدم أنّه قرأ. فلو أُخفي بعد أوّل ظهورٍ بلا فعلٍ منه، لم
+   يبقَ لنا دليلٌ على أنّه رآه أصلاً.
+
+   ▸ والمفتاح مرقّم (v1): فإن تغيّرت الصياغة تغييراً جوهرياً رُفع الرقم
+     فيُعاد العرض على الجميع — لأنّ إقراراً بنصٍّ قديم ليس إقراراً بالجديد.
+   ▸ ولا يُعرض فوق نافذة الدخول ولا استعادة كلمة المرور: يُعاد المحاولة
+     بعد قليل. فرسالةٌ تحجب عملاً يقوم به المستخدم تُقرأ إزعاجاً لا تنبيهاً.
+   ══════════════════════════════════════════════════════════════════════ */
+var EDU_ACK_KEY = 'tp_edu_ack_v1';
+var _eduShownThisLoad = false, _eduTries = 0;
+
+function eduNoticeMaybe(delay) {
+  setTimeout(function () {
+    try {
+      if (_eduShownThisLoad) return;
+      if (localStorage.getItem(EDU_ACK_KEY) === '1') return;
+      /* لا نُزاحم عملاً جارياً */
+      var busy = false;
+      try {
+        var ao = document.getElementById('authOverlay');
+        busy = !!(ao && ao.style.display && ao.style.display !== 'none')
+            || (typeof authRecovery !== 'undefined' && authRecovery);
+      } catch (_) {}
+      if (busy) { if (++_eduTries < 20) eduNoticeMaybe(3000); return; }
+      _eduShownThisLoad = true;
+      eduNoticeShow();
+    } catch (e) { console.warn('[edu] تعذّر عرض التنويه:', e && e.message); }
+  }, delay || 1400);
+}
+
+function eduNoticeShow() {
+  if (document.getElementById('eduNotice')) return;
+  var d = document.createElement('div');
+  d.id = 'eduNotice';
+  d.style.cssText = 'position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.86);' +
+                    'display:flex;align-items:center;justify-content:center;padding:18px;' +
+                    'backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)';
+  d.innerHTML =
+    '<div style="background:var(--surf);border:1px solid var(--bdr-modal);border-radius:20px;' +
+    'max-width:430px;width:100%;padding:26px 24px;text-align:right;direction:rtl;' +
+    'max-height:88vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.55)">' +
+
+      '<div style="text-align:center;margin-bottom:14px">' +
+        '<div style="font-size:40px;line-height:1">⚖️</div>' +
+        '<div style="font-size:17px;font-weight:800;margin-top:6px">تنويهٌ تعليميّ</div>' +
+        '<div style="font-size:11.5px;color:var(--txt-m);margin-top:3px">يُرجى قراءته قبل الاستخدام</div>' +
+      '</div>' +
+
+      '<div style="font-size:13px;color:var(--txt);line-height:2;margin-bottom:14px">' +
+        '<b>«تداول بلس»</b> منصّةٌ <b>تعليمية</b> تعرض أدوات التحليل ومؤشّراته كما تُقرّرها ' +
+        'مدارسُ التحليل المختلفة — الفنّيّ منها والأساسيّ — بغرض التثقيف وبناء المعرفة ' +
+        'وتمكين المستخدم من قراءة السوق بنفسه.' +
+      '</div>' +
+
+      '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.35);' +
+      'border-radius:14px;padding:13px 14px;margin-bottom:14px">' +
+        '<div style="font-size:12.5px;color:var(--txt);line-height:2">' +
+          '<div style="margin-bottom:6px">🚫 ما يُعرض هنا <b>ليس توصيةً</b> بشراء ورقةٍ مالية أو بيعها أو الاحتفاظ بها، ولا دعوةً إلى ذلك.</div>' +
+          '<div style="margin-bottom:6px">📋 ولا يُعدّ استشارةً مالية أو استثمارية، ولا نقدّم خدماتٍ استشارية مرخّصة.</div>' +
+          '<div style="margin-bottom:6px">📉 ونتائجُ الماضي — في أيّ نموذجٍ أو مؤشّر — لا تضمن نتائج المستقبل.</div>' +
+          '<div>⚖️ وقرارُ الاستثمار ومسؤوليّتُه الكاملة على متّخذه وحده.</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="font-size:11.5px;color:var(--txt-m);line-height:1.9;margin-bottom:16px">' +
+        'وللاطّلاع على التفاصيل: ' +
+        '<a href="terms.html" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:700">الشروط والأحكام</a>' +
+        ' · ' +
+        '<a href="privacy.html" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:700">سياسة الخصوصية</a>' +
+      '</div>' +
+
+      '<label for="eduNoticeOff" style="display:flex;align-items:center;gap:9px;font-size:12.5px;' +
+      'color:var(--txt);margin-bottom:16px;cursor:pointer;background:var(--surf-alt);' +
+      'border:1px solid var(--bdr);border-radius:12px;padding:11px 13px">' +
+        '<input type="checkbox" id="eduNoticeOff" style="width:17px;height:17px;cursor:pointer;flex:none">' +
+        '<span>قرأتُ التنويه وفهمته — <b>لا تُظهره مرّةً أخرى</b></span>' +
+      '</label>' +
+
+      '<button id="eduNoticeOk" style="width:100%;padding:13px;border-radius:13px;border:none;' +
+      'cursor:pointer;font-weight:800;font-size:14px;color:#fff;font-family:inherit;' +
+      'background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%)">متابعة</button>' +
+
+    '</div>';
+  document.body.appendChild(d);
+  var close = function () {
+    try {
+      var cb = document.getElementById('eduNoticeOff');
+      if (cb && cb.checked) localStorage.setItem(EDU_ACK_KEY, '1');
+    } catch (_) {}
+    try { d.remove(); } catch (_) { d.style.display = 'none'; }
+  };
+  var ok = document.getElementById('eduNoticeOk');
+  if (ok) ok.onclick = close;
+  /* والنقر خارج الصندوق لا يُغلق: تنويهٌ يُغلق بالخطأ لم يُقرأ */
 }
 
 /* ── وضع استعادة كلمة المرور: بعد فتح رابط البريد ── */

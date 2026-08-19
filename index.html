@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-18-v530';
-console.log('%c[تداول بلس] البناء: 2026-08-18-v530 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-18-v532';
+console.log('%c[تداول بلس] البناء: 2026-08-18-v532 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-18-v530 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v532', '🎚️ نفسُ الرقم بقراءتين متضادّتين — RSI 60.8 كان يُحسب **هابطاً** في العدّاد ويُكتب «منطقة إيجابية» في الإشارات، في نافذةٍ واحدة. والمذهبان معتبران: الارتداديّ يقرأ المرتفع تعباً، والزخميّ يقرأه قوّة — **ولا بيّنة عندنا ترجّح أحدهما**. ▸ فلم نختر مذهباً بلا دليل ولم نُبقِ التناقض: **يُصوَّت حيث لا يختلفان — فوق ٧٠ وتحت ٣٠ — ويُوصف بينهما وصفاً بلا صوت.** ▸ **وامتناعٌ عن الحكم حيث لا علم خيرٌ من حكمٍ يُنقض في السطر التالي.** ▸ ووصفُ الإشارات صار يوافق العدّ حرفاً بحرف'],
+    ['v531', '⚖️ خلاصةُ اتجاه السوق — تُصالح ولا تتنبّأ. كانت الشاشة تعرض أربعة أحكامٍ متنازعة في نافذةٍ واحدة: «٥٥٪ ضغط هابط» و«٦٧٪ احتمال هابط» وإشاراتٍ إيجابية وأهدافاً صاعدة **معاً**. ▸ فأُضيف شريطٌ واحد أعلاها يَعُدّ الإشارات ويذكر صوتَ كلٍّ منها، **و«متضارب» ناتجٌ مسموحٌ به لا يُجبَر على حسم** — فأصدقُ ما يُقال لمن ينظر أنّ السوق اليوم لا يقول شيئاً واضحاً، وذلك وحده يمنع دخولاً رديئاً. ▸ وأُزيل لفظ «احتمال»: الرقم مبنيٌّ على ثلاثة أصواتٍ لم تُعايَر على تاريخٍ قطّ، **ورقمٌ دقيقُ الصورة ضعيفُ الأصل أخطرُ من رقمٍ خشنٍ صادق** — فصار «وزن الإشارات». ▸ والحساب نفسه لم يُمسّ'],
     ['v530', '⏳ «باقي يوم» كانت تظلّ مكتوبةً أربعاً وعشرين ساعة — اشتراكٌ بقيت له **أربع ساعات** والشاشة تقول «باقي ١ يوم»، وظلّت تقولها منذ أمس، فظُنَّ العدّادُ متوقّفاً وبُحث عن علّةٍ لا وجود لها. والسبب `Math.ceil` على الأيام: كلُّ ما بين دقيقةٍ ويومٍ كامل يُكتب «١». ▸ **ومقياسٌ لا يتحرّك يُقرأ عطلاً لا دقّة** — فدون اليوم تُعرض الساعات، ودون الساعة الدقائق: «باقي ٤ ساعات» · «باقي ٢٠ دقيقة». ▸ في لوحة الأدمن وقائمة الحساب وبطاقة الاشتراك جميعاً'],
     ['v529', '⏳ الحفظُ كان يمنح أياماً لم يقصدها أحد — عدّادُ كلّ اشتراكٍ **منتهٍ** كان يُعاد تشغيله عند أيّ حفظ في «إدارة مستخدم»، ولو كان الحفظ لقفل هدفٍ لا علاقة له بالاشتراك. ▸ **ورُصد حيّاً بأخبث صورةٍ ممكنة:** اشتراكُ يومٍ وُضع عمداً لاختبار الانتهاء لم ينتهِ قطّ، لأنّ كلّ تعديلٍ على صاحبه يجدّده — **فبطل الاختبارُ الذي وُضع ليكشف الخلل، والعلّةُ تحرس نفسها.** ▸ واليوم لا يتجدّد منتهٍ إلا بخانةٍ صريحة «🔄 جدِّد المنتهية»، مطفأةٍ افتراضياً. ▸ ويبقى التجديد تلقائياً عند تفعيلٍ جديد أو تغيير الأيام — فذاك قصدٌ بيّنٌ لا لبس فيه'],
     ['v528', '📜 تذكيرُ وثيقة العمل الحرّ — التاريخ معلنٌ في التذييل والشروط، **ووثيقةٌ منتهيةٌ معلنةٌ أسوأ من عدم إعلانها**: الأولى إقرارٌ مكتوبٌ بالعمل بلا ترخيصٍ ساري، والثانية سكوت. ▸ فبطاقةٌ في أعلى لوحة الأدمن تقول الحال بلونها: 🟢 سارية · 🟡 تنتهي بعد أقلّ من ٦٠ يوماً · 🔴 انتهت. ▸ وتنبيهٌ عابر مرّةً واحدة كلّ يوم عند الاقتراب — للأدمن وحده، فهو شأنٌ إداريّ لا يعني المستخدم. ▸ **وعند التجديد يُغيَّر `LICENSE_EXPIRY` وحده ويُرفع الملف** — لا شيء غيره. ▸ وإن ساء التاريخ أو غاب صمتت ومضت، فلا يُكسر شيء'],
@@ -13086,18 +13088,47 @@ function pfAnalyzeRenderHist(histData, cur, highN, lowN, volN, fmt) {
     sl = +(effectiveCur * 0.94).toFixed(2);
   }
 
-  // ── احتمالات الاتجاه ──
+  /* ══════════════════════════════════════════════════════════════════
+     ⚖️ عدُّ الإشارات — لا «احتمال»
+
+     الشاشة كانت تقول «٦٧٪ احتمال الاتجاه الهابط»، والرقم مبنيٌّ على
+     **ثلاثة أصواتٍ لا أكثر** (٢ مقابل ١). و«احتمالٌ» بمنزلتين عشريتين
+     يمنح ثلاثةَ أصواتٍ ثقةً لم تُكتسب: لم نُعايره على تاريخٍ قطّ، ولم
+     نقس دقّته مرّةً واحدة.
+     ▸ **ورقمٌ دقيقُ الصورة ضعيفُ الأصل أخطرُ من رقمٍ خشنٍ صادق** — لأنّ
+       الناظر يثق بالصورة لا بالأصل.
+     ▸ فيبقى الحساب كما هو (لا نكسر شيئاً)، ويُضاف إليه صوتُ كلّ إشارة
+       ليُقرأ الحكمُ من مصدره، ويُصرَّح بالتضارب حين تتقارب الكفّتان.
+     ══════════════════════════════════════════════════════════════════ */
   let bullScore = 0, bearScore = 0;
+  const _votes = [];
+  const _v = (side, txt) => _votes.push({ s: side, t: txt });
+  /* ══════════════════════════════════════════════════════════════════
+     🎚️ RSI المتوسّط لا يُصوّت — لأنّ المدرستين تختلفان فيه
+
+     رُصد في نافذةٍ واحدة: RSI 60.8 يُحسب **هابطاً** في العدّاد ويُكتب
+     «منطقة إيجابية» في الإشارات. ونفس الرقم بقراءتين متضادّتين يُربك
+     الناظر ويُسقط ثقته في الشاشة كلّها.
+     ▸ والسبب أنّ المذهبين معتبران وكلاهما بلا حسم هنا: الارتداديّ يقرأ
+       المرتفع تعباً، والزخميّ يقرأه قوّة. **ولا بيّنة عندنا ترجّح أحدهما.**
+     ▸ فلا نختار مذهباً بلا دليل، ولا نُبقي التناقض: **يُصوَّت حيث لا
+       يختلفان — فوق ٧٠ وتحت ٣٠ — ويُوصف بينهما وصفاً بلا صوت.**
+     ▸ وامتناعٌ عن الحكم حيث لا علم خيرٌ من حكمٍ يُنقض في السطر التالي.
+     ══════════════════════════════════════════════════════════════════ */
   if (rsi !== null) {
-    if (rsi > 70) bearScore += 2; else if (rsi > 60) bearScore++;
-    else if (rsi < 30) bullScore += 2; else if (rsi < 40) bullScore++;
+    if (rsi > 70) { bearScore += 2; _v('bear', 'RSI ' + rsi + ' — شراءٌ مفرط'); }
+    else if (rsi < 30) { bullScore += 2; _v('bull', 'RSI ' + rsi + ' — بيعٌ مفرط'); }
+    else _v('neu', 'RSI ' + rsi + ' — داخل النطاق المحايد (٣٠–٧٠)');
   }
   if (momentum !== null) {
-    if (momentum > 3) bullScore += 2; else if (momentum > 1) bullScore++;
-    else if (momentum < -3) bearScore += 2; else if (momentum < -1) bearScore++;
+    if (momentum > 3) { bullScore += 2; _v('bull', 'زخمٌ قويّ +' + momentum + '%'); }
+    else if (momentum > 1) { bullScore++; _v('bull', 'زخمٌ موجب +' + momentum + '%'); }
+    else if (momentum < -3) { bearScore += 2; _v('bear', 'زخمٌ سالبٌ قويّ ' + momentum + '%'); }
+    else if (momentum < -1) { bearScore++; _v('bear', 'زخمٌ سالب ' + momentum + '%'); }
+    else _v('neu', 'زخمٌ ضعيف (' + momentum + '%)');
   }
-  if (sma20 !== null) { cur > sma20 ? bullScore++ : bearScore++; }
-  if (sma50 !== null) { cur > sma50 ? bullScore++ : bearScore++; }
+  if (sma20 !== null) { if (cur > sma20) { bullScore++; _v('bull', 'السعر فوق SMA20'); } else { bearScore++; _v('bear', 'السعر تحت SMA20'); } }
+  if (sma50 !== null) { if (cur > sma50) { bullScore++; _v('bull', 'السعر فوق SMA50'); } else { bearScore++; _v('bear', 'السعر تحت SMA50'); } }
   const total = bullScore + bearScore || 1;
   const bullPct = Math.round(bullScore/total*100);
   const bearPct = 100 - bullPct;
@@ -13111,10 +13142,13 @@ function pfAnalyzeRenderHist(histData, cur, highN, lowN, volN, fmt) {
     else signals.push('تحت SMA20 · ضغط بيعي');
   }
   if (rsi !== null) {
-    if (rsi > 70)      signals.push(`RSI ${rsi} — شراء مفرط`);
-    else if (rsi < 30) signals.push(`RSI ${rsi} — بيع مفرط`);
-    else if (rsi > 55) signals.push(`RSI ${rsi} — منطقة إيجابية`);
-    else               signals.push(`RSI ${rsi} — منطقة سلبية`);
+    /* 🎚️ الوصفُ هنا يوافق العدّ أعلاه: لا «إيجابية/سلبية» لرقمٍ محايد،
+       فذاك ما كان يناقض نفسه في الشاشة الواحدة. */
+    if (rsi > 70)      signals.push(`RSI ${rsi} — شراء مفرط · إجهاد صاعد`);
+    else if (rsi < 30) signals.push(`RSI ${rsi} — بيع مفرط · إجهاد هابط`);
+    else if (rsi > 55) signals.push(`RSI ${rsi} — أعلى الوسط · داخل النطاق المحايد`);
+    else if (rsi >= 45) signals.push(`RSI ${rsi} — وسط النطاق المحايد`);
+    else               signals.push(`RSI ${rsi} — أدنى الوسط · داخل النطاق المحايد`);
   }
   if (momentum !== null) {
     if (momentum > 2)       signals.push(`زخم إيجابي قوي (+${momentum}%)`);
@@ -13133,16 +13167,46 @@ function pfAnalyzeRenderHist(histData, cur, highN, lowN, volN, fmt) {
     else               { accumColor='#ef4444'; accumLabel='توزيع'; }
   }
 
+  /* ⚖️ الخلاصة: كفّتان متقاربتان ⇒ «متضارب» — ونُصرّح به.
+     فأصدقُ ما يُقال لمن ينظر أنّ السوق اليوم لا يقول شيئاً واضحاً،
+     وهذا وحده يمنع دخولاً رديئاً. والحسمُ المصطنع أسوأ من الصمت. */
+  const _nB = _votes.filter(v => v.s === 'bull').length;
+  const _nS = _votes.filter(v => v.s === 'bear').length;
+  const _nN = _votes.filter(v => v.s === 'neu').length;
+  const _gap = bullScore - bearScore;
+  const _vd = (!_votes.length)     ? { ic: '—',  t: 'لا بيانات كافية', c: '#94a3b8', bg: 'rgba(148,163,184,.10)', bd: 'rgba(148,163,184,.35)' }
+            : (Math.abs(_gap) <= 1) ? { ic: '⚖️', t: 'متضارب — لا اتجاه واضح', c: '#fbbf24', bg: 'rgba(245,158,11,.10)', bd: 'rgba(245,158,11,.45)' }
+            : (_gap >= 3)           ? { ic: '📈', t: 'ميلٌ صاعدٌ واضح', c: '#4ade80', bg: 'rgba(34,197,94,.10)', bd: 'rgba(34,197,94,.45)' }
+            : (_gap >= 2)           ? { ic: '📈', t: 'ميلٌ صاعد', c: '#86efac', bg: 'rgba(34,197,94,.08)', bd: 'rgba(34,197,94,.35)' }
+            : (_gap <= -3)          ? { ic: '📉', t: 'ميلٌ هابطٌ واضح', c: '#f87171', bg: 'rgba(248,113,113,.10)', bd: 'rgba(248,113,113,.45)' }
+            :                         { ic: '📉', t: 'ميلٌ هابط', c: '#fca5a5', bg: 'rgba(248,113,113,.08)', bd: 'rgba(248,113,113,.35)' };
+  const _pill = (n, co, lb) => '<span style="display:inline-block;background:' + co + '22;color:' + co +
+        ';border:1px solid ' + co + '66;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:800;margin-inline-start:5px">' + n + ' ' + lb + '</span>';
+  const _sumHtml =
+    '<div style="background:' + _vd.bg + ';border:1px solid ' + _vd.bd + ';border-radius:12px;padding:13px 14px;margin-bottom:14px">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
+        '<span style="font-size:20px;line-height:1">' + _vd.ic + '</span>' +
+        '<span style="font-size:14px;font-weight:800;color:' + _vd.c + '">' + _vd.t + '</span>' +
+        '<span style="margin-inline-start:auto">' + _pill(_nB, '#4ade80', 'صاعدة') + _pill(_nS, '#f87171', 'هابطة') + _pill(_nN, '#94a3b8', 'محايدة') + '</span>' +
+      '</div>' +
+      (_votes.length ? '<div style="font-size:10.5px;color:var(--txt-m);line-height:1.9;margin-top:7px">' +
+        _votes.map(v => (v.s === 'bull' ? '🟢 ' : v.s === 'bear' ? '🔴 ' : '⚪ ') + v.t).join(' · ') + '</div>' : '') +
+      '<div style="font-size:9.5px;color:var(--txt-m);margin-top:6px;line-height:1.7">' +
+        'عدُّ إشاراتٍ فنّية — لا احتمالٌ مقيس، ولا توصيةٌ بشراءٍ أو بيع.' +
+      '</div>' +
+    '</div>';
+
   el.innerHTML = `
+    ${_sumHtml}
     <!-- احتمالات الاتجاه -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div style="background:#3a1010;border:1px solid #7a2020;border-radius:10px;padding:14px;text-align:center">
         <div style="font-size:26px;font-weight:800;color:#f87171">${bearPct}%</div>
-        <div style="font-size:11px;color:#f87171;margin-top:3px">احتمال الاتجاه الهابط</div>
+        <div style="font-size:11px;color:#f87171;margin-top:3px">وزن الإشارات الهابطة</div>
       </div>
       <div style="background:#0d2a1a;border:1px solid #1a6a3a;border-radius:10px;padding:14px;text-align:center">
         <div style="font-size:26px;font-weight:800;color:#4ade80">${bullPct}%</div>
-        <div style="font-size:11px;color:#4ade80;margin-top:3px">احتمال الاتجاه الصاعد</div>
+        <div style="font-size:11px;color:#4ade80;margin-top:3px">وزن الإشارات الصاعدة</div>
       </div>
     </div>
     <div style="background:#111;border-radius:8px;overflow:hidden;height:8px;margin-bottom:14px">

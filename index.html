@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-18-v528';
-console.log('%c[تداول بلس] البناء: 2026-08-18-v528 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-18-v530';
+console.log('%c[تداول بلس] البناء: 2026-08-18-v530 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,8 @@ console.log('%c[تداول بلس] البناء: 2026-08-18-v528 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v530', '⏳ «باقي يوم» كانت تظلّ مكتوبةً أربعاً وعشرين ساعة — اشتراكٌ بقيت له **أربع ساعات** والشاشة تقول «باقي ١ يوم»، وظلّت تقولها منذ أمس، فظُنَّ العدّادُ متوقّفاً وبُحث عن علّةٍ لا وجود لها. والسبب `Math.ceil` على الأيام: كلُّ ما بين دقيقةٍ ويومٍ كامل يُكتب «١». ▸ **ومقياسٌ لا يتحرّك يُقرأ عطلاً لا دقّة** — فدون اليوم تُعرض الساعات، ودون الساعة الدقائق: «باقي ٤ ساعات» · «باقي ٢٠ دقيقة». ▸ في لوحة الأدمن وقائمة الحساب وبطاقة الاشتراك جميعاً'],
+    ['v529', '⏳ الحفظُ كان يمنح أياماً لم يقصدها أحد — عدّادُ كلّ اشتراكٍ **منتهٍ** كان يُعاد تشغيله عند أيّ حفظ في «إدارة مستخدم»، ولو كان الحفظ لقفل هدفٍ لا علاقة له بالاشتراك. ▸ **ورُصد حيّاً بأخبث صورةٍ ممكنة:** اشتراكُ يومٍ وُضع عمداً لاختبار الانتهاء لم ينتهِ قطّ، لأنّ كلّ تعديلٍ على صاحبه يجدّده — **فبطل الاختبارُ الذي وُضع ليكشف الخلل، والعلّةُ تحرس نفسها.** ▸ واليوم لا يتجدّد منتهٍ إلا بخانةٍ صريحة «🔄 جدِّد المنتهية»، مطفأةٍ افتراضياً. ▸ ويبقى التجديد تلقائياً عند تفعيلٍ جديد أو تغيير الأيام — فذاك قصدٌ بيّنٌ لا لبس فيه'],
     ['v528', '📜 تذكيرُ وثيقة العمل الحرّ — التاريخ معلنٌ في التذييل والشروط، **ووثيقةٌ منتهيةٌ معلنةٌ أسوأ من عدم إعلانها**: الأولى إقرارٌ مكتوبٌ بالعمل بلا ترخيصٍ ساري، والثانية سكوت. ▸ فبطاقةٌ في أعلى لوحة الأدمن تقول الحال بلونها: 🟢 سارية · 🟡 تنتهي بعد أقلّ من ٦٠ يوماً · 🔴 انتهت. ▸ وتنبيهٌ عابر مرّةً واحدة كلّ يوم عند الاقتراب — للأدمن وحده، فهو شأنٌ إداريّ لا يعني المستخدم. ▸ **وعند التجديد يُغيَّر `LICENSE_EXPIRY` وحده ويُرفع الملف** — لا شيء غيره. ▸ وإن ساء التاريخ أو غاب صمتت ومضت، فلا يُكسر شيء'],
     ['v527', '⚖️ التنويه التعليميّ — نافذةٌ تُعرض لكلّ زائر عند فتح التطبيق وتبقى تُعرض في كلّ دخولٍ حتى يُؤشّر «قرأتُ ولا تُظهره مرّة أخرى». ▸ **وغايتها البيّنة لا الإخبار:** أن يشهد المستخدم أنّه قرأ؛ فلو اختفت بعد أوّل ظهورٍ بلا فعلٍ منه لم يبقَ دليلٌ على أنّه رآها. ▸ ونصُّها يُقرّر أنّ المنصّة تعليمية تعرض ما تُقرّره مدارسُ التحليل، وأنّ ما فيها ليس توصيةً ولا استشارةً مرخّصة، وأنّ الماضي لا يضمن المستقبل، والقرارُ ومسؤوليّتُه على متّخذه. ▸ ولا تُزاحم نافذة الدخول ولا استعادة كلمة المرور — تنتظر وتُعيد المحاولة. ▸ ولا تُغلق بالنقر خارجها: تنويهٌ يُغلق بالخطأ لم يُقرأ. ▸ والمفتاح مرقّم `v1` فترقيتُه تُعيد العرض على الجميع — إذ إقرارٌ بنصٍّ قديم ليس إقراراً بالجديد'],
     ['v526', '🩺 رصدنا وضعَ القيد ولم نرصد رفعه — `_secSubRaw` تشترط `plan` في أوّل سطر، وأعلامُ القيد (الأهداف · الضبابيّ · المنبثقات) توضع على أقسامٍ **بلا اشتراك**. فتُقرأ الحالةُ السابقة فارغةً، ويُرى رفعُ القيد «لا شيء ⇐ لا شيء». ولذلك وصل `تلقائي ← مفتوحة` ولم يصل عكسُه. ▸ **ونصفُ الرصد أسوأ من انعدامه: يورث ثقةً في سجلٍّ ناقص.** ▸ والقراءة صارت خاماً أولاً و`_secSubRaw` للصيغة القديمة. ▸ وعُرِّب سطرُ شبكة الأمان: «📁 الرئيسية · 🎯 أهداف السهم: 🔓 مفتوحة ← ⚙️ تلقائي» — فالرسالة تُقرأ على الجوّال لا في مُنقِّح الأخطاء'],
@@ -3088,6 +3090,28 @@ function licNudgeMaybe() {
   } catch (e) {}
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   ⏳ «باقي يوم» تظلّ مكتوبةً أربعاً وعشرين ساعة
+
+   رُصد حيّاً: اشتراكٌ بقيت له أربعُ ساعات، والشاشة تقول «باقي ١ يوم» —
+   وظلّت تقولها منذ أمس. فظُنَّ العدّادُ متوقّفاً وبُحث عن علّةٍ لا وجود لها.
+   ▸ والسبب `Math.ceil` على الأيام: كلُّ ما بين دقيقةٍ ويومٍ كامل = «١».
+   ▸ **ومقياسٌ لا يتحرّك يُقرأ عطلاً، لا دقّةً.** فدون اليوم نعرض الساعات،
+     ودون الساعة الدقائق — فيرى الناظرُ الحركة فيطمئنّ.
+   ══════════════════════════════════════════════════════════════════════ */
+function _leftParts(x) {
+  try {
+    const ms = (x && x.msLeft != null) ? x.msLeft : null;
+    if (ms === null) return null;
+    if (ms <= 0) return { n: 0, u: '', txt: 'منتهٍ', short: 'منتهٍ' };
+    const H = 3600000, D = 24 * H;
+    if (ms >= D) { const n = Math.ceil(ms / D); return { n, u: 'يوم',   txt: 'باقي ' + n + ' يوم',   short: n + 'ي' }; }
+    if (ms >= H) { const n = Math.ceil(ms / H); return { n, u: 'ساعة',  txt: 'باقي ' + n + ' ساعة',  short: n + 'س' }; }
+    const n = Math.max(1, Math.ceil(ms / 60000));
+    return { n, u: 'دقيقة', txt: 'باقي ' + n + ' دقيقة', short: n + 'د' };
+  } catch (e) { return null; }
+}
+
 /* ── وضع استعادة كلمة المرور: بعد فتح رابط البريد ── */
 let authRecovery = false;
 function authStartRecovery() {
@@ -3200,7 +3224,7 @@ function _authRenderSubAndPay() {
         if (x.plan !== 'paid') return;
         const amt = x.price ? ` <b style="color:#fbbf24">${x.price} ر.س</b>` : '';
         if (x.expired) lines.push(`⏳ <span style="color:#f87171">${d.t}: منتهٍ</span>${amt}`);
-        else if (x.expiry) lines.push(`💳 <span style="color:${x.daysLeft <= 3 ? '#fbbf24' : '#4ade80'}">${d.t}: باقي ${x.daysLeft} يوم</span>${amt}`);
+        else if (x.expiry) lines.push(`💳 <span style="color:${x.daysLeft <= 3 ? '#fbbf24' : '#4ade80'}">${d.t}: ${(_leftParts(x) || {}).txt || ('باقي ' + x.daysLeft + ' يوم')}</span>${amt}`);
         else lines.push(`💳 <span style="color:#4ade80">${d.t}: مفعّل</span>${amt}`);
       });
       subEl.innerHTML = lines.length ? lines.join('<br>') : '🆓 اشتراكك الحالي: مجاني';
@@ -4574,18 +4598,19 @@ function _secSubRaw(r, k) {
 }
 function _subInfo(r, k) {
   const o = _secSubRaw(r, k || 'account');
-  if (!o || o.plan !== 'paid') return { plan: 'free', expired: false, daysLeft: null, expiry: null, price: 0, days: 0, showPay: true };
+  if (!o || o.plan !== 'paid') return { plan: 'free', expired: false, daysLeft: null, expiry: null, msLeft: null, price: 0, days: 0, showPay: true };
   const days = Number(o.days) || 0;
   const price = Number(o.price) || 0;
   const showPay = o.show_pay !== false;
   const start = o.start ? new Date(o.start) : null;
-  if (!start || days <= 0) return { plan: 'paid', expired: false, daysLeft: null, expiry: null, price, days, showPay };
+  if (!start || days <= 0) return { plan: 'paid', expired: false, daysLeft: null, expiry: null, msLeft: null, price, days, showPay };
   const expiry = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
   const msLeft = expiry.getTime() - nowTrusted();
   return {
     plan: 'paid',
     expired: msLeft <= 0,
     daysLeft: Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000))),
+    msLeft: msLeft,
     expiry, price, days, showPay,
   };
 }
@@ -8407,7 +8432,7 @@ function adminRenderUsers(query) {
         const x = _subInfo(r, d.k);
         if (x.plan !== 'paid') return;
         if (x.expired) anyExpired = true; else anyActivePaid = true;
-        subBits.push(`${d.t.replace(/^\S+\s/, '')}: ${x.expired ? '⏳منتهٍ' : (x.daysLeft !== null ? 'باقي ' + x.daysLeft + 'ي' : 'مفعّل')}${x.price ? ' (' + x.price + ' ر.س)' : ''}`);
+        subBits.push(`${d.t.replace(/^\S+\s/, '')}: ${x.expired ? '⏳منتهٍ' : (x.daysLeft !== null ? 'باقي ' + ((_leftParts(x) || {}).short || (x.daysLeft + 'ي')) : 'مفعّل')}${x.price ? ' (' + x.price + ' ر.س)' : ''}`);
       });
       /* ══════════════════════════════════════════════════════════════════
          🛡️ عضو فريق الإشراف لا تسري عليه الاشتراكات
@@ -9713,6 +9738,13 @@ function adminEditUser(email) {
       </div>
       <div style="font-size:11.5px;color:var(--txt-m);direction:ltr;text-align:left;margin-bottom:12px">${bulk ? (_admBulkTargets.slice(0, 6).join('<br>') + (_admBulkTargets.length > 6 ? `<br>… و${_admBulkTargets.length - 6} آخرين` : '')) : email}</div>
 
+      <label for="admRenewExpired" style="display:flex;align-items:center;gap:8px;font-size:11px;
+             color:var(--txt-m);background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;
+             padding:9px 11px;margin-bottom:10px;cursor:pointer;line-height:1.7">
+        <input type="checkbox" id="admRenewExpired" style="width:15px;height:15px;cursor:pointer;flex:none">
+        <span>🔄 جدِّد الاشتراكات <b>المنتهية</b> من الآن<br>
+          <span style="font-size:9.5px">مطفأةٌ افتراضياً — فالحفظ لا يمنح أياماً لم تقصدها</span></span>
+      </label>
       <div style="font-size:11.5px;font-weight:700;color:#fbbf24;margin-bottom:4px">الأقسام المتاحة له</div>
       <div style="border:1px solid var(--bdr);border-radius:12px;padding:8px 10px;margin-bottom:10px">
         <div style="display:flex;gap:6px;align-items:center;padding:2px 0">
@@ -9896,7 +9928,7 @@ function _admSubBlock(k, r) {
       <div style="font-size:9.5px;color:var(--txt-m);line-height:1.6">
         ${si.plan === 'paid' && si.expiry ? (si.expired
             ? '⏳ <span style="color:#f87171">منتهٍ</span> — الحفظ يجدّده من الآن'
-            : `✅ باقي <b style="color:#4ade80">${si.daysLeft}</b> يوم — ينتهي ${si.expiry.toLocaleDateString('ar-EG')}${si.price ? ` — <b style="color:#fbbf24">${si.price} ر.س</b>` : ''}`)
+            : `✅ باقي <b style="color:#4ade80">${(_leftParts(si) || {}).n != null ? _leftParts(si).n : si.daysLeft}</b> ${(_leftParts(si) || {}).u || 'يوم'} — ينتهي ${si.expiry.toLocaleDateString('ar-EG')}${si.price ? ` — <b style="color:#fbbf24">${si.price} ر.س</b>` : ''}`)
           : 'يبدأ العدّ عند الحفظ — وعند الانتهاء يُغلق هذا القسم تلقائياً'}
       </div>
     </div>
@@ -9988,15 +10020,29 @@ async function adminSaveUser() {
                  show_anyway: !!(_globHid && _ticked) };
   }
   const now = new Date().toISOString();
+  const _renewExp = (function () {
+    try { const c = document.getElementById('admRenewExpired'); return !!(c && c.checked); } catch (_) { return false; }
+  })();
   const rows = _admBulkTargets.map(email => {
     const prev = _admRestr[email] || {};
     const subs = {};
     for (const k of Object.keys(secIn)) {
       const cur = Object.assign({}, secIn[k]);
       const po = _secSubRaw(prev, k) || {};
-      /* يبدأ العدّ من الآن عند: تفعيل جديد، تغيير الأيام، أو تجديد منتهٍ */
+      /* ══════════════════════════════════════════════════════════════
+         ⏳ متى يُعاد تشغيل عدّاد الاشتراك؟
+
+         كان يُعاد لكلّ اشتراكٍ **منتهٍ** عند أيّ حفظ — ولو كان الحفظ
+         لقفل هدفٍ لا علاقة له بالاشتراك. فمن يُعدّل على مستخدمٍ منتهٍ
+         يمنحه مدّةً كاملةً مجّاناً وهو لا يدري.
+         ▸ ورُصد حيّاً: اشتراكُ يومٍ واحد لا ينتهي أبداً ما دام صاحبُه
+           تحت التعديل — **فيُبطَل الاختبارُ نفسُه الذي وُضع ليكشف الخلل.**
+         ▸ فالتجديد اليوم بقصدٍ صريح: خانة «🔄 جدِّد المنتهية»، مطفأة.
+         ▸ ويبقى تلقائياً عند تفعيلٍ جديد أو تغيير الأيام — فذاك فعلٌ
+           مقصودٌ بيّنٌ لا لبسَ فيه. */
       let start = po.start || null;
-      if (cur.plan === 'paid' && (po.plan !== 'paid' || Number(po.days) !== cur.days || !start || _subInfo(prev, k).expired)) start = now;
+      const _wasExp = (function () { try { return _subInfo(prev, k).expired; } catch (_) { return false; } })();
+      if (cur.plan === 'paid' && (po.plan !== 'paid' || Number(po.days) !== cur.days || !start || (_wasExp && _renewExp))) start = now;
       if (cur.plan !== 'paid') start = null;
       cur.start = start;
       if (popFlag.hasOwnProperty(k)) {

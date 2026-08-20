@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-19-v537';
-console.log('%c[تداول بلس] البناء: 2026-08-19-v537 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-19-v538';
+console.log('%c[تداول بلس] البناء: 2026-08-19-v538 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-19-v537 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v538', '🔍 بحثٌ سَلِس في «📨 طلبات الدعم» و«🛡️ سجل نشاط المشرفين» — ثلاثون طلباً وعشراتُ الإجراءات كانت تُقرأ بالتمرير وحده. **وسجلٌّ لا يُبحث فيه أرشيفٌ لا مرجع.** ▸ ولا يُعاد بناءُ شيء: يُخفى ما لا يُطابق ويُظهر ما يُطابق — **وأسلمُ إضافةٍ ما لا تلمس ما قبلها**. ▸ والنصُّ يمرّ بـ`arNormalize` كما في «أفضل فرص التداول»: تُتجاهل الهمزات والتشكيل و«ة/ه» و«ى/ي» والشرطات، وتُحوَّل الأرقام العربية — فمن كتب «الغى» وجد «أُلغي». ▸ وفي السجلّ يُبحث في **الصفوف** لا البطاقات، فالمطلوب عمليةٌ واحدة لا مشرفٌ كامل؛ وتُخفى البطاقة إن خلت، إلا أن يكون بريدُ المشرف نفسُه هو المطلوب. ▸ ويُعاد البحث بعد كلّ رسمٍ جديد — **ومرشّحٌ يُنسى عند التحديث أسوأ من غيابه، إذ يحسب الناظر أنّه ما زال يرى نتيجةَ بحثه.** ▸ ومع عدّاد النتائج وزرّ ✕ ومفتاح Escape'],
     ['v537', '🏷️ «١ مستخدم» ليست هويّة — وصلت رسالةُ تلجرام «👥 على: ١ مستخدم» فلم يُعرف مَن الواحد إلا بفتح السجلّ ومطابقة الوقت. والسبب أنّ الرسالة جاءت من **الخادم**، وهو يقرأ حقل الهدف في `admin_activity` وكنّا نكتب فيه العدد لا البريد — **فالمتصفّح يعرف الأسماء ويكتب العدد، ثمّ يُطلب من الخادم ما لم نُعطه.** ▸ **وسجلٌّ يعدّ ولا يُسمّي يُوثّق أنّ شيئاً جرى، لا ماذا جرى ولمن.** ▸ فصار يُسمّى حتى ثلاثة، ويُذكر الأوّل ومعه عدد الباقين فيما فوق — يبقى السطر مقروءاً ولا تضيع الهويّة'],
     ['v536', '✉️ الطزاجة تُقاس على الرسالة لا على الظرف — v535 قاس عمر العيّنة بختم **الحزمة**، والحزمة تُرفع من جديد كلّما أُضيف إليها سهم فيتجدّد ختمُ الظرف وما فيه على حاله. ورُصد حيّاً في الكونسول: «بثٌّ مشترك · عمره ٢٥ دقيقة» وفي داخله سهمٌ عمرُه **٦٠٦ دقيقة** — فمرّ الفحصَ وهو أقدمُ ما في الشاشة. ▸ **وختمٌ جماعيٌّ على محتوياتٍ مختلفة الأعمار يُخفي أقدمَها، إذ يرث الجميعُ عمرَ أحدثهم.** ▸ فصارت تُقرأ لحظةُ السهم نفسه — وهي التي كانت تقول الصدق في السطر المعروض («قبل ٦٠٦ دقيقة») بينما يقيس الحارسُ غيرها. ▸ وثبت بالفحص أنّ «سهمك» يملك الإغلاق: `quote/4192/` أعاد `price: 6.51`'],
     ['v535', '⏱️ «يُعرض» ليست «يُكتفى به» — كان البثّ إذا وُجد فيه السهم أنهى الأمر: يُعرض ولا يُسأل عن عمره، ومدّةُ القبول ١٢ ساعة. فعيّنةُ الحادية عشرة صباحاً تسود إلى منتصف الليل، **ويُغلق السوق بعدها بساعاتٍ فلا يظهر إغلاقُه أبداً** — وهذا ما رُصد: السيف غاليري أغلق ٦.٥١ والمعروض ٦.٥٦ من الصباح. ▸ **والباقة لم تكن العائق: ٣ طلباتٍ من ١٠٠ ذلك اليوم — منعنا أنفسنا عمّا نملكه ظنّاً أنّنا نقتصد.** ▸ فصارتا مدّتين: دون ٩٠ دقيقة يُكتفى بالبثّ بلا طلب، وفوقها يُعرض فوراً (فلا شاشةَ فارغة) ثمّ يُطلب الأحدث ويُستبدل عند وصوله، ويُحدَّث الجدول معه. ▸ وإن نفدت الميزانية أو فشل الطلب بقي المعروض كما هو — **فأسوأ حالٍ هو حالُ الأمس بعينه**'],
@@ -6290,6 +6291,13 @@ function renderAdminSection() {
              font-size:11px;color:var(--txt-m);text-align:center">⏳ جارٍ الحساب...</div>` : ''}
 
         <div style="${head}${owner ? ';margin-top:20px' : ''}">📨 طلبات الدعم <span id="admSupNew"></span></div>
+        <div style="position:relative;margin-bottom:5px">
+          <input id="admSupSearch" type="search" oninput="_admSearchSupport()" placeholder="🔍 ابحث في طلبات الدعم — بالبريد أو النصّ…"
+                 onkeydown="if(event.key==='Escape'){_admSearchClear('sup');}"
+                 style="width:100%;padding:8px 30px 8px 11px;border-radius:9px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;font-family:inherit;box-sizing:border-box">
+          <span onclick="_admSearchClear('sup')" title="مسح" style="position:absolute;inset-inline-end:9px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--txt-m);font-size:12px">✕</span>
+        </div>
+        <div id="admSupSearchN" style="font-size:10px;color:var(--txt-m);margin:0 0 6px;min-height:12px"></div>
         <div id="admSupportBox" style="max-height:300px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--bdr);
              border-radius:10px;padding:4px 10px;font-size:12px;color:var(--txt-m);
              word-break:break-word;overflow-wrap:anywhere">⏳ جارٍ التحميل...</div>
@@ -6308,6 +6316,13 @@ function renderAdminSection() {
           </div>
         </div>
         <div style="font-size:11px;color:var(--txt-m);line-height:1.7;margin-bottom:10px">يعرض لكل مشرف <b>ماذا عدّل</b> على المستخدمين و<b>ماذا ردّ</b> على الدعم. تُسجَّل الإجراءات تلقائياً.</div>
+        <div style="position:relative;margin-bottom:5px">
+          <input id="admActSearch" type="search" oninput="_admSearchActivity()" placeholder="🔍 ابحث في السجلّ — بالبريد أو نوع العملية…"
+                 onkeydown="if(event.key==='Escape'){_admSearchClear('act');}"
+                 style="width:100%;padding:8px 30px 8px 11px;border-radius:9px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:11.5px;font-family:inherit;box-sizing:border-box">
+          <span onclick="_admSearchClear('act')" title="مسح" style="position:absolute;inset-inline-end:9px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--txt-m);font-size:12px">✕</span>
+        </div>
+        <div id="admActSearchN" style="font-size:10px;color:var(--txt-m);margin:0 0 6px;min-height:12px"></div>
         <div id="admActivityBox" style="font-size:12px;color:var(--txt-m)">⏳ جارٍ التحميل...</div>
       </div>` : ''}
 
@@ -7627,7 +7642,7 @@ async function adminLoadSupport() {
       <!-- 🔎 الإخفات كان .6 فيُطفئ سطر المعلومات مرّتين: لونٌ باهتٌ على
            بطاقةٍ مُخفتة. و.85 يكفي للتمييز بين المُجاب والجديد بلا إتعاب العين.
            ⚠️ والمُصعَّدة لا تُخفَت أبداً مهما كانت حالتها — الإخفاتُ نقيضُ الغرض. -->
-      <div style="padding:9px 2px;border-bottom:1px solid var(--bdr);
+      <div class="admSupRow" style="padding:9px 2px;border-bottom:1px solid var(--bdr);
                   ${(r.status === 'new' || r.escalated) ? '' : 'opacity:.85'}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div style="min-width:0">
@@ -7691,6 +7706,7 @@ async function adminLoadSupport() {
         </div>
       </div>`;
     }).join('');
+    try { _admSearchSupport(); } catch (_) {}   /* الرسمُ الجديد يمحو الإخفاء */
   } catch (e) {
     box.innerHTML = '<div style="padding:10px;line-height:1.8">⚠️ نفّذ SQL جدول support_requests أولاً</div>';
   }
@@ -9386,7 +9402,7 @@ function adminRenderActivity() {
     items.forEach(a => { const m = _ACT_META[a.action]; if (m) c[m.grp]++; });
     const isSup = items[0].actor_role === 'supervisor';
     return `
-    <div style="border:1px solid var(--bdr);border-radius:12px;padding:11px 12px;margin-bottom:10px;background:var(--surf-alt)">
+    <div class="admActCard" style="border:1px solid var(--bdr);border-radius:12px;padding:11px 12px;margin-bottom:10px;background:var(--surf-alt)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px">
         <div style="font-size:12px;font-weight:800;color:var(--txt);direction:ltr;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis">
           ${email} ${isSup
@@ -9401,12 +9417,76 @@ function adminRenderActivity() {
       </div>
       <div style="max-height:230px;overflow-y:auto;border-top:1px dashed var(--bdr);padding-top:6px">
         ${items.slice(0, 80).map(a => { const m = _ACT_META[a.action] || { icon:'•', label:a.action };
-          return `<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11px;line-height:1.6">
+          return `<div class="admActRow" style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11px;line-height:1.6">
             <span>${m.icon} <b style="color:var(--txt)">${m.label}</b></span>${a.target ? ` · <span style="direction:ltr">${String(a.target).replace(/</g,'&lt;')}</span>` : ''}<span style="color:var(--txt-m);font-size:9.5px"> · ${new Date(a.created_at).toLocaleString('ar',{dateStyle:'short',timeStyle:'short'})}</span>${a.details ? `<div style="color:var(--txt-m);font-size:10px;margin-top:1px;word-break:break-word;overflow-wrap:anywhere">${String(a.details).replace(/^\[tg✓\]\s*/,'').replace(/</g,'&lt;')}</div>` : ''}
           </div>`; }).join('')}
       </div>
     </div>`;
   }).join('');
+  try { _admSearchActivity(); } catch (_) {}   /* الرسمُ الجديد يمحو الإخفاء */
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   🔍 بحثٌ في «طلبات الدعم» و«سجل نشاط المشرفين»
+
+   ثلاثون طلباً وعشراتُ الإجراءات تُقرأ بالتمرير وحده، ومن أراد عمليةً
+   بعينها لم يجد إلا أن يمرّ عليها كلِّها. **وسجلٌّ لا يُبحث فيه أرشيفٌ
+   لا مرجع.**
+
+   ▸ ولا يُعاد بناءُ شيء: يُخفى ما لا يُطابق ويُظهر ما يُطابق. فالمنطقُ
+     الذي يبني البطاقات لم يُمسّ — **وأسلمُ إضافةٍ ما لا تلمس ما قبلها**.
+   ▸ ويمرّ النصّ بـ`arNormalize` — نفس ما في «أفضل فرص التداول»: تُتجاهل
+     الهمزات والتشكيل و«ة/ه» و«ى/ي» والشرطات، وتُحوَّل الأرقام العربية.
+     فمن كتب «الغى» وجد «أُلغي»، ومن كتب «تجربه» وجد «تجربة».
+   ▸ وفي السجلّ يُبحث في الصفوف لا في البطاقات: البطاقةُ لمشرفٍ كامل،
+     والمطلوبُ عمليةٌ واحدة. وتُخفى البطاقة إن لم يبقَ فيها صفّ — إلا أن
+     يكون بريدُ المشرف نفسُه هو المطلوب، فتُعرض كاملةً.
+   ▸ ويُعاد البحثُ بعد كلّ رسمٍ جديد، وإلا عاد المخفيُّ ظاهراً عند أوّل
+     تحديث — **ومرشّحٌ يُنسى عند التحديث أسوأ من غيابه، لأنّ الناظر
+     يحسب أنّه ما زال يرى نتيجةَ بحثه.**
+   ══════════════════════════════════════════════════════════════════════ */
+function _admSearchSupport() {
+  try {
+    const inp = document.getElementById('admSupSearch'), box = document.getElementById('admSupportBox');
+    if (!inp || !box) return;
+    const q = arNormalize(inp.value || '');
+    let n = 0, tot = 0;
+    box.querySelectorAll('.admSupRow').forEach(el => {
+      tot++;
+      const hit = !q || arNormalize(el.textContent || '').includes(q);
+      el.style.display = hit ? '' : 'none';
+      if (hit) n++;
+    });
+    const c = document.getElementById('admSupSearchN');
+    if (c) c.textContent = q ? (n ? '🔎 ' + n + ' من ' + tot : '— لا نتائج') : '';
+  } catch (e) {}
+}
+function _admSearchActivity() {
+  try {
+    const inp = document.getElementById('admActSearch'), box = document.getElementById('admActivityBox');
+    if (!inp || !box) return;
+    const q = arNormalize(inp.value || '');
+    let n = 0, tot = 0;
+    box.querySelectorAll('.admActCard').forEach(card => {
+      const head = card.firstElementChild;
+      const byActor = !!q && arNormalize((head && head.textContent) || '').includes(q);
+      let shown = 0;
+      card.querySelectorAll('.admActRow').forEach(row => {
+        tot++;
+        const hit = !q || byActor || arNormalize(row.textContent || '').includes(q);
+        row.style.display = hit ? '' : 'none';
+        if (hit) { shown++; n++; }
+      });
+      card.style.display = (!q || shown) ? '' : 'none';
+    });
+    const c = document.getElementById('admActSearchN');
+    if (c) c.textContent = q ? (n ? '🔎 ' + n + ' من ' + tot : '— لا نتائج') : '';
+  } catch (e) {}
+}
+function _admSearchClear(which) {
+  const el = document.getElementById(which === 'sup' ? 'admSupSearch' : 'admActSearch');
+  if (el) { el.value = ''; el.focus(); }
+  (which === 'sup' ? _admSearchSupport : _admSearchActivity)();
 }
 
 /* رسالة خطأ ذكية لعمليات الأدمن: تكشف انتهاء الجلسة */

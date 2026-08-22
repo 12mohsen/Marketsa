@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-22-v548';
-console.log('%c[تداول بلس] البناء: 2026-08-22-v548 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-22-v549';
+console.log('%c[تداول بلس] البناء: 2026-08-22-v549 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-22-v548 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v549', '🎁 التجربة المجانية التلقائية — بشروطها الخمسة. **①** مفتاحٌ وعددُ أيامٍ في لوحة الأدمن لا رقمٌ محفور، فإن ظهر استنزافٌ أُطفئت في ثانية بلا رفع. **②** تُمنح عند **تأكيد البريد** لا عند التسجيل، فلا يحصدها بريدٌ وهميّ — والتأكيد حارسٌ مجّانيّ عندك أصلاً. **③** ونافذةٌ تُخبر صاحبها فور المنح: **تجربةٌ لا يعلم بها صاحبُها لا تُحوّل أحداً** — ينتهي وقتُه فيظنّ التطبيق تعطّل ويمضي وهو يلوم المنتج. **⑤** ومرّةً واحدة لكلّ بريد أبداً، بختمٍ في عمودٍ مستقلّ لا يُمحى بتعديل الاشتراك. ▸ **والحكم كلُّه على الخادم** (`claim_trial()` بـ`security definer`): لأنّ منحَها من المتصفّح يعني فتحَ الكتابة على القيود للمستخدم نفسه — **أي منحَه القدرة على منح نفسه**. ▸ ولا تُكتب فوق مشترٍ قائم، وإطفاؤها يمنع الجديدة ولا يسحب جاريةً: **والرجوعُ في المنحة أسوأ من منعها**'],
     ['v548', '🎁 المنحة على «⛔ التطبيق كله» كانت لا تُرى — تصنيفُ المستخدمين كان يفحص `ADMIN_TAB_DEFS` وهي **الأقسام وحدها**، ولا تشمل `account` («التطبيق كله») وزرُّ «🎁 تجربة مجانية» يكتب عليه بالضبط. **فمن مُنح سبعةَ أيامٍ على التطبيق كلّه يظهر «🆓 مجّاني» ويُعدّ في خانة من لم يُمنح شيئاً** — فيُقرأ الرقمُ الذي يُبنى عليه قرارُ التسعير على غير حقيقته. ▸ **وقائمةٌ تُصنّف الناس ثمّ تُخطئ صنفاً كاملاً أسوأ من قائمةٍ لا تُصنّف، لأنّ الأولى تُطمئن.** ▸ والشارة صارت تحمل المدّة: «🎁 تجربة — باقٍ ٥ أيام» · «🎁 مُمنَح — دائم»، وتحمرّ عند ثلاثة أيامٍ فأقلّ ⚠️. ▸ **ومنحةٌ بلا تاريخٍ تُنسى، وتاريخٌ بلا عرضٍ لا يُستثمر** — فالثلاثة الأخيرة هي موضع سؤال: أتشترك؟'],
     ['v547', '📬 رسالةُ التأكيد تصل «غير الهام» — والمستخدم لا يعرف. بلاغٌ جرّبه المالك على نفسه: أنشأ حساباً **أربع مرّات في اثنتي عشرة دقيقة** لأنّ الرسالة لم تظهر في الوارد، ثمّ تذكّر أنّها في «غير الهام». ▸ **ومن لا يتذكّر — وهو الأكثر — يظنّ التسجيل فشل فيغادر ولا يعود. وأغلى مستخدمٍ تخسره هو الذي أنشأ حسابه ثمّ لم يُكمل: دفعتَ ثمن جذبه كاملاً ولم تحصد منه شيئاً.** ▸ فبدل الجملة العابرة: شاشةٌ صريحة تقول أين يبحث، وزرٌّ يفتح مجلّد «غير الهام» مباشرةً حسب مزوّد بريده (Outlook · Gmail · Yahoo · iCloud)، وإعادةُ إرسالٍ بمهلة، ونصيحتان: «ليست بريداً غير هام» وإضافةُ العنوان لجهات الاتصال. ▸ **والمهلة ستّون ثانية عمداً: الضغطُ المتكرّر لا يُسرّع البريد لكنّه يرفع احتمال تصنيفه مزعجاً — فيصير العلاج جزءاً من الداء**'],
     ['v546', '🪪 بطاقةُ دخولٍ لا تموت بموت صاحبها — رُصد حيّاً: حُذف الحساب من التطبيق ومن Supabase، ثمّ حدّث المستخدمُ صفحتَه المفتوحة **فدخل كأنّ شيئاً لم يكن**، بل أُعيد إنشاء ملفّه فظهر «سجّل اليوم · متصل الآن». والسبب أنّ التوكن موقَّعٌ سلفاً وصالحٌ حتى انتهاء مدّته، والتطبيق يقرؤه من التخزين المحلّي ويصدّقه بلا أن يسأل الخادم: هل صاحبُه باقٍ؟ ▸ **وحذفٌ لا يُنهي جلسةً قائمة ليس حذفاً — هو تأجيلٌ ساعة.** والأخطر أنّ المزامنة تكتب الملفّ من جديد **فيُبعث المحذوف بيد التطبيق** ويُحسب مسجّلاً جديداً فيُفسد عدّ العملاء. ▸ فصار يُسأل الخادم مباشرةً (`auth.getUser()` — نداءٌ حقيقيّ لا قراءةُ توكن) عند المزامنة وعند تعثّر النبضة وكلّ خمس دقائق؛ فأقصى ما يبقى المحذوف داخلاً **خمس دقائق لا ساعة**. ▸ **ويُفرَّق بين إنكارٍ وانقطاع: عطلُ الشبكة ليس حذفاً** — فلا يُطرد أحدٌ لأنّ اتّصاله تعثّر'],
@@ -2845,6 +2846,57 @@ window.authResendConfirm = async function () {
     showToast('⚠️ تعذّر إعادة الإرسال: ' + ((e && e.message) || e));
   }
 };
+
+/* ══════════════════════════════════════════════════════════════════════
+   🎁 المطالبة بالتجربة التلقائية — نداءٌ واحد، والحكمُ على الخادم
+
+   لا يُقرّر المتصفّح شيئاً: لا يفحص المفتاح ولا المدّة ولا سبقَ المنح.
+   ينادي `claim_trial()` فتفحص هي كلَّ شرطٍ وتكتب أو تمتنع.
+   ▸ **ومنحُ اشتراكٍ من المتصفّح يعني فتحَ الكتابة على القيود للمستخدم
+     نفسه — أي منحَه القدرة على منح نفسه.** فبقيت مغلقةً كما هي.
+   ▸ ويُنادى مرّةً في الجلسة: النداءُ رخيص، لكنّ تكرارَه بلا داعٍ عادة.
+   ▸ ③ ويُخبَر صاحبُه فوراً — **فتجربةٌ لا يعلم بها صاحبُها لا تُحوّل
+     أحداً**؛ ينتهي وقتُه فيظنّ التطبيق تعطّل، ويمضي وهو يلوم المنتج.
+   ══════════════════════════════════════════════════════════════════════ */
+let _trialAsked = false;
+async function _claimTrialOnce() {
+  if (_trialAsked || !sb || !sbUser) return;
+  _trialAsked = true;
+  try {
+    const { data, error } = await sb.rpc('claim_trial');
+    if (error) {
+      if (!/not exist|schema cache|404/i.test(String(error.message || ''))) {
+        console.warn('[تجربة] تعذّرت المطالبة:', error.message || error);
+      } else console.info('[تجربة] الدالّة غير منفَّذة بعد — نفّذ التجربة_التلقائية.sql');
+      return;
+    }
+    if (!data || !data.ok) { console.info('[تجربة] لم تُمنح:', (data && data.why) || '—'); return; }
+    console.info('[تجربة] 🎁 مُنحت ' + data.days + ' يوماً');
+    try { if (typeof refreshUserRestrictions === 'function') await refreshUserRestrictions(); } catch (_) {}
+    _trialWelcome(data.days);
+  } catch (e) { console.warn('[تجربة] استثناء:', (e && e.message) || e); }
+}
+function _trialWelcome(days) {
+  try {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;z-index:1290;background:rgba(0,0,0,.82);display:flex;'
+                    + 'align-items:center;justify-content:center;padding:18px';
+    d.innerHTML =
+      '<div style="background:var(--surf);border:1px solid rgba(34,197,94,.5);border-radius:20px;'
+      + 'max-width:360px;width:100%;padding:26px 22px;text-align:center;direction:rtl">'
+      + '<div style="font-size:42px;line-height:1">🎁</div>'
+      + '<div style="font-size:17px;font-weight:800;color:#4ade80;margin:8px 0 4px">تجربتك المجانية بدأت</div>'
+      + '<div style="font-size:13px;color:var(--txt);line-height:2;margin-bottom:14px">'
+      + '<b>' + days + ' أيام</b> بكلّ الأقسام مفتوحة — بلا بطاقة ولا التزام.<br>'
+      + '<span style="font-size:11.5px;color:var(--txt-m)">وبعدها يعود التطبيق مجّانياً بأقسامه الأساسية، ولك أن تشترك متى شئت.</span>'
+      + '</div>'
+      + '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:12px;'
+      + 'border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:13.5px;color:#fff;'
+      + 'font-family:inherit;background:linear-gradient(135deg,#166534,#22c55e)">ابدأ الآن</button>'
+      + '</div>';
+    document.body.appendChild(d);
+  } catch (e) {}
+}
 
 /* التقاط العودة من رابط تأكيد البريد (قبل أن ينظف Supabase الرابط) */
 const _authFromConfirm = location.hash.includes('type=signup');
@@ -4965,6 +5017,8 @@ async function syncProfileAndRestrictions() {
   _startSubWatch();
   /* 🪪 لا يُكتب ملفٌّ لحسابٍ أنكره الخادم — وإلا بُعث المحذوف بيدنا */
   if (!(await _authVerifyLive('sync'))) return;
+  /* 🎁 وتُطلب التجربة التلقائية — الخادمُ يقرّر، والمتصفّح ينادي فقط */
+  try { await _claimTrialOnce(); } catch (_) {}
   /* سجّل ملف المستخدم (ليظهر في قائمة الأدمن) */
   try {
     /* فشلُه يُخفي المستخدم عن قائمة الأدمن كلّياً — فلا يُدار ولا يُسعَّر */
@@ -6520,6 +6574,26 @@ function renderAdminSection() {
           value="${(s.signupClosedMsg || '').replace(/"/g, '&quot;')}"
           style="width:100%;box-sizing:border-box;margin:2px 0 10px;padding:10px 12px;border-radius:9px;
                  border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:12.5px;outline:none">
+        <!-- 🎁 التجربة التلقائية — مفتاحٌ لا رقمٌ محفور -->
+        <label style="${row};cursor:pointer">
+          <span>🎁 منح تجربة مجانية تلقائياً عند تأكيد البريد
+            <div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px;line-height:1.7">
+              تُمنح <b>مرّةً واحدة لكلّ بريد أبداً</b>، وبعد تأكيده لا عند التسجيل — فلا يحصدها بريدٌ وهميّ.
+              ولا تُكتب فوق مشترٍ قائم. وإطفاؤها يمنع الجديدة ولا يسحب تجربةً جارية.
+              <b style="color:#fbbf24">⚠️ تحتاج تنفيذ <code>التجربة_التلقائية.sql</code> مرّةً واحدة.</b>
+            </div>
+          </span>
+          <input type="checkbox" id="admAutoTrial" ${(s.autoTrial && s.autoTrial.on) ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
+        </label>
+        <label style="${row}">
+          <span>📅 عدد أيام التجربة التلقائية
+            <div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px;line-height:1.7">
+              ٧ أيام تضمن <b>خمس جلساتٍ فعلية</b> مهما كان يوم تسجيله — والسوق يعمل الأحد إلى الخميس.
+            </div>
+          </span>
+          <input type="number" id="admAutoTrialDays" min="1" max="90" value="${(s.autoTrial && s.autoTrial.days) || 7}"
+            style="width:70px;padding:7px 9px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-size:12.5px;text-align:center;font-family:inherit">
+        </label>
         <label style="${row};cursor:pointer">
           <span>🗓️ إظهار «المفكرة» في الرئيسية (شريط أحداث التوزيعات + زر التبديل)</span>
           <input type="checkbox" id="admShowAgenda" ${s.showAgenda !== false ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
@@ -10577,6 +10651,10 @@ async function adminSave(btn) {
     guestHiddenTabs: tabKeys.filter(k => { const el = document.getElementById('admGMode-' + k); return el && el.value === 'hide'; }),
     requireLogin:   document.getElementById('admRequireLogin').checked,
     signupClosed:   (function () { const e = document.getElementById('admSignupClosed'); return e ? e.checked : false; })(),
+    autoTrial: (function () {
+      const on = document.getElementById('admAutoTrial'), d = document.getElementById('admAutoTrialDays');
+      return { on: on ? !!on.checked : false, days: Math.max(1, Math.min(90, parseInt((d && d.value) || '7', 10) || 7)) };
+    })(),
     signupClosedMsg:(function () { const e = document.getElementById('admSignupMsg'); return e ? e.value.trim() : ''; })(),
     showAgenda:     (function () { const e = document.getElementById('admShowAgenda'); return e ? e.checked : true; })(),
     showMarketOverview: document.getElementById('admMarketOverview').checked,

@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-20-v544';
-console.log('%c[تداول بلس] البناء: 2026-08-20-v544 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-20-v545';
+console.log('%c[تداول بلس] البناء: 2026-08-20-v545 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-20-v544 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v545', '📊 «هل انتفع المستخدمون؟» — يُجاب بما فعلوه لا بما يقولونه. **الاستفتاء يقيس ما يقولون، والبيانات تقيس ما يفعلون؛ والثاني أصدق حين يختلفان، وهما يختلفان كثيراً.** ▸ خمسةُ مقاييس في لوحة الأدمن من `payments` و`profiles` المحمَّلَين أصلاً — بلا جدولٍ جديد ولا نداءٍ إضافيّ: **🔁 نسبة التجديد** (مَن دفع مرّتين انتفع · ومرّةً واحدة قد تكون فضولاً) · **⏳ متوسّط عمر المشترك** · **🚪 انقطعوا** · **🔇 دفعوا ولم يعودوا** (أخطرُ صنف: لا يشكو ولا يجدّد، فلا تعرف أنّك خسرته إلا متأخّراً) · **💰 الصافي بعد الاسترداد**. ▸ والمبالغ صافيةٌ لا إجمالية، ومن استُردّ كاملاً لا يُعدّ عميلاً. ▸ **ونسبةٌ محسوبةٌ على ثلاثة عملاء تُوهم بيقينٍ لا تملكه** — فيُذكر عدد الأساس دائماً، وتظهر «⚠️ مؤشّرٌ لا حكم» دون خمسة'],
     ['v544', '↩️ أُعيد عدّاد «📈 صاعد بلا إعداد» — أُزيل في v543 لأنّه فُهم رقماً مكتوباً لا عدداً محسوباً (٨٥ سهماً قُرئت ٨٥٪). **وسوءُ الفهم كان في السياق لا في الرقم**، والعدد نفسُه نافع: يقول كم سهماً تنتظر إعدادها اليوم. ▸ و`noCount` باقٍ في `btn` لمن يحتاجه لاحقاً'],
     ['v543', '🔢 شارة «📈 صاعد بلا إعداد» بلا رقم — عددُها بالعشرات في أيّ يوم، **ورقمٌ كبيرٌ بطبعه لا يُخبر بشيء إلا الازدحام**. فبقيت الشارة ويُقرأ العدد من القائمة نفسها حين تُفتح. وبقيت بقيّة الشارات بأعدادها، فأعدادُها تعني شيئاً'],
     ['v542', '📈⚡ شارتان في اللوحة الموحّدة — «صاعد بلا إعداد» و«تحرّك حادّ». ▸ **الأولى قائمةُ الغد لا قائمةُ اليوم:** كان الشريط يجيب «ما الذي أفعله الآن؟» ولا يجيب «ما الذي أراقبه استعداداً لما بعد؟». والأسهم التي اصطفّت أطرُها صاعدةً ولم تكوّن إعداداً ليست «تجنّب» ولا «جاهز» — هي **ما يوشك أن يصير جاهزاً**. ولا يُعرَّف الاتجاه من جديد بل يُقرأ من `_mtfVerdict` نفسه الذي تقرأه البطاقة — **ومقياسٌ ثانٍ للشيء نفسه يفترق عنه يوماً ما**. ▸ **والثانية طُلبت «تجاوزت ٨٪»، وهي بابُ مطاردةٍ يناقض ما يقوله التطبيق في كلّ بطاقة: «فات الدخول — المطاردة تُبعد وقفك».** فبقي الرقم وتغيّر المعنى: يُعرض التحرّك صعوداً **وهبوطاً** (فسقوط ٨٪ حدثٌ يستحقّ الفحص كصعودها)، ويُرتَّب الأعنفُ أوّلاً. ▸ **والقائمةُ تُسمّى بما تفعله بها، لا بما تحرّك فيها**'],
@@ -6309,6 +6310,15 @@ function renderAdminSection() {
              word-break:break-word;overflow-wrap:anywhere">⏳ جارٍ التحميل...</div>
       </div>` : ''}
 
+      <!-- 📊 مقاييس الانتفاع (للأدمن الرئيسي فقط) -->
+      ${owner ? `<div style="${card}">
+        <div style="${head}">📊 هل انتفع المستخدمون؟</div>
+        <div style="font-size:11px;color:var(--txt-m);line-height:1.7;margin-bottom:10px">
+          تُحسب ممّا فعلوه لا ممّا قالوه — من بيانات الدفع والظهور القائمة، بلا نداءٍ إضافيّ.
+        </div>
+        <div id="admValueBox">⏳ جارٍ الحساب...</div>
+      </div>` : ''}
+
       <!-- 🛡️ سجل نشاط المشرفين (للأدمن الرئيسي فقط) -->
       ${owner ? `<div style="${card}">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
@@ -6756,6 +6766,7 @@ async function adminLoadPayments(loud) {
     ]);
     if (error) throw error;
     _admPayments = data || [];
+    try { adminRenderValue(); } catch (_) {}
     /* 🔁 المدفوعات تصل بعد المستخدمين أحياناً — فأعِد رسم القائمة لتظهر
        شارة المال. وبدونها تبقى «🆓 مجّاني» على من دفع، حتى تُحدَّث الصفحة. */
     try { if (typeof adminRenderUsers === 'function' && (_admUsers || []).length) {
@@ -8439,6 +8450,7 @@ function adminRenderUsers(query) {
   if (kindSel !== 'all') list = list.filter(u => _admUserKind(u) === kindSel);
   /* 📊 الخلاصة تُحسب على **كل** المستخدمين لا على المعروض — رقمُ عملائك
      لا يتغيّر لأنك بحثتَ عن اسم. */
+  try { adminRenderValue(); } catch (_) {}
   try {
     const sumEl = document.getElementById('admKindSummary');
     if (sumEl) {
@@ -9519,6 +9531,92 @@ function _admWhen(ts) {
     if (diff > 1 && diff < 7) return 'قبل ' + diff + ' أيام · ' + t;
     return d.toLocaleDateString('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long' }) + ' · ' + t;
   } catch (e) { return ''; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   📊 مقاييس الانتفاع — أصدقُ من أيّ استفتاء
+
+   السؤال: «هل انتفع المستخدمون؟» ولا يُجاب بنافذةٍ تسأل، بل بما فعلوه.
+   ▸ **الاستفتاء يقيس ما يقولون، والبيانات تقيس ما يفعلون — والثاني
+     أصدق حين يختلفان، وهما يختلفان كثيراً.**
+   ▸ ولا جدولَ جديد ولا نداءَ إضافيّ: تُقرأ من `_admPayments` و
+     `_admUsers` المحمَّلَين أصلاً.
+
+   والمقاييس الخمسة، وكلٌّ يجيب سؤالاً بعينه:
+     ① التجديد   ← مَن دفع مرّتين انتفع. مرّةً واحدةً قد يكون فضولاً.
+     ② العمر     ← كم يبقى المشترك معك في المتوسّط.
+     ③ الغائبون  ← دفع ثمّ اختفى: أخطرُ صنف، لأنّه لا يشكو ولا يجدّد.
+     ④ الصامتون  ← دفع ولم يعُد منذ أسبوعين: تحذيرٌ مبكّر قبل الانقطاع.
+     ⑤ الصافي    ← ما بقي بعد الاسترداد، لا ما دخل.
+
+   ▸ وتُعرض «—» حين لا تكفي البيانات؛ **ونسبةٌ محسوبةٌ على ثلاثة عملاء
+     تُوهم بيقينٍ لا تملكه**، فيُذكر عدد الأساس بجانبها دائماً.
+   ══════════════════════════════════════════════════════════════════════ */
+function adminRenderValue() {
+  const box = document.getElementById('admValueBox');
+  if (!box) return;
+  try {
+    const DAY = 86400000, now = Date.now();
+    /* ① اجمع عمليات كلّ عميل — الصافية وحدها */
+    const per = {};
+    (_admPayments || []).forEach(p => {
+      if (!['paid', 'partially_refunded', 'refunded'].includes(p.status)) return;
+      const e = String(p.email || '').toLowerCase(); if (!e) return;
+      const amt = Number(p.total) || 0;
+      const ref = Math.min(amt, Number(p.refunded_total) || (p.status === 'refunded' ? amt : 0));
+      const net = amt - ref;
+      if (net <= 0) return;                       /* استُردّ كاملاً ⇒ ليس عميلاً */
+      const t = new Date(p.paid_at || p.created_at).getTime();
+      const o = per[e] || (per[e] = { n: 0, net: 0, first: Infinity, last: 0 });
+      o.n++; o.net += net;
+      if (isFinite(t)) { o.first = Math.min(o.first, t); o.last = Math.max(o.last, t); }
+    });
+    const mails = Object.keys(per);
+    const nCust = mails.length;
+    if (!nCust) {
+      box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--txt-m);font-size:12px;line-height:1.9">'
+        + 'لا عملاء بعد — تظهر المقاييس مع أوّل عملية حقيقية.<br>'
+        + '<span style="font-size:11px">وهذا صحيح: مقياسٌ على صفرٍ لا يُقاس.</span></div>';
+      return;
+    }
+    /* ② التجديد */
+    const repeat = mails.filter(e => per[e].n >= 2).length;
+    const renewPct = Math.round(repeat / nCust * 100);
+    /* ③ العمر — لمن جدّد فقط، وإلا كان صفراً بلا معنى */
+    const lifes = mails.filter(e => per[e].n >= 2).map(e => (per[e].last - per[e].first) / DAY);
+    const avgLife = lifes.length ? Math.round(lifes.reduce((a, b) => a + b, 0) / lifes.length) : null;
+    /* ④ الغائبون — آخر دفعة تجاوزت ٣٥ يوماً ولم تُتبع */
+    const lapsed = mails.filter(e => (now - per[e].last) / DAY > 35).length;
+    /* ⑤ الصامتون — دفعوا ولم يظهروا منذ ١٤ يوماً */
+    const seen = {};
+    (_admUsers || []).forEach(u => { seen[String(u.email || '').toLowerCase()] = u.last_seen ? new Date(u.last_seen).getTime() : 0; });
+    let quiet = 0, seenKnown = 0;
+    mails.forEach(e => { if (seen[e] != null) { seenKnown++; if (!seen[e] || (now - seen[e]) / DAY > 14) quiet++; } });
+    const netAll = mails.reduce((a, e) => a + per[e].net, 0);
+
+    const card = (t, v, sub, co) =>
+      '<div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:12px;padding:11px 12px;text-align:center">'
+      + '<div style="font-size:10.5px;color:var(--txt-m);margin-bottom:3px">' + t + '</div>'
+      + '<div style="font-size:19px;font-weight:800;color:' + (co || 'var(--txt)') + '">' + v + '</div>'
+      + '<div style="font-size:9.5px;color:var(--txt-m);margin-top:2px;line-height:1.6">' + sub + '</div></div>';
+
+    const renewCo = nCust < 5 ? 'var(--txt-m)' : renewPct >= 50 ? '#4ade80' : renewPct >= 25 ? '#fbbf24' : '#f87171';
+    box.innerHTML =
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">'
+      + card('🔁 نسبة التجديد', (nCust < 3 ? '—' : renewPct + '%'), (nCust < 3 ? 'تحتاج ٣ عملاء فأكثر' : repeat + ' من ' + nCust + ' دفعوا مرّتين فأكثر'), renewCo)
+      + card('⏳ متوسّط عمر المشترك', (avgLife == null ? '—' : avgLife + ' يوم'), (avgLife == null ? 'لم يجدّد أحد بعد' : 'على ' + lifes.length + ' مجدِّد'))
+      + card('🚪 انقطعوا', lapsed, 'لم يدفعوا منذ +٣٥ يوماً', lapsed ? '#fbbf24' : 'var(--txt-m)')
+      + card('🔇 دفعوا ولم يعودوا', (seenKnown ? quiet : '—'), (seenKnown ? 'غائبون +١٤ يوماً' : 'لا بيانات ظهور'), quiet ? '#f87171' : 'var(--txt-m)')
+      + card('💰 الصافي المحصَّل', (Math.round(netAll * 100) / 100) + ' ر.س', nCust + ' عميلاً دافعاً', '#4ade80')
+      + '</div>'
+      + '<div style="font-size:10.5px;color:var(--txt-m);line-height:1.8;margin-top:9px">'
+      + '▸ <b>نسبة التجديد</b> هي المقياس الوحيد الذي لا يُجامل: من دفع مرّتين انتفع، ومن دفع مرّةً قد يكون فضولاً.<br>'
+      + '▸ و<b>«دفعوا ولم يعودوا»</b> أخطرُ صنف — لا يشكو ولا يجدّد، فلا تعرف أنّك خسرته إلا بعد فوات الأوان.'
+      + (nCust < 5 ? '<br>▸ <span style="color:#fbbf24">⚠️ الأساس ' + nCust + ' عملاء فقط — النِّسب هنا مؤشّرٌ لا حكم.</span>' : '')
+      + '</div>';
+  } catch (e) {
+    box.innerHTML = '<div style="padding:10px;color:var(--txt-m);font-size:11.5px">تعذّر حساب المقاييس: ' + (e && e.message) + '</div>';
+  }
 }
 
 /* رسالة خطأ ذكية لعمليات الأدمن: تكشف انتهاء الجلسة */

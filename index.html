@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-20-v546';
-console.log('%c[تداول بلس] البناء: 2026-08-20-v546 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-22-v547';
+console.log('%c[تداول بلس] البناء: 2026-08-22-v547 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-20-v546 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v547', '📬 رسالةُ التأكيد تصل «غير الهام» — والمستخدم لا يعرف. بلاغٌ جرّبه المالك على نفسه: أنشأ حساباً **أربع مرّات في اثنتي عشرة دقيقة** لأنّ الرسالة لم تظهر في الوارد، ثمّ تذكّر أنّها في «غير الهام». ▸ **ومن لا يتذكّر — وهو الأكثر — يظنّ التسجيل فشل فيغادر ولا يعود. وأغلى مستخدمٍ تخسره هو الذي أنشأ حسابه ثمّ لم يُكمل: دفعتَ ثمن جذبه كاملاً ولم تحصد منه شيئاً.** ▸ فبدل الجملة العابرة: شاشةٌ صريحة تقول أين يبحث، وزرٌّ يفتح مجلّد «غير الهام» مباشرةً حسب مزوّد بريده (Outlook · Gmail · Yahoo · iCloud)، وإعادةُ إرسالٍ بمهلة، ونصيحتان: «ليست بريداً غير هام» وإضافةُ العنوان لجهات الاتصال. ▸ **والمهلة ستّون ثانية عمداً: الضغطُ المتكرّر لا يُسرّع البريد لكنّه يرفع احتمال تصنيفه مزعجاً — فيصير العلاج جزءاً من الداء**'],
     ['v546', '🪪 بطاقةُ دخولٍ لا تموت بموت صاحبها — رُصد حيّاً: حُذف الحساب من التطبيق ومن Supabase، ثمّ حدّث المستخدمُ صفحتَه المفتوحة **فدخل كأنّ شيئاً لم يكن**، بل أُعيد إنشاء ملفّه فظهر «سجّل اليوم · متصل الآن». والسبب أنّ التوكن موقَّعٌ سلفاً وصالحٌ حتى انتهاء مدّته، والتطبيق يقرؤه من التخزين المحلّي ويصدّقه بلا أن يسأل الخادم: هل صاحبُه باقٍ؟ ▸ **وحذفٌ لا يُنهي جلسةً قائمة ليس حذفاً — هو تأجيلٌ ساعة.** والأخطر أنّ المزامنة تكتب الملفّ من جديد **فيُبعث المحذوف بيد التطبيق** ويُحسب مسجّلاً جديداً فيُفسد عدّ العملاء. ▸ فصار يُسأل الخادم مباشرةً (`auth.getUser()` — نداءٌ حقيقيّ لا قراءةُ توكن) عند المزامنة وعند تعثّر النبضة وكلّ خمس دقائق؛ فأقصى ما يبقى المحذوف داخلاً **خمس دقائق لا ساعة**. ▸ **ويُفرَّق بين إنكارٍ وانقطاع: عطلُ الشبكة ليس حذفاً** — فلا يُطرد أحدٌ لأنّ اتّصاله تعثّر'],
     ['v545', '📊 «هل انتفع المستخدمون؟» — يُجاب بما فعلوه لا بما يقولونه. **الاستفتاء يقيس ما يقولون، والبيانات تقيس ما يفعلون؛ والثاني أصدق حين يختلفان، وهما يختلفان كثيراً.** ▸ خمسةُ مقاييس في لوحة الأدمن من `payments` و`profiles` المحمَّلَين أصلاً — بلا جدولٍ جديد ولا نداءٍ إضافيّ: **🔁 نسبة التجديد** (مَن دفع مرّتين انتفع · ومرّةً واحدة قد تكون فضولاً) · **⏳ متوسّط عمر المشترك** · **🚪 انقطعوا** · **🔇 دفعوا ولم يعودوا** (أخطرُ صنف: لا يشكو ولا يجدّد، فلا تعرف أنّك خسرته إلا متأخّراً) · **💰 الصافي بعد الاسترداد**. ▸ والمبالغ صافيةٌ لا إجمالية، ومن استُردّ كاملاً لا يُعدّ عميلاً. ▸ **ونسبةٌ محسوبةٌ على ثلاثة عملاء تُوهم بيقينٍ لا تملكه** — فيُذكر عدد الأساس دائماً، وتظهر «⚠️ مؤشّرٌ لا حكم» دون خمسة'],
     ['v544', '↩️ أُعيد عدّاد «📈 صاعد بلا إعداد» — أُزيل في v543 لأنّه فُهم رقماً مكتوباً لا عدداً محسوباً (٨٥ سهماً قُرئت ٨٥٪). **وسوءُ الفهم كان في السياق لا في الرقم**، والعدد نفسُه نافع: يقول كم سهماً تنتظر إعدادها اليوم. ▸ و`noCount` باقٍ في `btn` لمن يحتاجه لاحقاً'],
@@ -2776,6 +2777,73 @@ let sb = null;        // عميل Supabase
 let sbUser = null;    // المستخدم الحالي (null = غير متصل)
 let _sbToken = null;  // رمز الجلسة (لنداء الوداع عند إغلاق التبويب)
 let authMode = 'login';
+
+/* ══════════════════════════════════════════════════════════════════════
+   📬 رسالةُ التأكيد تصل «غير الهام» — والمستخدم لا يعرف
+
+   بلاغٌ من المالك جرّبه على نفسه: أنشأ حساباً أربع مرّات في اثنتي عشرة
+   دقيقة لأنّ الرسالة لم تظهر في الوارد، **ثمّ تذكّر أنّها في «غير الهام»**.
+   ▸ ومن لا يتذكّر — وهو الأكثر — يظنّ التسجيل فشل فيغادر ولا يعود.
+     **وأغلى مستخدمٍ تخسره هو الذي أنشأ حسابه ثمّ لم يُكمل**: دفعتَ ثمن
+     جذبه كاملاً ولم تحصد منه شيئاً.
+   ▸ فلا تكفي جملةٌ عابرة: تُعرض شاشةٌ صريحة تقول **أين** تبحث، وتفتح
+     مجلّد «غير الهام» مباشرةً حسب مزوّد البريد، وتُعيد الإرسال بمهلة.
+   ▸ والمهلة ستّون ثانية عمداً: **الضغطُ المتكرّر لا يُسرّع البريد، لكنّه
+     يرفع احتمال تصنيفه مزعجاً** — فيصير العلاج جزءاً من الداء.
+   ══════════════════════════════════════════════════════════════════════ */
+function _mailProvider(email) {
+  const d = String(email || '').split('@')[1] || '';
+  if (/gmail|googlemail/i.test(d)) return { n: 'Gmail', u: 'https://mail.google.com/mail/u/0/#search/from%3A%40markets-a.com+in%3Aanywhere' };
+  if (/hotmail|outlook|live|msn/i.test(d)) return { n: 'Outlook', u: 'https://outlook.live.com/mail/0/junkemail' };
+  if (/yahoo/i.test(d)) return { n: 'Yahoo', u: 'https://mail.yahoo.com/d/folders/6' };
+  if (/icloud|me\.com/i.test(d)) return { n: 'iCloud', u: 'https://www.icloud.com/mail' };
+  return null;
+}
+let _resendAt = 0;
+function authShowVerifySent(email) {
+  const pv = _mailProvider(email);
+  const btn = 'display:inline-block;padding:9px 14px;border-radius:10px;font-size:12px;font-weight:800;'
+            + 'font-family:inherit;cursor:pointer;text-decoration:none;border:none';
+  authShowMsg(
+    '<div style="text-align:center;line-height:1.9">'
+    + '<div style="font-size:30px;line-height:1;margin-bottom:4px">📬</div>'
+    + '<div style="font-size:14px;font-weight:800;color:#4ade80;margin-bottom:2px">أُنشئ حسابك — بقي التأكيد</div>'
+    + '<div style="font-size:11.5px;direction:ltr;color:var(--txt-m);margin-bottom:8px">' + String(email || '').replace(/</g, '&lt;') + '</div>'
+
+    + '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.5);border-radius:12px;'
+    + 'padding:10px 12px;margin-bottom:10px;font-size:12.5px;color:#fcd34d;font-weight:700">'
+    + '⚠️ ابحث في <b>«البريد غير الهام / Junk»</b><br>'
+    + '<span style="font-size:11px;font-weight:600">أوّلُ رسالةٍ من موقعٍ جديد تصل هناك غالباً</span>'
+    + '</div>'
+
+    + (pv ? '<a href="' + pv.u + '" target="_blank" rel="noopener" style="' + btn
+        + ';background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;margin:0 3px 6px">📂 افتح «غير الهام» في ' + pv.n + '</a>' : '')
+    + '<button id="authResendBtn" onclick="authResendConfirm()" style="' + btn
+    + ';background:var(--surf-alt);color:var(--txt);border:1px solid var(--bdr);margin:0 3px 6px">🔄 لم تصلك؟ أعد الإرسال</button>'
+
+    + '<div style="font-size:10.5px;color:var(--txt-m);margin-top:6px;line-height:1.8">'
+    + '▸ اضغط <b>«ليست بريداً غير هام»</b> ليصلك ما بعدها في الوارد.<br>'
+    + '▸ وأضِف <span style="direction:ltr;display:inline-block">noreply@markets-a.com</span> إلى جهات اتصالك.'
+    + '</div></div>', 'ok');
+}
+window.authResendConfirm = async function () {
+  const b = document.getElementById('authResendBtn');
+  const left = Math.ceil((_resendAt - Date.now()) / 1000);
+  if (left > 0) { if (b) { b.textContent = '⏳ انتظر ' + left + ' ثانية'; } return; }
+  const email = (document.getElementById('authEmail') || {}).value || '';
+  if (!email) { showToast('اكتب بريدك أوّلاً'); return; }
+  if (b) { b.disabled = true; b.textContent = '⏳ جارٍ الإرسال…'; }
+  try {
+    const { error } = await sb.auth.resend({ type: 'signup', email: email.trim().toLowerCase() });
+    if (error) throw error;
+    _resendAt = Date.now() + 60000;
+    if (b) { b.textContent = '✅ أُرسلت — تحقّق من «غير الهام»'; }
+    setTimeout(() => { if (b) { b.disabled = false; b.textContent = '🔄 أعد الإرسال'; } }, 60000);
+  } catch (e) {
+    if (b) { b.disabled = false; b.textContent = '🔄 أعد الإرسال'; }
+    showToast('⚠️ تعذّر إعادة الإرسال: ' + ((e && e.message) || e));
+  }
+};
 
 /* التقاط العودة من رابط تأكيد البريد (قبل أن ينظف Supabase الرابط) */
 const _authFromConfirm = location.hash.includes('type=signup');
@@ -3739,7 +3807,7 @@ async function authSubmit() {
         authShowMsg('✅ تم إنشاء الحساب وتسجيل الدخول!', 'ok');
         setTimeout(authCloseModal, 1200);
       } else {
-        authShowMsg('📧 تم إنشاء الحساب — أُرسلت رسالة تأكيد إلى بريدك، افتحها واضغط الرابط ثم عد وسجّل الدخول.', 'ok');
+        authShowVerifySent(email);
       }
     } else {
       const { error } = await sb.auth.signInWithPassword({

@@ -187,7 +187,12 @@ async function tg(msg) {
        للجميع» عن نصف مسح. */
     const n = await page.evaluate(() => (typeof window.predCount === 'function' ? window.predCount() : 0));
     if (!n || n < 200) {
-      throw new Error('النتائج ناقصة: ' + (n || 0) + ' سهم فقط (المتوقّع ~269).');
+      /* 🩺 لا نقول «ناقصة» ونصمت: التطبيق يعدّ السقوط بسببه، فنقرؤه.
+         ورقمٌ ناقصٌ بلا سببٍ يجعل الإصلاح تخميناً — وقد خمّنّا وأخطأنا. */
+      let why = '';
+      try { why = await page.evaluate(() => (typeof window.predFailReport === 'function' ? window.predFailReport() : '')); } catch (_) {}
+      throw new Error('النتائج ناقصة: ' + (n || 0) + ' سهم فقط (المتوقّع ~269).'
+        + (why ? '\n🩺 ' + why : '\n🩺 (لا تقرير أسباب — ارفع نسخةً أحدث من التطبيق)'));
     }
     /* 8) 🩺 تقرير صحّة البيانات — أن تعرف العطل قبل أن يسألك مستخدم
        العطل الصامت هو ما كلّفنا الثقة: بقيت الشموع متأخّرة ولا شيء

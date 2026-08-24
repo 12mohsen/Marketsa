@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-24-v557';
-console.log('%c[تداول بلس] البناء: 2026-08-24-v557 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-24-v558';
+console.log('%c[تداول بلس] البناء: 2026-08-24-v558 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-24-v557 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v558', '↩️ استردادٌ لا يُلغي الخدمة = خسارةٌ مزدوجة — كانت خطوةً يدويّةً منفصلة: تردّ المال ثمّ تذهب إلى قائمة المستخدمين وتُلغي اشتراكه. **وكلُّ خطوةٍ يدويّةٍ منفصلةٍ تُنسى يوماً**، فيبقى مستردٌّ وخدمتُه تعمل: خسرتَ المال وأبقيتَ الخدمة. ▸ فصار «رفض» و«استرداد» يسألان: «هل تُلغى الاشتراكات المرتبطة بهذه العملية؟» مع سرد أقسامها. ▸ **ولا يُلغى شيءٌ بلا قرارٍ صريح** — فقد يكون الردّ تسويةً وديّة يُبقى فيها الاشتراك عمداً؛ وواجبُ التطبيق أن يُذكّر لا أن يقرّر. ▸ وتُلغى **أقسامُ هذه العملية وحدها**: اشتراكاتُه الأخرى وتجربتُه المجانية تبقى — **فالاسترداد يُلغي ما دُفع فيه لا ما وُهب له**. ▸ ويُحذف الاشتراك ولا يُصفَّر سعرُه: **صفٌّ بسعرٍ صفرٍ يبقى «مدفوعاً» في كلّ حاسبةٍ تقرؤه**. ▸ ويُسجَّل في سجلّ الأدمن ويُخطَر به تلجرام'],
     ['v557', '🧾 إيصالٌ بنودُه لا تجمع إجماليَّه مستندٌ ساقط — كان يسرد ٨٩ · ٩٩ · ١٠٩ · ١٤٩ · ١٩٩ · ١١٩ ويكتب أسفله «الإجمالي: ٧٩٫٥»، فيجمع القارئ — عميلاً كان أو مدقّقاً — فيجد ٧٦٤. ▸ **ومستندٌ يناقض نفسه لا يُصلحه شرحٌ شفويّ؛ يُحتجّ به عليك لا لك.** ▸ فصارت البنود تُوزَّع بنفس قسمة التفعيل (v555) — فلا يختلف الإيصال عن الاشتراك المخزَّن — ويُضاف سطرٌ صريح «⭐ باقة كلّ الأقسام — بدل ٧٦٤ ر.س · −٦٨٤٫٥» فيرى القارئ الأسعار الأصلية والمدفوع معاً، **فيفهم أنّه استفاد من باقةٍ لا أنّ الرقم أُخطئ**. ▸ **ورابعُ مواضع سقف الباقة** — البطاقة · التحويل · التفعيل · الإيصال'],
     ['v556', '🔐 حارسُ المتصفّح كان أوسع من حارس القاعدة — رُصد في كونسول مشرف: `POST analysis_daily → 403` ثمّ «✗ لم تُرفع البيانات اليومية — يبقى الناس على القديم». والحارس في التطبيق `isAdmin()` وهي تشمل المشرفين، بينما سياسةُ الجدول تسمح للأدمن الرئيسيّ وحده. **والفارقُ بين الحارسين يُدفع خطأً أحمرَ في كلّ مسح.** ▸ والضرر ليس في السطر الأحمر: **المشرف يمسح ويظنّ أنّه حدّث للناس وهو لم يحدّث شيئاً** — فصار يُقال له صراحةً «المسح تمّ لك وحدك». ▸ ولا نقص في الخدمة: الروبوت اليوميّ يعمل بحساب الأدمن ويرفع للجميع. ▸ **وكلُّ حارسٍ في المتصفّح يجب أن يوافق حارسَ القاعدة تماماً — وإلا وعد بما لا يملك**'],
     ['v555', '💰 ما دُفع يُوزَّع — الأسعار الخام كانت تُحفَظ على من اشترى بسعر الباقة. رُصد حيّاً: عميلٌ حوّل **٧٩٫٥** (سعر «⭐ كلّ الأقسام») وبعد التفعيل تقول قائمةُ حسابه: المحفظة ٨٩ · المراقبة ٩٩ · العوائد ١٠٩ · رادار ١٤٩ · اللوحة ١٩٩ · التحليل ١١٩ — أي **٧٦٤**. والسبب أنّ التفعيل يكتب `s.price` كما ورد في صفّ العملية، وسقفُ الباقة يُطبَّق على الإجمالي وحده. ▸ **وسعرٌ مخزَّنٌ لا يوافق ما دُفع ليس تجميلاً:** يُقرأ في الإيصال وفي حساب الاسترداد وفي «الإجمالي المحصَّل» — **فيتضخّم إيرادُك في دفاترك عشرة أضعاف، وتُحسب للعميل استعادةٌ لم يدفعها**. ▸ فصار المدفوع يُوزَّع بنسبة الأسعار، ويُحمَّل فارقُ التقريب على آخر قسمٍ حتى يساوي المجموعُ المدفوعَ بالهللة. ▸ **وهذه ثالثةُ مواضع سقف الباقة** — البطاقة (v490) والتحويل (v552) والتفعيل (v555)'],
@@ -7657,6 +7658,87 @@ async function _payActivateSubs(p) {
   return activated;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   ↩️ استردادٌ لا يُلغي الخدمة = خسارةٌ مزدوجة
+
+   الخطوة كانت يدويّةً منفصلة: تردّ المال، ثمّ تذهب إلى قائمة المستخدمين
+   وتُلغي اشتراكه. **وكلُّ خطوةٍ يدويّةٍ منفصلةٍ تُنسى يوماً** — فيبقى
+   مستردٌّ وخدمتُه تعمل: خسرتَ المال وأبقيتَ الخدمة.
+
+   ▸ ولا تُلغى تلقائياً بلا سؤال: فقد يكون الردّ تسويةً وديّة يُبقى فيها
+     الاشتراك عمداً. **والأمرُ قرارُ صاحبه، وواجبُ التطبيق أن يُذكّر لا
+     أن يقرّر.**
+   ▸ وتُلغى **أقسامُ هذه العملية وحدها** — لا كلُّ ما عنده. فقد يكون
+     اشترى قسماً آخر بعمليةٍ أخرى، أو مُنح تجربةً لم يدفع ثمنها،
+     **والاسترداد يُلغي ما دُفع فيه لا ما وُهب له.**
+   ══════════════════════════════════════════════════════════════════════ */
+async function _payRevokeSubs(p, keys) {
+  const ks = (keys && keys.length) ? keys
+           : (Array.isArray(p.services) ? p.services.map(s => s && s.k).filter(Boolean) : []);
+  if (!ks.length || !p.email) return [];
+  let prev = _admRestr[p.email];
+  if (!prev) {
+    const { data: _pv, error: _pe } = await sb.from('user_restrictions')
+      .select('*').eq('email', p.email).maybeSingle();
+    if (_pe) throw new Error('تعذّرت قراءة قيود المستخدم — أُلغي الإجراء: ' + (_pe.message || _pe));
+    prev = _pv || {};
+  }
+  const subs = Object.assign({}, prev.subs || {});
+  const gone = [];
+  ks.forEach(k => {
+    const cur = subs[k];
+    if (cur && cur.plan === 'paid') {
+      /* 🧹 يُحذف الاشتراك ولا يُصفَّر: صفٌّ بسعرٍ صفرٍ يبقى «مدفوعاً» في
+         كلّ حاسبةٍ تقرؤه، فيُحسب عميلاً ويُعدّ في الإيراد. */
+      delete subs[k];
+      const d = (typeof SUB_SECTION_DEFS !== 'undefined') ? SUB_SECTION_DEFS.find(x => x.k === k) : null;
+      gone.push(d ? d.t : k);
+    }
+  });
+  if (!gone.length) return [];
+  const row = { email: p.email, subs: subs, updated_at: new Date().toISOString() };
+  const { error } = await sb.from('user_restrictions').upsert(row, { onConflict: 'email' });
+  if (error) throw new Error('تعذّر إلغاء الاشتراكات: ' + (error.message || error));
+  _admRestr[p.email] = Object.assign({}, prev, { subs: subs });
+  try { await _admNotifyChanges([Object.assign({}, prev, { subs: subs, email: p.email })], 'إلغاء اشتراك بعد استرداد'); } catch (_) {}
+  try { logAdminAction('subs_revoked', p.email, '↩️ بعد استرداد — أُلغي: ' + gone.join('، ')); } catch (_) {}
+  return gone;
+}
+
+/* 🗣️ السؤال — لا يُلغى شيءٌ بلا قرارٍ صريح */
+function _payAskRevoke(p) {
+  return new Promise(resolve => {
+    const secs = (Array.isArray(p.services) ? p.services : []).map(s => {
+      const d = (typeof SUB_SECTION_DEFS !== 'undefined') ? SUB_SECTION_DEFS.find(x => x.k === (s && s.k)) : null;
+      return d ? d.t : (s && s.k);
+    }).filter(Boolean);
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;z-index:1310;background:rgba(0,0,0,.84);display:flex;'
+                    + 'align-items:center;justify-content:center;padding:18px';
+    d.innerHTML =
+      '<div style="background:var(--surf);border:1px solid rgba(248,113,113,.5);border-radius:18px;'
+      + 'max-width:380px;width:100%;padding:24px 20px;text-align:center;direction:rtl">'
+      + '<div style="font-size:34px;line-height:1">↩️</div>'
+      + '<div style="font-size:15.5px;font-weight:800;color:#fca5a5;margin:8px 0 4px">استُردّ المبلغ</div>'
+      + '<div style="font-size:12.5px;color:var(--txt);line-height:1.9;margin-bottom:6px">'
+      + 'هل تُلغى الاشتراكات المرتبطة بهذه العملية؟</div>'
+      + '<div style="font-size:11px;color:var(--txt-m);background:var(--surf-alt);border:1px solid var(--bdr);'
+      + 'border-radius:10px;padding:9px 11px;line-height:1.9;margin-bottom:14px">'
+      + (secs.length ? secs.join(' · ') : 'لا أقسام في هذه العملية')
+      + '<div style="font-size:10px;margin-top:5px;opacity:.85">ولا يُمسّ غيرها: اشتراكاتُه الأخرى وتجربتُه المجانية تبقى.</div></div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button id="_rvYes" style="flex:1.2;padding:11px;border-radius:11px;border:none;cursor:pointer;'
+      + 'font-weight:800;font-size:13px;color:#fff;font-family:inherit;background:linear-gradient(135deg,#991b1b,#dc2626)">نعم، ألغِها</button>'
+      + '<button id="_rvNo" style="flex:1;padding:11px;border-radius:11px;cursor:pointer;'
+      + 'border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-weight:700;font-size:12.5px;font-family:inherit">لا، أُبقيها</button>'
+      + '</div></div>';
+    document.body.appendChild(d);
+    const fin = (v) => { try { d.remove(); } catch (_) {} resolve(v); };
+    d.querySelector('#_rvYes').onclick = () => fin(true);
+    d.querySelector('#_rvNo').onclick  = () => fin(false);
+  });
+}
+
 async function adminSetPaymentStatus(id, status) {
   if (!(isSuperAdmin() || can('users'))) { showToast('⛔ لا تملك صلاحية إدارة المدفوعات'); return; }
   const p = _admPayments.find(x => x.id === id);
@@ -7670,6 +7752,16 @@ async function adminSetPaymentStatus(id, status) {
   const { error } = await sb.from('payments').update({ status }).eq('id', id);
   if (error) { _admErr(error, 'فشل تحديث الحالة'); return; }
   if (p) p.status = status;
+  /* ↩️ رُفضت أو استُردّت ⇒ اسأل عن الاشتراكات المرتبطة */
+  if ((status === 'rejected' || status === 'refunded') && p && p.email) {
+    try {
+      if (await _payAskRevoke(p)) {
+        const gone = await _payRevokeSubs(p);
+        showToast(gone.length ? '↩️ أُلغيت: ' + gone.join('، ') : 'ℹ️ لا اشتراكات قائمة من هذه العملية');
+        if (typeof adminLoadUsers === 'function') adminLoadUsers();
+      } else showToast('ℹ️ أُبقيت الاشتراكات كما هي');
+    } catch (e) { _admErr(e, 'تعذّر إلغاء الاشتراكات'); }
+  }
   logAdminAction(status === 'confirmed' ? 'payment_confirm' : status === 'rejected' ? 'payment_reject' : 'payment_reset',
                  (p && p.email) || ('#' + id), (p && p.amount != null) ? ('المبلغ: ' + p.amount + ' ر.س') : '');
   if (status === 'rejected') showToast('❌ رُفضت العملية');

@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-24-v559';
-console.log('%c[تداول بلس] البناء: 2026-08-24-v559 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-24-v560';
+console.log('%c[تداول بلس] البناء: 2026-08-24-v560 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-24-v559 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v560', '⛔ «التطبيق كله» يُغني عن الأقسام — فإلغاؤها وحدها لا يحجب شيئاً. رُصد حيّاً: استُردّ المبلغ وأُلغيت الأقسام الستّة **فعلاً**، وبقي المستخدم يرى كلّ شيء. والسبب منحةٌ سارية على «⛔ التطبيق كله» تفتح الأقسام جميعاً. ▸ **ومبدؤنا صحيح — الاسترداد يُلغي ما دُفع فيه لا ما وُهب له — لكنّ الموهوب هنا يُغني عن المدفوع كلِّه، فيصير الإلغاء بلا أثر والأدمن يظنّ أنّه حجب وهو لم يحجب.** ▸ فلا يُلغى الموهوب تلقائياً **ولا يُسكت عنه**: يُعلَن في النافذة صريحاً «⚠️ وعنده التطبيق كله ساري (باقٍ ١٠ يوم) — وهو يفتح الأقسام جميعاً» مع خانةٍ منفصلة لإلغائه معها. ▸ **والقرار لصاحبه، والمعلومة حقُّه**'],
     ['v559', '↩️ زرُّ «استرداد» للتحويل البنكيّ — الحالة التي لم تكن موجودة. كانت حالاتُ العملية ثلاثاً: مؤكّدة · مرفوضة · قيد المراجعة، **ولا شيء اسمُه «مستردّة»**. فمن ردّ مالاً لعميلٍ لم يجد إلا «رفض» — و«رفض» تعني أنّ التحويل لم يصحّ أصلاً، لا أنّ مالاً دخل ثمّ رُدّ. ▸ **والفرق يظهر في الدفاتر:** المرفوضة لم تُحصَّل قطّ والمستردّة حُصّلت ثمّ رُدّت؛ وكلتاهما صفرٌ في الصافي، **لكنّ الأولى لم تكن عميلاً والثانية كانت** — ونسبةُ التجديد وعددُ العملاء يُبنيان على هذا. ▸ ويُطلب **الرقم المرجعيّ إلزاماً**: التحويل البنكيّ لا تشهد له بوّابة، **فإشعارُ بنكك هو السجلّ كلُّه ورقمُه ما يربطه بالعملية**. ▸ ويقبل الاسترداد الجزئيّ ويمنع تجاوز المتبقّي، ثمّ يسأل عن إلغاء الاشتراكات (v558)'],
     ['v558', '↩️ استردادٌ لا يُلغي الخدمة = خسارةٌ مزدوجة — كانت خطوةً يدويّةً منفصلة: تردّ المال ثمّ تذهب إلى قائمة المستخدمين وتُلغي اشتراكه. **وكلُّ خطوةٍ يدويّةٍ منفصلةٍ تُنسى يوماً**، فيبقى مستردٌّ وخدمتُه تعمل: خسرتَ المال وأبقيتَ الخدمة. ▸ فصار «رفض» و«استرداد» يسألان: «هل تُلغى الاشتراكات المرتبطة بهذه العملية؟» مع سرد أقسامها. ▸ **ولا يُلغى شيءٌ بلا قرارٍ صريح** — فقد يكون الردّ تسويةً وديّة يُبقى فيها الاشتراك عمداً؛ وواجبُ التطبيق أن يُذكّر لا أن يقرّر. ▸ وتُلغى **أقسامُ هذه العملية وحدها**: اشتراكاتُه الأخرى وتجربتُه المجانية تبقى — **فالاسترداد يُلغي ما دُفع فيه لا ما وُهب له**. ▸ ويُحذف الاشتراك ولا يُصفَّر سعرُه: **صفٌّ بسعرٍ صفرٍ يبقى «مدفوعاً» في كلّ حاسبةٍ تقرؤه**. ▸ ويُسجَّل في سجلّ الأدمن ويُخطَر به تلجرام'],
     ['v557', '🧾 إيصالٌ بنودُه لا تجمع إجماليَّه مستندٌ ساقط — كان يسرد ٨٩ · ٩٩ · ١٠٩ · ١٤٩ · ١٩٩ · ١١٩ ويكتب أسفله «الإجمالي: ٧٩٫٥»، فيجمع القارئ — عميلاً كان أو مدقّقاً — فيجد ٧٦٤. ▸ **ومستندٌ يناقض نفسه لا يُصلحه شرحٌ شفويّ؛ يُحتجّ به عليك لا لك.** ▸ فصارت البنود تُوزَّع بنفس قسمة التفعيل (v555) — فلا يختلف الإيصال عن الاشتراك المخزَّن — ويُضاف سطرٌ صريح «⭐ باقة كلّ الأقسام — بدل ٧٦٤ ر.س · −٦٨٤٫٥» فيرى القارئ الأسعار الأصلية والمدفوع معاً، **فيفهم أنّه استفاد من باقةٍ لا أنّ الرقم أُخطئ**. ▸ **ورابعُ مواضع سقف الباقة** — البطاقة · التحويل · التفعيل · الإيصال'],
@@ -7591,8 +7592,9 @@ async function adminRefundBank(id) {
       showToast('↩️ سُجّل استرداد ' + amt.toFixed(2) + ' ر.س');
       adminRenderPayments();
       /* والسؤال عن الاشتراكات — لا يُلغى شيءٌ بلا قرار */
-      if (await _payAskRevoke(p)) {
-        const gone = await _payRevokeSubs(p);
+      const _ans = await _payAskRevoke(p);
+      if (_ans && _ans.yes) {
+        const gone = await _payRevokeSubs(p, null, _ans.account);
         showToast(gone.length ? '↩️ أُلغيت: ' + gone.join('، ') : 'ℹ️ لا اشتراكات قائمة من هذه العملية');
         if (typeof adminLoadUsers === 'function') adminLoadUsers();
       } else showToast('ℹ️ أُبقيت الاشتراكات كما هي');
@@ -7750,7 +7752,7 @@ async function _payActivateSubs(p) {
      اشترى قسماً آخر بعمليةٍ أخرى، أو مُنح تجربةً لم يدفع ثمنها،
      **والاسترداد يُلغي ما دُفع فيه لا ما وُهب له.**
    ══════════════════════════════════════════════════════════════════════ */
-async function _payRevokeSubs(p, keys) {
+async function _payRevokeSubs(p, keys, alsoAccount) {
   const ks = (keys && keys.length) ? keys
            : (Array.isArray(p.services) ? p.services.map(s => s && s.k).filter(Boolean) : []);
   if (!ks.length || !p.email) return [];
@@ -7773,8 +7775,14 @@ async function _payRevokeSubs(p, keys) {
       gone.push(d ? d.t : k);
     }
   });
-  if (!gone.length) return [];
+  /* ⛔ وإلغاء «التطبيق كله» إن طُلب — بقرارٍ صريحٍ لا افتراض */
   const row = { email: p.email, subs: subs, updated_at: new Date().toISOString() };
+  if (alsoAccount) {
+    delete subs.account;
+    row.sub_plan = 'free'; row.sub_start = null; row.sub_days = 0; row.sub_price = 0;
+    gone.push('⛔ التطبيق كله');
+  }
+  if (!gone.length) return [];
   const { error } = await sb.from('user_restrictions').upsert(row, { onConflict: 'email' });
   if (error) throw new Error('تعذّر إلغاء الاشتراكات: ' + (error.message || error));
   _admRestr[p.email] = Object.assign({}, prev, { subs: subs });
@@ -7790,6 +7798,27 @@ function _payAskRevoke(p) {
       const d = (typeof SUB_SECTION_DEFS !== 'undefined') ? SUB_SECTION_DEFS.find(x => x.k === (s && s.k)) : null;
       return d ? d.t : (s && s.k);
     }).filter(Boolean);
+    /* ══════════════════════════════════════════════════════════════════
+       ⛔ «التطبيق كله» يُغني عن الأقسام — فإلغاؤها وحدها لا يحجب شيئاً
+
+       رُصد حيّاً: استُردّ المبلغ، وأُلغيت الأقسام الستّة فعلاً، **وبقي
+       المستخدم يرى كلّ شيء**. والسبب منحةٌ سارية على «⛔ التطبيق كله»
+       (تجربةٌ مجانية) وهي تفتح الأقسام جميعاً.
+       ▸ ومبدؤنا صحيح: **الاسترداد يُلغي ما دُفع فيه لا ما وُهب له**. لكنّ
+         الموهوب هنا يُغني عن المدفوع كلِّه — **فيصير الإلغاء بلا أثر،
+         والأدمن يظنّ أنّه حجب وهو لم يحجب**.
+       ▸ فلا يُلغى الموهوب من تلقاء نفسه، **ولا يُسكت عنه**: يُعلَن صريحاً
+         مع خيارٍ منفصل. والقرار لصاحبه، والمعلومة حقُّه.
+       ══════════════════════════════════════════════════════════════════ */
+    let _accAlso = false, _accTxt = '';
+    try {
+      const _r = (_admRestr && _admRestr[p.email]) || {};
+      const _ai = (typeof _subInfo === 'function') ? _subInfo(_r, 'account') : null;
+      if (_ai && _ai.plan === 'paid' && !_ai.expired) {
+        _accAlso = true;
+        _accTxt = (_ai.daysLeft != null) ? ('باقٍ ' + _ai.daysLeft + ' يوم') : 'دائم';
+      }
+    } catch (_) {}
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;inset:0;z-index:1310;background:rgba(0,0,0,.84);display:flex;'
                     + 'align-items:center;justify-content:center;padding:18px';
@@ -7804,6 +7833,16 @@ function _payAskRevoke(p) {
       + 'border-radius:10px;padding:9px 11px;line-height:1.9;margin-bottom:14px">'
       + (secs.length ? secs.join(' · ') : 'لا أقسام في هذه العملية')
       + '<div style="font-size:10px;margin-top:5px;opacity:.85">ولا يُمسّ غيرها: اشتراكاتُه الأخرى وتجربتُه المجانية تبقى.</div></div>'
+      + (_accAlso
+          ? '<label for="_rvAcc" style="display:flex;gap:8px;align-items:flex-start;text-align:right;'
+            + 'background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.5);border-radius:11px;'
+            + 'padding:10px 11px;margin-bottom:12px;cursor:pointer">'
+            + '<input type="checkbox" id="_rvAcc" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex:none">'
+            + '<span style="font-size:11.5px;color:#fcd34d;line-height:1.8">'
+            + '⚠️ وعنده «<b>⛔ التطبيق كله</b>» ساري (' + _accTxt + ') — <b>وهو يفتح الأقسام جميعاً</b>.<br>'
+            + '<span style="font-size:10.5px;opacity:.9">فإلغاءُ الأقسام وحدها لن يحجب عنه شيئاً. أشّر هنا لإلغائه معها.</span>'
+            + '</span></label>'
+          : '')
       + '<div style="display:flex;gap:8px">'
       + '<button id="_rvYes" style="flex:1.2;padding:11px;border-radius:11px;border:none;cursor:pointer;'
       + 'font-weight:800;font-size:13px;color:#fff;font-family:inherit;background:linear-gradient(135deg,#991b1b,#dc2626)">نعم، ألغِها</button>'
@@ -7811,7 +7850,12 @@ function _payAskRevoke(p) {
       + 'border:1.5px solid var(--bdr);background:var(--surf-alt);color:var(--txt);font-weight:700;font-size:12.5px;font-family:inherit">لا، أُبقيها</button>'
       + '</div></div>';
     document.body.appendChild(d);
-    const fin = (v) => { try { d.remove(); } catch (_) {} resolve(v); };
+    const fin = (v) => {
+      let acc = false;
+      try { const c = d.querySelector('#_rvAcc'); acc = !!(c && c.checked); } catch (_) {}
+      try { d.remove(); } catch (_) {}
+      resolve(v ? { yes: true, account: acc } : { yes: false, account: false });
+    };
     d.querySelector('#_rvYes').onclick = () => fin(true);
     d.querySelector('#_rvNo').onclick  = () => fin(false);
   });
@@ -7833,8 +7877,9 @@ async function adminSetPaymentStatus(id, status) {
   /* ↩️ رُفضت أو استُردّت ⇒ اسأل عن الاشتراكات المرتبطة */
   if ((status === 'rejected' || status === 'refunded') && p && p.email) {
     try {
-      if (await _payAskRevoke(p)) {
-        const gone = await _payRevokeSubs(p);
+      const _ans = await _payAskRevoke(p);
+      if (_ans && _ans.yes) {
+        const gone = await _payRevokeSubs(p, null, _ans.account);
         showToast(gone.length ? '↩️ أُلغيت: ' + gone.join('، ') : 'ℹ️ لا اشتراكات قائمة من هذه العملية');
         if (typeof adminLoadUsers === 'function') adminLoadUsers();
       } else showToast('ℹ️ أُبقيت الاشتراكات كما هي');

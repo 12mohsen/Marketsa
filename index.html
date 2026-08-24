@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-24-v558';
-console.log('%c[تداول بلس] البناء: 2026-08-24-v558 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-24-v559';
+console.log('%c[تداول بلس] البناء: 2026-08-24-v559 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-24-v558 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v559', '↩️ زرُّ «استرداد» للتحويل البنكيّ — الحالة التي لم تكن موجودة. كانت حالاتُ العملية ثلاثاً: مؤكّدة · مرفوضة · قيد المراجعة، **ولا شيء اسمُه «مستردّة»**. فمن ردّ مالاً لعميلٍ لم يجد إلا «رفض» — و«رفض» تعني أنّ التحويل لم يصحّ أصلاً، لا أنّ مالاً دخل ثمّ رُدّ. ▸ **والفرق يظهر في الدفاتر:** المرفوضة لم تُحصَّل قطّ والمستردّة حُصّلت ثمّ رُدّت؛ وكلتاهما صفرٌ في الصافي، **لكنّ الأولى لم تكن عميلاً والثانية كانت** — ونسبةُ التجديد وعددُ العملاء يُبنيان على هذا. ▸ ويُطلب **الرقم المرجعيّ إلزاماً**: التحويل البنكيّ لا تشهد له بوّابة، **فإشعارُ بنكك هو السجلّ كلُّه ورقمُه ما يربطه بالعملية**. ▸ ويقبل الاسترداد الجزئيّ ويمنع تجاوز المتبقّي، ثمّ يسأل عن إلغاء الاشتراكات (v558)'],
     ['v558', '↩️ استردادٌ لا يُلغي الخدمة = خسارةٌ مزدوجة — كانت خطوةً يدويّةً منفصلة: تردّ المال ثمّ تذهب إلى قائمة المستخدمين وتُلغي اشتراكه. **وكلُّ خطوةٍ يدويّةٍ منفصلةٍ تُنسى يوماً**، فيبقى مستردٌّ وخدمتُه تعمل: خسرتَ المال وأبقيتَ الخدمة. ▸ فصار «رفض» و«استرداد» يسألان: «هل تُلغى الاشتراكات المرتبطة بهذه العملية؟» مع سرد أقسامها. ▸ **ولا يُلغى شيءٌ بلا قرارٍ صريح** — فقد يكون الردّ تسويةً وديّة يُبقى فيها الاشتراك عمداً؛ وواجبُ التطبيق أن يُذكّر لا أن يقرّر. ▸ وتُلغى **أقسامُ هذه العملية وحدها**: اشتراكاتُه الأخرى وتجربتُه المجانية تبقى — **فالاسترداد يُلغي ما دُفع فيه لا ما وُهب له**. ▸ ويُحذف الاشتراك ولا يُصفَّر سعرُه: **صفٌّ بسعرٍ صفرٍ يبقى «مدفوعاً» في كلّ حاسبةٍ تقرؤه**. ▸ ويُسجَّل في سجلّ الأدمن ويُخطَر به تلجرام'],
     ['v557', '🧾 إيصالٌ بنودُه لا تجمع إجماليَّه مستندٌ ساقط — كان يسرد ٨٩ · ٩٩ · ١٠٩ · ١٤٩ · ١٩٩ · ١١٩ ويكتب أسفله «الإجمالي: ٧٩٫٥»، فيجمع القارئ — عميلاً كان أو مدقّقاً — فيجد ٧٦٤. ▸ **ومستندٌ يناقض نفسه لا يُصلحه شرحٌ شفويّ؛ يُحتجّ به عليك لا لك.** ▸ فصارت البنود تُوزَّع بنفس قسمة التفعيل (v555) — فلا يختلف الإيصال عن الاشتراك المخزَّن — ويُضاف سطرٌ صريح «⭐ باقة كلّ الأقسام — بدل ٧٦٤ ر.س · −٦٨٤٫٥» فيرى القارئ الأسعار الأصلية والمدفوع معاً، **فيفهم أنّه استفاد من باقةٍ لا أنّ الرقم أُخطئ**. ▸ **ورابعُ مواضع سقف الباقة** — البطاقة · التحويل · التفعيل · الإيصال'],
     ['v556', '🔐 حارسُ المتصفّح كان أوسع من حارس القاعدة — رُصد في كونسول مشرف: `POST analysis_daily → 403` ثمّ «✗ لم تُرفع البيانات اليومية — يبقى الناس على القديم». والحارس في التطبيق `isAdmin()` وهي تشمل المشرفين، بينما سياسةُ الجدول تسمح للأدمن الرئيسيّ وحده. **والفارقُ بين الحارسين يُدفع خطأً أحمرَ في كلّ مسح.** ▸ والضرر ليس في السطر الأحمر: **المشرف يمسح ويظنّ أنّه حدّث للناس وهو لم يحدّث شيئاً** — فصار يُقال له صراحةً «المسح تمّ لك وحدك». ▸ ولا نقص في الخدمة: الروبوت اليوميّ يعمل بحساب الأدمن ويرفع للجميع. ▸ **وكلُّ حارسٍ في المتصفّح يجب أن يوافق حارسَ القاعدة تماماً — وإلا وعد بما لا يملك**'],
@@ -7508,6 +7509,7 @@ function adminRenderPayments() {
         <button onclick="_payConfirmAction(${p.id},'confirmed')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.1);color:#86efac;font-size:10.5px;font-weight:700;cursor:pointer">✅ تأكيد</button>
         <button onclick="_payConfirmAction(${p.id},'rejected')" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#fca5a5;font-size:10.5px;font-weight:700;cursor:pointer">❌ رفض</button>
         <button onclick="_payConfirmAction(${p.id},'pending')" style="padding:5px 11px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf-alt);color:var(--txt-m);font-size:10.5px;font-weight:700;cursor:pointer">⏳ إعادة</button>`}
+        ${(p.status === 'confirmed' || p.status === 'paid') ? `<button onclick="adminRefundBank(${p.id})" title="سجّل استرداداً حقيقياً — بعد أن تُحوّل المبلغ من بنكك" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.1);color:#fcd34d;font-size:10.5px;font-weight:700;cursor:pointer">↩️ استرداد</button>` : ''}
         ${(card && isSuperAdmin() && (Number(p.refunded_total) > 0) && (Number(p.refunded_total) < Number(p.total)) && p.provider_id) ? `
         <button onclick="payManualSettle('${esc(p.provider_id)}', ${Number(p.total) || 0}, ${Number(p.refunded_total) || 0})" title="ميسر لا تقبل ردّاً ثانياً — سجّل هنا ما رددتَه بتحويلٍ بنكيّ" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.1);color:#fcd34d;font-size:10.5px;font-weight:700;cursor:pointer">✍️ ردٌّ يدويّ</button>` : ''}
         <button onclick="adminTogglePayReply(${p.id})" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);color:#93c5fd;font-size:10.5px;font-weight:700;cursor:pointer">↩️ رد</button>
@@ -7520,6 +7522,82 @@ function adminRenderPayments() {
       </div>` : ''}
     </div>`;
   }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ↩️ تسجيل استرداد تحويلٍ بنكيّ — الحالة التي لم تكن موجودة
+
+   كانت حالاتُ العملية ثلاثاً: مؤكّدة · مرفوضة · قيد المراجعة. ولا شيء
+   اسمُه «مستردّة». فمن ردّ مالاً لعميلٍ لم يجد إلا «رفض» —
+   **و«رفض» تعني أنّ التحويل لم يصحّ أصلاً، لا أنّ مالاً دخل ثمّ رُدّ.**
+   ▸ والفرق يظهر في الدفاتر: المرفوضة لم تُحصَّل قطّ، والمستردّة حُصّلت
+     ثمّ رُدّت — وكلتاهما «صفرٌ» في الصافي، **لكنّ الأولى لم تكن عميلاً
+     والثانية كانت.** ونسبةُ التجديد وعددُ العملاء يُبنيان على هذا.
+   ▸ ويُطلب **الرقم المرجعيّ** لأنّ التحويل البنكيّ لا تشهد له بوّابة:
+     **إشعارُ بنكك هو السجلّ كلُّه، ورقمُه هو ما يربطه بهذه العملية.**
+   ══════════════════════════════════════════════════════════════════════ */
+async function adminRefundBank(id) {
+  if (!(isSuperAdmin() || can('users'))) { showToast('⛔ لا تملك الصلاحية'); return; }
+  const p = _admPayments.find(x => x.id === id);
+  if (!p) { showToast('⚠️ لم تُعثر العملية'); return; }
+  const paid = Math.round((Number(p.total) || 0) * 100) / 100;
+  const already = Math.round((Number(p.refunded_total) || 0) * 100) / 100;
+  const left = Math.round((paid - already) * 100) / 100;
+  if (left <= 0) { showToast('ℹ️ استُردّ كامل المبلغ سابقاً'); return; }
+
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:1305;background:rgba(0,0,0,.84);display:flex;'
+                  + 'align-items:center;justify-content:center;padding:18px';
+  const inp = 'width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid var(--bdr);'
+            + 'background:var(--surf-alt);color:var(--txt);font-size:13px;font-family:inherit;outline:none;margin-bottom:9px';
+  d.innerHTML =
+    '<div style="background:var(--surf);border:1px solid rgba(251,191,36,.5);border-radius:18px;max-width:380px;'
+    + 'width:100%;padding:22px 20px;direction:rtl;text-align:right">'
+    + '<div style="text-align:center;font-size:32px;line-height:1">↩️</div>'
+    + '<div style="text-align:center;font-size:15.5px;font-weight:800;color:#fcd34d;margin:6px 0 3px">تسجيل استرداد</div>'
+    + '<div style="text-align:center;font-size:11.5px;color:var(--txt-m);margin-bottom:14px">'
+    + (p.email || '') + ' · المدفوع ' + paid + ' ر.س' + (already ? ' · استُردّ سابقاً ' + already : '') + '</div>'
+    + '<label style="font-size:11.5px;color:var(--txt-m)">المبلغ المستردّ (الأقصى ' + left + ')</label>'
+    + '<input id="_rfAmt" type="number" step="0.01" min="0.01" max="' + left + '" value="' + left + '" style="' + inp + '">'
+    + '<label style="font-size:11.5px;color:var(--txt-m)">الرقم المرجعيّ لتحويل البنك</label>'
+    + '<input id="_rfRef" type="text" placeholder="من إشعار التحويل" style="' + inp + ';direction:ltr;text-align:left">'
+    + '<div style="font-size:10.5px;color:var(--txt-m);line-height:1.8;margin-bottom:12px">'
+    + '⚠️ سجّلها <b>بعد</b> أن تُحوّل المبلغ فعلاً — وإلى <b>نفس الحساب</b> الذي حوّل منه.</div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button id="_rfGo" style="flex:1.2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;'
+    + 'font-size:13px;color:#0b1220;font-family:inherit;background:linear-gradient(135deg,#f59e0b,#fbbf24)">سجّل الاسترداد</button>'
+    + '<button id="_rfNo" style="flex:1;padding:11px;border-radius:11px;cursor:pointer;border:1.5px solid var(--bdr);'
+    + 'background:var(--surf-alt);color:var(--txt);font-weight:700;font-size:12.5px;font-family:inherit">إلغاء</button>'
+    + '</div></div>';
+  document.body.appendChild(d);
+  d.querySelector('#_rfNo').onclick = () => d.remove();
+  d.querySelector('#_rfGo').onclick = async () => {
+    const amt = Math.round((parseFloat(d.querySelector('#_rfAmt').value) || 0) * 100) / 100;
+    const ref = (d.querySelector('#_rfRef').value || '').trim();
+    if (!(amt > 0) || amt > left) { showToast('⚠️ مبلغٌ غير صالح — الأقصى ' + left); return; }
+    if (!ref) { showToast('⚠️ اكتب الرقم المرجعيّ — إشعارُ بنكك هو السجلّ الوحيد'); return; }
+    const total = Math.round((already + amt) * 100) / 100;
+    const st = (Math.round(total * 100) >= Math.round(paid * 100)) ? 'refunded' : 'partially_refunded';
+    const who = (typeof sbUser !== 'undefined' && sbUser && sbUser.email) || 'الأدمن';
+    try {
+      const { error } = await sb.from('payments')
+        .update({ refunded_total: total, status: st,
+                  message: String(p.message || '') + '\n↩️ استُردّ ' + amt.toFixed(2)
+                           + ' ر.س بتحويل بنكيّ · مرجع: ' + ref + ' · بواسطة ' + who })
+        .eq('id', id);
+      if (error) throw error;
+      p.refunded_total = total; p.status = st; d.remove();
+      try { logAdminAction('refund_bank', p.email || ('#' + id), amt.toFixed(2) + ' ر.س · مرجع ' + ref); } catch (_) {}
+      showToast('↩️ سُجّل استرداد ' + amt.toFixed(2) + ' ر.س');
+      adminRenderPayments();
+      /* والسؤال عن الاشتراكات — لا يُلغى شيءٌ بلا قرار */
+      if (await _payAskRevoke(p)) {
+        const gone = await _payRevokeSubs(p);
+        showToast(gone.length ? '↩️ أُلغيت: ' + gone.join('، ') : 'ℹ️ لا اشتراكات قائمة من هذه العملية');
+        if (typeof adminLoadUsers === 'function') adminLoadUsers();
+      } else showToast('ℹ️ أُبقيت الاشتراكات كما هي');
+    } catch (e) { _admErr(e, 'تعذّر تسجيل الاسترداد'); }
+  };
 }
 
 /* نافذة تأكيد قبل تنفيذ أي إجراء على عملية دفع */

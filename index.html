@@ -1854,7 +1854,7 @@ canvas#mdChart{display:block;width:100% !important}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
       <button class="pred-filter active" id="predFilter-all"      onclick="predSetFilter('all')">الكل <span id="predCount-all">(0)</span></button>
       <button class="pred-filter"        id="predFilter-ready"    onclick="predSetFilter('ready')">🎯 جاهز <span id="predCount-ready">(0)</span></button>
-      <button class="pred-filter"        id="predFilter-high"     onclick="predSetFilter('high')">احتمال عالٍ <span id="predCount-high">(0)</span></button>
+      <button class="pred-filter"        id="predFilter-high"     onclick="predSetFilter('high')" title="درجة توافق المؤشّرات مرتفعة — ليست نسبة نجاح">توافق عالٍ <span id="predCount-high">(0)</span></button>
       <button class="pred-filter"        id="predFilter-imminent" onclick="predSetFilter('imminent')">وشيك <span id="predCount-imminent">(0)</span></button>
       <button class="pred-filter"        id="predFilter-up"       onclick="predSetFilter('up')">صعودي <span id="predCount-up">(0)</span></button>
       <button class="pred-filter"        id="predFilter-down"     onclick="predSetFilter('down')">هبوطي <span id="predCount-down">(0)</span></button>
@@ -2434,8 +2434,8 @@ function toggleDisclaimer(){
    نسخة الكود — للتحقق السريع أن المتصفح
    يشغّل أحدث نسخة من الملف (افحص الكونسول)
 ───────────────────────────────────── */
-window.APP_BUILD = '2026-08-25-v575';
-console.log('%c[تداول بلس] البناء: 2026-08-25-v575 · اكتب buildLog() لتفصيل التغييرات',
+window.APP_BUILD = '2026-08-27-v576';
+console.log('%c[تداول بلس] البناء: 2026-08-27-v576 · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
    📜 سجلّ البناءات — سطرٌ لكل بناء
@@ -2445,6 +2445,7 @@ console.log('%c[تداول بلس] البناء: 2026-08-25-v575 · اكتب bui
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v576', '🏷️ «٨٧٪» ← «توافق ٨٧» — الاسم يُصحَّح بعد أن كذّبه القياس. قِيس المتنبّئ على **٧٢٤ إشارة و٢٦ تاريخاً**: الحافّة على السوق **٠٫٠٠٪** (أسهمُه صعدت ٠٫٢٥٪ والسوق ٠٫٥٠٪ — **في الاتجاهين معاً**، فنداءُ «صاعد/هابط» لا يحمل معلومة)، والصاعدة تفوّقت في **٧ أيامٍ من ٢٦** والمتوقّع ١٣. ▸ وشرائح الاحتمال الثلاث لا تتفاضل: فائضُ ٧٠–٧٧ كان **+٠٫٩٩٪** وفائضُ ٨٥+ كان **−٠٫٢٢٪**، و«فاقت معيارها» تسير عكسهما ⇒ **قفزاتٌ نادرة لا خاصيّة**. ▸ **وعلامةُ المئة هي المشكلة لا الرقم:** «٨٧٪» تُقرأ وعداً بالنجاح، والرقم درجةُ اجتماع مؤشّراتٍ على مئة لا أكثر. فحُذفت العلامة وسُمّي باسمه في الفلتر والبطاقة والمعايرة والتلميحات. ▸ **ولم يُمسّ حسابٌ ولا منطقُ ترتيب: هذا تصحيحُ لسانٍ لا تعديلُ محرّك.** ▸ وتُعاد الملفّات الثلاثة شهرياً — ودون ~١٠٠ تاريخٍ تبقى النتيجة اتجاهاً لا حكماً'],
     ['v575', '🔽 الشموع تُجلب تنازلياً بحدٍّ صريح — سببُ «بلا شموع ٧٦ سهماً» أخيراً. كان الطلب **تصاعدياً بلا حدّ**، والخادم يقصّ عند سقفٍ للصفوف؛ فمن كان تاريخُه طويلاً (أرامكو · البحري · الإدراجات القديمة) يُقصّ عند **الأقدم**، فيصير آخرُ صفٍّ عنده من سنواتٍ مضت، فيراه حارسُ الطزاجة قديماً فيذهب إلى ياهو عبر وسطاء عامّين فيُخنق فيعود «بلا شموع». ▸ **والقصُّ لم يكن يُعلن عن نفسه: لا خطأ ولا تحذير — بياناتٌ صحيحةٌ ناقصةٌ من الطرف الذي يهمّ. وأخطرُ نقصٍ ما يبدو تامّاً.** ▸ فصار يُطلب الأحدث صراحةً (`order desc · limit 1400`) ثمّ يُقلَب — **وإن قصّ الخادم الآن قصّ من القديم، وهو ما لا نحتاجه**. ▸ ويُعلَن رفضُ بيانات القاعدة لقِدَمها مرّةً في الكونسول، فلا يبقى صامتاً. ▸ **والأمثلة كانت تصرخ بالجواب: ٢٢٢٢ · ٤٠٣٠ · ١٣٠١ — كلُّها إدراجاتٌ قديمة**'],
     ['v574', '🩺 «بلا شموع» ٧٧ سهماً — والقاعدة فيها ٢٦٩ رمزاً بشمعة اليوم. قياسٌ لا تخمين: `predFailReport()` قال «سقط ٧٧ — بلا شموع ٧٧ · ضحل ٠ · مرفوض ٠ · استثناء ٠»، والعدد يتبدّل في كلّ مسح (١٩٦ · ٢٠٢ · ١٩٢) — **وهذا توقيعُ الخنق لا العطل الثابت**. ▸ وكان الخطأ يُبتلع في سطرٍ واحد `if (error || ...) return null` — **فلا يُفرَّق بين «تعذّر الجلب» و«لا بيانات»، وهما نقيضان في العلاج: الأوّل يُعاد والثاني يُقبل.** ▸ فصار الخطأ يُعاد مرّةً بعد مهلةٍ **عشوائية** (فإعادةٌ متزامنة من العمّال تصنع الموجة التي فرّت منها)، ويُعلَن نصُّه أوّلَ مرّة ليُعرف أهو خنقٌ ٤٢٩ أم غيره. ▸ وخُفّض التوازي ٥ ← ٤: **وسهمٌ يُجلب أبطأ خيرٌ من سهمٍ لا يُجلب**'],
     ['v573', '↩️ رُجوعٌ عن v572 — بالقياس لا بالرأي. جُرّبت عتبةُ كشفٍ أدقّ (النزول إلى ٢٪ وطلبُ ستّ نقاط)، وقيست على السوق كلّه فأساءت ولم تُحسن: **سليم ٥٩٪ ← ٥٤٪ · يكسر ٠٪ ← ١٪ · مطابقة ضعيفة ٢٠٪ ← ٢٤٪ · وسيط المطابقة ٦٢٪ ← ٦١٪** — و«الرقيق» لم ينخفض ذرّة (١٤٪ قبل وبعد). ▸ **فالعتبةُ الأدقّ التقطت ضجيجاً ولم تكشف بنية**، ودُفع ثمنٌ بلا مقابل. ▸ **وهذا ما تُثبته القياسات لا الحدس:** الحدسُ قال «انزل أدقّ تجد بنيةً»، والسوقُ قال «تجد ضجيجاً». ▸ ويبقى v570/v571 (ترتيب الترجيح) — وهما اللذان أنزلا الكسر إلى صفر'],
@@ -13383,7 +13384,10 @@ function wlRender() {
         outClr = hit ? '#4ade80' : '#fbbf24';
       }
       predBadge =
-        `<span class="pf-tag" style="background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.4)">🔮 تنبّؤ ${dirIco} ${p.prob}%${p.targetPct != null ? ' · ' + (p.targetPct > 0 ? '+' : '') + p.targetPct + '%' : ''}</span>` +
+        /* 🏷️ «توافق 87» لا «87%» — الرقم درجةُ اجتماع مؤشّرات على مئة،
+              وقياسُ 27 أغسطس 2026 أثبت أنّه لا يرتّب النتائج. فعلامةُ
+              المئة تجعله وعداً، وحذفُها يُعيده وصفاً. */
+        `<span class="pf-tag" style="background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.4)" title="درجة توافق المؤشّرات (0–100) — ليست نسبة نجاح">🔮 تنبّؤ ${dirIco} توافق ${p.prob}${p.targetPct != null ? ' · هدف ' + (p.targetPct > 0 ? '+' : '') + p.targetPct + '%' : ''}</span>` +
         (outTxt ? `<span class="pf-tag" style="color:${outClr};border:1px solid ${outClr}55">${outTxt}</span>` : '');
     }
 
@@ -15120,7 +15124,11 @@ document.addEventListener('keydown', e => {
       });
       Object.keys(acc).forEach(k => { const a = acc[k]; a.rate = Math.round(a.s / (a.s + a.f) * 100); });
       _predSymAcc = acc;
-      /* 📈 الدقّة حسب مستوى الاحتمال + ⏱️ متوسط أيام بلوغ الهدف */
+      /* 📈 الدقّة حسب درجة التوافق + ⏱️ متوسط أيام بلوغ الهدف
+         ⚠️ وهذه دقّةٌ **مرصودة** لا موعودة. وقياس 27 أغسطس 2026 (724
+         إشارة · 26 تاريخاً) وجد أنّ الشرائح الثلاث لا تتفاضل في العائد:
+         فائض 70–77 كان +0.99% وفائض 85+ كان −0.22%، والعمودان متناقضان
+         ⇒ قفزاتٌ نادرة لا خاصيّة. فتُعرض الأرقام ولا تُوعَد بها. */
       const bk = { '70': { s: 0, f: 0 }, '80': { s: 0, f: 0 }, '90': { s: 0, f: 0 } };
       let daysSum = 0, daysN = 0;
       _predOutcomes.forEach(p => {
@@ -15278,9 +15286,9 @@ document.addEventListener('keydown', e => {
       '<div style="font-size:10.5px;color:var(--txt-m);text-align:center;padding:12px 8px;line-height:1.8">🎯 «نجح» = بلوغ السعر الهدف خلال المدّة المتوقّعة. تقييم آلي للأغراض التعليمية فقط.</div>';
     if (want === 'success') {
       const b = _predStats.byProb || {};
-      const cell = k => { const x = b[k] || {}; const lbl = k === '90' ? '90%+' : k + '–' + (Number(k) + 9) + '%'; return lbl + ': <b>' + (x.rate != null ? x.rate + '%' : '—') + '</b>'; };
+      const cell = k => { const x = b[k] || {}; const lbl = k === '90' ? '90+' : k + '–' + (Number(k) + 9); return lbl + ': <b>' + (x.rate != null ? x.rate + '%' : '—') + '</b>'; };
       const avg = _predStats.avgDays != null ? _predStats.avgDays + ' يوم' : '—';
-      wrap.innerHTML = '<div style="font-size:11px;color:var(--txt-m);background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center;line-height:1.9">⏱️ متوسط بلوغ الهدف: <b style="color:#4ade80">' + avg + '</b><br>📈 الدقّة حسب الاحتمال — ' + cell('70') + ' · ' + cell('80') + ' · ' + cell('90') + '</div>' + wrap.innerHTML;
+      wrap.innerHTML = '<div style="font-size:11px;color:var(--txt-m);background:var(--surf-alt);border:1px solid var(--bdr);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center;line-height:1.9">⏱️ متوسط بلوغ الهدف: <b style="color:#4ade80">' + avg + '</b><br>📈 الدقّة حسب درجة التوافق — ' + cell('70') + ' · ' + cell('80') + ' · ' + cell('90') + '</div>' + wrap.innerHTML;
     }
     if (want === 'fail') {
       const rc = { reverse: 0, short: 0, flat: 0 };
@@ -16018,7 +16026,7 @@ document.addEventListener('keydown', e => {
           '<div style="display:flex;align-items:center;gap:6px">' +
           '<div style="flex:1;height:7px;background:var(--bdr);border-radius:4px;overflow:hidden">' +
           '<div style="height:100%;width:' + r.probability + '%;background:' + probColor(r.probability) + '"></div></div>' +
-          '<span style="font-weight:800;font-size:12px;color:' + probColor(r.probability) + '" title="درجة انضغاط مركّبة 0–100 (ليست احتمالاً)">' + r.probability + '</span></div></td>' +
+          '<span style="font-weight:800;font-size:12px;color:' + probColor(r.probability) + '" title="درجة توافق المؤشّرات 0–100 — ليست احتمالاً ولا نسبة نجاح. وقياسُ 724 إشارة لم يجد أنّ ارتفاعها يرفع العائد.">' + r.probability + '</span></div></td>' +
         '<td style="padding:9px 6px;text-align:center;font-size:11.5px">' + Math.round(r.squeezeStrength * 100) + '%' + (r.ttm ? ' 🔒' : '') + '</td>' +
         '<td style="padding:9px 6px;text-align:center">' + dirChip(r.direction) + '</td>' +
         '<td style="padding:9px 6px;text-align:center">' + predLTCell(r.sym) + '</td>' +
@@ -16721,7 +16729,7 @@ document.addEventListener('keydown', e => {
     if (bp && r.probability != null) {
       const key = r.probability >= 90 ? '90' : r.probability >= 80 ? '80' : '70';
       if (bp[key] && (bp[key].s + bp[key].f) >= MIN && bp[key].rate != null)
-        return { rate: bp[key].rate, n: bp[key].s + bp[key].f, basis: 'ثقة ~' + key + '%' };
+        return { rate: bp[key].rate, n: bp[key].s + bp[key].f, basis: 'توافق ~' + key };
     }
     return null;
   }

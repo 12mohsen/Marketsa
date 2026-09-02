@@ -1968,13 +1968,13 @@ canvas#mdChart{display:block;width:100% !important}
             </div>
             <div style="display:flex;gap:6px;align-items:center">
               <!-- 📐 القناة الانحدارية — زرٌّ يُشغّلها ويُطفئها، ولا شيء يتغيّر ما لم تُضغط -->
-              <button id="termChanBtn" onclick="termToggleChan()" title="قناة انحدارٍ على ما هو معروضٌ الآن: خطُّ الاتجاه ±2 انحراف معياريّ" style="background:var(--surf);border:1px solid var(--bdr);color:#a78bfa;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📐 القناة</button>
+              <button id="termChanBtn" onclick="termToggleChan()" title="قناة انحدارٍ على 160 شمعة — نفسِ النافذة التي تُحسب عليها الخطّة: خطُّ الاتجاه ±2 انحراف معياريّ. وإن كبّرتَ أو سحبتَ تبعت القناةُ ما تراه." style="background:var(--surf);border:1px solid var(--bdr);color:#a78bfa;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📐 القناة</button>
               <button id="termTVBtn" onclick="termOpenTV()" style="background:var(--surf);border:1px solid var(--bdr);color:#38bdf8;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📊 TradingView ↗</button>
             </div>
           </div>
           <div id="termStats" style="margin-bottom:8px"></div>
           <div id="termChart" style="width:100%;border-radius:10px;overflow:hidden"></div>
-          <div style="font-size:10.5px;color:var(--txt-m);margin-top:5px">🕯️ MA20 (أزرق) · MA50 (برتقالي) · حجم — من بياناتك. · 📐 «القناة» خطُّ انحدارٍ ±2 انحراف على المعروض — وصفٌ للنافذة لا تنبّؤ.</div>
+          <div style="font-size:10.5px;color:var(--txt-m);margin-top:5px">🕯️ MA20 (أزرق) · MA50 (برتقالي) · حجم — من بياناتك. · 📐 «القناة» خطُّ انحدارٍ ±2 انحراف على 160 شمعة (نفسِ نافذة الخطّة، لا عرضِ شاشتك) — وصفٌ للنافذة لا تنبّؤ. · «قوة» = ما يقطعه الميل ÷ عرض القناة؛ دون 0.50 تُرسم رماديةً «عرضية» لأن الاتجاه أصغرُ من ضجيجه.</div>
         </div>
         <!-- تفاصيل التحليل -->
         <div id="termDetail" style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:16px;min-height:220px">
@@ -14656,6 +14656,50 @@ document.addEventListener('keydown', e => {
 /* ─────────────────────────────────────
    TAB NAVIGATION
 ───────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   📏 PLAN_WIN — نافذةُ القياس الواحدة
+
+   بلاغٌ حقيقيّ على «السيف غاليري 4192»: نفسُ السهم، ونفسُ اللحظة —
+   قناةٌ **خضراء صاعدة** على الكمبيوتر و**حمراء هابطة** على الجوال.
+   والسببُ أنّ القناة كانت تُقاس على «ما هو معروض»، والمعروضُ يتبدّل
+   بعرض الشاشة (70 شمعة تحت 760px · 180 فوقها).
+
+   ▸ **وعرضُ الشاشة ليس حقيقةً من حقائق السوق.** أن يختلف وصفُ الأداة
+     لأنّ القارئ أمسك جوّالاً بدل حاسوب — عيبٌ لا يُصلحه شرح.
+   ▸ والأسوأ أنّ الخطّة نفسها (دخول · وقف · هدف) تُقاس على 160 شمعة
+     في `elliottCompute`، فمستخدمُ الجوال يقرأ هدفاً بُني على 160 شمعة
+     وأمامه 70: **يُطالَب بالثقة في دليلٍ لا يراه.**
+
+   فصار الرقمُ ثابتاً واحداً يقرؤه الاثنان: الخطّةُ تقيسه، والقناةُ
+   تقيسه، والشاشةُ ترسم ما يسعُها وتُفصح عن الفرق.
+   ══════════════════════════════════════════════════════════════════════ */
+const PLAN_WIN = 160;
+
+/* ══════════════════════════════════════════════════════════════════════
+   ⚪ CHAN_FLAT — العتبةُ التي دونها لا تُسمّى القناةُ اتجاهاً
+
+   «قوّةُ الاتجاه» = ما يقطعه خطُّ الانحدار عبر النافذة ÷ عرض القناة:
+
+        str = |b| × (nn − 1) ÷ (2 × K × sd)          [K = 2 ⇒ 4·sd]
+
+   ▸ str = 1 ⇒ الميلُ يقطع عرضَ القناة كاملاً: اتجاهٌ يقود السعر.
+   ▸ str = 0.2 ⇒ يقطع خُمسَه: **السعرُ يتذبذب أكثرَ ممّا يتّجه**،
+     والخطُّ يصف ميلاً غارقاً في ضجيجه.
+
+   وهي مرتبطةٌ بـ R² ارتباطاً رتيباً (str ≈ 0.5 ⇔ R² ≈ 25%)، فاخترناها
+   لأنها **تُقرأ من الشارت بالعين**: طولُ الميل مقابل عرض الشريط.
+
+   ▸ والعلّة التي أوجبتها: «السيف غاليري» بميل ‎+0.04%‎/شمعة على 160
+     شمعة يقطع ‎0.15‎ ريال وعرضُ قناته ‎0.71‎ — **خُمسُ الضجيج، مرسومٌ
+     بخضرةِ اتجاهٍ حقيقيّ**، والبطاقةُ تحته تقول «⏳ انتظر». فيصدّق
+     القارئُ اللونَ ويُهمل النصّ. **ولونٌ يناقض حكمَك أسوأ من لا لون.**
+
+   ▸ 🔬 والرقمُ أدناه **مبدئيّ حتى يُقاس**: شغّل `chanCalib()` في
+     الطرفية بعد مسح السوق، واقرأ عند أيّ عتبةٍ يهبط تناقضُ القناة مع
+     المحرّك. **كما رددتَ v572 حين خالف السوقُ الحدس.**
+   ══════════════════════════════════════════════════════════════════════ */
+const CHAN_FLAT = 0.50;
+
 /* ═══ متنبئ الانفجار السعري (قسم جميع الأسهم) ═══ */
 (function(){
   const nz = x => (x === null || x === undefined || isNaN(x)) ? null : +x;
@@ -18118,6 +18162,79 @@ document.addEventListener('keydown', e => {
        جديدة (تُحرّكه) أو مغادرة الفأرة على الكمبيوتر. */
     svg.addEventListener('touchcancel', hideAll);
   }
+  /* ══════════════════════════════════════════════════════════════════════
+     🔬 chanCalib() — معايرةُ عتبة «العرضية» على السوق كلّه
+
+     العتبةُ في `CHAN_FLAT` رقمٌ مبدئيٌّ اخترتُه بالحساب لا بالقياس،
+     **وهذا بالضبط ما ردَّ v572**: قال الحدسُ «انزل أدقّ تجد بنية»،
+     وقال السوقُ «تجد ضجيجاً». فلا تُثبَّت العتبةُ حتى تُقاس.
+
+     ▸ بلا شبكة ولا انتظار: `PRED_CACHE` يحمل تاريخ كلّ سهمٍ مُسِح.
+     ▸ ولا تلمس شيئاً — تقرأ وتطبع، ثمّ تُعيد الصفوف لمن أراد تحليلاً أعمق.
+
+     الاستعمال: امسح السوق، ثمّ في طرفيّة المتصفّح:  chanCalib()
+
+     🎯 والمقياسُ الحاكم ليس «كم سهماً يصير رمادياً» بل **«كم مرّةً
+        تناقض القناةُ محرّكَك»**: سهمٌ قناتُه خضراء و`elDir` هابط تناقضٌ
+        يراه المستخدم ولا يملك حلَّه. فاختر أصغرَ عتبةٍ يهبط عندها
+        «تناقض %» هبوطاً معتبراً — فما زاد بعدها يشتري صمتاً بلا فائدة.
+     ══════════════════════════════════════════════════════════════════════ */
+  window.chanCalib = function (winBars) {
+    const W = (+winBars > 0) ? +winBars : PLAN_WIN;
+    const rows = [];
+    Object.keys(PRED_CACHE).forEach(function (sym) {
+      try {
+        const cds = PRED_CACHE[sym];
+        if (!cds || cds.length < 30) return;
+        const nn = Math.min(W, cds.length);
+        const M = cds.slice(-nn).map(function (c) { return +c.c; });
+        let sx = 0, sy = 0, sxy = 0, sxx = 0;
+        for (let i = 0; i < nn; i++) {
+          if (!isFinite(M[i]) || M[i] <= 0) return;      // سهمٌ ببياناتٍ ناقصة يُترك، لا يُلفَّق
+          sx += i; sy += M[i]; sxy += i * M[i]; sxx += i * i;
+        }
+        const den = nn * sxx - sx * sx; if (!den) return;
+        const b = (nn * sxy - sx * sy) / den, a = (sy - b * sx) / nn;
+        let ss = 0; for (let i = 0; i < nn; i++) { const r = M[i] - (a + b * i); ss += r * r; }
+        const sd = Math.sqrt(ss / nn);
+        const str = (sd > 0) ? Math.abs(b) * (nn - 1) / (4 * sd) : 99;
+        const res = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).find(function (x) { return x && x.sym === sym; });
+        rows.push({
+          sym: sym, nn: nn, str: +str.toFixed(3),
+          dir: (b >= 0 ? 'up' : 'down'),
+          el: (res && res.elDir) ? res.elDir : '',
+          plan: !!(res && res.elPlan && res.elPlan.rr)
+        });
+      } catch (e) {}
+    });
+    if (!rows.length) { console.warn('🔬 [معايرة] لا شموع في الذاكرة — امسح السوق أوّلاً ثمّ أعد النداء.'); return null; }
+    rows.sort(function (p, q) { return p.str - q.str; });
+    const pct = function (k) { return rows[Math.min(rows.length - 1, Math.floor(rows.length * k))].str; };
+    console.log('🔬 معايرة عتبة «العرضية» · نافذة ' + W + ' شمعة · ' + rows.length + ' سهماً'
+      + ' · العتبة الحالية CHAN_FLAT = ' + CHAN_FLAT);
+    console.log('   توزيع القوّة — 10%: ' + pct(.10).toFixed(2) + ' · 25%: ' + pct(.25).toFixed(2)
+      + ' · الوسيط: ' + pct(.50).toFixed(2) + ' · 75%: ' + pct(.75).toFixed(2) + ' · 90%: ' + pct(.90).toFixed(2));
+    const withEl = rows.filter(function (r) { return r.el; });
+    console.log('   أسهمٌ لها اتجاهُ محرّكٍ يُقارَن به: ' + withEl.length
+      + (withEl.length ? '' : ' — ⚠️ بلا elDir لا يُقاس التناقض، امسح السوق كاملاً'));
+    const table = [0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0].map(function (t) {
+      const grey = rows.filter(function (r) { return r.str < t; });
+      const judged = withEl.filter(function (r) { return r.str >= t; });
+      const clash = judged.filter(function (r) { return r.dir !== r.el; });
+      return {
+        'العتبة': t,
+        'رمادية %': +(grey.length / rows.length * 100).toFixed(1),
+        'ملوّنة': judged.length,
+        'تناقض': clash.length,
+        'تناقض %': judged.length ? +(clash.length / judged.length * 100).toFixed(1) : 0
+      };
+    });
+    console.table(table);
+    console.log('👈 العتبة 0 = السلوك القديم (كلُّ شيءٍ ملوّن). اختر أصغرَ عتبةٍ يهبط عندها «تناقض %»'
+      + ' هبوطاً معتبراً، ثمّ ثبّتها في CHAN_FLAT.');
+    return { rows: rows, table: table };
+  };
+
   /* 🕯️ رسم شموع يابانية (SVG) + حجم + متوسطان متحرّكان — من بياناتك مباشرة */
   /* ══════════════════════════════════════════════════════════════════════
      🔍 عدسة الشارت — حالة التكبير والتحريك
@@ -18362,20 +18479,53 @@ document.addEventListener('keydown', e => {
     let chan = '', chanTag = '';
     try {
       if (TERM_CH && take >= 10) {
-        const nn = take;
+        /* ══════════════════════════════════════════════════════════
+           📏 القياسُ على نافذةٍ ثابتة · والرسمُ على ما تسعُه الشاشة
+
+           «العرضُ الافتراضيّ» = ما لم يلمسه المستخدم: العدسةُ عند آخر
+           الشموع (`off === 0`) والعرضُ يساوي حدَّ الجهاز (`maxBars`).
+           وهذا بالضبط موضعُ العطل — فيُقاس فيه `PLAN_WIN` لا عرضُ
+           الشاشة، فيتّحد الوصفُ على الجهازين ويتّحد مع الخطّة.
+
+           ▸ فإن كبّر المستخدم أو سحب، عادت القناةُ تصف ما يراه —
+             **لأنّ تلك نافذةٌ اختارها هو، لا حدٌّ فرضتْه شاشتُه.**
+           ▸ و`end` حدٌّ أعلى لـ`nn` فلا تخرج الشريحةُ عن البيانات أبداً.
+           ══════════════════════════════════════════════════════════ */
+        const _defView = (_lens.off === 0 && take === Math.min(n, maxBars));
+        const nn = Math.min(_defView ? PLAN_WIN : take, end);
+        const M = cds.slice(end - nn, end).map(c => +c.c);
         let sx = 0, sy = 0, sxy = 0, sxx = 0;
-        for (let i = 0; i < nn; i++) { sx += i; sy += C[i]; sxy += i * C[i]; sxx += i * i; }
+        for (let i = 0; i < nn; i++) { sx += i; sy += M[i]; sxy += i * M[i]; sxx += i * i; }
         const den = nn * sxx - sx * sx;
         if (den !== 0) {
           const b = (nn * sxy - sx * sy) / den;      // الميل: تغيّر السعر لكل شمعة
           const a = (sy - b * sx) / nn;              // التقاطع
           let ss = 0;
-          for (let i = 0; i < nn; i++) { const r = C[i] - (a + b * i); ss += r * r; }
+          for (let i = 0; i < nn; i++) { const r = M[i] - (a + b * i); ss += r * r; }
           const sd = Math.sqrt(ss / nn);             // الانحراف المعياريّ للبواقي
           const K = 2;
-          const x0 = L0 + cw / 2, x1 = L0 + (nn - 1) * cw + cw / 2;
+          /* 🧭 إسقاطُ نافذة القياس على محور الرسم — آخرُ شمعةٍ مشتركةٌ
+             بينهما، فنَعُدّ إلى الوراء منها. ولو تساوت النافذتان صار
+             `x0 = L0 + cw/2` و`f0 = a` — أي السلوكُ القديم حرفاً بحرف.
+             ▸ ولا نرسم القناةَ إلا فوق ما قاسته: إن كان المرسومُ أوسع
+               بدأتْ متأخّرةً عن حافّته، وإن كان أضيقَ قصّها `clipPath`. */
+          const x0 = L0 + (take - nn) * cw + cw / 2, x1 = L0 + (take - 1) * cw + cw / 2;
           const f0 = a, f1 = a + b * (nn - 1);
-          const col = b >= 0 ? '#22c55e' : '#ef4444';
+          /* ══════════════════════════════════════════════════════════
+             ⚪ قوّةُ الاتجاه — ولونٌ ثالثٌ لِـ«لا اتجاه»
+
+             كان اللونُ فحصَ إشارةٍ فقط: `b >= 0 ? أخضر : أحمر`. فميلُ
+             ‎+0.0001‎ يُرسم بخضرةِ ميلِ ‎+0.5‎ — **تُلبَس درجاتُ اليقين
+             لوناً واحداً**، وأكثرُ الأسهم في أكثر الأيام عرضيّةٌ لا
+             صاعدةٌ ولا هابطة.
+             ▸ والرمادي ليس إخفاءً: الميلُ والموضعُ يبقيان مقروءَين،
+               وإنّما يُنزع عن الخطّ ادّعاءُ الاتجاه.
+             ▸ وهذا امتدادُ مبدأٍ قائمٍ عندك (`_thin`): حين تضعف
+               البيانات تُعلن الأداةُ ضعفَها بدل أن تُجمّله.
+             ══════════════════════════════════════════════════════════ */
+          const _str = (sd > 0) ? (Math.abs(b) * (nn - 1)) / (2 * K * sd) : 99;
+          const _flat = _str < CHAN_FLAT;
+          const col = _flat ? '#94a3b8' : (b >= 0 ? '#22c55e' : '#ef4444');
           /* ══════════════════════════════════════════════════════════
              ⚠️ عيّنةٌ صغيرة — تُرسم باهتةً وتُعلن ضعفها
 
@@ -18408,14 +18558,21 @@ document.addEventListener('keydown', e => {
              ▸ وموضع آخر إغلاقٍ داخل القناة: 0% قاعُها · 100% سقفُها */
           const mid = (f0 + f1) / 2;
           const slopePct = (mid > 0) ? (b / mid * 100) : 0;
-          const lastC = C[nn - 1], fitLast = a + b * (nn - 1);
+          const lastC = M[nn - 1], fitLast = f1;
           const band = K * sd;
           let pos = (band > 0) ? ((lastC - (fitLast - band)) / (2 * band)) * 100 : 50;
           pos = Math.max(0, Math.min(100, pos));
           chanTag = '<text x="' + (L0 + 92) + '" y="26" font-size="10.5" font-weight="700" fill="'
             + (_thin ? '#94a3b8' : col) + '"'
-            + ' stroke="#0b1220" stroke-width="2.6" paint-order="stroke">📐 قناة ' + nn + ' شمعة · ميل '
+            + ' stroke="#0b1220" stroke-width="2.6" paint-order="stroke">📐 قناة ' + nn + ' شمعة'
+            /* 🔍 والفرقُ يُقال لا يُخفى: قِيسَ على 160 ورُسم منها 70 —
+               فمن رأى قناةً أطولَ من شموعه عرَف لِمَ، ولم يظنّها عطلاً. */
+            + (nn !== take ? ' (معروض ' + take + ')' : '') + ' · ميل '
             + (slopePct >= 0 ? '+' : '') + slopePct.toFixed(2) + '%/شمعة · الموضع ' + Math.round(pos) + '%'
+            /* ⚪ والقوّةُ تُقال دائماً لا عند الضعف فقط — فرقمٌ يظهر عند
+               السوء وحده يُقرأ تهمةً، ورقمٌ دائمٌ يُقرأ مقياساً. */
+            + ' · قوة ' + (_str >= 9.99 ? '9.9+' : _str.toFixed(2))
+            + (_flat ? ' ⚪ عرضية — لا اتجاه يُعتمد' : '')
             /* ⚠️ والتصريح بالضعف جزءٌ من الرقم لا حاشيةٌ له */
             + (_thin ? ' · ⚠️ عيّنة صغيرة — اقرأها خشنةً' : '') + '</text>';
         }
@@ -22021,7 +22178,10 @@ function elliottCompute(series, curPrice) {
     try { const w = pts.slice(-Math.min(252, pts.length)).map(p => p.c); return w.length ? Math.max.apply(null, w) : 0; }
     catch (e) { return 0; }
   })();
-  const win = pts.slice(-Math.min(160, pts.length));
+  /* 📏 نافذةُ القياس الواحدة — نفسُها التي تقيسها القناةُ على الشارت،
+     فلا يقول الرسمُ شيئاً وتقول الأرقامُ غيرَه. (انظر `PLAN_WIN` أعلاه) */
+  const _W = (typeof PLAN_WIN === 'number' && PLAN_WIN > 0) ? PLAN_WIN : 160;
+  const win = pts.slice(-Math.min(_W, pts.length));
   const vals = win.map(p => p.c);
   /* زجزاج: يكتشف نقاط الانعطاف بعتبة نسبية لالتقاط «الساق النشطة» الحالية بدل أكبر تأرجح مطلق */
   const zz = (v, pct) => {

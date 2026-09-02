@@ -18179,15 +18179,41 @@ const CHAN_FLAT = 0.50;
         يراه المستخدم ولا يملك حلَّه. فاختر أصغرَ عتبةٍ يهبط عندها
         «تناقض %» هبوطاً معتبراً — فما زاد بعدها يشتري صمتاً بلا فائدة.
      ══════════════════════════════════════════════════════════════════════ */
-  window.chanCalib = function (winBars) {
-    const W = (+winBars > 0) ? +winBars : PLAN_WIN;
-    const rows = [];
-    Object.keys(PRED_CACHE).forEach(function (sym) {
+  window.chanCalib = function (opts) {
+    opts = opts || {};
+    const W    = (+opts.win      > 0) ? +opts.win      : PLAN_WIN;
+    const MINB = (+opts.minBars  > 0) ? +opts.minBars  : 100;   // سهمٌ بتاريخٍ أقصر لا يُقارَن بغيره
+    const MIN_SAMPLE = 40;                                      // دون ذلك الجدولُ ضجيجٌ لا قياس
+
+    /* 📥 مصدران للتاريخ — والثاني هو الفرق بين 8 أسهمٍ و88:
+         ① `PRED_CACHE`      — يملؤه المسح (الأقدم أوّلاً · {c})
+         ② `histAllDailyCache` — كاش localStorage (الأحدث أوّلاً · {close}) */
+    const src = {};
+    try {
+      Object.keys(PRED_CACHE).forEach(function (s) {
+        const c = PRED_CACHE[s];
+        if (Array.isArray(c) && c.length) src[s] = c.map(function (x) { return +x.c; });
+      });
+    } catch (e) {}
+    const nPred = Object.keys(src).length;
+    try {
+      const bs = (typeof histAllDailyCache !== 'undefined' && histAllDailyCache && histAllDailyCache.bySymbol) || null;
+      if (bs) Object.keys(bs).forEach(function (s) {
+        if (src[s]) return;
+        const r = bs[s];
+        if (!Array.isArray(r) || !r.length) return;
+        src[s] = r.map(function (x) { return +(x.close != null ? x.close : x.c); }).reverse();
+      });
+    } catch (e) {}
+    const nHist = Object.keys(src).length - nPred;
+
+    const rows = []; let shortHist = 0;
+    Object.keys(src).forEach(function (sym) {
       try {
-        const cds = PRED_CACHE[sym];
-        if (!cds || cds.length < 30) return;
-        const nn = Math.min(W, cds.length);
-        const M = cds.slice(-nn).map(function (c) { return +c.c; });
+        const all = src[sym];
+        if (!all || all.length < MINB) { shortHist++; return; }
+        const nn = Math.min(W, all.length);
+        const M = all.slice(-nn);
         let sx = 0, sy = 0, sxy = 0, sxx = 0;
         for (let i = 0; i < nn; i++) {
           if (!isFinite(M[i]) || M[i] <= 0) return;      // سهمٌ ببياناتٍ ناقصة يُترك، لا يُلفَّق
@@ -18197,42 +18223,61 @@ const CHAN_FLAT = 0.50;
         const b = (nn * sxy - sx * sy) / den, a = (sy - b * sx) / nn;
         let ss = 0; for (let i = 0; i < nn; i++) { const r = M[i] - (a + b * i); ss += r * r; }
         const sd = Math.sqrt(ss / nn);
-        const str = (sd > 0) ? Math.abs(b) * (nn - 1) / (4 * sd) : 99;
+        const str = (sd > 0) ? Math.abs(b) * (nn - 1) / (2 * 2 * sd) : 99;
         const res = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).find(function (x) { return x && x.sym === sym; });
-        rows.push({
-          sym: sym, nn: nn, str: +str.toFixed(3),
-          dir: (b >= 0 ? 'up' : 'down'),
-          el: (res && res.elDir) ? res.elDir : '',
-          plan: !!(res && res.elPlan && res.elPlan.rr)
-        });
+        rows.push({ sym: sym, nn: nn, str: +str.toFixed(3), dir: (b >= 0 ? 'up' : 'down'),
+                    el: (res && res.elDir) ? res.elDir : '', plan: !!(res && res.elPlan && res.elPlan.rr) });
       } catch (e) {}
     });
-    if (!rows.length) { console.warn('🔬 [معايرة] لا شموع في الذاكرة — امسح السوق أوّلاً ثمّ أعد النداء.'); return null; }
+    if (!rows.length) { console.warn('🔬 [معايرة] لا تاريخ في الذاكرة — امسح السوق أوّلاً ثمّ أعد النداء.'); return null; }
+
     rows.sort(function (p, q) { return p.str - q.str; });
     const pct = function (k) { return rows[Math.min(rows.length - 1, Math.floor(rows.length * k))].str; };
     console.log('🔬 معايرة عتبة «العرضية» · نافذة ' + W + ' شمعة · ' + rows.length + ' سهماً'
+      + ' (من المسح ' + nPred + ' · من كاش التاريخ ' + nHist + ' · مستبعَدٌ لقِصَر تاريخه ' + shortHist + ')'
       + ' · العتبة الحالية CHAN_FLAT = ' + CHAN_FLAT);
     console.log('   توزيع القوّة — 10%: ' + pct(.10).toFixed(2) + ' · 25%: ' + pct(.25).toFixed(2)
       + ' · الوسيط: ' + pct(.50).toFixed(2) + ' · 75%: ' + pct(.75).toFixed(2) + ' · 90%: ' + pct(.90).toFixed(2));
     const withEl = rows.filter(function (r) { return r.el; });
-    console.log('   أسهمٌ لها اتجاهُ محرّكٍ يُقارَن به: ' + withEl.length
-      + (withEl.length ? '' : ' — ⚠️ بلا elDir لا يُقاس التناقض، امسح السوق كاملاً'));
+    console.log('   أسهمٌ لها اتجاهُ محرّكٍ يُقارَن به: ' + withEl.length);
+
+    /* ══════════════════════════════════════════════════════════════
+       ⚠️ والمِقياسُ يُعلن خطأه — وإلا كان أخطرَ ممّا يقيس
+
+       أوّلُ تشغيلٍ حقيقيّ ردّ **٨ أسهم**، وطبع جدولاً أنيقاً فيه
+       «تناقض 0%» عند عتبة 0.6 — والصفرُ مبنيٌّ على **سهمين**.
+       ▸ ونسبةٌ من سهمين هامشُها ±69 نقطة: **رقمٌ يبدو حكماً وهو نردٌ.**
+       ▸ وهذا عينُ ما تحرسه `_thin` في الشارت، فيلزم المِقياسَ ما يلزم
+         المرسوم: **يقول قوّته مع رقمه، أو لا يُقرأ.**
+       ══════════════════════════════════════════════════════════════ */
+    const moe = function (p, n) { return n > 0 ? +(196 * Math.sqrt(p * (1 - p) / n)).toFixed(1) : 0; };
     const table = [0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0].map(function (t) {
       const grey = rows.filter(function (r) { return r.str < t; });
       const judged = withEl.filter(function (r) { return r.str >= t; });
       const clash = judged.filter(function (r) { return r.dir !== r.el; });
+      const p = judged.length ? clash.length / judged.length : 0;
       return {
         'العتبة': t,
         'رمادية %': +(grey.length / rows.length * 100).toFixed(1),
         'ملوّنة': judged.length,
         'تناقض': clash.length,
-        'تناقض %': judged.length ? +(clash.length / judged.length * 100).toFixed(1) : 0
+        'تناقض %': +(p * 100).toFixed(1),
+        'هامش ±': moe(p, judged.length),
+        'يُقرأ؟': judged.length >= 30 ? '✅' : (judged.length >= 12 ? '⚠️ ضعيف' : '❌ قليل')
       };
     });
     console.table(table);
-    console.log('👈 العتبة 0 = السلوك القديم (كلُّ شيءٍ ملوّن). اختر أصغرَ عتبةٍ يهبط عندها «تناقض %»'
-      + ' هبوطاً معتبراً، ثمّ ثبّتها في CHAN_FLAT.');
-    return { rows: rows, table: table };
+
+    if (rows.length < MIN_SAMPLE) {
+      console.warn('⛔ العيّنة ' + rows.length + ' سهماً — دون ' + MIN_SAMPLE + ' لا يُقرأ هذا الجدول حكماً.\n'
+        + '   انظر عمود «هامش ±»: هو نصفُ عرضِ الثقة 95% لنسبة التناقض. حين يقارب الهامشُ النسبةَ نفسها،\n'
+        + '   فالرقمُ لا يُميّز عتبةً عن أخرى.\n'
+        + '   ▸ الحلّ: شغّل المسح الكامل للسوق (يملأ PRED_CACHE بمئات الأسهم) ثمّ أعد chanCalib().');
+    } else {
+      console.log('👈 العتبة 0 = السلوك القديم. اختر أصغرَ عتبةٍ يهبط عندها «تناقض %» هبوطاً يتجاوز هامشَه،'
+        + ' ثمّ ثبّتها في CHAN_FLAT.');
+    }
+    return { rows: rows, table: table, n: rows.length, readable: rows.length >= MIN_SAMPLE };
   };
 
   /* 🕯️ رسم شموع يابانية (SVG) + حجم + متوسطان متحرّكان — من بياناتك مباشرة */

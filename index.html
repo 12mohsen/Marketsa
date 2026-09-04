@@ -1951,6 +1951,8 @@ canvas#mdChart{display:block;width:100% !important}
       <div id="termFilterBar" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch"></div>
     </div>
     <div style="flex:1;min-height:0;overflow:auto;padding:14px">
+    <div id="termRibbonTrust" style="display:none;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
+    <div id="termRegimeStarts" style="display:none;gap:16px;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
     <div id="termGrid" style="display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:14px;align-items:start">
       <!-- قائمة الأسهم -->
       <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:8px;max-height:78vh;overflow:auto">
@@ -17484,6 +17486,8 @@ const CHAN_FLAT = 0.50;
     const wrap = document.getElementById('termList'); if (!wrap) return;
     const all = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).slice();
     _termRenderFilterBar(all);   // 🎯 حدّث أعداد الفلاتر دائماً (على الكل)
+    try { termRenderRibbonTrust(); } catch (e) {}   // 🎯 قسم «الأكثر توافقاً» — لا يُسقط القائمة لو فشل
+    try { termRenderRegimeStarts(); } catch (e) {}  // 🟢🔴 قسم «بدأت الصعود/الهبوط الآن» — لا يُسقط القائمة لو فشل
     let list = all;
     if (!list.length) {
       wrap.innerHTML = '<div style="text-align:center;color:var(--txt-m);padding:30px 12px;line-height:1.9;font-size:13px">لا بيانات بعد — افتح <b>رادار</b> واضغط <b>إعادة المسح</b> مرة، ثم عُد هنا.</div>';
@@ -18305,9 +18309,239 @@ const CHAN_FLAT = 0.50;
     return { rows: rows, table: table, n: rows.length, readable: rows.length >= MIN_SAMPLE };
   };
 
+  /* ══════════════════════════════════════════════════════════════════════
+     🎯 موثوقية شريط الاتجاه — اختبارٌ تاريخيّ (Backtest) على كل سهم
+
+     السؤال: لكل نافذةٍ صُنِّفت «صاعد» أو «هابط» بشريط الاتجاه (لا
+     العرضيّة — فهي لا تدّعي اتجاهاً أصلاً فلا تُختبر)، هل استمرّ
+     السعر بنفس الاتجاه خلال النافذة التالية مباشرة (RW شمعة أخرى)؟
+     النسبةُ = مرّات الصحّة ÷ إجمالي النوافذ ذات الاتجاه لكل سهم.
+
+     ▸ نفس مصدرَي بيانات chanCalib() بالضبط: PRED_CACHE ثم كاش التاريخ
+       — بلا شبكة ولا انتظار.
+     ▸ نفس إصلاح «سعرٍ ثابتٍ تماماً» المطبَّق على الشريط المرسوم.
+     ▸ سهمٌ عيّنته دون MIN_SAMPLE مقطعاً لا يُحسب — رقمٌ من عيّنة
+       صغيرة يضلّل أكثر ممّا يفيد (نفس مبدأ «هامش ±» في chanCalib).
+     ══════════════════════════════════════════════════════════════════════ */
+  function _ribbonBacktest() {
+    /* 📏 خطوة الاختبار هنا أضيق من خطوة الشريط المرئي (RW) عمداً:
+       الشريطُ المرئي يعرض مقاطع لا تتداخل (RW كاملة) لأن ذاك عرضٌ
+       بصريّ، أمّا هنا فالغرض إحصائيّ بحت — وبتاريخٍ نموذجيّ ~160
+       شمعة، مقاطع RW غير متداخلة تعطي ٧ عيّنات كحدٍّ أقصى (أقلّ بعد
+       استبعاد العرضي)، وهو ما جعل MIN_SAMPLE=8 السابقة تُسقط كلَّ
+       السوق تقريباً. خطوةٌ أضيق (RW/2) تُضاعف العيّنة بلا تاريخٍ إضافي،
+       بثمن تداخلٍ جزئيّ بين المقاطع — مقبولٌ لغرض إحصائيّ، لا للعرض. */
+    const RW = 20, STEP = 10, MIN_SAMPLE = 6, MINB = 80, K2 = 2;
+    const src = {};
+    try {
+      Object.keys(PRED_CACHE).forEach(function (s) {
+        const c = PRED_CACHE[s];
+        if (Array.isArray(c) && c.length) src[s] = c.map(function (x) { return +x.c; });
+      });
+    } catch (e) {}
+    try {
+      const bs = (typeof histAllDailyCache !== 'undefined' && histAllDailyCache && histAllDailyCache.bySymbol) || null;
+      if (bs) Object.keys(bs).forEach(function (s) {
+        if (src[s]) return;
+        const r = bs[s];
+        if (!Array.isArray(r) || !r.length) return;
+        src[s] = r.map(function (x) { return +(x.close != null ? x.close : x.c); }).reverse();
+      });
+    } catch (e) {}
+
+    const results = [];
+    Object.keys(src).forEach(function (sym) {
+      try {
+        const all = src[sym];
+        if (!all || all.length < MINB) return;
+        let hits = 0, total = 0;
+        for (let start = 0; start + RW * 2 <= all.length; start += STEP) {
+          const M = all.slice(start, start + RW), m = M.length;
+          let sx = 0, sy = 0, sxy = 0, sxx = 0, bad = false;
+          for (let i = 0; i < m; i++) {
+            const v = M[i]; if (!isFinite(v) || v <= 0) { bad = true; break; }
+            sx += i; sy += v; sxy += i * v; sxx += i * i;
+          }
+          if (bad) continue;
+          const den = m * sxx - sx * sx; if (!den) continue;
+          const b = (m * sxy - sx * sy) / den, a = (sy - b * sx) / m;
+          let ss = 0; for (let i = 0; i < m; i++) { const r = M[i] - (a + b * i); ss += r * r; }
+          const sd = Math.sqrt(ss / m);
+          let cls;
+          if (Math.abs(b) < 1e-9 && sd < 1e-9) cls = 'flat';
+          else {
+            const str = (sd > 0) ? (Math.abs(b) * (m - 1)) / (2 * K2 * sd) : 99;
+            cls = (str < CHAN_FLAT) ? 'flat' : (b >= 0 ? 'up' : 'down');
+          }
+          if (cls === 'flat') continue;
+          const fwd = all.slice(start + RW, start + RW * 2);
+          if (fwd.length < Math.floor(RW * 0.5)) continue;
+          const endPrice = M[m - 1], fwdEnd = fwd[fwd.length - 1];
+          total++;
+          if ((cls === 'up' && fwdEnd > endPrice) || (cls === 'down' && fwdEnd < endPrice)) hits++;
+        }
+        if (total >= MIN_SAMPLE) {
+          const res = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).find(function (x) { return x && x.sym === sym; });
+          results.push({ sym: sym, name: (res && res.name) || sym, n: total, acc: hits / total });
+        }
+      } catch (e) {}
+    });
+    results.sort(function (p, q) { return q.acc - p.acc; });
+    return results;
+  }
+  window.ribbonCalib = _ribbonBacktest;   // 🔬 للفحص اليدوي بطرفيّة المتصفّح كذلك
+
+  /* ══════════════════════════════════════════════════════════════════════
+     🟢🔴 قريبة من قاع/قمة القناة — احتمال ارتداد
+
+     بطلب المستخدم بعد توضيحه بمثالين حقيقيين («مهارة» قرب القاع
+     يحتمل ارتداداً صاعداً، و«الكابلات السعودية» قرب القمة يحتمل
+     ارتداداً هابطاً): هذا **ليس** كشف انعكاس اتجاه — هو نفس رقم
+     «الموضع %» المطبوع أعلى شارت كل سهم بالضبط (0% قاعُ القناة ·
+     100% سقفُها)، محسوبٌ هنا على كامل السوق دفعةً واحدة.
+
+     الصيغة **منقولةٌ حرفاً بحرف** من نفس مكان رسم القناة بالشارت
+     (المتغيّرات nn/K/sd/f1/pos هناك) — لا معادلة جديدة، فتتّسق
+     القراءتان تماماً: نفس الرقم الذي تراه بالضبط لو فتحت السهم.
+     ══════════════════════════════════════════════════════════════════════ */
+  function _channelPosition(all) {
+    const nn = Math.min((typeof PLAN_WIN === 'number' && PLAN_WIN > 0) ? PLAN_WIN : 160, all.length);
+    if (nn < 10) return null;
+    const M = all.slice(all.length - nn);
+    let sx = 0, sy = 0, sxy = 0, sxx = 0, bad = false;
+    for (let i = 0; i < nn; i++) {
+      const v = M[i]; if (!isFinite(v) || v <= 0) { bad = true; break; }
+      sx += i; sy += v; sxy += i * v; sxx += i * i;
+    }
+    if (bad) return null;
+    const den = nn * sxx - sx * sx;
+    if (!den) return null;
+    const b = (nn * sxy - sx * sy) / den, a = (sy - b * sx) / nn;
+    let ss = 0; for (let i = 0; i < nn; i++) { const r = M[i] - (a + b * i); ss += r * r; }
+    const sd = Math.sqrt(ss / nn), K = 2;
+    const f1 = a + b * (nn - 1), band = K * sd;
+    if (band <= 0) return null;
+    let pos = ((M[nn - 1] - (f1 - band)) / (2 * band)) * 100;
+    return Math.max(0, Math.min(100, pos));
+  }
+
+  function _bestPriceHistory() {
+    const a = {}, b = {};
+    try {
+      Object.keys(PRED_CACHE).forEach(function (s) {
+        const c = PRED_CACHE[s];
+        if (Array.isArray(c) && c.length) a[s] = c.map(function (x) { return +x.c; });
+      });
+    } catch (e) {}
+    try {
+      const bs = (typeof histAllDailyCache !== 'undefined' && histAllDailyCache && histAllDailyCache.bySymbol) || null;
+      if (bs) Object.keys(bs).forEach(function (s) {
+        const r = bs[s];
+        if (!Array.isArray(r) || !r.length) return;
+        b[s] = r.map(function (x) { return +(x.close != null ? x.close : x.c); }).reverse();
+      });
+    } catch (e) {}
+    const src = {};
+    new Set(Object.keys(a).concat(Object.keys(b))).forEach(function (s) {
+      src[s] = (a[s] && b[s]) ? (a[s].length >= b[s].length ? a[s] : b[s]) : (a[s] || b[s]);
+    });
+    return src;
+  }
+
+  function _ribbonRegimeStarts() {
+    const NEAR_BOTTOM = 15, NEAR_TOP = 85;   // نفس منطقة «الحافّة» — قابلة للتعديل
+    const src = _bestPriceHistory();
+
+    const up = [], down = [];
+    Object.keys(src).forEach(function (sym) {
+      try {
+        const all = src[sym];
+        const pos = _channelPosition(all);
+        if (pos == null) return;
+        const res = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).find(function (x) { return x && x.sym === sym; });
+        const entry = { sym: sym, name: (res && res.name) || sym, price: res ? res.price : null, pos: Math.round(pos) };
+        if (pos <= NEAR_BOTTOM) up.push(entry);        // 🟢 قرب القاع — احتمال ارتداد صاعد
+        else if (pos >= NEAR_TOP) down.push(entry);    // 🔴 قرب القمة — احتمال ارتداد هابط
+      } catch (e) {}
+    });
+    up.sort(function (p, q) { return p.pos - q.pos; });      // الأقرب للقاع أوّلاً
+    down.sort(function (p, q) { return q.pos - p.pos; });    // الأقرب للقمة أوّلاً
+    return { up: up, down: down };
+  }
+  window.ribbonRegimeStarts = _ribbonRegimeStarts;   // 🔬 للفحص اليدوي بطرفيّة المتصفّح كذلك
+
+  /* 🟢🔴 يُعيد رسم قسمَي «قريبة من القاع/القمة» */
+  var TERM_REGIME_TAB = 'up';   // 🟢/🔴 التبويب الحالي المعروض
+  window.termSetRegimeTab = function (tab) { TERM_REGIME_TAB = tab; try { termRenderRegimeStarts(); } catch (e) {} };
+
+  function termRenderRegimeStarts() {
+    const host = document.getElementById('termRegimeStarts');
+    if (!host) return;
+    let r;
+    try { r = _ribbonRegimeStarts(); } catch (e) { r = null; }
+    if (!r || (!r.up.length && !r.down.length)) { host.style.display = 'none'; return; }
+    if (TERM_REGIME_TAB === 'up' && !r.up.length) TERM_REGIME_TAB = 'down';
+    if (TERM_REGIME_TAB === 'down' && !r.down.length) TERM_REGIME_TAB = 'up';
+
+    const tabBtn = function (tab, label, color, n) {
+      const on = TERM_REGIME_TAB === tab;
+      return '<button onclick="window.termSetRegimeTab(\'' + tab + '\')" style="cursor:pointer;font:inherit;font-weight:800;font-size:11.5px;'
+        + 'padding:6px 14px;border-radius:9px;border:1px solid ' + (on ? color : 'var(--bdr)') + ';'
+        + 'background:' + (on ? color + '22' : 'transparent') + ';color:' + (on ? color : 'var(--txt-m)') + '">'
+        + label + ' (' + n + ')</button>';
+    };
+    const list = TERM_REGIME_TAB === 'up' ? r.up : r.down;
+    const listColor = TERM_REGIME_TAB === 'up' ? '#22c55e' : '#ef4444';
+
+    host.style.display = 'block';
+    host.innerHTML =
+      '<div style="display:flex;gap:8px;margin-bottom:8px">'
+      + tabBtn('up', '🟢 قريبة من القاع (ارتداد صاعد محتمل)', '#22c55e', r.up.length)
+      + tabBtn('down', '🔴 قريبة من القمة (ارتداد هابط محتمل)', '#ef4444', r.down.length)
+      + '</div>'
+      + '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch">'
+      + list.slice(0, 30).map(function (e) {
+          return '<div onclick="window.termSelect(\'' + e.sym + '\')" style="flex:none;cursor:pointer;background:var(--surf);'
+            + 'border:1px solid var(--bdr);border-radius:9px;padding:5px 10px;text-align:center;min-width:70px">'
+            + '<div style="font-size:11.5px;font-weight:800;color:' + listColor + ';white-space:nowrap">' + (e.name || e.sym) + '</div>'
+            + '<div style="font-size:9.5px;color:var(--txt-m);white-space:nowrap">' + e.sym + (e.price != null ? ' · ' + (+e.price).toFixed(2) : '') + ' · ' + e.pos + '%</div>'
+            + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div style="font-size:9.5px;color:var(--txt-m);margin-top:4px">الموضع % = نفس رقم «الموضع» أعلى شارت السهم — 0% قاعُ القناة (160 شمعة) · 100% سقفُها. قربٌ من حافّة لا ضمانَ ارتداد.</div>';
+  }
+
+  /* 🎯 يُعيد رسم قسم «الأكثر توافقاً» — يُستدعى بعد كل تحديث للقائمة */
+  function termRenderRibbonTrust() {
+    const host = document.getElementById('termRibbonTrust');
+    if (!host) return;
+    let rows;
+    try { rows = _ribbonBacktest(); } catch (e) { rows = null; }
+    if (!rows || !rows.length) { host.style.display = 'none'; return; }
+    const top = rows.slice(0, 12);
+    host.style.display = 'block';
+    host.innerHTML =
+      '<div style="font-size:12px;font-weight:800;color:var(--txt-m);margin-bottom:6px">🎯 الأكثر توافقاً مع شريط الاتجاه تاريخياً</div>'
+      + '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">'
+      + top.map(function (r) {
+          const pct = Math.round(r.acc * 100);
+          const col = pct >= 65 ? '#22c55e' : (pct >= 50 ? '#fbbf24' : '#94a3b8');
+          return '<div onclick="window.termSelect(\'' + r.sym + '\')" style="flex:none;cursor:pointer;background:var(--surf-alt);'
+            + 'border:1px solid var(--bdr);border-radius:10px;padding:7px 11px;text-align:center;min-width:74px">'
+            + '<div style="font-size:12.5px;font-weight:800;color:' + col + '">' + pct + '%</div>'
+            + '<div style="font-size:10.5px;font-weight:700;white-space:nowrap">' + r.name + '</div>'
+            + '<div style="font-size:9px;color:var(--txt-m)">' + r.sym + ' · ن=' + r.n + '</div>'
+            + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div style="font-size:9.5px;color:var(--txt-m);margin-top:2px">اختبارٌ تاريخيّ: هل استمرّ السعر بنفس اتجاه المقطع (20 شمعة) خلال الـ20 التالية؟ '
+      + 'عيّنةٌ ≥ 8 مقاطع لكل سهم فقط — رقمٌ من عيّنة أصغر لا يُقرأ. ن = عدد المقاطع المختبَرة.</div>';
+  }
+
   /* 🕯️ رسم شموع يابانية (SVG) + حجم + متوسطان متحرّكان — من بياناتك مباشرة */
   /* ══════════════════════════════════════════════════════════════════════
      🔍 عدسة الشارت — حالة التكبير والتحريك
+
      take = كم شمعة تُعرض · off = كم شمعة نرجع للخلف من آخر واحدة.
      تُحفظ لكل رمز على حدة، وتُصفَّر عند تبديل السهم أو الإطار — فلا
      تُورَّث نافذةُ سهمٍ إلى سهمٍ آخر عدد شموعه مختلف.
@@ -18428,7 +18662,7 @@ const CHAN_FLAT = 0.50;
     }
     if (_vw) { mn = Math.min(mn, _vw); mx = Math.max(mx, _vw); }
     const pad = (mx - mn) * 0.06 || 1, lo = mn - pad, hi = mx + pad;
-    const W = 900, HT = 380, volH = 70, chH = HT - volH - 8, L0 = 6, R0 = 72;   /* R0 أوسع لوسم سعر أكبر */
+    const W = 900, volH = 70, ribH = 16, chH = 302, HT = chH + ribH + volH + 8, L0 = 6, R0 = 72;   /* R0 أوسع لوسم سعر أكبر · ribH: شريط الاتجاه الجديد بين السعر والحجم */
     const pw = W - L0 - R0, cw = pw / seg.length;
     /* 📐 احفظ الهندسة ليقرأها متتبّع الفأرة (نفس القيم بالضبط) */
     _TERM_GEOM.W = W; _TERM_GEOM.HT = HT; _TERM_GEOM.chH = chH; _TERM_GEOM.L0 = L0; _TERM_GEOM.R0 = R0; _TERM_GEOM.cw = cw; _TERM_GEOM.take = seg.length;
@@ -18678,6 +18912,47 @@ const CHAN_FLAT = 0.50;
         }
       }
     } catch (e) { chan = ''; chanTag = ''; }
+
+    /* ══════════════════════════════════════════════════════════════════
+       🎯 شريط نظام الاتجاه — يقسّم الشموع المعروضة إلى نوافذ متتالية
+       (RIB_WIN شمعة لكل نافذة)، ولكل نافذة انحدارٌ خطيّ بنفس أسلوب
+       «القناة» أعلاه (نفس عتبة CHAN_FLAT)، ويُرسم شريطاً ملوّناً
+       (أخضر صاعد · أحمر هابط · رماديّ عرضي) في الشريط الجديد بين
+       السعر والحجم. لا يمسّ هندسة السعر أو الحجم — مساحته محجوزة
+       سلفاً في `ribH`. وأيّ خطأ هنا يُسقطه وحده دون بقية الشارت. */
+    let ribbon = '';
+    try {
+      const RIB_WIN = 20;                 // حجم النافذة بالشموع — قابل للتعديل
+      if (take >= RIB_WIN * 2) {
+        const K2 = 2, ribY = chH + 4 + ribH / 2;   // منتصف الشريط الجديد
+        for (let start = 0; start < take; start += RIB_WIN) {
+          const endI = Math.min(start + RIB_WIN, take);
+          const m = endI - start;
+          if (m < Math.max(4, Math.floor(RIB_WIN * 0.5))) break;
+          let sx = 0, sy = 0, sxy = 0, sxx = 0;
+          for (let i = 0; i < m; i++) { const v = C[start + i]; sx += i; sy += v; sxy += i * v; sxx += i * i; }
+          const den = m * sxx - sx * sx;
+          if (den === 0) continue;
+          const b = (m * sxy - sx * sy) / den, a = (sy - b * sx) / m;
+          let ss = 0;
+          for (let i = 0; i < m; i++) { const r = C[start + i] - (a + b * i); ss += r * r; }
+          const sd = Math.sqrt(ss / m);
+          /* ✅ سعرٌ ثابتٌ تماماً (بلا ميلٍ ولا تذبذب — أسهمٌ شحيحة السيولة
+             أحياناً) لا يُقرأ «صاعداً بقوة» بحيلة sd=0؛ هو عرضيٌّ بداهةً. */
+          let cls;
+          if (Math.abs(b) < 1e-9 && sd < 1e-9) { cls = 'flat'; }
+          else {
+            const str = (sd > 0) ? (Math.abs(b) * (m - 1)) / (2 * K2 * sd) : 99;
+            cls = (str < CHAN_FLAT) ? 'flat' : (b >= 0 ? 'up' : 'down');
+          }
+          const col = cls === 'flat' ? '#94a3b8' : (cls === 'up' ? '#22c55e' : '#ef4444');
+          const x0 = L0 + start * cw, x1 = L0 + (endI - 1) * cw + cw;
+          /* 📐 ميلٌ بصريّ خفيف يعكس اتجاه المقطع — لا خطٌّ أفقيٌّ عديم القراءة */
+          ribbon += '<line x1="' + x0.toFixed(1) + '" y1="' + ribY.toFixed(1) + '" x2="' + x1.toFixed(1) + '" y2="' + ribY.toFixed(1)
+                  + '" stroke="' + col + '" stroke-width="4" stroke-linecap="round"/>';
+        }
+      }
+    } catch (e) { ribbon = ''; }
     /* ✨ ظهور متدرّج: الشبكة والمناطق أولاً ثم الشموع — إحساسٌ بالحياة
        بلا أي تكلفة أداء (CSS خالص، لا JS ولا إعادة رسم). */
     /* ══════════════════════════════════════════════════════════════════
@@ -18689,7 +18964,7 @@ const CHAN_FLAT = 0.50;
        فنُسقط الصنف عند إعادة الرسم التفاعليّة، ونُبقيه عند أوّل فتح. */
     return '<svg viewBox="0 0 ' + W + ' ' + HT + '" width="100%" style="display:block;direction:ltr"'
       + (_termSkipAnim ? '' : ' class="term-svg"') + '>'
-      + grid + plan + chan + vol      /* 📐 القناة خلف الشموع — تصف ولا تحجب */
+      + grid + plan + chan + vol + ribbon    /* 📐 القناة خلف الشموع · 🎯 شريط الاتجاه بين السعر والحجم */
       + '<path d="' + ma50 + '" fill="none" stroke="#f59e0b" stroke-width="1.3" opacity="0.85"/>'
       + '<path d="' + ma20 + '" fill="none" stroke="#38bdf8" stroke-width="1.3" opacity="0.9"/>'
       + bars
@@ -18702,6 +18977,7 @@ const CHAN_FLAT = 0.50;
           ? '<text x="' + (L0 + 92) + '" y="12" font-size="10" font-weight="700" fill="#fcd34d">🔒 مستويات الدخول والوقف والهدف للمشتركين</text>'
           : '')
       + '<text x="' + (W - R0) + '" y="' + (HT - volH - 2).toFixed(1) + '" font-size="9" fill="#94a3b8" text-anchor="end">الحجم</text>'
+      + '<text x="' + (W - R0) + '" y="' + (chH + ribH + 1).toFixed(1) + '" font-size="9" fill="#94a3b8" text-anchor="end">الاتجاه</text>'
       /* 📅 نطاق ما يُعرض — أسفل يسار الشارت، بعيداً عن الشموع والوسوم */
       + (_rangeNote
           /* ⚠️ كان `direction="rtl"` مع `text-anchor` الافتراضي «start»:
@@ -24161,6 +24437,86 @@ function histDestroyCandles() {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   🎯 مؤشر نظام الاتجاه (Trend Regime Strip)
+   يقسّم الشموع إلى نوافذ متتالية، يحسب انحداراً خطياً لكل نافذة،
+   يصنّفها صاعد/هابط/عرضي، ثم يدمج النوافذ المتجاورة من نفس الفئة
+   في قطعة واحدة — فيظهر شريط ملوّن أسفل السعر (أخضر/أحمر/أبيض).
+   القيم أدناه افتراضية وقابلة للتعديل حسب الحاجة.
+   ══════════════════════════════════════════════════════════════ */
+const REGIME_WINDOW    = 20;     // حجم النافذة بالشموع
+const REGIME_THRESHOLD = 0.015;  // 1.5% حدّ أدنى للميل ليُعتبر اتجاهاً واضحاً
+
+function histComputeRegimeSegments(entries, windowSize) {
+  const n = entries.length;
+  if (n < windowSize * 2) return [];
+
+  const chunks = [];
+  for (let start = 0; start < n; start += windowSize) {
+    const end = Math.min(start + windowSize, n);
+    if (end - start < Math.max(3, Math.floor(windowSize * 0.5))) break;
+    const slice = entries.slice(start, end);
+    const m = slice.length;
+
+    /* انحدار خطي بسيط: x = 0..m-1 (ترتيب الشمعة)، y = سعر الإغلاق */
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    slice.forEach((e, i) => { sumX += i; sumY += e.close; sumXY += i * e.close; sumXX += i * i; });
+    const denom = (m * sumXX - sumX * sumX) || 1;
+    const slope = (m * sumXY - sumX * sumY) / denom;
+    const intercept = (sumY - slope * sumX) / m;
+    const startVal = intercept;
+    const endVal   = intercept + slope * (m - 1);
+    const avgPrice = sumY / m;
+    const normSlope = avgPrice ? (endVal - startVal) / avgPrice : 0;
+
+    let cls = 'flat';
+    if (normSlope > REGIME_THRESHOLD) cls = 'up';
+    else if (normSlope < -REGIME_THRESHOLD) cls = 'down';
+
+    chunks.push({ start, end: end - 1, startVal, endVal, cls });
+  }
+
+  /* دمج النوافذ المتجاورة من نفس الفئة في قطعة واحدة */
+  const merged = [];
+  chunks.forEach(c => {
+    const last = merged[merged.length - 1];
+    if (last && last.cls === c.cls) { last.end = c.end; last.endVal = c.endVal; }
+    else merged.push({ ...c });
+  });
+  return merged;
+}
+
+function histRenderRegimeStrip(chart, entries) {
+  const segments = histComputeRegimeSegments(entries, REGIME_WINDOW);
+  if (!segments.length) return [];
+
+  const COLORS = { up: '#4ade80', down: '#f87171', flat: '#e5e7eb' };
+  const series = [];
+
+  segments.forEach(seg => {
+    const s = chart.addLineSeries({
+      color: COLORS[seg.cls],
+      lineWidth: 3,
+      priceScaleId: 'regime',
+      lastValueVisible: false,
+      priceLineVisible: false,
+      crosshairMarkerVisible: false,
+    });
+    s.setData([
+      { time: entries[seg.start].time, value: seg.startVal },
+      { time: entries[seg.end].time,   value: seg.endVal },
+    ]);
+    series.push(s);
+  });
+
+  chart.priceScale('regime').applyOptions({
+    scaleMargins: { top: 0.68, bottom: 0.22 },
+    borderVisible: false,
+  });
+
+  return series;
+}
+
 /* تجميع الشموع اليومية إلى أسبوعية/شهرية (OHLC صحيح) */
 function histAggCandles(asc, periodType) {
   const keyFor = (d) => {
@@ -24306,6 +24662,9 @@ function histRenderCandles(dataRows, tab, isSim) {
     time: e.time, value: e.vol,
     color: (e.open !== null && e.close < e.open) ? 'rgba(248,113,113,.35)' : 'rgba(74,222,128,.35)',
   })));
+
+  /* 🎯 شريط نظام الاتجاه (صاعد/هابط/عرضي) أسفل السعر */
+  histRenderRegimeStrip(chart, built.entries);
 
   /* افتراضياً: آخر ~90 شمعة يومية، وكل التاريخ للأسبوعي/الشهري */
   const n = built.entries.length;

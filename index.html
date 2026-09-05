@@ -18411,6 +18411,23 @@ const CHAN_FLAT = 0.50;
     return Math.max(0, Math.min(100, pos));
   }
 
+  /* 📊 موضع مؤشر تاسي نفسه — للاستئناس بجانب قسم القاع/القمة، لا كسهمٍ
+     ضمن القوائم (تاسي مُستبعَدٌ عمداً من كل الفلاتر لأنه ليس سهماً). */
+  function _tasiChannelInfo() {
+    try {
+      let arr = null;
+      if (typeof PRED_CACHE !== 'undefined' && PRED_CACHE && PRED_CACHE['TASI'] && PRED_CACHE['TASI'].length) {
+        arr = PRED_CACHE['TASI'].map(function (x) { return +x.c; });
+      } else if (typeof histAllDailyCache !== 'undefined' && histAllDailyCache && histAllDailyCache.bySymbol && histAllDailyCache.bySymbol['TASI']) {
+        arr = histAllDailyCache.bySymbol['TASI'].map(function (x) { return +(x.close != null ? x.close : x.c); }).reverse();
+      }
+      if (!arr || !arr.length) return null;
+      const pos = _channelPosition(arr);
+      if (pos == null) return null;
+      return { pos: Math.round(pos) };
+    } catch (e) { return null; }
+  }
+
   function _bestPriceHistory() {
     const a = {}, b = {};
     const isStock = function (s) { return /^\d+$/.test(s); };   // ⛔ رمز السهم رقميّ بالكامل دائماً — TASI وأمثاله ليسوا أسهماً
@@ -18687,9 +18704,17 @@ const CHAN_FLAT = 0.50;
     const list = TERM_REGIME_TAB === 'up' ? r.up : r.down;
     const listColor = TERM_REGIME_TAB === 'up' ? '#22c55e' : '#ef4444';
 
+    /* 📊 تاسي للاستئناس بجانب العنوان — بلا زر ولا قابلية ضغط، مجرّد سياق */
+    let tasiBadge = '';
+    const tasi = _tasiChannelInfo();
+    if (tasi) {
+      const tCol = tasi.pos <= 15 ? '#22c55e' : (tasi.pos >= 85 ? '#ef4444' : 'var(--txt-m)');
+      tasiBadge = '<span onclick="window.termSelect(\'TASI\')" style="cursor:pointer;font-size:10.5px;color:' + tCol + ';font-weight:700;margin-inline-start:8px;text-decoration:underline dotted">· TASI موضعه ' + tasi.pos + '%</span>';
+    }
+
     host.style.display = 'block';
     _preserveScrollAndSet(host, '#termRegimeStartsScroll',
-      '<div style="font-size:12px;font-weight:800;color:var(--txt-m);margin-bottom:6px">🎯 قريبة من القاع/القمة — والأولوية لمن بدأ اتجاهاً للتو</div>'
+      '<div style="font-size:12px;font-weight:800;color:var(--txt-m);margin-bottom:6px">🎯 قريبة من القاع/القمة — والأولوية لمن بدأ اتجاهاً للتو' + tasiBadge + '</div>'
       + '<div style="display:flex;gap:8px;margin-bottom:8px">'
       + tabBtn('up', '🟢 قريبة من القاع', '#22c55e', r.up.length)
       + tabBtn('down', '🔴 قريبة من القمة', '#ef4444', r.down.length)

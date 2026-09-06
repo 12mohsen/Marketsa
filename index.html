@@ -18568,6 +18568,67 @@ const CHAN_FLAT = 0.50;
   }
   window.channelEdgeBacktest = _channelEdgeBacktest;   // 🔬 للفحص اليدوي بطرفيّة المتصفّح
 
+  /* ══════════════════════════════════════════════════════════════════════
+     🔬 باك تست الإشارة المدموجة — حافّة القناة + تأكيد شريط الاتجاه معاً
+
+     السؤال المباشر: هل اشتراط الشرطين **معاً** (لا الموضع% لوحده) يرفع
+     الدقة فوق 49%/56% اللي أثبتناها للموضع% المنفرد؟ هذا اختبارٌ حقيقيّ
+     لا افتراضٌ نظريّ — نفس منهجية _channelEdgeBacktest بالضبط (خطوة
+     STEP تمشي على التاريخ، كل نافذةٍ تنتهي عند نقطتها فقط — لا رؤية
+     لبيانات المستقبل)، مع إضافة شرط: هل تصنيف آخر 20 يوم (نفس معادلة
+     الشريط) **يختلف** عن تصنيف الـ20 يوم قبلها مباشرة (تأكيدٌ "طازج")
+     وبنفس جهة الحافّة؟ سهمٌ/نقطةٌ لا تحقّق الشرطين معاً لا تُحسب أصلاً.
+     ══════════════════════════════════════════════════════════════════════ */
+  function _entrySignalBacktest(opts) {
+    opts = opts || {};
+    const PW = (typeof PLAN_WIN === 'number' && PLAN_WIN > 0) ? PLAN_WIN : 160;
+    const RW = 20, STEP = opts.step || 5, FWD = opts.fwd || 20;
+    const NEAR_BOTTOM = opts.nearBottom != null ? opts.nearBottom : 15;
+    const NEAR_TOP = opts.nearTop != null ? opts.nearTop : 85;
+    const MIN_SAMPLE = opts.minSample || 6;
+    const src = _bestPriceHistory();
+
+    let hitsB = 0, totalB = 0, hitsT = 0, totalT = 0;
+    const perSym = [];
+    Object.keys(src).forEach(function (sym) {
+      try {
+        const all = src[sym];
+        if (!all || all.length < PW + RW * 2 + FWD + STEP) return;
+        let symHits = 0, symTotal = 0;
+        for (let i = Math.max(PW - 1, RW * 2 - 1); i + FWD < all.length; i += STEP) {
+          const pos = _channelPosition(all.slice(i - PW + 1, i + 1));
+          if (pos == null) continue;
+          if (pos > NEAR_BOTTOM && pos < NEAR_TOP) continue;   // ⛔ لا حافّة هنا أصلاً
+
+          /* 📏 تأكيد «طازج»: تصنيف آخر 20 يوم ينتهي عند i يختلف عن
+             تصنيف الـ20 يوم قبله مباشرة — كلاهما بلا رؤية مستقبل */
+          const cls1 = _ribbonWindowClass(all.slice(i - RW + 1, i + 1));
+          const cls0 = _ribbonWindowClass(all.slice(i - RW * 2 + 1, i - RW + 1));
+          if (cls1 === 'flat' || cls1 === cls0) continue;      // ⛔ ليس تأكيداً طازجاً
+
+          const matchesEdge = (pos <= NEAR_BOTTOM && cls1 === 'up') || (pos >= NEAR_TOP && cls1 === 'down');
+          if (!matchesEdge) continue;                          // ⛔ التأكيد بجهة مخالفة للحافّة
+
+          const nowPrice = all[i], fwdPrice = all[i + FWD];
+          if (pos <= NEAR_BOTTOM) { totalB++; symTotal++; if (fwdPrice > nowPrice) { hitsB++; symHits++; } }
+          else { totalT++; symTotal++; if (fwdPrice < nowPrice) { hitsT++; symHits++; } }
+        }
+        if (symTotal >= MIN_SAMPLE) {
+          const res = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).find(function (x) { return x && x.sym === sym; });
+          perSym.push({ sym: sym, name: (res && res.name) || sym, n: symTotal, acc: symHits / symTotal });
+        }
+      } catch (e) {}
+    });
+    perSym.sort(function (p, q) { return q.acc - p.acc; });
+    return {
+      bottom: { hits: hitsB, total: totalB, acc: totalB ? hitsB / totalB : null },
+      top:    { hits: hitsT, total: totalT, acc: totalT ? hitsT / totalT : null },
+      overall: { hits: hitsB + hitsT, total: totalB + totalT, acc: (totalB + totalT) ? (hitsB + hitsT) / (totalB + totalT) : null },
+      perSymbol: perSym
+    };
+  }
+  window.entrySignalBacktest = _entrySignalBacktest;   // 🔬 للفحص اليدوي: window.entrySignalBacktest()
+
   /* ⏳ يُحسب الباك تست (مكلفٌ نسبياً — يمشي على كامل تاريخ ~300 سهم) مرّة
      واحدة فقط ويُخزَّن؛ الاستدعاءات اللاحقة (كل إعادة رسمٍ للقسم) تُعيد
      نفس النتيجة المخزَّنة فوراً بلا حسابٍ مكرَّر. */
@@ -19336,6 +19397,13 @@ const CHAN_FLAT = 0.50;
   };
   try { const _m0 = localStorage.getItem('term_mode'); if (_m0 === 'invest' || _m0 === 'swing') TERM_MODE = _m0; } catch (_) {}
 
+  /* 🧮 يحفظ سقف الخسارة بالريال محلياً (يبقى محفوظاً بين الجلسات)،
+     ويعيد رسم بطاقة السهم المفتوح فوراً بالحساب الجديد. */
+  window.termSetRiskCap = function (v) {
+    const n = +v;
+    try { localStorage.setItem('riskCapSAR', (n > 0 ? n : 200)); } catch (e) {}
+    if (typeof TERM_SEL !== 'undefined' && TERM_SEL) window.termSelect(TERM_SEL);
+  };
   window.termSelect = function (sym) {
     /* 🔍 سهمٌ جديد ⇒ نافذة عرضٍ جديدة (لا نُورّث تكبير سهمٍ لآخر) */
     if (TERM_SEL !== sym) { try { _termLensReset(); } catch (_) {} }
@@ -19634,6 +19702,29 @@ const CHAN_FLAT = 0.50;
             + ' (تشتري أغلى ووقفُك أبعد). وهو انتظارُ <b>تأكيدٍ</b> لا انتظارُ سعرٍ أفضل.</div>';
         }
       }
+
+      /* ══════════════════════════════════════════════════════════════
+         🧮 حاسبة حجم الصفقة — تحوّل «ع/م» من نسبة مجرّدة إلى عدد أسهم
+         فعلي، بناءً على سقفٍ ثابتٍ للخسارة بالريال يحدّده المستخدم
+         نفسه (لا نسبة من رأس المال الكامل — رقمٌ واحدٌ بسيط يفهمه
+         بلا حسبة). الفكرة: مهما كانت نسبة نجاحك، خسارتك القصوى بكل
+         صفقة محدودةٌ سلفاً ولا تتوسّع معها أبداً. */
+      const _riskCap = (function () { try { const v = +localStorage.getItem('riskCapSAR'); return (v > 0) ? v : 200; } catch (e) { return 200; } })();
+      let _posCalc = '';
+      if (_en > 0 && _st > 0 && _en > _st) {
+        const riskPerShare = _en - _st;
+        const shares = Math.floor(_riskCap / riskPerShare);
+        const cost = shares * _en;
+        _posCalc = '<div style="margin-top:10px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:9px;padding:8px 10px">'
+          + '<div style="font-size:11px;color:var(--txt-m);margin-bottom:5px">🧮 حاسبة حجم الصفقة — سقف خسارتي بالصفقة '
+          + '<input type="number" min="1" step="10" value="' + _riskCap + '" onchange="window.termSetRiskCap(this.value)" '
+          + 'style="width:66px;background:var(--surf);border:1px solid var(--bdr);border-radius:5px;color:inherit;padding:2px 4px;text-align:center;font:inherit" /> ريال</div>'
+          + (shares > 0
+              ? '<div style="font-size:13.5px;font-weight:800;color:#4ade80">اشتر بحدّ أقصى ' + shares + ' سهماً (≈ ' + cost.toFixed(0) + ' ريال)</div>'
+                + '<div style="font-size:10px;color:var(--txt-m);margin-top:2px">لو ضرب الوقف ' + _st.toFixed(2) + ' بالضبط، خسارتك ≈ ' + Math.round(shares * riskPerShare) + ' ريال — لا تتجاوز سقفك مهما حصل</div>'
+              : '<div style="font-size:12px;color:#f87171">سقف خسارتك أقل من خسارة سهمٍ واحد (' + riskPerShare.toFixed(2) + ' ريال) بهذي الصفقة — إمّا ترفع السقف أو تتجاوز هذي الصفقة تماماً</div>')
+          + '</div>';
+      }
       html += sec('🎯 خطة القنّاص',
         _asOfStampHTML(_lg)
         + '<div style="font-size:13px;font-weight:800;color:' + _kmColor + ';margin-bottom:8px">' + _kmText + '</div>'
@@ -19650,6 +19741,7 @@ const CHAN_FLAT = 0.50;
               + 'انتظر زوال المأخذ؛ فالخطة لا تهرب، وإن هربت جاءت غيرها.<\/div>'
             : '')
         + '<div style="text-align:center;font-size:11px;color:var(--txt-m);margin-top:7px">' + _rrLine + ' · 🧩 توافق ' + ((typeof _snConflCount === 'function') ? _snConflCount(r) : '?') + '/5</div>'
+        + _posCalc
         /* 📏 مدى سنوي ضيّق — لا يُحجب بل يُعلَن: الشارت يبدو طبيعياً
            لأنه ممدود على ارتفاع الإطار، ولا شيء فيه يُنبئ أن السهم
            لم يتحرّك إلا 5% في سنة كاملة. */

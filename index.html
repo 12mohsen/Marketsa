@@ -2456,7 +2456,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-06-v590';
+window.APP_BUILD = '2026-09-06-v591';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2467,6 +2467,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v591', '🌐 «أمسح فلا يظهر عند المستخدمين» — والسببُ بنيويٌّ لا عابر. قسما «الأكثر توافقاً» و«أين يقف السعر داخل قناته» يُحسبان من **الشموع نفسها** (`PRED_CACHE` · `PRED_FULL_C`)، وهي لا تُملأ إلا بالمسح الكامل — **أي في متصفّح من مسح وحده**. والمستخدمُ العاديّ لا يمسح: يقرأ `radar_results` جاهزةً، فليس عنده شموعُ 269 سهماً ولا يُعقل أن يجلبها. ▸ **فكان القسمان أدمن-فقط بالصدفة لا بالتصميم** — يراهما من حسبهما، ويرى غيرُه «لا نتائج». ▸ والحلُّ يتبع بنيةَ التطبيق نفسَها (`radar_results` · `analysis_daily` · `sahmk_shared`): **يُحسب مرّةً عند الأدمن، ويُرفع، ويُقرأ للجميع.** ولا تُرفع الشموع بل **الخلاصةُ** فقط — قائمتا القاع/القمة وصفوفُ التوافق وأرقامُ الدقّة: عشراتُ الكيلوبايت لا مئاتُ الميغا. ▸ ويُستعمل **الصفُّ id=2** من `radar_results` نفسِه: نفسُ الجدول ونفسُ الأعمدة ومفتاحٌ آخر — **فلا حاجة إلى تعديلٍ في القاعدة**. ▸ والرفعُ **مربوطٌ بنهاية المسح لا بزرٍّ يدويّ**: خطوةٌ يجب تذكّرها هي خطوةٌ ستُنسى، فيعود البلاغُ بعد شهر. ▸ وعمرٌ أقصى 30 ساعة: **قائمةُ «قرب القاع» من أسبوعٍ مضى أسوأُ من غيابها، لأنّها تبدو حاضرةً وهي ليست كذلك.** ▸ ولا يُطبع «رُفعت» إلا بعد تأكيد القاعدة — نفسُ درسِ الرادار: **الأدمن يظنّ الناسَ رأوا ما لم يروه**'],
     ['v590', '🏷️ الشارةُ تقول v582 والكودُ عند v589 — **بقيت متخلّفةً سبعةَ إصدارات**، رصدها المالك من سطر الطرفية. والسببُ أنّ الرقم كان مكتوباً **مرّتين**: في `APP_BUILD` وفي نصّ `console.log` — فتُحدَّث إحداهما وتُنسى الأخرى. ▸ **وهذه ليست زينة**: `APP_BUILD` يُختم به كلُّ نتيجة رادار في `logic_v` (أيُّ إصدارٍ أصدر هذا الحكم)، ويُرفع مع كلّ بلاغ خطأ، ويُعرض للأدمن «النسخة الحيّة». فشارةٌ كاذبةٌ تعني: **نتائجُ سبعة إصداراتٍ مختومةٌ باسم إصدارٍ لم يُنتجها** · وأدمنٌ لا يعرف ما يعمل عنده · وبلاغُ خطأٍ يقود إلى شيفرةٍ غير التي انكسرت. ▸ **والأمرُّ أنّ الشارةَ نفسَها بُنيت لتحرسك من الكاش القديم** — فإن كذبت، تعطّلت الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة. ▸ فصار نصُّ الطباعة يُشتقّ من الثابت (`+ window.APP_BUILD +`) ولا يبقى إلا **موضعٌ واحدٌ يُحدَّث**. **ورقمٌ مكتوبٌ مرّتين يفترقان يوماً ما — والسؤال متى لا هل**'],
     ['v589', '🔒 أدواتُ القياس تُغلَق على الأدمن — وتنظيفُ ما بعد الجلسة. أُضيفت في v583–v588 عشرُ دوالٍّ تُنادى من طرفيّة المتصفّح (`chanCalib` · `channelTradeBacktest` · `posCheck` · `ribbonCalib` …). وهي **قراءةٌ محضة لا تكتب شيئاً**، لكنّها تكشف منهجَ التطبيق كاملاً لمن يفتح F12: العتبات، والنوافذ، وطريقةَ الباك تست، وحدودَ العيّنة. **وما بُني بالقياس لا يُعطى مجّاناً لمن يفتح لوحة المطوّر.** ▸ فصارت تمرّ بـ`_adminTool()`: غلافٌ يفحص `isAdmin()` **عند النداء لا عند التحميل** — لأنّ حالةَ الأدمن تُعرف بعد المصادقة، فلو فُحصت لحظةَ التعريف لحُجبت عن الأدمن نفسِه. ولغيرِ الأدمن سطرٌ واضح لا خطأٌ غامض. ▸ والغلافُ على **الكشف** لا على المنطق: الدوالُّ الداخلية (`_channelEdgeBacktest` · `_ribbonRegimeStarts`) تبقى كما هي، فلا يتأثّر شيءٌ في الواجهة — وقد فُحص ألّا تُنادى أيٌّ منها من HTML. ▸ وأُزيل `test33.html` من مجلد الرفع (حُفظ في النسخ الاحتياطية): ملفٌّ مكرّرٌ يفتح التطبيقَ على رابطٍ ثانٍ بلا داعٍ. ▸ **وخُتمت الجلسة بتدقيقٍ آليٍّ على 24 نقطة**: سلامةُ البلوكات التسعة، ووجودُ كلّ إصلاحٍ من v583 إلى v589، وغيابُ بقايا الشيفرة القديمة (`C[start + i]` = صفر)، وألّا تبقى دالّةُ قياسٍ مكشوفةً بلا غلاف'],
     ['v588', '🕳️ الاختفاءُ الصامت — الإفصاحُ غاب حيث يلزم أكثر من غيره. رصده المالك على متصفّح صفحة الأدمن: قسمُ «أين يقف السعر داخل قناته» **اختفى بالكامل بلا رسالة**، لأنّ الشرط يُخفي القسمَ متى خلت القائمتان — **قبل أن تُطبع رسالةُ التغطية المضافة في v587**. ▸ فصار الإفصاحُ يعمل في كلّ الحالات **إلا الحالة التي بُني لها**: صفرُ نتائج. **والصفرُ بلا سببٍ يُقرأ عطلاً أو سوقاً خالياً.** ▸ ولا يجوز خلطُ حالتين: **صفرٌ لنقص البيانات** يُعرض برسالةٍ تقول ما ينقص وكيف يُستدرك · و**صفرٌ حقيقيّ** (السوقُ كلُّه في منتصف قنواته) يُعرض بجملةٍ تقول إنّه **خبرٌ عن السوق لا عطلٌ في الأداة**. ولا يُخفى القسمُ إلا إذا لم يُحسب شيءٌ بعد. ▸ وأُضيف تنبيهٌ يجهله أكثرُ المستخدمين: **بياناتُ التحليل تُحفظ لكلّ متصفّحٍ على حدة** — فمسحٌ في متصفّحٍ لا يُغني عن مسحٍ في غيره'],
@@ -15890,6 +15891,24 @@ const CHAN_FLAT = 0.50;
     try { _snHistRecord(PRED_RESULTS); _snHistApply(PRED_RESULTS); } catch (e) {}
     predSaveCache();
     Promise.resolve(radarUploadShared()).catch(function(){});   // 🌐 وحّد النتائج لكل المستخدمين (الأدمن فقط)
+    /* ══════════════════════════════════════════════════════════════════
+       🌐 وأقسامُ اللوحة تُرفع مع النتائج — لا بخطوةٍ يدويّةٍ تُنسى
+
+       بلاغُ المالك: «أمسح فلا يظهر عند المستخدمين». ولو تُرك الرفعُ
+       يدويّاً لعاد البلاغُ بعد شهر: **خطوةٌ يجب تذكّرها هي خطوةٌ ستُنسى.**
+       ▸ والحسابُ يحتاج الشمُوعَ التي مُلئت للتوّ في هذا المسح، فيُنادى
+         بعده مباشرةً وقبل أن تُستبدل بمسحٍ لاحق.
+       ▸ وتأخيرٌ قصير: `_ribbonRenderLocal` يقرأ `PRED_RESULTS` بعد
+         استقرارها، والرفعُ يقرأ ما حسبته هي.
+       ══════════════════════════════════════════════════════════════════ */
+    try {
+      if (typeof isAdmin === 'function' && isAdmin()) {
+        setTimeout(function () {
+          try { _ribbonRenderLocal(0); } catch (e) {}
+          setTimeout(function () { Promise.resolve(terminalUploadShared()).catch(function(){}); }, 800);
+        }, 1200);
+      }
+    } catch (e) {}
     try { tgNotifyGolden(); } catch (e) {}   // 🔔 تنبيه تلجرام عند وجود فرصة ذهبية (أدمن)
     if (btn) { btn.disabled = false; btn.textContent = '🔮 إعادة المسح'; }
     predShowProgress(false);
@@ -19359,7 +19378,108 @@ const CHAN_FLAT = 0.50;
   var _regimeStartsCache = null;   // نتائج _ribbonRegimeStarts المخزَّنة (مدمجة: قاع/قمة + بداية اتجاه)
   var _ribbonRetryStarted = false; // يمنع بدء سلسلة الحساب أكثر من مرّة
 
+  /* ══════════════════════════════════════════════════════════════════════
+     🌐 مشاركةُ القسمين — الحسابُ عند الأدمن، والنتيجةُ للجميع
+
+     بلاغُ المالك: «أمسح فلا يظهر عند المستخدمين». وهو محقّ، والسببُ
+     بنيويّ لا عابر:
+
+     ▸ القسمان يُحسبان من **الشموع نفسها** (`PRED_CACHE` · `PRED_FULL_C`)،
+       وهي لا تُملأ إلا بالمسح الكامل — أي **في متصفّح من مسح وحده**.
+     ▸ والمستخدمُ العاديّ لا يمسح: يقرأ `radar_results` جاهزةً. فليس
+       عنده شموعُ 269 سهماً، ولا يُعقل أن يجلبها (مئاتُ آلاف الصفوف).
+     ▸ فكان القسمان **أدمن-فقط بالصدفة لا بالتصميم** — يراهما من حسبهما.
+
+     والحلُّ يتبع بنيةَ التطبيق نفسَها (`radar_results` · `analysis_daily`
+     · `sahmk_shared`): **يُحسب مرّةً عند الأدمن، ويُرفع، ويُقرأ للجميع.**
+     ▸ ولا تُرفع الشموع — بل **الخلاصةُ** فقط: قائمتا القاع/القمة،
+       وصفوفُ التوافق، وأرقامُ الدقّة. عشراتُ الكيلوبايت لا مئاتُ الميغا.
+     ▸ ويُستعمل **الصفُّ id=2** من `radar_results` نفسِه: نفسُ الجدول
+       ونفسُ الأعمدة ومفتاحٌ آخر — **فلا حاجة إلى تعديلٍ في القاعدة**.
+     ▸ والحسابُ المحليّ يبقى احتياطاً: من عنده شموعٌ يحسب لنفسه، ومن لا
+       فالمشتركةُ تكفيه.
+     ══════════════════════════════════════════════════════════════════════ */
+  const TERM_SHARED_ID = 2;                 // صفٌّ ثانٍ في radar_results
+  const TERM_SHARED_TTL = 30 * 60 * 60 * 1000;   // 30 ساعة — يومُ تداولٍ وزيادة
+
+  /* 📤 يرفعها الأدمن بعد المسح — ولا يُطبع نجاحٌ إلا بعد تأكيد القاعدة */
+  async function terminalUploadShared() {
+    try {
+      if (typeof sb === 'undefined' || !sb) return;
+      if (!(typeof isAdmin === 'function' && isAdmin())) return;
+      const payload = {
+        regime: _regimeStartsCache || null,
+        trust: Array.isArray(_ribbonTrustCache) ? _ribbonTrustCache.slice(0, 40) : null,
+        edgeAcc: _channelEdgeAccCache || null,
+        build: (window.APP_BUILD || '')
+      };
+      if (!payload.regime && !payload.trust) {
+        console.warn('[terminal] ✗ لا شيءَ يُرفع — لم تُحسب أقسامُ اللوحة بعد. افتح اللوحة الموحّدة ثمّ أعد المحاولة.');
+        return;
+      }
+      const { error } = await sb.from('radar_results').upsert({
+        id: TERM_SHARED_ID,
+        data: payload,
+        scanned_at: new Date().toISOString(),
+        logic_v: (window.APP_BUILD || '')
+      });
+      /* ⚠️ نفسُ درسِ الرادار: لا يُقال «رُفعت» إلا بعد نجاحٍ مؤكَّد —
+         وإلا ظنّ الأدمن أنّ الناس رأوا ما لم يروه. */
+      if (error) {
+        console.warn('[terminal] ✗ لم تُرفع أقسام اللوحة — يبقى المستخدمون بلا قسمَي القناة:', error.message || error);
+        console.warn('   ▸ إن كان السببُ صلاحيات (RLS) على radar_results، فالصفُّ id=2 يحتاج نفسَ سياسة id=1.');
+        return;
+      }
+      console.log('[terminal] ✓ رُفعت أقسامُ اللوحة للجميع · قاع ' + ((payload.regime && payload.regime.up.length) || 0)
+        + ' · قمة ' + ((payload.regime && payload.regime.down.length) || 0)
+        + ' · توافق ' + ((payload.trust && payload.trust.length) || 0) + ' · ' + (window.APP_BUILD || ''));
+    } catch (e) { console.warn('[terminal] رفعُ أقسام اللوحة تعذّر:', e && e.message); }
+  }
+  window.terminalUploadShared = terminalUploadShared;   /* 🔄 رفعٌ يدويّ عند الحاجة */
+
+  /* 📥 يقرؤها الجميع — تُرجع true إن وصلت وصلحت */
+  async function terminalLoadShared() {
+    try {
+      if (typeof sb === 'undefined' || !sb) return false;
+      const { data, error } = await sb.from('radar_results')
+        .select('data, scanned_at').eq('id', TERM_SHARED_ID).maybeSingle();
+      if (error || !data || !data.data) return false;
+      const age = data.scanned_at ? (Date.now() - new Date(data.scanned_at).getTime()) : Infinity;
+      /* 🕒 قديمةٌ جداً ⇒ لا تُعرض: قائمةُ «قرب القاع» من أسبوعٍ مضى أسوأُ
+         من غيابها، لأنّها تبدو حاضرةً وهي ليست كذلك. */
+      if (age > TERM_SHARED_TTL) {
+        console.info('[terminal] أقسامُ اللوحة المشتركة قديمة (' + Math.round(age / 3600000) + ' ساعة) — تُتجاهل.');
+        return false;
+      }
+      const P = data.data;
+      let got = false;
+      if (P.regime && P.regime.up && P.regime.down) { _regimeStartsCache = P.regime; got = true; }
+      if (Array.isArray(P.trust) && P.trust.length) { _ribbonTrustCache = P.trust; got = true; }
+      if (P.edgeAcc) { _channelEdgeAccCache = P.edgeAcc; }
+      if (!got) return false;
+      try { termRenderRibbonTrust(); } catch (e) {}
+      try { termRenderRegimeStarts(); } catch (e) {}
+      console.info('[terminal] ✓ أقسامُ اللوحة من المشترك · قاع ' + P.regime.up.length + ' · قمة ' + P.regime.down.length);
+      return true;
+    } catch (e) { return false; }
+  }
+
   function _ribbonRenderWithRetry(tries) {
+    /* 🌐 المشتركةُ أوّلاً وفي المحاولة الأولى وحدها: أكثرُ المستخدمين
+       لا شموعَ عندهم، فالحسابُ المحليّ عندهم يعطي صفراً مهما تكرّر. */
+    if (tries === 0) {
+      try {
+        terminalLoadShared().then(function (ok) {
+          if (!ok) _ribbonRenderLocal(0);          // لا مشتركة ⇒ احسب محلياً كما كان
+          else if (typeof isAdmin === 'function' && isAdmin()) _ribbonRenderLocal(0);  /* 🛠️ الأدمن يحسب ليرفع */
+        });
+      } catch (e) { _ribbonRenderLocal(0); }
+      return;
+    }
+    _ribbonRenderLocal(tries);
+  }
+
+  function _ribbonRenderLocal(tries) {
     try { _ribbonTrustCache = _ribbonBacktest(); } catch (e) {}
     try { _regimeStartsCache = _ribbonRegimeStarts(); } catch (e) {}
     try { termRenderRibbonTrust(); } catch (e) {}
@@ -19368,7 +19488,7 @@ const CHAN_FLAT = 0.50;
     const h2 = document.getElementById('termRegimeStarts');
     const stillEmpty = (h1 && h1.style.display === 'none') || (h2 && h2.style.display === 'none');
     if (stillEmpty && tries < 6) {
-      setTimeout(function () { _ribbonRenderWithRetry(tries + 1); }, 2500 + tries * 1500);
+      setTimeout(function () { _ribbonRenderLocal(tries + 1); }, 2500 + tries * 1500);
     }
   }
   /* 🔄 تحديث يدويّ اختياري — لو احتجت رقماً أحدث لاحقاً بلا إعادة تحميل الصفحة */

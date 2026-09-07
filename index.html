@@ -2456,7 +2456,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-07-v600';
+window.APP_BUILD = '2026-09-07-v602';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2467,6 +2467,8 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v602', '🩹 معيارٌ يرفض المرجعَ نفسَه معيارٌ معطوب — رُصد في تجربةٍ **قبل التسليم**. نقلتُ شرطَ «الوسيط > ‎−1‎» من فحص القناة إلى المختبَر كما هو، فرفض كلَّ استراتيجيةٍ بلا استثناء. ▸ والسببُ أنّ تصميمَ المختبَر **هدفٌ 2R ووقفٌ 1R**: أكثرُ من نصف الصفقات تُوقَف بحكم الشكل، فالوسيطُ ‎−1‎ **حتى لخطّ الأساس نفسِه** — أي أنّ المعيارَ كان يرفض مرجعَه. ▸ فصار الوسيطُ يُقارَن بوسيط المرجع لا بعددٍ مطلق، وأُضيف عمودُ «وسيطُ المرجع» ليُرى الأساسُ لا يُفترض، وحكمٌ ثالث «⚠️ تفوّقٌ في الذيل» لما يتفوّق توقّعُه ووسيطُه دون المرجع. ▸ **والدرسُ أنّ نقلَ معيارٍ صالحٍ إلى تصميمٍ آخر ينقل صلاحيّتَه معه** — وهو وجهٌ آخر لعلّة هذه الجلسة كلّها'],
+    ['v601', '🧪 مختبَرُ الاستراتيجيات — «أريد فرصاً، والسوقُ لا يمشي على إليوت وحده». وإليوت مطبَّقاً بأمانةٍ سقفُه ~٣٪ من السوق، فالطريقُ مولّدٌ ثانٍ **يُقاس قبل أن يُشحن** لا بوّاباتٌ تُوسَّع. ▸ stratLab() تمتحن ثمانيةَ مرشّحين (اختراق 20/55 · قمّة 52 أسبوعاً · ارتداد متوسط 50 · RSI(2) · انفجار حجم · حجم+اختراق · زخمٌ نسبيّ) بـ**قواعدَ واحدةٍ للجميع**: دخولٌ عند الإغلاق · وقف 2×ATR · هدف 2R · أفق 20 جلسة — **فمن يغيّر الوقفَ يغيّر ع/م ونسبةَ الفوز معاً، وهذا خطأٌ اعترفتُ به في هذه الجلسة**. ▸ ومعها **ذراعُ تحكّم**: «كلُّ الشموع بلا شرط» بنفس القواعد — فلا يُحكم على رقمٍ مطلق بل على **التفوّق فوق السوق**، وهو الدرسُ الذي كشف أنّ «قرب القمة ٥٦٪» كانت تحت خطّ الأساس ٥٧٪. ▸ والحرّاسُ الأربعة كما هم: تصحيحُ التداخل (خطوة 5 × أفق 20 ⇒ العيّنةُ الفعّالة الربع) · هامشُ **الفرق** لا هامشُ الرقم · الوسيطُ (توقّعٌ موجبٌ وسيطُه ‎−1‎ ذيلٌ نادر لا نظام) · ونصيبُ أكبر ثلاثة. ▸ وstratLabStability() تفحص النصفين — **وميزةٌ تنقلب ليست ميزة**. ▸ قياسٌ محض: لا سطرَ سلوكٍ تغيّر'],
     ['v600', '🔻 الكتلةُ الكبرى تحت المجهر — **148 سهماً (٥٥٪) خرجوا لأنّ عدَّهم «دورةٌ هابطة»**، والخطّةُ لا تُبنى إلا على صاعدة. والسؤالُ الذي لم نملك جوابَه: **أهو حكمٌ أم قرعة؟** ▸ فأُضيفت downCycleReport() تقيس ثلاثةَ أدلّةٍ لكلّ سهم: ① **عدٌّ ميّت** — السعرُ خارج مدى مستويات الدورة كلّها؛ والرايةُ `stale` **محسوبةٌ في المحرّك منذ زمنٍ ولا تدخل اختيارَ المحور أصلاً**. ② **يناقض الأطر** — الأسبوعيُّ صاعدٌ والعدُّ يقول هابط. ③ **الفارق** — الوصيفُ صاعدٌ وبينهما نقاطٌ معدودة ⇒ قرعةٌ لا حكم. ▸ وكُشف في المحرّك `altDir` و`altLegs` و`anchorAge` — **إضافةٌ محضة**: ثلاثةُ حقولٍ تُقرأ ولا يُقرأ منها شيءٌ في السلوك. ▸ ولا يُغيَّر حرفٌ حتى نرى الأرقام: **يُقاس، ثمّ يُقرَّر**'],
     ['v599', '🔁 نفسُ السهم بجوابين في شاشةٍ واحدة — رصده المالك على الوطنيّة 8300 فورَ رفع v598: الحكمُ يقول «⭕ الدورةُ في الموجة C، بعد الاندفاع»، وقسمُ «🎯 القنّاص» تحته بأربعة أسطر يقول «لم يكوّن إليوت إعداداً على هذا السهم بعد». **أصلحتُ الجملةَ في مكانٍ ونسيتُها في آخر** — وهي علّةُ هذه الجلسة كلّها بعينها: معلومةٌ واحدةٌ تُكتب مرّتين فيتخلّف أحدُ الموضعين. ▸ فصار القسمُ يقرأ `elBlock` نفسَه الذي يقرؤه الحكم — **مصدرٌ واحد، ونصٌّ واحد، فلا يفترقان أبداً**. ▸ والدرسُ يستحقّ التسجيل: **أن أُصلح عرضاً دون أن أبحث عن توائمه إصلاحٌ ناقص** — وقد وقعتُ فيه ثلاث مرّاتٍ في هذه الجلسة (القفل · الشارة · هذه)'],
     ['v598', '🔇 الصمتُ تظليلٌ آخر — و**٨٤٫٨٪ من السوق كان يُرفَض صامتاً**. بلاغُ المالك: «التطبيق لايعطي شي فقط تجنّب بلا إعداد انتظر». والقياس: 228 سهماً من 269 يرجع لهم plan=null بلا سببٍ واحد، والبطاقةُ تقول لهم جميعاً «غيابُ قياسٍ لا رفضٌ للسهم» — **وهي صادقةٌ في مسارٍ من ستّة**. ▸ فصار لكلّ مسارٍ سببُه بالاسم والرقم: `down` (دورةٌ هابطة · 148) · `late` (الموجة A/B/C · 27) · `geo45` (إسقاطُ الموجة ٤ يدخل مجالَ الموجة ١ — بالرقمين) · `geo23` · `rr`. ويُحمَل السببُ مع النتيجة (`elBlock`) فيقرؤه الحكمُ وقسمُ إليوت من **مصدرٍ واحد**، ولا يُخترع في مكانين. ▸ و«لا نعرف بعد» غيرُ «انتهى الاندفاع»: الأولى تدعو للمراقبة والثانية تنهى عنها — فاختلف ذيلُ الرسالة تبعاً للسبب. ▸ **واعتُمدت المعايرة على الدورات الصالحة وحدها** بعد قياسها على السوق: المستحيلُ رياضياً **49 ⇐ صفر**، والثمنُ معلومٌ ومقبول: الخطط **8 ⇐ 6**، والثقة **17 ⇐ 58** تحت الحدّ — **لأنّها كانت تُعايَر على الامتحان ثمّ تُصحَّح به، فأرقامُها منتفخة**. وثقةٌ منتفخةٌ أخطرُ من ثقةٍ ناقصة. ▸ حارسان قبل التسليم: بإطفاء المفتاح يطابق المحرّكُ نسخةَ ما قبل التعديل **حرفاً بحرفٍ على 4000 سهماً (صفرُ فرق)**؛ وكلُّ سهمٍ بلا خطّةٍ صار له سببٌ مسجَّل — **صفرُ صامتٍ من 3913**'],
@@ -19472,6 +19474,249 @@ const CHAN_FLAT = 0.50;
 
      ولا تُغيَّر خوارزميةٌ واحدة: أداةُ قياسٍ للأدمن، تقول ولا تفعل.
      ══════════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════════════
+     🧪 stratLab() — مختبَرُ الاستراتيجيات: ثمانيةُ مرشّحين بقواعدَ واحدة
+
+     طلبُ المالك: «أريد فرصاً — السوقُ لا يمشي على إليوت وحده. ابحث لي
+     عن أفضل أداةٍ أو استراتيجية». **والبحثُ بالسمعة هو ما أوقعنا في فخّ
+     «قاع القناة»**: بدا صحيحاً على شارت جرير، ثمّ قِيس فأعطى ‎−0.004R‎
+     على 4958 صفقة.
+
+     فالطريقةُ نفسُها التي رفضت فرضيّتنا، تُطبَّق على المرشّحين:
+
+     ① **قواعدُ موحّدة** — لا تُقارَن استراتيجيةٌ بوقفٍ ضيّقٍ بأخرى بوقفٍ
+        واسع. فالجميع: دخولٌ عند الإغلاق · وقفٌ عند ‎2×ATR‎ · هدفٌ ‎2R‎ ·
+        أفقُ 20 جلسة. **من يغيّر الوقفَ يغيّر ع/م ونسبةَ الفوز معاً —
+        وهذا خطأٌ اعترفتُ به في هذه الجلسة.**
+     ② **ذراعُ تحكّم** — «كلُّ الشموع بلا شرط» تُقاس بنفس القواعد. فما
+        لم تتفوّق عليها الاستراتيجيةُ فهي **ليست ميزة، بل ميلُ السوق**.
+        (وهذا ما كشف أنّ «قرب القمة 56٪» كانت **تحت** خطّ الأساس 57٪.)
+     ③ **تصحيحُ التداخل** — خطوةُ 5 مع أفقِ 20 ⇒ تداخلٌ رباعيّ ⇒ العيّنةُ
+        الفعّالة ~الربع، فتُضاعَف الهوامش.
+     ④ **الوسيطُ ونصيبُ أكبر ثلاثة** — توقّعٌ موجبٌ وسيطُه ‎−1‎ يعني أنّ
+        الربحَ في ذيلٍ نادر، لا في نظام. (هكذا سقطت خانةُ «هابطة ≥1.5».)
+
+     ولا تُغيَّر خوارزميةٌ واحدة: أداةُ قياسٍ للأدمن، تقول ولا تفعل.
+     ══════════════════════════════════════════════════════════════════════ */
+  window.stratLab = _adminTool('stratLab', function (opts) {
+    opts = opts || {};
+    const STEP = opts.step || 5;
+    const FWD  = opts.fwd  || 20;      // أفقُ الصفقة (أسبوعان إلى شهر)
+    const RRT  = opts.rr   || 2;       // الهدف = 2R لكلّ الاستراتيجيات
+    const RG   = Array.isArray(opts.range) ? opts.range : [0, 1];
+    const QUIET = !!opts.quiet;
+    const src = _bestPriceHistory();
+    const syms = Object.keys(src);
+    if (!syms.length) { console.warn('🧪 لا تاريخَ — امسح السوق أوّلاً.'); return null; }
+
+    /* ── 📦 حجمُ التداول من كاش المسح (الوحيدُ الحامل للحجم) ── */
+    const vol = {};
+    try {
+      Object.keys(PRED_CACHE).forEach(function (s) {
+        if (!/^\d+$/.test(s)) return;
+        const c = PRED_CACHE[s];
+        if (Array.isArray(c) && c.length > 60) vol[s] = { c: c.map(function (x) { return +x.c; }), v: c.map(function (x) { return +x.v || 0; }) };
+      });
+    } catch (e) {}
+
+    /* ── 🧮 أدواتٌ صغيرة ── */
+    const maxOf = function (A, i, w) { let m = -Infinity; for (let j = Math.max(0, i - w + 1); j <= i; j++) if (A[j] > m) m = A[j]; return m; };
+    const sma = function (A, i, w) { if (i < w - 1) return null; let s = 0; for (let j = i - w + 1; j <= i; j++) s += A[j]; return s / w; };
+    const atrOf = function (A, i, w) { if (i < w) return null; let s = 0; for (let j = i - w + 1; j <= i; j++) s += Math.abs(A[j] - A[j - 1]); return s / w; };
+    const rsiOf = function (A, i, w) {
+      if (i < w) return null;
+      let g = 0, l = 0;
+      for (let j = i - w + 1; j <= i; j++) { const d = A[j] - A[j - 1]; if (d > 0) g += d; else l -= d; }
+      if (g + l === 0) return 50;
+      return 100 * g / (g + l);
+    };
+
+    /* ══ 🎯 محاكاةُ الصفقة — واحدةٌ للجميع، فلا يفوز أحدٌ بقواعده ══ */
+    const sim = function (A, i, atr) {
+      const entry = A[i];
+      const risk = 2 * atr;
+      if (!(risk > 0) || !(entry > 0)) return null;
+      const rp = risk / entry;
+      if (rp < 0.005 || rp > 0.25) return null;           // مخاطرةٌ خارج المعقول ⇒ لا تُحسب
+      const stop = entry - risk, target = entry + RRT * risk;
+      for (let k = 1; k <= FWD; k++) {
+        const px = A[i + k];
+        if (px == null) break;
+        if (px <= stop) return -1;
+        if (px >= target) return RRT;
+      }
+      const last = A[i + FWD];
+      return (last == null) ? null : (last - entry) / risk;
+    };
+
+    /* ══ 📋 المرشّحون — شرطُ الدخول وحده يفرّقهم ══ */
+    const CAND = [
+      { k: '⚙️ خطُّ الأساس — كلُّ الشموع', need: 210, f: function () { return true; } },
+      { k: '① اختراقُ أعلى 20 جلسة', need: 210, f: function (A, i) { return A[i] >= maxOf(A, i - 1, 20); } },
+      { k: '① اختراقُ أعلى 55 جلسة', need: 210, f: function (A, i) { return A[i] >= maxOf(A, i - 1, 55); } },
+      { k: '① قربُ قمّة 52 أسبوعاً (≥98٪)', need: 300, f: function (A, i) { return A[i] >= 0.98 * maxOf(A, i, 252); } },
+      { k: '③ ارتدادٌ لمتوسط 50 داخل صعود', need: 260,
+        f: function (A, i) {
+          const m50 = sma(A, i, 50), m200 = sma(A, i, 200), m50p = sma(A, i - 10, 50);
+          if (m50 == null || m200 == null || m50p == null) return false;
+          return m50 > m200 && m50 > m50p && A[i] >= m50 * 0.97 && A[i] <= m50 * 1.03 && A[i - 5] > A[i];
+        } },
+      { k: '③ RSI(2) دون 10 فوق متوسط 200', need: 260,
+        f: function (A, i) {
+          const m200 = sma(A, i, 200); if (m200 == null || A[i] <= m200) return false;
+          const r = rsiOf(A, i, 2); return r != null && r < 10;
+        } },
+      { k: '④ انفجارُ حجم ‎2×‎ بشمعةٍ صاعدة', need: 60, vol: true,
+        f: function (A, i, V) {
+          if (!V || !(A[i] > A[i - 1])) return false;
+          let s = 0, n = 0; for (let j = i - 20; j < i; j++) { if (V[j] > 0) { s += V[j]; n++; } }
+          return n >= 15 && V[i] >= 2 * (s / n);
+        } },
+      { k: '④ حجمٌ ‎2×‎ + اختراقُ أعلى 20', need: 60, vol: true,
+        f: function (A, i, V) {
+          if (!V || A[i] < maxOf(A, i - 1, 20)) return false;
+          let s = 0, n = 0; for (let j = i - 20; j < i; j++) { if (V[j] > 0) { s += V[j]; n++; } }
+          return n >= 15 && V[i] >= 2 * (s / n);
+        } }
+    ];
+
+    const B = function () { return { n: 0, w: 0, sum: 0, rs: [], sy: {} }; };
+    const res = {}; CAND.forEach(function (c) { res[c.k] = B(); });
+    res['② الزخمُ النسبيّ — أقوى خُمس (12−1 شهراً)'] = B();
+
+    const push = function (o, r, sym) { o.n++; o.sum += r; if (r > 0) o.w++; o.rs.push(r); o.sy[sym] = (o.sy[sym] || 0) + r; };
+
+    /* ══ المرورُ الأوّل: كلُّ ما يُقاس داخل السهم الواحد ══ */
+    syms.forEach(function (sym) {
+      const A = src[sym]; if (!Array.isArray(A) || A.length < 120) return;
+      const V = vol[sym] ? vol[sym].v : null, AV = vol[sym] ? vol[sym].c : null;
+      CAND.forEach(function (c) {
+        const useV = !!c.vol;
+        const P = useV ? AV : A, VV = useV ? V : null;
+        if (!P || P.length < c.need + FWD + STEP) return;
+        const lo0 = c.need, hi0 = P.length - FWD - 1, span = hi0 - lo0;
+        if (span <= 0) return;
+        const lo = lo0 + Math.floor(RG[0] * span), hi = lo0 + Math.floor(RG[1] * span);
+        for (let i = lo; i <= hi; i += STEP) {
+          let ok = false;
+          try { ok = !!c.f(P, i, VV); } catch (_) { ok = false; }
+          if (!ok) continue;
+          const atr = atrOf(P, i, 20); if (atr == null) continue;
+          const r = sim(P, i, atr);
+          if (r != null) push(res[c.k], r, sym);
+        }
+      });
+    });
+
+    /* ══ المرورُ الثاني: الزخمُ النسبيّ — مقارنةٌ بين الأسهم لا داخلها ══
+       يُرتَّب السوقُ كلُّه في التاريخ نفسه، ويُشترى أقوى خُمس. والمحاذاةُ
+       بالعدّ رجوعاً من آخر شمعة (كلُّ الأسهم مُسحت في اليوم نفسه). */
+    const MOM = res['② الزخمُ النسبيّ — أقوى خُمس (12−1 شهراً)'];
+    try {
+      const deep = syms.filter(function (s) { return src[s].length >= 300 + FWD; });
+      let maxAgo = Infinity;
+      deep.forEach(function (s) { maxAgo = Math.min(maxAgo, src[s].length - 300); });
+      const agoHi = Math.max(0, maxAgo - 1);
+      const spanA = agoHi - FWD;
+      if (deep.length >= 30 && spanA > 0) {
+        const aLo = FWD + Math.floor((1 - RG[1]) * spanA), aHi = FWD + Math.floor((1 - RG[0]) * spanA);
+        for (let ago = aLo; ago <= aHi; ago += STEP) {
+          const rank = [];
+          deep.forEach(function (s) {
+            const A = src[s], idx = A.length - 1 - ago;
+            if (idx - 252 < 0) return;
+            const a = A[idx - 21], b = A[idx - 252];
+            if (!(a > 0) || !(b > 0)) return;
+            rank.push({ s: s, m: a / b - 1, i: idx });
+          });
+          if (rank.length < 30) continue;
+          rank.sort(function (x, y) { return y.m - x.m; });
+          rank.slice(0, Math.max(1, Math.floor(rank.length / 5))).forEach(function (o) {
+            const A = src[o.s];
+            if (o.i + FWD >= A.length) return;
+            const atr = atrOf(A, o.i, 20); if (atr == null) return;
+            const r = sim(A, o.i, atr);
+            if (r != null) push(MOM, r, o.s);
+          });
+        }
+      }
+    } catch (e) {}
+
+    /* ══ 📊 الإحصاء — والضعفُ يُعلَن مع القوّة ══ */
+    const base = res['⚙️ خطُّ الأساس — كلُّ الشموع'];
+    const expOf = function (o) { return o.n ? o.sum / o.n : 0; };
+    const seOf  = function (o) { return o.n ? 1.2 / Math.sqrt(o.n / 4) : 99; };   // تداخلٌ رباعيّ
+    const med   = function (a) { if (!a.length) return 0; const s = a.slice().sort(function (x, y) { return x - y; }); return s[Math.floor(s.length / 2)]; };
+    const eB = expOf(base), sB = seOf(base);
+    /* ══════════════════════════════════════════════════════════════
+       🩺 وسيطُ ‎−1‎ هنا **بنيةٌ لا مرض** — رُصد في تجربةٍ قبل التسليم
+
+       نقلتُ شرطَ «الوسيط > ‎−1‎» من فحص القناة كما هو، فرفض كلَّ شيء.
+       والسبب أنّ التصميم هنا **هدفٌ 2R ووقفٌ 1R**: أكثرُ من نصف
+       الصفقات تُوقَف بحكم الشكل، فالوسيطُ ‎−1‎ حتى لخطّ الأساس نفسِه.
+       ▸ **ومعيارٌ يرفض المرجعَ نفسه معيارٌ معطوب** — فصار الوسيطُ
+         يُقارَن بوسيط خطّ الأساس لا بعددٍ مطلق.
+       ══════════════════════════════════════════════════════════════ */
+
+    const rows = Object.keys(res).map(function (k) {
+      const o = res[k], e = expOf(o), se = seOf(o);
+      const lift = e - eB;
+      const mSE = Math.sqrt(se * se + sB * sB);            // هامشُ الفرق لا هامشُ الرقم
+      const top3 = Object.keys(o.sy).sort(function (a, b) { return o.sy[b] - o.sy[a]; }).slice(0, 3)
+                     .reduce(function (s, x) { return s + o.sy[x]; }, 0);
+      const share = (o.sum > 0.5) ? Math.round(100 * top3 / o.sum) + '٪' : '—';
+      let v;
+      if (k.indexOf('خطُّ الأساس') === 0 || k.indexOf('⚙️') === 0) v = '— مرجع —';
+      else if (o.n < 150) v = '⚠️ عيّنةٌ صغيرة';
+      else if (lift > 1.96 * mSE && med(o.rs) >= med(base.rs)) v = '✅ تفوّقٌ مُثبَت';
+      else if (lift > 1.96 * mSE) v = '⚠️ تفوّقٌ في الذيل — الوسيطُ دون المرجع';
+      else if (lift < -1.96 * mSE) v = '🔻 أسوأُ من السوق';
+      else v = '— لا يُحسم';
+      return { 'الاستراتيجية': k, 'صفقات': o.n,
+               'فوز٪': o.n ? +(o.w / o.n * 100).toFixed(1) : 0,
+               'التوقّع R': +e.toFixed(3),
+               'تفوّقٌ على السوق R': +lift.toFixed(3),
+               'هامش ±R': +(1.96 * mSE).toFixed(3),
+               'وسيط R': +med(o.rs).toFixed(2),
+               'وسيطُ المرجع': +med(base.rs).toFixed(2),
+               'نصيبُ أكبر 3': share,
+               'الحكم': v };
+    });
+    rows.sort(function (a, b) { return b['تفوّقٌ على السوق R'] - a['تفوّقٌ على السوق R']; });
+
+    if (QUIET) return { res: res, rows: rows, base: eB };
+    console.log('%c🧪 مختبَرُ الاستراتيجيات · ' + syms.length + ' سهماً · أفقُ ' + FWD + ' جلسة · وقفٌ 2×ATR · هدفٌ ' + RRT + 'R · ' + (window.APP_BUILD || ''),
+      'color:#a78bfa;font-weight:bold;font-size:14px');
+    console.log('   القواعدُ واحدةٌ للجميع، **والحكمُ على التفوّق فوق السوق لا على الرقم المطلق**.');
+    console.table(rows);
+    console.log('🩺 وسيطُ ‎−1‎ بنيةٌ لا مرض: الهدفُ 2R والوقفُ 1R، فأكثرُ من نصف الصفقات تُوقَف — **حتى في خطّ الأساس نفسِه**.\n'
+      + '   فالحكمُ على الوسيط بمقارنته بوسيط المرجع، لا بعددٍ مطلق.');
+    console.log('⚠️ الوقفُ والهدفُ يُفحصان على الإغلاق (لا نملك أعلى/أدنى اليوم) — الرقمُ سقفٌ متفائل.\n'
+      + '⚠️ ولا عمولةَ محسوبة: اخصم ~' + (typeof TRADE_COST_PCT !== 'undefined' ? TRADE_COST_PCT : 0.3) + '٪ ذهاباً وإياباً.\n'
+      + '▸ stratLab({range:[0,0.5]}) و{range:[0.5,1]} لفحص الثبات نصفاً بنصف — **وما لا يثبت في النصفين لا يُبنى عليه**.');
+    return { rows: rows, base: eB };
+  });
+
+  /* 🔬 الثباتُ نصفاً بنصف — الحارسُ الذي أسقط فرضيّةَ القناة */
+  window.stratLabStability = _adminTool('stratLabStability', function (opts) {
+    const A = window.stratLab(Object.assign({}, opts, { range: [0, 0.5], quiet: true }));
+    const B = window.stratLab(Object.assign({}, opts, { range: [0.5, 1], quiet: true }));
+    if (!A || !B) return null;
+    const m = function (X) { const o = {}; X.rows.forEach(function (r) { o[r['الاستراتيجية']] = r; }); return o; };
+    const a = m(A), b = m(B);
+    const out = Object.keys(a).map(function (k) {
+      const x = a[k] || {}, y = b[k] || {};
+      const lx = x['تفوّقٌ على السوق R'], ly = y['تفوّقٌ على السوق R'];
+      return { 'الاستراتيجية': k,
+               'النصف الأقدم': lx, 'صفقات‑أ': x['صفقات'],
+               'النصف الأحدث': ly, 'صفقات‑ب': y['صفقات'],
+               'ثابت؟': (lx > 0 && ly > 0) ? '✅ موجبٌ في النصفين' : ((lx < 0 && ly < 0) ? '🔻 سالبٌ في النصفين' : '⚠️ ينقلب') };
+    });
+    console.log('%c🔬 ثباتُ التفوّق نصفاً بنصف — **ميزةٌ تنقلب ليست ميزة**', 'color:#38bdf8;font-weight:bold;font-size:13px');
+    console.table(out);
+    return out;
+  });
+
   window.downCycleReport = _adminTool('downCycleReport', function (opts) {
     opts = opts || {};
     const SHOW = (opts.show === undefined) ? 40 : +opts.show;

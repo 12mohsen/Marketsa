@@ -1953,6 +1953,7 @@ canvas#mdChart{display:block;width:100% !important}
     <div style="flex:1;min-height:0;overflow:auto;padding:14px">
     <div id="termRibbonTrust" style="display:none;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
     <div id="termRegimeStarts" style="display:none;gap:16px;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
+    <div id="termTopsNearHigh" style="display:none;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
     <div id="termGrid" style="display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:14px;align-items:start">
       <!-- قائمة الأسهم -->
       <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:8px;max-height:78vh;overflow:auto">
@@ -2456,7 +2457,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-07-v606';
+window.APP_BUILD = '2026-09-07-v607';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2467,6 +2468,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v607', '🏔️ «الأقوى عند قمّتها السنوية» — مستكشِفٌ لا إشارة، وهو خلاصةُ خمسين مقارنة. من عشرة مرشّحين في خمسة إعدادات بقي هذا وحده يجتاز شرطين من ثلاثة، **ولم يجتز الثالث** — فيُعرض بحجمه لا بأكبرَ منه: «يتفوّق على السوق ‎+0.217R‎ ±0.122 ويثبت في النصفين · **وصافيه بعد العمولة ‎+0.086R‎ ±0.119 أي داخل الهامش**». ▸ وليس تناقضاً: **السوقُ نفسُه خاسرٌ ‎−0.131R‎** على هذا المدى (احتمالُ الصعود بعد 20 جلسة 43٪)، والتفوّقُ على خاسرٍ يوصل إلى الصفر لا إلى الربح. فالقسمُ **يُضيّق البحث ولا يقول اشترِ** — نفسُ قرار قسم القناة وللسبب نفسه. ▸ ويُذكر فيه ما **سقط** كما يُذكر ما بقي: «الشراء عند الدعم» رُفض ثلاث مرّاتٍ بثلاث طرقٍ مستقلّة (ارتدادُ م50 ‎−0.023‎ · قاعُ القناة ‎−0.004R‎ · RSI صافيه سالب) — **وهي الفلسفةُ التي يقوم عليها التطبيق**. ▸ والدروسُ الثلاثة طُبِّقت قبل أن يُكتب سطرٌ واحد: سُئل عن **القفل** (`_wrapIfLocked` بمفتاح اللوحة)، ورُفع في **المشترك** (`tops` في الصفّ id=2) فيصل من لم يمسح، وأُعلنت **التغطية** (كم سهماً قِيس من كم)'],
     ['v606', '②① المركّب — الناجيان الوحيدان يُمتحنان معاً. عند وقفِ 4×ATR بقي سطران موجبَين في النصفين: **الزخمُ النسبيّ (0.142 و0.139 على 6576 صفقة — أثبتُ ما قِيس اليوم)** و**قربُ قمّة 52 أسبوعاً (0.216 ثمّ 0.049)**، وانقلب الاختراقان (55 و20) إلى السالب في النصف الأحدث فسقطا. ▸ والزخمُ يجيب «أيَّ سهمٍ؟» والقمّةُ تجيب «ومتى؟» — فدمجُهما فرضيّةٌ لها وجهُها **قبل** أن نرى رقمَها، لا التقاطٌ بعده. ▸ ويلزم تحذيرٌ صريح: امتُحن تسعةُ مرشّحين في أربعة إعدادات، **وكلّما زاد المُمتحَن زاد احتمالُ رابحٍ بالصدفة**. فالحكمُ للثبات في النصفين على عيّنةٍ كبيرة، لا لأعلى رقمٍ في الجدول'],
     ['v605', '🎖️ «رابح» تحتاج دليلاً كما تحتاجه «يتفوّق». عند وقفِ 4×ATR خرج «✅ رابحٌ ويتفوّق» لصافٍ قدرُه ‎+0.086R‎ **وهامشُه ‎±0.119‎** — أي أنّه لا يُميَّز عن الصفر. ▸ والسببُ أنّي كتبتُ الشرطَ `net > 0` مجرّداً بينما اشترطتُ للتفوّق هامشَه كاملاً — **شرطان لمعنيَين، وأحدُهما بلا دليل**. وهو نفسُ ما نحاربه: رقمٌ يُعرض بثقةٍ لا يملكها، وأخطرُ ما يكون حين يُصدّقه صاحبُه ويشتري به. ▸ فصار «رابح» تشترط `net > 1.96×SE`، وأُضيف عمودُ «هامشُ الصافي ±» ليُرى لا يُفترض، وحالٌ ثالثةٌ صريحة **«🟡 يتفوّق · وربحُه داخل الهامش»** — وهي أصدقُ وصفٍ لأفضلِ ما وجدناه حتى الآن'],
     ['v604', '⚖️ «صافٍ» كان اسماً لغير معناه — **وهي علّةُ هذه الجلسة بعينها، وقعتُ فيها في أداتي أنا**. سمّيتُ العمودَ «تفوّقٌ صافٍ R» وهو **فرقٌ** بين طرفين كلاهما يدفع العمولة، فخرج 0.175 وهو أكبرُ من الخام 0.156 — **صافٍ أكبرُ من الخام بعد خصمٍ مستحيل**، والرقمُ كان يقول «أفضلُ من السوق» والقارئُ يقرأ «رابح». ▸ والحقيقةُ بعد العمولة على سوقك: قمّةُ 52 أسبوعاً **0.000R** · الزخم **−0.063** · RSI(2) **−0.071** · اختراق 55 **−0.085** · اختراق 20 **−0.121** · خطُّ الأساس **−0.174**. **لا رابحَ واحد، وأفضلُها يتعادل.** ▸ فانفصل العمودان: «صافي التوقّع R» يقول أرابحٌ هو، و«تفوّقٌ فوق السوق R» يقول أأفضلُ من المرجع — **والحكمُ يشترط الاثنين**، وأُضيف «💸 يتفوّق على السوق لكنّه خاسرٌ بعد العمولة». ▸ والعمولةُ بـR تتناسب **عكسياً** مع عرض الوقف (2×ATR ⇒ 0.147R · 4×ATR ⇒ ~0.074R)، فصار `atrMult` قابلاً للتغيير: **قد تكون بنيةُ الصفقة هي العائق لا الإشارة** — والزخمُ النسبيّ ثابتٌ في النصفين (0.111 و0.128 على 6571 صفقة) فإشارتُه حيّة، وإنّما تأكلها بنيةُ الوقف. ▸ وحُذفت حاشيةُ «لا عمولةَ محسوبة» — بقيت بعد أن صارت محسوبة'],
@@ -20009,10 +20011,11 @@ const CHAN_FLAT = 0.50;
       const payload = {
         regime: _regimeStartsCache || null,
         trust: Array.isArray(_ribbonTrustCache) ? _ribbonTrustCache.slice(0, 40) : null,
+        tops: _topsNearHighCache || null,
         edgeAcc: _channelEdgeAccCache || null,
         build: (window.APP_BUILD || '')
       };
-      if (!payload.regime && !payload.trust) {
+      if (!payload.regime && !payload.trust && !payload.tops) {
         console.warn('[terminal] ✗ لا شيءَ يُرفع — لم تُحسب أقسامُ اللوحة بعد. افتح اللوحة الموحّدة ثمّ أعد المحاولة.');
         return;
       }
@@ -20073,10 +20076,12 @@ const CHAN_FLAT = 0.50;
       let got = false;
       if (P.regime && P.regime.up && P.regime.down) { _regimeStartsCache = P.regime; got = true; }
       if (Array.isArray(P.trust) && P.trust.length) { _ribbonTrustCache = P.trust; got = true; }
+      if (P.tops && Array.isArray(P.tops.rows)) { _topsNearHighCache = P.tops; got = true; }
       if (P.edgeAcc) { _channelEdgeAccCache = P.edgeAcc; }
       if (!got) return false;
       try { termRenderRibbonTrust(); } catch (e) {}
       try { termRenderRegimeStarts(); } catch (e) {}
+      try { termRenderTopsNearHigh(); } catch (e) {}
       console.info('[terminal] ✓ أقسامُ اللوحة من المشترك · قاع ' + P.regime.up.length + ' · قمة ' + P.regime.down.length);
       return true;
     } catch (e) { return false; }
@@ -20132,8 +20137,12 @@ const CHAN_FLAT = 0.50;
       const _g = _ribbonRegimeStarts();
       if ((_g && (_g.up.length || _g.down.length)) || !_regimeStartsCache) _regimeStartsCache = _g;
     } catch (e) {}
+    /* 🏔️ القسمُ الثالث يتبع القاعدةَ نفسَها: لا يُمحى كاشٌ صالحٌ بنتيجةٍ خاوية */
+    try { const _h = _topsNearHigh(); if ((_h && _h.rows && _h.rows.length) || !_topsNearHighCache) _topsNearHighCache = _h;
+    } catch (e) {}
     try { termRenderRibbonTrust(); } catch (e) {}
     try { termRenderRegimeStarts(); } catch (e) {}
+    try { termRenderTopsNearHigh(); } catch (e) {}
     const h1 = document.getElementById('termRibbonTrust');
     const h2 = document.getElementById('termRegimeStarts');
     const stillEmpty = (h1 && h1.style.display === 'none') || (h2 && h2.style.display === 'none');
@@ -20159,6 +20168,105 @@ const CHAN_FLAT = 0.50;
   /* 🟢🔴 يُعيد رسم قسمَي «قريبة من القاع/القمة» */
   var TERM_REGIME_TAB = 'up';   // 🟢/🔴 التبويب الحالي المعروض
   window.termSetRegimeTab = function (tab) { TERM_REGIME_TAB = tab; try { termRenderRegimeStarts(); } catch (e) {} };
+
+  /* ══════════════════════════════════════════════════════════════════════
+     🏔️ «الأقوى عند قمّتها السنوية» — مستكشِفٌ لا إشارة دخول
+
+     خرج من `stratLab()` على سوقك: من عشرة مرشّحين في خمسة إعدادات، هذا
+     أفضلُ ما بقي — **ولم يجتز الشروطَ الثلاثة كاملةً**، فيُعرض بحجمه:
+
+       ✅ يتفوّق على السوق بيقين:  ‎+0.217R‎  بهامش ‎±0.122‎  (ن=1556)
+       🟡 وصافيه بعد العمولة:      ‎+0.086R‎  بهامش ‎±0.119‎  ⇒ **داخل الهامش**
+       ✅ موجبٌ في نصفَي التاريخ:   0.216 ثمّ 0.049
+       ✅ وتركّزُه معتدل:            أكبرُ ثلاثة = 31٪
+
+     والجملةُ التي تلخّصه: **يتفوّق على السوق بيقين، وصافيه لا يُميَّز عن
+     الصفر** — وليس تناقضاً: السوقُ نفسُه خاسرٌ ‎−0.131R‎ على هذا المدى
+     (احتمالُ الصعود بعد 20 جلسة 43٪ لا 50٪)، والتفوّقُ على خاسرٍ يوصل
+     إلى الصفر لا إلى الربح.
+
+     ▸ ولذلك هو **ترتيبٌ يُضيّق البحث**، لا قائمةُ شراء. نفسُ ما اخترتَه
+       لقسم القناة، وللسبب نفسِه.
+     ▸ ويُذكر معه ما **سقط**: الشراءُ عند الدعم رُفض ثلاث مرّاتٍ بثلاث
+       طرقٍ مستقلّة (ارتدادُ م50 · قاعُ القناة · RSI). فالقارئُ يستحقّ أن
+       يعرف ما لا يعمل كما يعرف ما قد يعمل.
+     ══════════════════════════════════════════════════════════════════════ */
+  var _topsNearHighCache = null;
+
+  function _topsNearHigh() {
+    try {
+      const src = _bestPriceHistory();
+      const names = {};
+      try { (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).forEach(function (x) { if (x && x.sym) names[String(x.sym)] = x.name || ''; }); } catch (e) {}
+      const all = [];
+      Object.keys(src).forEach(function (sym) {
+        const A = src[sym];
+        if (!Array.isArray(A) || A.length < 260) return;
+        const n = A.length, c = A[n - 1];
+        if (!(c > 0)) return;
+        let hi = -Infinity;
+        for (let j = n - 252; j < n; j++) if (A[j] > hi) hi = A[j];
+        if (!(hi > 0)) return;
+        const a = A[n - 22], b = A[n - 253];
+        const mom = (a > 0 && b > 0) ? (a / b - 1) : null;   // زخمُ 12−1 شهراً
+        all.push({ s: sym, nm: names[sym] || sym, g: (c / hi - 1) * 100, m: mom, p: c });
+      });
+      if (!all.length) return null;
+      /* 🥇 الرتبةُ المئوية للزخم — مقارنةٌ بين الأسهم لا داخل السهم */
+      const withM = all.filter(function (x) { return x.m != null; }).sort(function (a, b) { return a.m - b.m; });
+      const rank = {};
+      withM.forEach(function (x, i) { rank[x.s] = Math.round(100 * (i + 1) / withM.length); });
+      const near = all.filter(function (x) { return x.g >= -2; })
+                      .map(function (x) { return { s: x.s, nm: x.nm, g: +x.g.toFixed(1), m: x.m == null ? null : +(x.m * 100).toFixed(1), q: rank[x.s] != null ? rank[x.s] : null, p: +x.p.toFixed(2) }; });
+      near.sort(function (a, b) { return (b.q == null ? -1 : b.q) - (a.q == null ? -1 : a.q); });
+      return { rows: near.slice(0, 40), covered: all.length, known: Object.keys(src).length };
+    } catch (e) { return null; }
+  }
+
+  function termRenderTopsNearHigh() {
+    const host = document.getElementById('termTopsNearHigh');
+    if (!host) return;
+    /* 🔒 يتبع قفلَ اللوحة — انظر شرح `_LK` في `termRenderRegimeStarts`.
+       والسؤالُ عن القفل **قبل** أن يُكتب العرض، لا بعد أن يُبلَّغ عنه. */
+    const _LK = function (h) {
+      try { return (typeof _wrapIfLocked === 'function') ? _wrapIfLocked('terminal', h) : h; } catch (e) { return h; }
+    };
+    const r = _topsNearHighCache;
+    if (!r) { host.style.display = 'none'; return; }
+    host.style.display = 'block';
+
+    const chip = function (x) {
+      const strong = (x.q != null && x.q >= 80);
+      const col = strong ? '#22c55e' : '#94a3b8';
+      return '<div onclick="window.termSelect(\'' + x.s + '\')" style="flex:0 0 auto;cursor:pointer;background:rgba(' + (strong ? '34,197,94' : '148,163,184') + ',.10);'
+        + 'border:1px solid rgba(' + (strong ? '34,197,94' : '148,163,184') + ',.4);border-radius:10px;padding:7px 10px;min-width:112px">'
+        + '<div style="font-size:12.5px;font-weight:800;color:' + col + '">' + (x.nm || x.s).slice(0, 14) + '</div>'
+        + '<div style="font-size:10.5px;color:var(--txt-m);margin-top:2px">' + x.s + ' · ' + x.p + '</div>'
+        + '<div style="font-size:10.5px;margin-top:3px">قمّة سنوية <b>' + (x.g === 0 ? 'عندها' : x.g + '٪') + '</b></div>'
+        + '<div style="font-size:10.5px;color:' + col + '">زخم ' + (x.q == null ? '—' : 'أقوى ' + (100 - x.q) + '٪') + '</div>'
+        + '</div>';
+    };
+
+    const body = r.rows.length
+      ? '<div id="termTopsScroll" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch">'
+        + r.rows.map(chip).join('') + '</div>'
+      : '<div style="font-size:12px;color:var(--txt-m);padding:6px 0">لا سهمَ عند قمّته السنوية اليوم — <b>خبرٌ عن السوق لا عطلٌ في القسم</b>.</div>';
+
+    host.innerHTML =
+      '<div style="font-size:13.5px;font-weight:900;margin-bottom:2px">🏔️ الأقوى عند قمّتها السنوية <span style="font-size:11px;color:var(--txt-m);font-weight:700">(' + r.rows.length + ' سهم · ضمن 2٪ من قمّة 52 أسبوعاً)</span></div>'
+      + '<div style="font-size:11px;color:var(--txt-m);margin-bottom:7px">📊 مقيسٌ الآن ' + r.covered + ' من ' + r.known + ' — الباقي بلا تاريخٍ كافٍ (252 شمعة)، شغّل المسح الكامل.</div>'
+      + _LK(body)
+      /* 📏 الرقمُ يُعرض بهامشه دائماً — ورقمٌ بلا هامشٍ ادّعاءٌ لا قياس */
+      + '<div style="font-size:11px;color:var(--txt-m);margin-top:8px;line-height:1.8;border-top:1px solid var(--bdr);padding-top:7px">'
+      + '⚠️ <b>قِيس على تاريخك</b> (1556 صفقة · وقفٌ 4×ATR · أفقُ 20 جلسة): '
+      + '<b style="color:#22c55e">يتفوّق على السوق ‎+0.217R‎ ±0.122</b> — ويثبت في نصفَي التاريخ. '
+      + '<b style="color:#fbbf24">وصافيه بعد العمولة ‎+0.086R‎ ±0.119 — أي داخل الهامش، لا يُميَّز عن الصفر.</b> '
+      + 'وليس تناقضاً: <b>السوقُ نفسُه خاسرٌ ‎−0.131R‎</b> على هذا المدى (احتمالُ الصعود بعد 20 جلسة 43٪ لا 50٪)، '
+      + 'والتفوّقُ على خاسرٍ يوصل إلى الصفر لا إلى الربح. '
+      + '<b>فهذا القسم مستكشِفٌ لا إشارة دخول</b> — يُضيّق البحث ولا يقول اشترِ. '
+      + '<span style="color:#94a3b8">ولمن يسأل عن الضدّ: «الشراءُ عند الدعم» رُفض ثلاث مرّاتٍ بثلاث طرقٍ مستقلّة على البيانات نفسِها.</span>'
+      + '</div>';
+  }
 
   function termRenderRegimeStarts() {
     const host = document.getElementById('termRegimeStarts');

@@ -2456,7 +2456,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-07-v596';
+window.APP_BUILD = '2026-09-07-v597';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2467,6 +2467,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v597', '🔬 قياسُ البديل قبل اعتماده — لا بعده. أعطى planGapReport() على السوق الحقيقي: **227 سهماً (84.4٪) يُرفَضون صامتين**، و**193 يستحيل عليهم الإعدادُ رياضياً**، والخططُ الجاهزة **8 من 269**. ▸ وأكّد الجدولُ ما برهنّاه: كلُّ صفٍّ نِسبُه (0.618 · 1.618 · 0.382) — أي **بلا معايرة** — خرج «—»، وكلُّ صفٍّ عايَرناه خرج «🔒 نعم». **فالمعايرةُ نفسُها هي العطل، لا نقصُ البيانات**. ▸ فأُضيف `_ELLIOTT_CAL_STRICT` — مفتاحُ قياسٍ **افتراضُه false**، يُعايِر على الدورات المحترِمة لقاعدتَي إليوت وحدها. و`planGapReport({fix:true})` يرفعه ثمّ يُعيده في `finally`، فيطبع جدول قبل/بعد. ▸ **ولم يُعتمد شيء**: قُوبل مخرَجُ elliottCompute حرفاً بحرفٍ على 4000 سهماً قبل التعديل وبعده — **مطابقةٌ تامّة**. يُقاس على السوق أولاً، ثمّ يُقرَّر'],
     ['v596', '🗂️ «planGapReport() — متاحةٌ للأدمن وحده» وهو الأدمن. **والبوّابةُ سليمة، والعطلُ في المكان**: يُفتح الملفُّ من `file:///B:/…`، وأصلُ `file:` مبهَمٌ فريد — فلا تُستعاد جلسةُ Supabase، فـsbUser فارغٌ، فـisSuperAdmin() كاذبةٌ بحقّ. والسجلُّ نفسُه كان يقولها: «رفعُ التحليل المشترك للأدمن (أو الروبوت اليومي)». ▸ فاستُثنيت النسخةُ المحلّية وحدها في _adminTool — **ولا ثغرةَ فيه**: لا مستخدمَ على markets-a.com يبلغ `location.protocol === "file:"` أبداً، فهذه نسخةٌ على قرصِ صاحبها. ويبقى الحجبُ كما هو على كلّ ما يُخدَم عبر https. ▸ ويُعلَن الاستثناءُ في الطرفية بدل أن يُطبَّق صامتاً'],
     ['v595', '🕳️ «لا إعداد 261» — والبطاقة تقول «غيابُ قياسٍ لا رفضٌ للسهم» — وهي صادقةٌ في مسارٍ واحدٍ من ستّة. بلاغُ المالك: «فرصٌ طارت بدون الاستفادة مثل الوطنيّة 8300». ▸ فرعا الخطّة يغطّيان الدورةَ الصاعدة ذاتَ ـ legs ٢ و٣ و٤ فقط؛ وما عداهما يرجع plan=null **بلا سببٍ يُعرض**: دورةٌ هابطة · الموجة 5/A/B/C · هندسةٌ فاشلة · ع/م أو سقفُ القمّة. ▸ **وأخطرُ ما قيس: استحالةٌ رياضيةٌ لا رفض** — خطّةُ «الموجة ٤→٥» تشترط w4 > قمّةِ الموجة ١، وهذا يكافئ e3·(1−r4) > r2. ونِسبُ المعايرة تُقصّ عند سقوفِها (r2≤0.9 · r4≤0.7 · e3≤2.618)، فعند r2=0.9 وr4=0.7 يلزم e3 > 3.00 — **وسقفُ e3 هو 2.618**. فالشرطُ لا يتحقّق أبداً. ▸ وسببُ القصّ أنّ _elliottCalibrate **تقيس شيئاً آخر**: تمرّ على كلّ سداسيّةِ محاورٍ صالحةً كانت أم كاسرة، فتقيس نسبةَ كلّ تأرجحٍ إلى الذي قبله — وهي ـ ١ بالبناء (وسيطٌ خام: r2≈1.12 · r4≈1.00). ▸ فُأضيفت planGapReport() — أداةُ أدمنٍ تقيس الأسبابَ على السوق نفسه بأسماءِ الأسهم، **ولم يُغيّر حرفٌ واحدٌ من الخوارزمية** — يُقاس قبل أن يُصلَح'],
     ['v594', '🧮 حاسبةُ حجم الصفقة — الأداةُ الوحيدةُ التي لا تتنبّأ بشيء. طلبها المالك، وتبيّن بالبحث أنّها **لم تكن في أيّ ملفٍ في المشروع**: لا في النسخة الحالية، ولا في `index_33` قبل أن يُمَسّ، ولا في أيّ نسخةٍ احتياطية — **مذكورةٌ في ملخّص جلسةٍ سابقة وحده**. وُثّقت كمُنجَزة ولم تصل الكود. **وميزةٌ في التوثيق لا في الملف ليست ميزة.** ▸ فبُنيت الآن داخل «خطة القنّاص»: العددُ = سقفُ الخسارة ÷ (الدخول − الوقف)، ويُقرَّب **للأسفل** فلا يتجاوز السقفَ ولو بريال. ويُحسب على **الدخول المخطَّط** لا السعر الحالي — فهو السعرُ الذي ستشتري به إن نُفِّذت الخطة. ▸ **ولا تَعِد بما لا تملك**: الوقفُ يُنفَّذ «إن ضُرب بالضبط»، والفجوةُ الافتتاحية قد تتجاوزه — فيُقال صراحةً في السطر نفسِه. **حاسبةٌ تَعِد بحدٍّ لا تملكه أسوأُ من غيابها.** ▸ والسقفُ يُحفظ لهذا المتصفّح، ويُحدَّث **سطرُ النتيجة وحده** عند الكتابة — فلا يُفقد التركيزُ من الحقل ولا تقفز الصفحة. ▸ وهي داخل البطاقة، فتتبع قفلَ «الأهداف ووقف الخسارة» تلقائياً — إذ لا تُحسب إلا من الدخول والوقف'],
@@ -19344,60 +19345,83 @@ const CHAN_FLAT = 0.50;
     try { list = (Array.isArray(PRED_RESULTS) ? PRED_RESULTS : []).filter(function (x) { return x && /^\d+$/.test(String(x.sym)); }); } catch (e) {}
     if (!list.length) { console.warn('🕳️ لا نتائجَ مسحٍ في هذا المتصفّح — شغّل المسحَ الكامل أولاً.'); return null; }
 
-    const cnt = {}, rows = [], silent = [];
-    const bump = function (k) { cnt[k] = (cnt[k] || 0) + 1; };
+    const scan = function () {
+      const cnt = {}, silent = [];
+      const bump = function (k) { cnt[k] = (cnt[k] || 0) + 1; };
+      list.forEach(function (r) {
+        const sym = String(r.sym), nm = r.name || '';
+        let cds = null;
+        try { cds = PRED_CACHE[sym]; } catch (e) {}
+        if (!Array.isArray(cds) || cds.length < 20) { bump('⚪ بلا تاريخٍ كافٍ'); return; }
+        let e = null;
+        try { e = elliottCompute(cds, r.price); } catch (_) { e = null; }
+        if (!e) { bump('⚪ لا عدَّ صالحاً أصلاً'); return; }
 
-    list.forEach(function (r) {
-      const sym = String(r.sym), nm = r.name || '';
-      let cds = null;
-      try { cds = PRED_CACHE[sym]; } catch (e) {}
-      if (!Array.isArray(cds) || cds.length < 20) { bump('⚪ بلا تاريخٍ كافٍ'); return; }
-      let e = null;
-      try { e = elliottCompute(cds, r.price); } catch (_) { e = null; }
-      if (!e) { bump('⚪ لا عدَّ صالحاً أصلاً'); return; }
+        if (e.plan) { bump('✅ خطّةٌ جاهزة'); return; }
+        if (e.planBlock && e.planBlock.k === 'thin') { bump('🟠 مُعلَنة: عدٌّ رقيق (نقطتان)'); return; }
+        if (e.planBlock && e.planBlock.k === 'conf') { bump('🟠 مُعلَنة: ثقةٌ دون ' + ELLIOTT_MIN_CONF + '٪'); return; }
 
-      if (e.plan) { bump('✅ خطّةٌ جاهزة'); return; }
-
-      if (e.planBlock && e.planBlock.k === 'thin') { bump('🟠 مُعلَنة: عدٌّ رقيق (نقطتان)'); return; }
-      if (e.planBlock && e.planBlock.k === 'conf') { bump('🟠 مُعلَنة: ثقةٌ دون ' + ELLIOTT_MIN_CONF + '٪'); return; }
-
-      /* ── ما بعده صامتٌ تماماً: يرجع plan=null بلا سببٍ يُعرض ── */
-      const L = Math.abs(e.P1 - e.P0) || 1;
-      const _r2 = Math.abs(e.P1 - e.w2.v) / L;
-      const _e3 = Math.abs(e.w3.v - e.w2.v) / L;
-      const _d = Math.abs(e.w3.v - e.w2.v) || 1;
-      const _r4 = Math.abs(e.w3.v - e.w4.v) / _d;
-      let k;
-      if (e.dir !== 'up') k = '🔴 صامت: دورةٌ هابطة — لا فرعَ خطّةٍ أصلاً';
-      else if (e.legs >= 5) k = '🔴 صامت: الموجة ' + e.nowWave + ' — الفرعان يغطّيان ٢ و٣ و٤ فقط';
-      else if (e.legs <= 2) k = (!(e.w3.v > e.w2.v && e.w2.v > e.P0)) ? '🔴 صامت: هندسة ٢→٣ فشلت' : '🔴 صامت: ع/م أو سقفُ القمّة';
-      else k = (!(e.w5.v > e.w4.v && e.w4.v > e.P1)) ? '🔴 صامت: استحالةُ ٤→٥ (w4 ≤ قمّة الموجة ١)' : '🔴 صامت: ع/م أو سقفُ القمّة';
-      bump(k);
-      silent.push({
-        'الرمز': sym, 'الاسم': nm.slice(0, 18),
-        'السبب': k.replace('🔴 صامت: ', ''),
-        'اتجاه': e.dir === 'up' ? 'صاعد' : 'هابط',
-        'سواق': e.legs, 'موجة': e.nowWave,
-        'ثقة٪': e.confidence == null ? '—' : e.confidence,
-        'r2': +_r2.toFixed(2), 'e3': +_e3.toFixed(2), 'r4': +_r4.toFixed(2),
-        /* 🔒 البرهان: w4 > P1 يكافئ e3·(1−r4) > r2. فإذا استحال رياضياً قيل صراحةً */
-        'مستحيل؟': (_e3 * (1 - _r4) <= _r2) ? '🔒 نعم' : '—',
-        'السعر': r.price, 'القمّة1': e.P1, 'w4': e.w4.v
+        /* ── ما بعده صامتٌ تماماً: يرجع plan=null بلا سببٍ يُعرض ── */
+        const L = Math.abs(e.P1 - e.P0) || 1;
+        const _r2 = Math.abs(e.P1 - e.w2.v) / L;
+        const _e3 = Math.abs(e.w3.v - e.w2.v) / L;
+        const _d = Math.abs(e.w3.v - e.w2.v) || 1;
+        const _r4 = Math.abs(e.w3.v - e.w4.v) / _d;
+        let k;
+        if (e.dir !== 'up') k = '🔴 صامت: دورةٌ هابطة — لا فرعَ خطّةٍ أصلاً';
+        else if (e.legs >= 5) k = '🔴 صامت: الموجة ' + e.nowWave + ' — الفرعان يغطّيان ٢ و٣ و٤ فقط';
+        else if (e.legs <= 2) k = (!(e.w3.v > e.w2.v && e.w2.v > e.P0)) ? '🔴 صامت: هندسة ٢→٣ فشلت' : '🔴 صامت: ع/م أو سقفُ القمّة';
+        else k = (!(e.w5.v > e.w4.v && e.w4.v > e.P1)) ? '🔴 صامت: استحالةُ ٤→٥ (w4 ≤ قمّة الموجة ١)' : '🔴 صامت: ع/م أو سقفُ القمّة';
+        bump(k);
+        silent.push({
+          'الرمز': sym, 'الاسم': nm.slice(0, 18),
+          'السبب': k.replace('🔴 صامت: ', ''),
+          'اتجاه': e.dir === 'up' ? 'صاعد' : 'هابط',
+          'سواق': e.legs, 'موجة': e.nowWave,
+          'ثقة٪': e.confidence == null ? '—' : e.confidence,
+          'r2': +_r2.toFixed(2), 'e3': +_e3.toFixed(2), 'r4': +_r4.toFixed(2),
+          /* 🔒 البرهان: w4 > P1 يكافئ e3·(1−r4) > r2. فإذا استحال رياضياً قيل صراحةً */
+          'مستحيل؟': (_e3 * (1 - _r4) <= _r2) ? '🔒 نعم' : '—',
+          'السعر': +(+r.price).toFixed(2), 'القمّة1': e.P1, 'w4': e.w4.v
+        });
       });
-      rows.push(1);
-    });
+      return { cnt: cnt, silent: silent };
+    };
 
     const tot = list.length;
-    const sum = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; })
-      .map(function (k) { return { 'السبب': k, 'عدد': cnt[k], 'نسبة': (100 * cnt[k] / tot).toFixed(1) + '٪' }; });
+    const A = scan();
+
+    /* 🔬 القياسُ المقارَن — يُرفع المفتاحُ ثمّ يُعاد مهما حدث */
+    let B = null;
+    if (opts.fix) {
+      try { window._ELLIOTT_CAL_STRICT = true; B = scan(); }
+      catch (e) { console.warn('🔬 تعذّر القياسُ المقارَن: ' + ((e && e.message) || e)); }
+      finally { window._ELLIOTT_CAL_STRICT = false; }
+    }
+
+    const keys = function (o) { return Object.keys(o).sort(function (a, b) { return o[b] - o[a]; }); };
+    const pc = function (n) { return (100 * n / tot).toFixed(1) + '٪'; };
 
     console.log('%c🕳️ لماذا لا توجد خطّة؟ — قياسٌ على ' + tot + ' سهماً من مسحِ هذا المتصفّح · ' + (window.APP_BUILD || ''),
       'color:#f59e0b;font-weight:bold;font-size:14px');
-    console.table(sum);
 
-    const nSilent = silent.length;
-    const nImp = silent.filter(function (x) { return x['مستحيل؟'] === '🔒 نعم'; }).length;
-    console.log('🔇 صامتٌ بلا سببٍ معروض: ' + nSilent + ' سهماً (' + (100 * nSilent / tot).toFixed(1) + '٪) — '
+    if (!B) {
+      console.table(keys(A.cnt).map(function (k) { return { 'السبب': k, 'عدد': A.cnt[k], 'نسبة': pc(A.cnt[k]) }; }));
+    } else {
+      /* 📊 قبل/بعد في جدولٍ واحد — فالفرقُ يُرى لا يُحكى */
+      const all = Array.from(new Set(Object.keys(A.cnt).concat(Object.keys(B.cnt))));
+      all.sort(function (a, b) { return (B.cnt[b] || 0) + (A.cnt[b] || 0) - (B.cnt[a] || 0) - (A.cnt[a] || 0); });
+      console.table(all.map(function (k) {
+        const a = A.cnt[k] || 0, b = B.cnt[k] || 0;
+        return { 'السبب': k, 'الحالي': a, 'الحالي٪': pc(a), 'بعد التصحيح': b, 'بعد٪': pc(b), 'الفرق': (b - a > 0 ? '+' : '') + (b - a) };
+      }));
+      console.log('%c🔬 هذا قياسٌ فقط — التطبيقُ ما زال يعمل بالمعايرة الحالية. لم يُعتمد شيء.',
+        'color:#38bdf8;font-weight:bold');
+    }
+
+    const nSilent = A.silent.length;
+    const nImp = A.silent.filter(function (x) { return x['مستحيل؟'] === '🔒 نعم'; }).length;
+    console.log('🔇 صامتٌ بلا سببٍ معروض: ' + nSilent + ' سهماً (' + pc(nSilent) + ') — '
       + 'البطاقةُ تقول لهم «غيابُ قياسٍ لا رفضٌ للسهم» وهي **رفضٌ صريح**.');
     if (nImp) {
       console.warn('🔒 ' + nImp + ' سهماً يستحيل عليها الخطّةُ رياضياً — لا اليوم ولا غداً ولا بأيّ سعر.\n'
@@ -19407,10 +19431,11 @@ const CHAN_FLAT = 0.50;
     }
     if (SHOW > 0 && nSilent) {
       console.log('📋 أوّل ' + Math.min(SHOW, nSilent) + ' سهماً من الصامتين:');
-      console.table(silent.slice(0, SHOW));
+      console.table(A.silent.slice(0, SHOW));
     }
-    console.log('▸ planGapReport({show:0}) للملخّص وحده · planGapReport({show:300}) للقائمة كاملة');
-    return { total: tot, summary: cnt, silent: silent };
+    console.log('▸ planGapReport({show:0}) للملخّص وحده · planGapReport({show:300}) للقائمة كاملة'
+      + '\n▸ planGapReport({fix:true, show:0}) لقياس المعايرة المصحَّحة **بلا اعتمادها**');
+    return { total: tot, summary: A.cnt, silent: A.silent, fixed: B ? B.cnt : null };
   });
 
   function _ribbonRegimeStarts() {
@@ -23846,9 +23871,27 @@ function investView(r, ltInd, daily) {
 /* 🎯 معايرة نِسب إليوت من تاريخ السهم نفسه (بدل النِّسب النظرية الثابتة التي تُبالغ).
    يقيس متوسط ارتداد/امتداد كل موجة عبر دورات السهم السابقة → نِسب واقعية لهذا السهم. */
 function _elliottCalibrate(piv) {
+  /* ══════════════════════════════════════════════════════════════════
+     🔬 مفتاحُ قياسٍ لا سلوك — افتراضُه `false` فلا يغيّر حرفاً واحداً
+
+     رُصد أنّ هذه الدالّة تمرّ على **كلّ** سداسيّةِ محاورٍ في الزجزاج،
+     صالحةً كانت أم كاسرةً لقاعدتَي إليوت، فتقيس نسبةَ كلّ تأرجحٍ إلى
+     الذي قبله — وهي ≈١ بالبناء. فتُقصّ النِّسبُ عند سقوفها وتُشلّ الخطّة.
+     ▸ والمفتاحُ يسمح بقياس البديل على السوق **قبل** اعتماده:
+       `planGapReport({fix:true})` يرفعه ثمّ يُعيده، ولا شيء سواه يمسّه.
+     ══════════════════════════════════════════════════════════════════ */
+  let _strict = false;
+  try { _strict = !!window._ELLIOTT_CAL_STRICT; } catch (e) {}
   const R2 = [], E3 = [], R4 = [], E5 = [];
   for (let a = 0; a + 5 < piv.length; a++) {
     const L1 = piv[a + 1].p - piv[a].p; if (Math.abs(L1) < 1e-6) continue;
+    if (_strict) {
+      /* ✅ لا تُعايَر إلا دورةٌ تحترم القاعدتَين القاطعتَين — وإلّا فنحن
+         نُعايِر على ما نرفضه، ثمّ نرفض بما عايَرناه عليه. */
+      const _p0 = piv[a].p, _p1 = piv[a + 1].p, _u = _p1 > _p0;
+      if (_u ? (piv[a + 2].p <= _p0 || piv[a + 4].p <= _p1)
+             : (piv[a + 2].p >= _p0 || piv[a + 4].p >= _p1)) continue;
+    }
     const w2 = piv[a + 2].p - piv[a + 1].p, w3 = piv[a + 3].p - piv[a + 2].p,
           w4 = piv[a + 4].p - piv[a + 3].p, w5 = piv[a + 5].p - piv[a + 4].p;
     if (Math.abs(w3) < 1e-6) continue;

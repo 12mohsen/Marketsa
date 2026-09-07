@@ -1953,7 +1953,7 @@ canvas#mdChart{display:block;width:100% !important}
     <div style="flex:1;min-height:0;overflow:auto;padding:14px">
     <div id="termRibbonTrust" style="display:none;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
     <div id="termRegimeStarts" style="display:none;gap:16px;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
-    <div id="termTopsNearHigh" style="display:none;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
+    <div id="termNearLow" style="display:none;margin-bottom:12px;background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:10px 12px"></div>
     <div id="termGrid" style="display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:14px;align-items:start">
       <!-- قائمة الأسهم -->
       <div style="background:var(--surf-alt);border:1px solid var(--bdr);border-radius:14px;padding:8px;max-height:78vh;overflow:auto">
@@ -2457,7 +2457,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-07-v618';
+window.APP_BUILD = '2026-09-07-v619';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2468,6 +2468,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v619', '🪫 **بنيتُ القسمَ مقلوباً — والقياسُ على البيانات النظيفة قلبه.** بعد إصلاح الأعطال الأربعة (صفوفُ العطلة · الجلساتُ المنسوخة · التاريخُ المتقطّع · **وقصُّ الجلب عند ألف صفٍّ صامتاً**) صار القياسُ على 48642 نقطة بدل 37000. ▸ والنتيجة: **⑥ قربُ قاع 52 أسبوعاً أوّلُ مرشّحٍ يجتاز الشروطَ الثلاثة كلَّها** — صافٍ ‎+0.072R‎ فوق هامشه ‎±0.065‎ · موجبٌ في النصفين (0.06 ثمّ 0.21) · تركّزٌ **8٪** على 5169 صفقة. **وأقوى دليلٍ فيه الوسيط ‎−0.01‎ مقابل ‎−0.31‎ للمرجع** — فالتوزيعُ كلُّه انزاح، لا أنّ ذيلاً نادراً حمل الربح. ▸ **والوجهُ الذي بنيتُه سالبٌ بيقين**: قربُ القمّة ‎−0.169‎ · اختراق 20 ‎−0.302‎ · اختراق 55 ‎−0.295‎، **سالبةٌ في النصفين كلُّها**. سوقُك مائلٌ إلى الارتداد لا إلى الاستمرار — وهو متّسقٌ مع سوقٍ حدُّه اليومي ±10٪ وحركتُه أفراد. ▸ فأُبدل «🏔️ الأقوى عند قمّتها» بـ«🪫 الأقرب إلى قاعها السنويّ»، **ورُتّب بالقرب لا بالزخم** (الدمجُ ⑦ قِيس فلم يجتز، والبسيطُ ⑥ اجتاز — فلا يُزاد شرطٌ لم يكسب مكانَه). ▸ وتُعرض أرقامُه بهوامشها، ويُذكر في متنه أنّ سابقَه كان مقلوباً — **فالسجلُّ الذي يمحو خطأه دعايةٌ لا تاريخ**'],
     ['v618', '🕳️ **جدولُ أصفارٍ يُقرأ نتيجةً.** شُغّل المختبَرُ قبل المسح فكانت ذاكرةُ الشموع فارغة، **فطبع اثني عشر سطراً كلُّها أصفار وهوامشَ ‎±194‎ و‎±274‎** — ولا سطرَ يقول «لا بيانات». والقارئُ يرى جدولاً مكتملَ الشكل فيظنّه قياساً، **وهذه علّةُ الجلسة بعينها: شكلٌ سليمٌ ومعنىً غائب**. ▸ فيُفحص المرجعُ قبل الطباعة: إن لم تُوجد صفقةٌ واحدة **لا يُطبع جدولٌ أصلاً**، وتُقال العلّةُ وعلاجُها — «الشموعُ تُحمَّل أثناء المسح الكامل وتُفقد بإعادة تحميل الصفحة». ▸ ونظّف histPurgeDupes 1571 جلسةً منسوخة (0.5٪ من الصفوف) — مطابقاً لما قدّره الكشفُ على العيّنة'],
     ['v617', '👯 **جلستان بالأرقام الخمس نفسِها ليستا مصادفة.** رصده المالك في آخر صفوف 2170: 2026-09-03 و2026-09-06 بفتحٍ وأعلى وأدنى وإغلاقٍ **وحجمٍ متطابقٍ إلى آخر رقم (308155)** — وهذه نسخةٌ لا جلسة. ومعها «إغلاقٌ مطابقٌ لسابقه» عند **7.8٪**. ▸ ومصدرُها الأرجح المزامنةُ الليلية: تكتب آخر الجلسات، فإن لم يكن المصدرُ قد حدّث أعاد إغلاقَ أمس تحت تاريخ اليوم. ▸ **وأثرُها ليس محايداً**: النسخةُ تصنع «يوماً ساكناً ثمّ قفزة» — نمطٌ **يُجمّل الارتداد ويُقبّح الاختراق**، وهو اتجاهُ ما يقوله المختبَر بالضبط (⑥ قربُ القاع يتفوّق · والاختراقاتُ سالبةٌ في النصفين). فلا يُحكم قبل إزالتها. ▸ والشرطُ صارم: تطابقُ الخمسة **وحجمٌ > 0** — فالسهمُ الموقوف يعطي أرقاماً متطابقةً بحجمٍ صفر، وذاك ليس نسخة. ▸ **وتوقّعي السابق فشل وأُسجّله**: قلتُ إنّ تنظيف الجمعة/السبت سيُنزل النصفَ الأحدث لـ⑥ من 0.263 إلى ~0.06، **فلم يتغيّر ذرّة**. والتوقّعُ الخاطئُ يُكتب كما يُكتب الصائب'],
     ['v616', '📄 **بياناتٌ صحيحةٌ ناقصةٌ بصمت — أخطرُ أشكال النقص.** كشفه histInspect على 2170: القاعدةُ فيها 1307 صفّاً، والطلبُ `limit(1400)` أعاد **1000 بالضبط** وآخرُ تاريخٍ فيها 2025-07-20 — أي أنّ **آخر ثلاثةَ عشرَ شهراً سقطت من الجواب بلا خطأٍ ولا تحذير**. والسببُ أنّ PostgREST يحدّ كلَّ طلبٍ بألف صفّ ويسكت. ▸ وأثرُه ليس على أدواتِ اليوم وحدها: **`histLoadCandles` لم تحمّل يوماً أكثر من 1000 شمعة لأيّ سهمٍ منذ نشأة التطبيق**، فكلُّ قياساتنا — القديمة والجديدة — جرت على 1000 لا على ما في القاعدة. ▸ **وتنظيفُ الجمعة والسبت كان ناقصاً للسبب نفسِه**: حذف من أقدم 1000 صفٍّ فقط، والفاسدُ في آخر سنةٍ باقٍ — وهو ما يفسّر لماذا لم تعد الأرقامُ بعد التنظيف. ▸ فأُضيف `_sbPagedRows()` يجلب بصفحاتٍ حتى تعود صفحةٌ ناقصة، واستُعمل في جلب الشموع وفي أدوات الفحص والتنظيف الثلاث. ▸ **والدرسُ أنّ `limit` طلبٌ لا ضمان** — والفرقُ بين ما طلبتَ وما وصلك لا يُعلنه أحد، فيجب أن يُفحص'],
@@ -20654,11 +20655,11 @@ const CHAN_FLAT = 0.50;
       const payload = {
         regime: _regimeStartsCache || null,
         trust: Array.isArray(_ribbonTrustCache) ? _ribbonTrustCache.slice(0, 40) : null,
-        tops: _topsNearHighCache || null,
+        nearLow: _nearLowCache || null,
         edgeAcc: _channelEdgeAccCache || null,
         build: (window.APP_BUILD || '')
       };
-      if (!payload.regime && !payload.trust && !payload.tops) {
+      if (!payload.regime && !payload.trust && !payload.nearLow) {
         console.warn('[terminal] ✗ لا شيءَ يُرفع — لم تُحسب أقسامُ اللوحة بعد. افتح اللوحة الموحّدة ثمّ أعد المحاولة.');
         return;
       }
@@ -20719,12 +20720,12 @@ const CHAN_FLAT = 0.50;
       let got = false;
       if (P.regime && P.regime.up && P.regime.down) { _regimeStartsCache = P.regime; got = true; }
       if (Array.isArray(P.trust) && P.trust.length) { _ribbonTrustCache = P.trust; got = true; }
-      if (P.tops && Array.isArray(P.tops.rows)) { _topsNearHighCache = P.tops; got = true; }
+      if (P.nearLow && Array.isArray(P.nearLow.rows)) { _nearLowCache = P.nearLow; got = true; }
       if (P.edgeAcc) { _channelEdgeAccCache = P.edgeAcc; }
       if (!got) return false;
       try { termRenderRibbonTrust(); } catch (e) {}
       try { termRenderRegimeStarts(); } catch (e) {}
-      try { termRenderTopsNearHigh(); } catch (e) {}
+      try { termRenderNearLow(); } catch (e) {}
       console.info('[terminal] ✓ أقسامُ اللوحة من المشترك · قاع ' + P.regime.up.length + ' · قمة ' + P.regime.down.length);
       return true;
     } catch (e) { return false; }
@@ -20781,11 +20782,11 @@ const CHAN_FLAT = 0.50;
       if ((_g && (_g.up.length || _g.down.length)) || !_regimeStartsCache) _regimeStartsCache = _g;
     } catch (e) {}
     /* 🏔️ القسمُ الثالث يتبع القاعدةَ نفسَها: لا يُمحى كاشٌ صالحٌ بنتيجةٍ خاوية */
-    try { const _h = _topsNearHigh(); if ((_h && _h.rows && _h.rows.length) || !_topsNearHighCache) _topsNearHighCache = _h;
+    try { const _h = _nearLow52(); if ((_h && _h.rows && _h.rows.length) || !_nearLowCache) _nearLowCache = _h;
     } catch (e) {}
     try { termRenderRibbonTrust(); } catch (e) {}
     try { termRenderRegimeStarts(); } catch (e) {}
-    try { termRenderTopsNearHigh(); } catch (e) {}
+    try { termRenderNearLow(); } catch (e) {}
     const h1 = document.getElementById('termRibbonTrust');
     const h2 = document.getElementById('termRegimeStarts');
     const stillEmpty = (h1 && h1.style.display === 'none') || (h2 && h2.style.display === 'none');
@@ -20813,30 +20814,33 @@ const CHAN_FLAT = 0.50;
   window.termSetRegimeTab = function (tab) { TERM_REGIME_TAB = tab; try { termRenderRegimeStarts(); } catch (e) {} };
 
   /* ══════════════════════════════════════════════════════════════════════
-     🏔️ «الأقوى عند قمّتها السنوية» — مستكشِفٌ لا إشارة دخول
+     🪫 «الأقرب إلى قاعها السنويّ» — مستكشِفٌ لا إشارة دخول
 
-     خرج من `stratLab()` على سوقك: من عشرة مرشّحين في خمسة إعدادات، هذا
-     أفضلُ ما بقي — **ولم يجتز الشروطَ الثلاثة كاملةً**، فيُعرض بحجمه:
+     ⚠️ **بُني هذا القسمُ أوّلاً مقلوباً** (v607: «الأقوى عند قمّتها»)، ثمّ
+     كُشفت أربعةُ أعطالٍ في البيانات كانت تعمل بصمت — أخطرُها **قصُّ الجلب
+     عند ألف صفٍّ بلا خطأٍ ولا تحذير**، فكان التطبيقُ يقرأ ~70٪ من تاريخه.
+     وبعد الإصلاح انقلب القياس، **فأُبدل القسمُ بضدّه ولم يُمحَ خطؤه**.
 
-       ✅ يتفوّق على السوق بيقين:  ‎+0.217R‎  بهامش ‎±0.122‎  (ن=1556)
-       🟡 وصافيه بعد العمولة:      ‎+0.086R‎  بهامش ‎±0.119‎  ⇒ **داخل الهامش**
-       ✅ موجبٌ في نصفَي التاريخ:   0.216 ثمّ 0.049
-       ✅ وتركّزُه معتدل:            أكبرُ ثلاثة = 31٪
+     النتيجةُ على 48642 نقطةً نظيفة — وهو أوّلُ مرشّحٍ يجتاز الشروطَ الثلاثة:
+       ✅ صافٍ بعد العمولة:  ‎+0.072R‎  وهامشُه ‎±0.065‎  ⇒ فوقه بقليل
+       ✅ تفوّقٌ على السوق:   ‎+0.166R‎  ±0.069
+       ✅ موجبٌ في النصفين:  0.059 ثمّ 0.212
+       ✅ وتركّزُه ضئيل:      أكبرُ ثلاثة = 8٪ · على 5169 صفقة
 
-     والجملةُ التي تلخّصه: **يتفوّق على السوق بيقين، وصافيه لا يُميَّز عن
-     الصفر** — وليس تناقضاً: السوقُ نفسُه خاسرٌ ‎−0.131R‎ على هذا المدى
-     (احتمالُ الصعود بعد 20 جلسة 43٪ لا 50٪)، والتفوّقُ على خاسرٍ يوصل
-     إلى الصفر لا إلى الربح.
-
-     ▸ ولذلك هو **ترتيبٌ يُضيّق البحث**، لا قائمةُ شراء. نفسُ ما اخترتَه
-       لقسم القناة، وللسبب نفسِه.
-     ▸ ويُذكر معه ما **سقط**: الشراءُ عند الدعم رُفض ثلاث مرّاتٍ بثلاث
-       طرقٍ مستقلّة (ارتدادُ م50 · قاعُ القناة · RSI). فالقارئُ يستحقّ أن
-       يعرف ما لا يعمل كما يعرف ما قد يعمل.
+     ▸ **وأقوى دليلٍ فيه ليس التوقّع بل الوسيط**: ‎−0.01‎ مقابل ‎−0.31‎ للمرجع.
+       فالتوزيعُ كلُّه انزاح — ولو كان ذيلاً نادراً لبقي الوسيطُ مكانَه.
+     ▸ ويُرتَّب **بالقرب من القاع وحده**: الدمجُ مع الزخم (⑦) قِيس فلم يجتز،
+       والبسيطُ اجتاز. **فلا يُزاد شرطٌ لم يكسب مكانَه.**
+     ▸ والوجهُ المقابل مؤكَّدٌ بنفس القوّة: قربُ القمّة ‎−0.169‎ · اختراق 20
+       ‎−0.302‎ · اختراق 55 ‎−0.295‎ — **سالبةٌ في النصفين كلُّها**. فسوقُ
+       المالك مائلٌ إلى الارتداد لا إلى الاستمرار، وهو متّسقٌ مع سوقٍ حدُّه
+       اليومي ±10٪ وحركتُه أفراد.
+     ▸ ويبقى **مستكشِفاً**: الميزةُ صغيرة، والوقفُ يُفحص على الإغلاق فالرقمُ
+       سقفٌ متفائل، وامتُحن أكثرُ من سبعين احتمالاً فبعضُ الفائزين بالصدفة.
      ══════════════════════════════════════════════════════════════════════ */
-  var _topsNearHighCache = null;
+  var _nearLowCache = null;
 
-  function _topsNearHigh() {
+  function _nearLow52() {
     try {
       const src = _bestPriceHistory();
       const names = {};
@@ -20847,67 +20851,72 @@ const CHAN_FLAT = 0.50;
         if (!Array.isArray(A) || A.length < 260) return;
         const n = A.length, c = A[n - 1];
         if (!(c > 0)) return;
-        let hi = -Infinity;
-        for (let j = n - 252; j < n; j++) if (A[j] > hi) hi = A[j];
-        if (!(hi > 0)) return;
+        let lo = Infinity, hi = -Infinity;
+        for (let j = n - 252; j < n; j++) { if (A[j] < lo) lo = A[j]; if (A[j] > hi) hi = A[j]; }
+        if (!(lo > 0)) return;
         const a = A[n - 22], b = A[n - 253];
-        const mom = (a > 0 && b > 0) ? (a / b - 1) : null;   // زخمُ 12−1 شهراً
-        all.push({ s: sym, nm: names[sym] || sym, g: (c / hi - 1) * 100, m: mom, p: c });
+        const mom = (a > 0 && b > 0) ? (a / b - 1) : null;   // زخمُ 12−1 شهراً (للعلم لا للترتيب)
+        /* 📉 البعدُ فوق القاع السنويّ — والقياسُ اختار هذا الطرف لا الآخر */
+        all.push({ s: sym, nm: names[sym] || sym, g: (c / lo - 1) * 100, m: mom, p: c,
+                   r: (hi > lo) ? ((c - lo) / (hi - lo)) * 100 : null });
       });
       if (!all.length) return null;
       /* 🥇 الرتبةُ المئوية للزخم — مقارنةٌ بين الأسهم لا داخل السهم */
       const withM = all.filter(function (x) { return x.m != null; }).sort(function (a, b) { return a.m - b.m; });
       const rank = {};
       withM.forEach(function (x, i) { rank[x.s] = Math.round(100 * (i + 1) / withM.length); });
-      const near = all.filter(function (x) { return x.g >= -2; })
-                      .map(function (x) { return { s: x.s, nm: x.nm, g: +x.g.toFixed(1), m: x.m == null ? null : +(x.m * 100).toFixed(1), q: rank[x.s] != null ? rank[x.s] : null, p: +x.p.toFixed(2) }; });
-      near.sort(function (a, b) { return (b.q == null ? -1 : b.q) - (a.q == null ? -1 : a.q); });
+      const near = all.filter(function (x) { return x.g <= 2; })
+                      .map(function (x) { return { s: x.s, nm: x.nm, g: +x.g.toFixed(1), m: x.m == null ? null : +(x.m * 100).toFixed(1), q: rank[x.s] != null ? rank[x.s] : null, p: +x.p.toFixed(2), r: x.r == null ? null : Math.round(x.r) }; });
+      /* 🔻 الأقربُ إلى قاعه أوّلاً — والزخمُ يُعرض ولا يُرتَّب به:
+         الدمجُ (⑦) قِيس فلم يجتز، والبسيطُ (⑥) اجتاز. فلا يُزاد شرطٌ لم يكسب مكانَه. */
+      near.sort(function (a, b) { return a.g - b.g; });
       return { rows: near.slice(0, 40), covered: all.length, known: Object.keys(src).length };
     } catch (e) { return null; }
   }
 
-  function termRenderTopsNearHigh() {
-    const host = document.getElementById('termTopsNearHigh');
+  function termRenderNearLow() {
+    const host = document.getElementById('termNearLow');
     if (!host) return;
     /* 🔒 يتبع قفلَ اللوحة — انظر شرح `_LK` في `termRenderRegimeStarts`.
        والسؤالُ عن القفل **قبل** أن يُكتب العرض، لا بعد أن يُبلَّغ عنه. */
     const _LK = function (h) {
       try { return (typeof _wrapIfLocked === 'function') ? _wrapIfLocked('terminal', h) : h; } catch (e) { return h; }
     };
-    const r = _topsNearHighCache;
+    const r = _nearLowCache;
     if (!r) { host.style.display = 'none'; return; }
     host.style.display = 'block';
 
     const chip = function (x) {
-      const strong = (x.q != null && x.q >= 80);
+      const strong = (x.g <= 0.5);   /* 🔻 الأقربُ إلى القاع هو المميَّز — والقياسُ اختار القربَ لا الزخم */
       const col = strong ? '#22c55e' : '#94a3b8';
       return '<div onclick="window.termSelect(\'' + x.s + '\')" style="flex:0 0 auto;cursor:pointer;background:rgba(' + (strong ? '34,197,94' : '148,163,184') + ',.10);'
         + 'border:1px solid rgba(' + (strong ? '34,197,94' : '148,163,184') + ',.4);border-radius:10px;padding:7px 10px;min-width:112px">'
         + '<div style="font-size:12.5px;font-weight:800;color:' + col + '">' + (x.nm || x.s).slice(0, 14) + '</div>'
         + '<div style="font-size:10.5px;color:var(--txt-m);margin-top:2px">' + x.s + ' · ' + x.p + '</div>'
-        + '<div style="font-size:10.5px;margin-top:3px">قمّة سنوية <b>' + (x.g === 0 ? 'عندها' : x.g + '٪') + '</b></div>'
-        + '<div style="font-size:10.5px;color:' + col + '">زخم ' + (x.q == null ? '—' : 'أقوى ' + (100 - x.q) + '٪') + '</div>'
+        + '<div style="font-size:10.5px;margin-top:3px">فوق القاع <b>' + (x.g === 0 ? 'عنده' : '+' + x.g + '٪') + '</b></div>'
+        + '<div style="font-size:10.5px;color:var(--txt-m)">موضعُ السنة ' + (x.r == null ? '—' : x.r + '٪') + ' · زخم ' + (x.q == null ? '—' : 'أقوى ' + (100 - x.q) + '٪') + '</div>'
         + '</div>';
     };
 
     const body = r.rows.length
-      ? '<div id="termTopsScroll" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch">'
+      ? '<div id="termNearLowScroll" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch">'
         + r.rows.map(chip).join('') + '</div>'
-      : '<div style="font-size:12px;color:var(--txt-m);padding:6px 0">لا سهمَ عند قمّته السنوية اليوم — <b>خبرٌ عن السوق لا عطلٌ في القسم</b>.</div>';
+      : '<div style="font-size:12px;color:var(--txt-m);padding:6px 0">لا سهمَ عند قاعه السنويّ اليوم — <b>خبرٌ عن السوق لا عطلٌ في القسم</b>.</div>';
 
     host.innerHTML =
-      '<div style="font-size:13.5px;font-weight:900;margin-bottom:2px">🏔️ الأقوى عند قمّتها السنوية <span style="font-size:11px;color:var(--txt-m);font-weight:700">(' + r.rows.length + ' سهم · ضمن 2٪ من قمّة 52 أسبوعاً)</span></div>'
+      '<div style="font-size:13.5px;font-weight:900;margin-bottom:2px">🪫 الأقرب إلى قاعها السنويّ <span style="font-size:11px;color:var(--txt-m);font-weight:700">(' + r.rows.length + ' سهم · ضمن 2٪ فوق قاع 52 أسبوعاً)</span></div>'
       + '<div style="font-size:11px;color:var(--txt-m);margin-bottom:7px">📊 مقيسٌ الآن ' + r.covered + ' من ' + r.known + ' — الباقي بلا تاريخٍ كافٍ (252 شمعة)، شغّل المسح الكامل.</div>'
       + _LK(body)
       /* 📏 الرقمُ يُعرض بهامشه دائماً — ورقمٌ بلا هامشٍ ادّعاءٌ لا قياس */
       + '<div style="font-size:11px;color:var(--txt-m);margin-top:8px;line-height:1.8;border-top:1px solid var(--bdr);padding-top:7px">'
-      + '⚠️ <b>قِيس على تاريخك</b> (1556 صفقة · وقفٌ 4×ATR · أفقُ 20 جلسة): '
-      + '<b style="color:#22c55e">يتفوّق على السوق ‎+0.217R‎ ±0.122</b> — ويثبت في نصفَي التاريخ. '
-      + '<b style="color:#fbbf24">وصافيه بعد العمولة ‎+0.086R‎ ±0.119 — أي داخل الهامش، لا يُميَّز عن الصفر.</b> '
-      + 'وليس تناقضاً: <b>السوقُ نفسُه خاسرٌ ‎−0.131R‎</b> على هذا المدى (احتمالُ الصعود بعد 20 جلسة 43٪ لا 50٪)، '
-      + 'والتفوّقُ على خاسرٍ يوصل إلى الصفر لا إلى الربح. '
-      + '<b>فهذا القسم مستكشِفٌ لا إشارة دخول</b> — يُضيّق البحث ولا يقول اشترِ. '
-      + '<span style="color:#94a3b8">ولمن يسأل عن الضدّ: «الشراءُ عند الدعم» رُفض ثلاث مرّاتٍ بثلاث طرقٍ مستقلّة على البيانات نفسِها.</span>'
+      + '⚠️ <b>قِيس على تاريخك بعد تنظيفه</b> (5169 صفقة · وقفٌ 4×ATR · أفقُ 20 جلسة): '
+      + '<b style="color:#22c55e">يتفوّق على السوق ‎+0.166R‎ ±0.069</b> · '
+      + '<b style="color:#22c55e">وصافيه بعد العمولة ‎+0.072R‎ ±0.065 — أي فوق هامشه بقليل</b> · '
+      + 'موجبٌ في نصفَي التاريخ (0.06 ثمّ 0.21) · وتركّزُه <b>8٪</b> فقط. '
+      + 'وأقوى دليلٍ فيه <b>الوسيط ‎−0.01‎ مقابل ‎−0.31‎ للسوق</b> — أي أنّ التوزيعَ كلَّه انزاح، لا أنّ ذيلاً نادراً حمل الربح. '
+      + '<b>ومع ذلك فهو مستكشِفٌ لا إشارةَ دخول</b>: الميزةُ صغيرة (~14 ريالاً للصفقة بحدّ مخاطرةٍ 200)، '
+      + 'والوقفُ يُفحص على الإغلاق فالرقمُ سقفٌ متفائل، وامتُحن أكثرُ من سبعين احتمالاً فبعضُ الفائزين يفوز بالصدفة. '
+      + '<span style="color:#94a3b8">وللأمانة: بنيتُ هنا أوّلاً قسمَ «الأقوى عند قمّتها» — وكان مقلوباً. القياسُ على البيانات النظيفة قال إنّ شراءَ القمّة ‎−0.169R‎ سالبٌ في النصفين، فأُبدل بضدّه.</span>'
       + '</div>';
   }
 

@@ -2457,7 +2457,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-07-v615';
+window.APP_BUILD = '2026-09-07-v616';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2468,6 +2468,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v616', '📄 **بياناتٌ صحيحةٌ ناقصةٌ بصمت — أخطرُ أشكال النقص.** كشفه histInspect على 2170: القاعدةُ فيها 1307 صفّاً، والطلبُ `limit(1400)` أعاد **1000 بالضبط** وآخرُ تاريخٍ فيها 2025-07-20 — أي أنّ **آخر ثلاثةَ عشرَ شهراً سقطت من الجواب بلا خطأٍ ولا تحذير**. والسببُ أنّ PostgREST يحدّ كلَّ طلبٍ بألف صفّ ويسكت. ▸ وأثرُه ليس على أدواتِ اليوم وحدها: **`histLoadCandles` لم تحمّل يوماً أكثر من 1000 شمعة لأيّ سهمٍ منذ نشأة التطبيق**، فكلُّ قياساتنا — القديمة والجديدة — جرت على 1000 لا على ما في القاعدة. ▸ **وتنظيفُ الجمعة والسبت كان ناقصاً للسبب نفسِه**: حذف من أقدم 1000 صفٍّ فقط، والفاسدُ في آخر سنةٍ باقٍ — وهو ما يفسّر لماذا لم تعد الأرقامُ بعد التنظيف. ▸ فأُضيف `_sbPagedRows()` يجلب بصفحاتٍ حتى تعود صفحةٌ ناقصة، واستُعمل في جلب الشموع وفي أدوات الفحص والتنظيف الثلاث. ▸ **والدرسُ أنّ `limit` طلبٌ لا ضمان** — والفرقُ بين ما طلبتَ وما وصلك لا يُعلنه أحد، فيجب أن يُفحص'],
     ['v615', '🔬 **الإزاحةُ كانت عطلاً — ولم تكن العطلَ الوحيد.** حُذف 2212 صفّاً على عطلة السوق (الفرضيّةُ صحّت: ~14 صفّاً لكلّ رمز على جمعةٍ أو سبت)، **ومع ذلك لم تعد الأرقام**: خطُّ الأساس ما زال عند وسيط ‎−0.34‎ بدل ‎−0.61‎، وأعدادُ الصفقات داخل السهم الواحد أقلُّ بـ~20٪ (اختراق 20: 3579 ⇐ 2720) بينما الزخمُ النسبيّ لم يتغيّر (6529 ⇐ 6511) — **ففرقٌ يمسّ ما يُقاس داخل السهم ولا يمسّ ما يُقاس بين الأسهم**. ▸ وقد خمّنتُ مرّتين — «سدُّ فجوات» ثمّ «إزاحةُ تاريخ» — وأصبتُ في الثانية جزئياً. **والثالثةُ لا تُخمَّن.** ▸ فأُضيفت histInspect(رمز): تعرض الصفوفَ كما هي بخمسة فحوصٍ يستحيل أن تكذب — جلساتُ كلّ سنة (السوق ~250) · توزيعُ أيام الأسبوع · التواريخُ المكرّرة · الحركاتُ فوق ±12٪ (وحدُّ السوق ±10٪) · وآخرُ 15 صفّاً بأعينها. ▸ **ولا قرارَ ولا رفعَ لأيّ قسمٍ حتى تُقرأ هذه الأرقام** — لا القديمة ولا الجديدة'],
     ['v614', '🚨 **انقلبت كلُّ النتائج بعد التعبئة — ورقمان بهذا الحجم خبرٌ عن البيانات لا عن السوق.** شراءُ قمّة 20 يوماً صار ‎−0.40R‎ **بثباتٍ في النصفين** على 2758 صفقة، وشراءُ قاع 52 أسبوعاً ‎+0.445R‎ على 2157. ولو صحّ الأوّل لكان بيعُه مطبعةَ نقود. **وخطُّ الأساس نفسُه تحرّك** (وسيطه ‎−0.61‎ ⇐ ‎−0.33‎) — والمرجعُ لا استراتيجيةَ فيه، فتحرُّكُه يعني أنّ السلاسل السعرية نفسَها تغيّرت. ▸ والفرضيّةُ: الـ«19 شمعة» ليست سدَّ فجواتٍ بل **نسخاً مكرّرةً بتاريخٍ مُزاحٍ يوماً** — التاريخُ يُبنى من `toISOString()` بتوقيت UTC، فيختلف بين `range=5y` و`range=max` إن اختلف توقيتُ طابع المصدر. **والنسخةُ المزاحة تضع سعراً قديماً بين سعرَين جديدَين = انعكاسٌ وهميٌّ ليومٍ واحد** — وهو بعينه ما يجعل شراءَ القاع يربح وشراءَ القمّة يخسر. ▸ وفحصٌ واحدٌ يحسمها بلا جدل: **السوقُ السعودي يتداول الأحد–الخميس**، فصفٌّ على جمعةٍ أو سبت لا يحتمل تأويلاً. فأُضيفت histAudit() (قراءةٌ محضة) وhistPurgeWeekend() للتنظيف. ▸ **ولا يُرفع قسمُ «الأقوى عند قمّتها السنوية» (v607) حتى يُحسم هذا** — فهو مبنيٌّ على النتيجة التي انقلبت'],
     ['v613', '🔁 عمليّةٌ طويلةٌ بلا استئنافٍ عمليّةٌ ناقصة. توقّف الشوطُ عند الرمز 78 من 269 بـ`ERR_HTTP2_PROTOCOL_ERROR` — **عطلُ نقلٍ لا عطلُ بيانات**، ولم يكن في الأداة ما يتعافى منه ولا ما يقول أين وقفت. ▸ فأُضيفت **إعادةُ محاولةٍ واحدة** بعد ثانيتين (الشبكةُ تتعثّر ولا تموت، وبلا إعادةٍ يسقط الرمزُ لسببٍ لا علاقةَ له به)، و**سطرُ استئنافٍ جاهزٌ للنسخ** يُطبع عند كلّ فشلٍ وفي الختام: `histBackfill({all:true, from:N})`. ▸ وخطُّ القصّ صار `console.log` لا `warn`: القصُّ سلوكٌ صحيحٌ متوقَّع، و`warn` تطبع أثرَ النداء كاملاً فتغرق السجلَّ في ضجيجٍ **يخفي الأخطاء الحقيقية** — وهو ضررٌ لا نفع. ▸ والعمليّةُ آمنةٌ للتكرار بطبعها (`upsert`)، فأسوأُ ما يقع من إعادةٍ خاطئة ضياعُ وقت'],
@@ -9635,9 +9636,12 @@ async function histDbLoad(sym, minBars) {
        ▸ فيُطلب الأحدثُ صراحةً ويُقلَب بعده. وإن قصّ الخادمُ الآن، قصّ
          من القديم — **وهو ما لا نحتاجه أصلاً**.
        ══════════════════════════════════════════════════════════════ */
-    let { data, error } = await sb.from('historical_prices')
-      .select('d,o,h,l,c,v').eq('symbol', sym)
-      .order('d', { ascending: false }).limit(1400);
+    /* 📄 صفحاتٌ لا `limit`: الحدُّ الصلب 1000 صفٍّ لكلّ طلب — انظر `_sbPagedRows` */
+    let data = null, error = null;
+    try {
+      data = await _sbPagedRows('historical_prices', 'd,o,h,l,c,v',
+        function (q) { return q.eq('symbol', sym).order('d', { ascending: false }); }, 1400);
+    } catch (e) { error = e; }
     if (error) {
       if (!_histErrShown) {
         _histErrShown = true;
@@ -9645,9 +9649,11 @@ async function histDbLoad(sym, minBars) {
           + (error.message || error) + (error.code ? ' (' + error.code + ')' : ''));
       }
       await new Promise(r => setTimeout(r, 350 + Math.random() * 650));
-      ({ data, error } = await sb.from('historical_prices')
-        .select('d,o,h,l,c,v').eq('symbol', sym)
-        .order('d', { ascending: false }).limit(1400));
+      try {
+        data = await _sbPagedRows('historical_prices', 'd,o,h,l,c,v',
+          function (q) { return q.eq('symbol', sym).order('d', { ascending: false }); }, 1400);
+        error = null;
+      } catch (e) { error = e; }
       if (!error && data) console.info('[hist] ✓ نجحت الإعادة لـ' + sym);
     }
     if (error || !data || data.length < (minBars || 25)) return null;
@@ -9957,6 +9963,32 @@ async function divScanAll(btn) {
 
 /* جلب 5 سنوات يومي من المصدر (نفس بروكسيات التطبيق) بصيغة صفوف للتخزين
    ▸ `range` اختياريّ: '5y' افتراضاً، و'1mo' للمزامنة اليومية الخفيفة. */
+/* ══════════════════════════════════════════════════════════════════════
+   📄 _sbPagedRows() — PostgREST يُرجع 1000 صفٍّ كحدٍّ أقصى، ويسكت
+
+   كُشف على 2170: القاعدةُ فيها 1307 صفّاً، وطلبُ `limit(1400)` أعاد
+   **1000 بالضبط** وآخرُ تاريخٍ فيها 2025-07-20 — أي أنّ آخر ثلاثةَ عشرَ
+   شهراً سقطت من الجواب **بلا خطأٍ ولا تحذير**.
+   ▸ **وهذا أخطرُ أشكال النقص: بياناتٌ صحيحةٌ ناقصةٌ بصمت.** الطلبُ ينجح،
+     والصفوفُ سليمة، والعددُ أقلُّ مما طُلب — ولا شيء يقول ذلك.
+   ▸ وأثرُه أنّ التطبيقَ **لم يحمّل يوماً أكثر من 1000 شمعة لأيّ سهم منذ
+     نشأته**، وكلُّ قياساتنا جرت على 1000 لا على ما في القاعدة.
+   ▸ فالحلُّ صفحاتٌ بـ`range(from,to)` حتى تعود صفحةٌ ناقصة.
+   ══════════════════════════════════════════════════════════════════════ */
+async function _sbPagedRows(table, cols, build, want) {
+  const PAGE = 1000, cap = want || 5000, out = [];
+  for (let from = 0; from < cap; from += PAGE) {
+    let q = sb.from(table).select(cols);
+    q = build(q);
+    const { data, error } = await q.range(from, Math.min(from + PAGE, cap) - 1);
+    if (error) { if (!out.length) throw error; break; }
+    if (!data || !data.length) break;
+    out.push.apply(out, data);
+    if (data.length < PAGE) break;
+  }
+  return out;
+}
+
 async function histFetchYahoo5y(sym, range) {
   const _syncStamp = new Date().toISOString();   // 🕰️ طابع هذه المزامنة
   const ticker = (sym === 'TASI') ? '^TASI.SR' : sym + '.SR';
@@ -20007,7 +20039,7 @@ const CHAN_FLAT = 0.50;
         + '   شغّلها كاملةً بـ: histBackfill({all:true})   ·   وللإيقاف في أيّ لحظة: histBackfillStop = true');
     } else {
       console.log('▸ أعد الآن: await histDepth()  لترى المدى الجديد · ثمّ **امسح مسحاً كاملاً** ليدخل التاريخُ الجديد الكاش.\n'
-        + '▸ وارفع حدَّ الجلب إن لزم: `limit(1400)` في `histLoadCandles` صار أضيقَ من بياناتك.');
+        + '▸ (v616: صار الجلبُ بصفحات، فلا يقصُّ حدُّ الألف صفٍّ شيئاً بعد اليوم.)');
     }
     return { done: done, added: added, failed: failed, rows: rows };
   });
@@ -20080,9 +20112,8 @@ const CHAN_FLAT = 0.50;
     sym = String(sym || '2170');
     let data = null;
     try {
-      const r = await sb.from('historical_prices').select('d,o,h,l,c,v').eq('symbol', sym)
-        .order('d', { ascending: true }).limit(3000);
-      data = r.data;
+      data = await _sbPagedRows('historical_prices', 'd,o,h,l,c,v',
+        function (q) { return q.eq('symbol', sym).order('d', { ascending: true }); }, 4000);
     } catch (e) { console.warn('🔬 تعذّر الجلب: ' + ((e && e.message) || e)); return null; }
     if (!Array.isArray(data) || !data.length) { console.warn('🔬 لا صفوفَ للرمز ' + sym); return null; }
     const DAY = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -20148,8 +20179,8 @@ const CHAN_FLAT = 0.50;
     for (const s of syms) {
       let data = null;
       try {
-        const r = await sb.from('historical_prices').select('d,c').eq('symbol', s).order('d', { ascending: true }).limit(2000);
-        data = r.data;
+        data = await _sbPagedRows('historical_prices', 'd,c',
+          function (q) { return q.eq('symbol', s).order('d', { ascending: true }); }, 4000);
       } catch (e) {}
       if (!Array.isArray(data) || !data.length) { rows.push({ 'الرمز': s, 'صفوف': 0, 'جمعة/سبت': '—', 'إغلاقٌ مكرّر': '—' }); continue; }
       let wk = 0, dup = 0;
@@ -20199,8 +20230,9 @@ const CHAN_FLAT = 0.50;
     for (const s of syms) {
       let bad = [];
       try {
-        const r = await sb.from('historical_prices').select('d').eq('symbol', s).order('d', { ascending: true }).limit(2000);
-        (r.data || []).forEach(function (x) {
+        const _all = await _sbPagedRows('historical_prices', 'd',
+          function (q) { return q.eq('symbol', s).order('d', { ascending: true }); }, 4000);
+        (_all || []).forEach(function (x) {
           const dow = new Date(x.d + 'T00:00:00Z').getUTCDay();
           if (dow === 5 || dow === 6) bad.push(x.d);
         });
@@ -20289,7 +20321,7 @@ const CHAN_FLAT = 0.50;
     }
     console.log('⚠️ ثلاثةُ أرقامٍ لا تُخلط:\n'
       + '   ① القاعدةُ تحوي ما فوق — وهو سقفُ ما يمكن قياسه.\n'
-      + '   ② والجلبُ محدودٌ بـ**1400 صفّ لكلّ سهم** (~5.6 سنة) — وهو سقفُ ما يصل متصفّحك.\n'
+      + '   ② والجلبُ صار **بصفحات** منذ v616 — وكان قبلها يقف عند **1000 صفٍّ صامتاً** مهما طُلب.\n'
       + '   ③ وما قاس عليه المختبَر هو الثالث: ما وصل فعلاً ودخل الكاش. راجع عمود «في متصفّحك الآن».');
     return { total: total, oldest: oldest, newest: newest, rows: rows };
   });

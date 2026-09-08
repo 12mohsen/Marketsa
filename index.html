@@ -2457,7 +2457,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-07-v630';
+window.APP_BUILD = '2026-09-08-v631';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2468,6 +2468,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v631', '📜 **سجلّ التطبيق يُفتح لأوّل مرّة — قال المالك: «صار مثل السبّورة، أين الفائدة؟ كلُّها تحذيرٌ وانتظار» — وهو محقّ.** والعلّة فيَّ قبل أن تكون في السوق: كلُّ ما فعلتُه في هذه الجلسة كان **طرحاً** — أزلتُ ادّعاء قسم القمم، وترجيح السهم الواحد، ومعنى لون الشريط — **ولم أُضف مخرجاً واحداً**. وصدقٌ لا يُنتج إلاّ لافتات «انتبه» سبّورةٌ فعلاً. ▸ **والمخرجُ ليس تخفيفَ عتبة** — ذاك يصنع شاشةً خضراء تخسر مالاً، وقد قَسنا أنّ كلَّ ما قاس الاستمرار خسر. ▸ بل **`planLedger()`**: في `plan_outcomes` ٢٠٥ خطّةً معلّقة، و`resolve_plan_outcomes` تعيد «حُسمت 0» في كلّ مسح منذ شهور — **فالمحاسبة مبنيّةٌ ومعطّلةٌ معاً، وهو أسوأُ من غيابها لأنّ وجودها يوهم برقابة**. ▸ فتُحسَم في المتصفّح من `historical_prices` مباشرةً، بانضباط المختبَر حرفاً بحرف: **أعلى/أدنى اليوم والوقفُ أوّلاً**، **وخطّةٌ لم يبلغها السعر لا تُعدّ رابحةً ولا خاسرةً بل باباً ثالثاً**، **وتُنزع المتداخلة** (الخطّة تُسجّل كلَّ يومٍ حتّى تُحسم، فعدُّها كلّها يضخّم العيّنة ويصنع يقيناً كاذباً). ▸ ويُشقُّ السجلّ **بعلامات التطبيق نفسِه** (ذهبية · ثقةُ العدّ · التوافق · الأسبوعي) — **فإن لم تفصل علاماتُه بين رابحٍ وخاسر فهي زينةٌ لا معلومة**. ▸ **وهذا أوّلُ قياسٍ في المشروع يحكم على ما عَرَضَه التطبيق فعلاً لا على استراتيجيةٍ تخيّلناها** — وبه وحده يُعرَف أأُوسِّع الأخضرُ بدليلٍ أم يُضيَّق'],
     ['v630', '🎯 **لونُ شريط الاتجاه لا يتنبّأ — والآن يقول ذلك تحته.** جاء جوابُ الامتحان الذي عُقد في v629 على 29,582 حالة: **الأخضر ‎−0.028R‎ ±0.048** و**الأحمر ‎+0.010R‎ ±0.041** — كلاهما صفرٌ داخل هامشه، وكلاهما **ينقلب** بين نصفَي المدّة (الأخضر 0.029 ثمّ ‎−0.126‎ · والأحمر ‎−0.056‎ ثمّ 0.078). ▸ **وعلى عيّنةٍ بهذا الحجم ليس هذا ضعفَ دليلٍ بل دليلَ عدم**: لو كان في اللون معلومةٌ صغيرة لظهرت. ▸ فلم يُمَسّ الحساب: الشريطُ **دقيقٌ فيما يصفه** — ميلُ عشرين جلسةً مضت — والخللُ في **ما يُفهم منه**، وذاك لا يُصلَح بمعادلةٍ بل بكلمة. ▸ فأُضيف تحت الشارت سطرٌ يقول ما قاله القياسُ بالأرقام نفسِها. ▸ **وهذا ثالثُ فحصٍ في هذه الجلسة يُنقذ عرضاً من ادّعاءٍ لم يُمتحن** — بعد قسم القمم الذي بُني مقلوباً، وترجيح السهم الواحد الذي كان سيعرض متوسّطَ السوق 269 مرّةً بزيّ تحليلٍ خاصّ. **وأداةٌ تصف الماضي بصدقٍ ليست عيباً؛ العيبُ أن تسكت حتى يُظنّ أنّها تصف الغد**'],
     ['v629', '🎗️ **امتحانُ شريط الاتجاه — سأل المالك: أنجعله أقربَ إلى الحقيقة؟** والشريطُ **وصفٌ لا توقّع**: كلُّ مقطعٍ يقول ماذا فعل الميلُ في عشرين شمعةً مضت، **وهو دقيقٌ في ذلك بالتعريف** (وقد ضُبطت مرساتُه في v584 وعُويرت عتبتُه على 270 سهماً). ▸ **لكنّ القارئ يقرؤه توقّعاً** — أخضرُ خيرٌ وأحمرُ شرّ — **ولم يُمتحن ذلك ولا مرّة في عمر التطبيق**. ▸ فأُضيف إلى المختبَر مقطعُه **بنفس قاعدته حرفاً بحرف** (20 شمعة · انحدارٌ خطّيّ · وعتبةُ `CHAN_FLAT` نفسُها) — **لا تعريفَ ثانٍ للشيء نفسه، فذاك أصلُ أعطال هذه الجلسة كلِّها**. ▸ والشكُّ مُعلَنٌ قبل النتيجة: كلُّ ما قاس الاستمرار خسر اليوم (اختراق 20 ‎−0.319‎ · اختراق 55 ‎−0.318‎ · قمّة 52 ‎−0.179‎)، **والشريطُ الأخضرُ مقياسُ استمرارٍ بامتياز**. فإن خسر الأخضرُ وربح الأحمرُ **فاللونان يقولان عكسَ ما يُقرأ منهما**'],
     ['v628', '💥 **«undefined» في بطاقة السهم — رصدها المالك في الصورة.** أُضيف سطرُ السياق في v627 وعُرِّف **داخل فرع «توجد خطّة»**، فخرج في فرع «لا خطة» بقيمة `undefined` مطبوعةً تحت النصّ (سابك · الإستثمار). ▸ والسببُ مدرسيّ: `var` يُرفع تصريحُه إلى الدالّة **وقيمتُه لا تُرفع**، فالفرعُ الذي لم يُنفَّذ فيه الإسناد يقرأ `undefined` لا النصَّ الفارغ. ▸ فنُقل التعريفُ **قبل سلسلة الشروط كلِّها** وصار `const` — فلا فرعَ يفتقده ولا فرعَ يعيد كتابته. ▸ **والدرسُ من عائلة اليوم نفسِها**: قيمةٌ تُعرَّف في مكانٍ وتُقرأ في مكانين — وأحدُهما لا يمرّ بموضع التعريف. ▸ وفي كتابة هذا السطر نفسِه كسرتُ البلوكَ مرّةً أخرى بعلامتَي اقتباسٍ مفردة داخل نصٍّ محاطٍ بمثلها — **وهو عينُ خطأ v586**، أمسكه الفحصُ الآليّ قبل التسليم للمرّة الثانية. **وسجلُّ التغييرات نصٌّ يُنفَّذ لا نصٌّ يُقرأ**'],
@@ -19790,6 +19791,213 @@ const CHAN_FLAT = 0.50;
       'color:#22c55e;font-weight:bold');
     console.log('▸ الآن: stratLab({atrMult:4, intrabar:true})');
     return { symbols: ok, bars: bars };
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     📜 planLedger() — سجلُّ التطبيق: هل نفعت خططُه فعلاً؟
+
+     كلُّ ما جرى في هذه الجلسة كان جدلاً عن قيمةٍ **متوقَّعة**: مختبَرٌ
+     يقيس استراتيجياتٍ لم يعرضها التطبيق قطّ، ومعايرةٌ تحكم على أرقامٍ لم
+     تُنفَّذ. **ولم يُفتح ولا مرّةً السؤالُ الذي يحسم ما سبقه كلَّه:
+     الخططُ التي أصدرها التطبيق فعلاً — ماذا صار إليها؟**
+
+     وفي `plan_outcomes` مئتان وخمسُ خططٍ **معلّقة منذ شهور**، ودالّةُ
+     `resolve_plan_outcomes` تعيد «حُسمت 0» في كلّ مسح. فالمحاسبةُ مبنيّةٌ
+     ومعطَّلةٌ معاً — **وهو أسوأُ من غيابها**، لأنّ وجودها يوهم برقابة.
+
+     ▸ فتُحسم هنا في المتصفّح من `historical_prices` مباشرةً، بلا انتظار
+       دالّةِ خادمٍ لا نراها. وبانضباط المختبَر نفسِه حرفاً بحرف:
+         • **أعلى/أدنى اليوم لا الإغلاق**، والوقفُ يُفحص **أوّلاً** — ففي
+           يومٍ يلمس الطرفين لا يُعرف أيُّهما سبق، فيُفترض الأسوأ.
+         • **والدخولُ يُنتظر**: خطّةٌ لم يبلغها السعرُ ليست خاسرةً ولا
+           رابحة — **هي لم تقع**، وعدُّها في أيّ العمودين تزوير.
+         • **وتُنزع المتداخلة**: الخطّةُ نفسُها تُسجَّل كلَّ يومٍ حتى تُحسم،
+           فعدُّها كلَّها يضخّم العيّنةَ أضعافاً ويصنع يقيناً كاذباً. فتُؤخذ
+           حلقاتٌ غيرُ متداخلةٍ لكلّ رمز، وعليها وحدَها يُبنى الحكم.
+     ▸ ويُشقُّ السجلُّ **بعلامات التطبيق نفسِه** (ذهبية · ثقةُ العدّ ·
+       التوافق) — فإن لم تفصل علاماتُه بين رابحٍ وخاسر **فهي زينةٌ لا
+       معلومة**، وذاك أهمُّ ما يخرج من هذه الأداة.
+
+     🔬 قراءةٌ محضة: لا تكتب في القاعدة حرفاً.
+     ══════════════════════════════════════════════════════════════════════ */
+  window._LEDGER_OHLC = window._LEDGER_OHLC || null;
+
+  window.planLedger = _adminTool('planLedger', async function (opts) {
+    opts = opts || {};
+    if (typeof sb === 'undefined' || !sb) { console.warn('📜 لا اتصالَ بالقاعدة.'); return null; }
+    const MAXB = (+opts.bars > 0) ? +opts.bars : 30;      // مهلةُ الخطّة بالجلسات
+    const SHOW = (+opts.show >= 0) ? +opts.show : 12;
+
+    /* ① السجلُّ كلُّه — بصفحات، فالحدُّ الصلب ألفُ صفٍّ يسكت عمّا بعده */
+    let recs = [];
+    try {
+      recs = await _sbPagedRows('plan_outcomes', '*',
+        function (q) { return q.order('plan_date', { ascending: true }); }, 20000);
+    } catch (e) {
+      console.warn('📜 تعذّرت قراءة `plan_outcomes` — ' + ((e && e.message) || e));
+      return null;
+    }
+    if (!recs.length) { console.warn('📜 السجلُّ فارغ — لم تُسجَّل خطّةٌ بعد.'); return null; }
+
+    const dates = recs.map(function (r) { return r.plan_date; }).filter(Boolean).sort();
+    console.log('%c📜 سجلُّ خطط القنّاص — حسمٌ في المتصفّح من تاريخك المخزَّن', 'color:#a78bfa;font-weight:bold;font-size:14px');
+    console.log('   ▸ ' + recs.length.toLocaleString('en') + ' تسجيلاً · من ' + dates[0] + ' إلى ' + dates[dates.length - 1]
+      + ' · ' + new Set(recs.map(function (r) { return String(r.symbol); })).size + ' رمزاً · المهلة ' + MAXB + ' جلسة');
+
+    /* ② أعلى/أدنى بعمقٍ كامل — مرّةً واحدة، ويُعاد استعمالُه في التشغيل التالي */
+    const need = Array.from(new Set(recs.map(function (r) { return String(r.symbol); })));
+    let OH = window._LEDGER_OHLC;
+    const have = OH ? Object.keys(OH).length : 0;
+    const missing = OH ? need.filter(function (s) { return !OH[s]; }) : need;
+    if (missing.length) {
+      OH = OH || {};
+      console.log('   🕯️ جلبُ الشموع لـ' + missing.length + ' رمزاً' + (have ? ' (محفوظٌ سابقاً ' + have + ')' : '')
+        + ' — يستغرق ~' + Math.ceil(missing.length * 0.8 / 60) + '–' + Math.ceil(missing.length * 2 / 60) + ' دقيقة…');
+      let k = 0;
+      for (const s of missing) {
+        try {
+          const d = await _sbPagedRows('historical_prices', 'd,h,l,c',
+            function (q) { return q.eq('symbol', s).order('d', { ascending: true }); }, 4000);
+          if (Array.isArray(d) && d.length) {
+            OH[s] = { d: d.map(function (x) { return x.d; }),
+                      h: d.map(function (x) { return +x.h || +x.c; }),
+                      l: d.map(function (x) { return +x.l || +x.c; }),
+                      c: d.map(function (x) { return +x.c; }) };
+          }
+        } catch (e) {}
+        k++;
+        if (k % 40 === 0) console.log('      … ' + k + '/' + missing.length);
+      }
+      window._LEDGER_OHLC = OH;
+    }
+
+    /* ③ الحسم — صفقةً صفقة، بأعلى/أدنى اليوم والوقفُ أوّلاً */
+    const R = [];
+    let noData = 0, tooYoung = 0;
+    for (const r of recs) {
+      const s = String(r.symbol), S = OH[s];
+      const en = +r.entry, st = +r.stop, tg = +r.target, pi = +r.price_at_issue;
+      if (!S || !(en > 0) || !(st > 0) || !(tg > en) || !(en > st)) { noData++; continue; }
+      /* أوّلُ جلسةٍ **بعد** يوم الإصدار — فالخطّةُ تُنشر بعد الإغلاق */
+      let i0 = -1;
+      for (let i = 0; i < S.d.length; i++) { if (S.d[i] > r.plan_date) { i0 = i; break; } }
+      if (i0 < 0) { tooYoung++; continue; }
+      if (S.d.length - i0 < MAXB) { tooYoung++; continue; }   /* لم تنضج بعد — ولا تُحسب */
+      const risk = en - st;
+      /* اتجاهُ الدخول: أمرٌ محدَّدٌ تحت السعر يُلمس بالأدنى، وفوقه يُلمس بالأعلى */
+      const below = !(pi > 0) || en <= pi;
+      let ei = -1;
+      for (let i = i0; i < Math.min(i0 + MAXB, S.d.length); i++) {
+        if (below ? (S.l[i] <= en) : (S.h[i] >= en)) { ei = i; break; }
+      }
+      if (ei < 0) { R.push({ sym: s, name: r.name || s, d: r.plan_date, fate: 'no-entry', rec: r }); continue; }
+      let fate = 'open', rr = null, xi = Math.min(ei + MAXB, S.d.length) - 1;
+      for (let i = ei; i < Math.min(ei + MAXB, S.d.length); i++) {
+        if (S.l[i] <= st) { fate = 'stop'; rr = -1; xi = i; break; }          /* ⚠️ الوقفُ أوّلاً عمداً */
+        if (S.h[i] >= tg) { fate = 'target'; rr = (tg - en) / risk; xi = i; break; }
+      }
+      if (rr === null) { rr = (S.c[xi] - en) / risk; fate = 'expire'; }
+      R.push({ sym: s, name: r.name || s, d: r.plan_date, ed: S.d[ei], xd: S.d[xi],
+               fate: fate, rr: rr, entry: en, stop: st, target: tg, rec: r,
+               bh: (S.c[xi] - S.c[ei]) / risk });                              /* المرجع: نفسُ النافذة شراءً وحملاً */
+    }
+
+    if (tooYoung && !R.length) {
+      console.warn('📜 لا خطّةَ ناضجةً بعد: ' + tooYoung + ' تسجيلاً مهلتُها لم تكتمل، و' + noData + ' بلا بيانات.');
+      return null;
+    }
+
+    /* ④ الحلقاتُ غيرُ المتداخلة — عليها وحدَها يُبنى الحكم */
+    const bySym = {};
+    R.forEach(function (t) { (bySym[t.sym] = bySym[t.sym] || []).push(t); });
+    const solo = [];
+    Object.keys(bySym).forEach(function (s) {
+      const a = bySym[s].slice().sort(function (x, y) { return x.d < y.d ? -1 : 1; });
+      let cur = '';
+      a.forEach(function (t) {
+        if (t.d > cur) { solo.push(t); cur = t.xd || t.d; }
+      });
+    });
+
+    const stat = function (arr) {
+      const v = arr.filter(function (t) { return typeof t.rr === 'number'; }).map(function (t) { return t.rr; });
+      if (!v.length) return { n: 0 };
+      const m = v.reduce(function (a, b) { return a + b; }, 0) / v.length;
+      let s2 = 0; v.forEach(function (x) { s2 += (x - m) * (x - m); });
+      const sd = Math.sqrt(s2 / Math.max(1, v.length - 1));
+      const so = v.slice().sort(function (a, b) { return a - b; });
+      return { n: v.length, mean: m, se: sd / Math.sqrt(v.length),
+               med: so[Math.floor(so.length / 2)],
+               win: v.filter(function (x) { return x > 0; }).length / v.length };
+    };
+    const F = function (x, k) { return (x >= 0 ? '+' : '') + x.toFixed(k == null ? 3 : k); };
+    const line = function (label, arr, all) {
+      const o = stat(arr), ne = all.filter(function (t) { return t.fate === 'no-entry'; }).length;
+      if (!o.n) return { 'الشريحة': label, 'صفقات': 0, 'وسطيّ R': '—', 'الهامش': '—', 'وسيط': '—', 'رابحة': '—', 'لم تُلمس': ne, 'الحكم': '🚫 لا بيانات' };
+      const sig = Math.abs(o.mean) > 1.96 * o.se;
+      return { 'الشريحة': label, 'صفقات': o.n, 'وسطيّ R': F(o.mean), 'الهامش': '±' + (1.96 * o.se).toFixed(3),
+               'وسيط': F(o.med, 2), 'رابحة': Math.round(o.win * 100) + '٪', 'لم تُلمس': ne,
+               'الحكم': !sig ? '⚪ داخل الهامش' : (o.mean > 0 ? '🟢 موجبٌ مُثبَت' : '🔴 سالبٌ مُثبَت') };
+    };
+
+    /* ⑤ المصير — والدخولُ غيرُ المُلامَس بابٌ ثالثٌ لا خانةٌ في الربح والخسارة */
+    const cnt = function (a, f) { return a.filter(function (t) { return t.fate === f; }).length; };
+    console.log('%c⚖️ مصيرُ الخطط', 'color:#38bdf8;font-weight:bold');
+    console.table([
+      { 'المجموعة': 'كلُّ التسجيلات', 'الكلّ': R.length, '🎯 بلغت الهدف': cnt(R, 'target'), '🛑 ضربت الوقف': cnt(R, 'stop'),
+        '⌛ انتهت المهلة': cnt(R, 'expire'), '👻 لم يُلمس الدخول': cnt(R, 'no-entry') },
+      { 'المجموعة': '✅ غيرُ المتداخلة', 'الكلّ': solo.length, '🎯 بلغت الهدف': cnt(solo, 'target'), '🛑 ضربت الوقف': cnt(solo, 'stop'),
+        '⌛ انتهت المهلة': cnt(solo, 'expire'), '👻 لم يُلمس الدخول': cnt(solo, 'no-entry') }
+    ]);
+
+    console.log('%c📊 الحصيلة بالـR — والحكمُ من الصفّ الثاني وحده', 'color:#f59e0b;font-weight:bold');
+    const bh = stat(solo.map(function (t) { return { rr: t.bh }; }).filter(function (t) { return typeof t.rr === 'number'; }));
+    console.table([
+      line('كلُّ التسجيلات (تُقرأ وصفاً لا حكماً)', R, R),
+      line('✅ غيرُ المتداخلة — الحكم', solo, solo),
+      { 'الشريحة': '⚖️ المرجع: نفسُ النوافذ شراءً وحملاً', 'صفقات': bh.n || 0,
+        'وسطيّ R': bh.n ? F(bh.mean) : '—', 'الهامش': bh.n ? '±' + (1.96 * bh.se).toFixed(3) : '—',
+        'وسيط': bh.n ? F(bh.med, 2) : '—', 'رابحة': bh.n ? Math.round(bh.win * 100) + '٪' : '—', 'لم تُلمس': '—', 'الحكم': '—' }
+    ]);
+
+    /* ⑥ هل تفصل علاماتُ التطبيق؟ — وهذا أهمُّ سؤالٍ في الأداة كلِّها */
+    const sub = function (f) { return solo.filter(f); };
+    const rows = [
+      line('⭐ ذهبية', sub(function (t) { return !!t.rec.golden; }), solo),
+      line('☆ غيرُ ذهبية', sub(function (t) { return !t.rec.golden; }), solo),
+      line('🔒 ثقةُ العدّ ≥ 70', sub(function (t) { return +t.rec.el_conf >= 70; }), solo),
+      line('🔓 ثقةُ العدّ 50–69', sub(function (t) { return +t.rec.el_conf >= 50 && +t.rec.el_conf < 70; }), solo),
+      line('📅 الأسبوعيّ صاعد', sub(function (t) { return /صاعد|up/i.test(String(t.rec.wk_trend || '')); }), solo),
+      line('📉 الأسبوعيّ غيرُ صاعد', sub(function (t) { return !/صاعد|up/i.test(String(t.rec.wk_trend || '')); }), solo),
+      line('🤝 توافقٌ ≥ 2', sub(function (t) { return +t.rec.confl >= 2; }), solo),
+      line('🙅 توافقٌ < 2', sub(function (t) { return !(+t.rec.confl >= 2); }), solo)
+    ];
+    console.log('%c🔎 هل تفصل علاماتُ التطبيق بين رابحٍ وخاسر؟', 'color:#a78bfa;font-weight:bold');
+    console.table(rows);
+
+    if (SHOW && solo.length) {
+      const done = solo.filter(function (t) { return typeof t.rr === 'number'; }).sort(function (a, b) { return b.rr - a.rr; });
+      const pick = done.slice(0, Math.ceil(SHOW / 2)).concat(done.slice(-Math.floor(SHOW / 2)));
+      console.log('%c🔬 أفضلُ وأسوأُ الحلقات', 'color:#94a3b8;font-weight:bold');
+      console.table(pick.map(function (t) {
+        return { 'الرمز': t.sym, 'الاسم': t.name, 'صدرت': t.d, 'دخلت': t.ed, 'خرجت': t.xd,
+                 'دخول': t.entry, 'وقف': t.stop, 'هدف': t.target,
+                 'المصير': t.fate === 'target' ? '🎯 هدف' : t.fate === 'stop' ? '🛑 وقف' : '⌛ مهلة',
+                 'R': F(t.rr, 2), '⭐': t.rec.golden ? 'نعم' : '—' };
+      }));
+    }
+
+    /* ⑦ ولماذا تعيد الدالّةُ الخادمية «حُسمت 0» — تشخيصٌ لا شكوى */
+    console.log('%c🩺 لماذا كان السجلُّ معلّقاً؟', 'color:#ef4444;font-weight:bold');
+    console.log('   ▸ ناضجةٌ وقابلةٌ للحسم هنا: ' + R.length + ' تسجيلاً.\n'
+      + '   ▸ لم تنضج بعد (مهلةُ ' + MAXB + ' جلسةً لم تكتمل): ' + tooYoung + '.\n'
+      + '   ▸ بلا شموعٍ أو بأرقامٍ غيرِ متّسقة: ' + noData + '.\n'
+      + (R.length
+          ? '   ▸ **فالبياناتُ كافيةٌ للحسم، والعطلُ في `resolve_plan_outcomes` وحدها** — وهذا الحسابُ يغنيك عنها حتى تُصلَح.'
+          : '   ▸ فالسجلُّ حديثٌ فعلاً ولا شيءَ ينضج بعد — أعِد بعد ' + MAXB + ' جلسة.'));
+    console.log('▸ خياراتٌ: planLedger({bars:20})  ·  {show:0} لإخفاء الأمثلة  ·  والشموعُ محفوظةٌ فلا تُجلب مرّتين.');
+
+    return { records: R.length, solo: solo.length, tooYoung: tooYoung, noData: noData, all: R, nonOverlapping: solo };
   });
 
   window.stratLab = _adminTool('stratLab', function (opts) {

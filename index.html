@@ -1576,7 +1576,7 @@ canvas#mdChart{display:block;width:100% !important}
       <span class="nav-ico">⚡</span> تحليل السوق
     </button>
     <button class="nav-btn" data-tab="sniper" onclick="switchTab('sniper',this)">
-      <span class="nav-ico">🎯</span> قنّاص الفرص
+      <span class="nav-ico">📐</span> مستويات الصفقة
     </button>
     <button class="nav-btn" data-tab="terminal" onclick="switchTab('terminal',this)">
       <span class="nav-ico">🖥️</span> اللوحة الموحّدة
@@ -1876,9 +1876,9 @@ canvas#mdChart{display:block;width:100% !important}
 <div class="section-panel" id="panel-sniper">
   <div style="max-width:920px;margin:0 auto;padding:16px 12px 40px">
     <div style="text-align:center;margin-bottom:12px">
-      <div style="font-size:25px;font-weight:900">🎯 قنّاص الفرص</div>
-      <div style="font-size:14.5px;color:var(--txt-m);margin-top:6px;line-height:1.8">أسهم لها <b>خطة دخول جاهزة</b> من إليوت (دخول · وقف · هدف · مخاطرة‑عائد) مرتّبة بالأقوى — اختر توقيتك بلا بحث.</div>
-      <button id="sniperRescanBtn" onclick="sniperRescan(this)" style="display:none;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s">🔮 إعادة المسح وتحديث الفرص</button>
+      <div style="font-size:25px;font-weight:900">📐 مستويات الصفقة</div>
+      <div style="font-size:14.5px;color:var(--txt-m);margin-top:6px;line-height:1.8"><b>دخولٌ ووقفٌ وهدفٌ محسوبة</b> على الأسهم التي كوّن عليها العدُّ بنيةً — <b>لتعرف مخاطرتَك وحجمَك قبل أن تدخل</b>. <span style="color:#fbbf24;font-weight:700">وهي مستوياتٌ للانضباط لا وعدٌ بربح</span>: قِيست على خمس سنوات فلم يثبت تفوّقُها على يومٍ عشوائيّ — <b>ونفعُها في الوقف المحدَّد والحجم المحسوب، وذاك يعمل ولو كانت الميزةُ صفراً.</b></div>
+      <button id="sniperRescanBtn" onclick="sniperRescan(this)" style="display:none;margin-top:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s">🔮 إعادة المسح وتحديث المستويات</button>
       <div id="sniperScanProg" style="display:none;max-width:420px;margin:12px auto 0">
         <div style="height:10px;background:rgba(148,163,184,.18);border-radius:6px;overflow:hidden">
           <div id="sniperScanBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#a855f7);transition:width .25s"></div>
@@ -2457,7 +2457,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-09-09-v653';
+window.APP_BUILD = '2026-09-09-v654';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2468,6 +2468,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v654', '📐 **«قنّاص الفرص» صار «مستويات الصفقة» — والاسمُ كان يَعِد بما لم يثبت.** ردّ المالكُ على اقتراح الإخفاء بجملةٍ حاسمة: **«الخطّة هي التي معطية التطبيق معنى، بدونها لا قيمة له»** — **وهو محقّ، وسحبتُ توصيتي**. ▸ **وخطئي أنّي قارنتُ بالبديل الخطأ**: قِستُ الخطّة بسؤال «هل تتفوّق على يومٍ عشوائيّ؟» فجاء الجواب لا، **لكنّ البديل الواقعيّ ليس «لا يشتري» بل «يشتري بلا وقفٍ ولا حجمٍ محسوب»** — **فخطّةٌ بلا ميزةٍ ولها وقفٌ محدَّد أفضلُ من صفقةٍ بلا خطّةٍ أصلاً، وهي ما سيقع لو سُحبت**. ▸ **وأربعةٌ ممّا تعطيه لا تحتاج «تفوّقاً» لتعمل**: خسارةٌ محدودة (وقفٌ يحوّل خسارةً مفتوحة إلى 4.7٪ معلومة) · حجمٌ محسوب (الحاسبةُ مبنيّةٌ على الوقف وتسقط بسقوطه) · **نقطةُ إبطالٍ مكتوبة تمنع التشبّث بخاسر** · وقرارٌ مكتوبٌ قبل الانفعال. **وكلُّها تعمل عند ميزةٍ صفر.** ▸ **فالصوابُ ليس الإخفاء بل تصحيحُ ما يَعِد به الاسم**: «قنّاص الفرص» يَعِد باقتناص فرص، و«مستويات الصفقة» تصف ما يُعطى فعلاً. **والمحرّكُ والأرقامُ لم تُمَسّ إطلاقاً** — والوصفُ الجديد يقدّم **الوقفَ والحجم** ويقول صراحةً إنّها **مستوياتٌ للانضباط لا وعدٌ بربح**. ▸ **ومفتاحُ القسم `sniper` لم يُغيَّر حرفاً** — فهو مخزَّنٌ في اشتراكات المستخدمين وحجبِهم، **وتغييرُه يقطع من دفع**. الاسمُ عرضٌ والمفتاحُ عقد. ▸ **وبين «وعدٍ كاذب» و«لا شيء» خيارٌ ثالث: أداةٌ صادقةٌ تُقدَّم بما هي عليه** — وقد أمضيتُ يومين أطارد الادّعاءات فكِدتُ أرمي الأداةَ معها'],
     ['v653', '🔴 **التناقضُ الظاهر يُشرح لا يُلغى — سأل المالك: «وإذا تركناها هل لها ضرر؟ أعتقد لونٌ فقط».** والجوابُ المقيس: **لا ضررَ على ماله** — عائدُ القسم المطلق ‎+0.005R‎ ±0.039، أي صفرٌ عملياً، **فمن ابتعد عن الأحمر ابتعد عن صفقةٍ لا تربح ولا تخسر**. **لكنّ الضررَ على المعنى**: عنوانٌ يعرض قائمةً ثمّ يصبغها كلَّها بلون «تجنّب» يناقض نفسَه أمام القارئ، **ويُخفي المعلومةَ الوحيدة التي تفصل فعلاً**. ▸ فلم يُمَسّ اللون — **وهو صادقٌ في بابه: الأطرُ هابطةٌ فعلاً، وv621 بُني على مبدأٍ سليم** — **بل شُرح بالأرقام**: 1637 حمراء · 24 رمادية · **17 خضراء** من 1678 حالةً في خمس سنوات، **فاللونُ لا يفصل شيئاً عن شيء، والشارةُ الخضراء تظهر نحوَ مرّةٍ كلَّ عشرة أشهر**. والسببُ بنيويّ: السهمُ لا يبلغ ‎0.5٪‎ فوق قاع سنته إلاّ بهبوطٍ يضعه تحت م50 وم50 تحت م200 — **فشرطا «أخضر» يتناقضان بنيوياً**. ▸ **والأحمرُ هو حاملُ التفوّق كلِّه** (‎+0.077R‎)، فيُقال صراحةً إنّه لا يُقرأ «ابتعد» بل «هكذا تكون قيعانُ السنة». ▸ **وأُضيفت المعلومةُ التي كانت غائبة**: الترتيبُ يفصل — الأقربُ إلى قاعه (ضمن ‎0.5٪‎) تفوّق **‎+0.124R‎ ±0.057** والبقيّةُ ‎+0.032‎ داخلَ هامشها. **فالقسمُ يرتّب بالصواب ويلوّن بما لا يفصل — فأُعلن ذلك بدل أن يُصلَح بلونٍ جديدٍ يكسر مبدأً سليماً.** ▸ **وأصغرُ تدخّلٍ يحلّ التناقض: سطرٌ يشرح، لا لونٌ يُغيَّر**'],
     ['v652', '🔁 **كتبتُ محاكاةً ثانيةً للشيء نفسِه بقواعدَ مختلفة — وهو عينُ ما أحذّر منه.** أعطى `nearLowAudit` لقربِ القاع مع الهبوط **‎−0.076R‎** بينما أعطى `stratLab` **‎+0.026R‎** للقاعدة نفسِها، والمرجعان كذلك (‎−0.059‎ مقابل ‎−0.126‎) — **فالفرقُ في الهندسة لا في السوق**. والسببُ حارسٌ في `sim` لم أنسخه: `if (rp < 0.005 || rp > 0.25) return null` — **مخاطرةٌ خارج المعقول لا تُحسب**، وقربَ القاع تكثر الأسهمُ التي يتجاوز فيها ATR×4 رُبعَ السعر. ومعه اختلفت العمولةُ بالـR والخطوة. ▸ **وهذا «تعريفان لشيءٍ واحد» — أصلُ أعطال هذه الجلسة كلِّها، ووقعتُ فيه وأنا أحذّر منه بالاسم.** فوُحّدت القواعدُ حرفاً بحرف: حارسُ `rp` · العمولةُ `COST/rp` · والخطوةُ 5 كما في المختبَر لتُقارَن الأرقامُ به. ▸ **واكتشافٌ لا يتأثّر بهذا إطلاقاً لأنّه عَدٌّ لا تقدير**: الشارةُ **🟢 الخضراء ظهرت مرّتين في خمس سنوات على تسعين سهماً** (‎~6‎ في السوق كلِّه · مرّةً كلَّ عشرة أشهر)، و**381 من 388 (98٪) حمراء**. **فاللونُ ليس مقلوباً — هو معدوم: التلوينُ لا يفرّق شيئاً عن شيء.** والسببُ بنيويّ: السهمُ لا يبلغ ‎0.5٪‎ فوق قاع سنته إلاّ بهبوطٍ يضعه تحت م50 وم50 تحت م200 — **فشرطا «أخضر» يتناقضان بنيوياً**. ▸ و**حارسُ الموقوف (v621): صفرُ حالاتٍ في خمس سنوات** — أُضيف لحالةٍ واحدةٍ رُصدت ولم تتكرّر'],
     ['v651', '🔊 **زرٌّ يحتاج ثلاثَ ضغطات — والعلّةُ حارسٌ يبتلع النقرَ صامتاً.** رصده المالك: ضغط «🔮 إعادة المسح» أكثرَ من ثلاث مرّاتٍ قبل أن يبدأ. والسببُ أنّ `_autoUpgradeScan` يبدأ مسحاً **تلقائياً** عند فتح الصفحة على بناءٍ جديد (النتائجُ بإصدارٍ قديم)، **فوقعت نقراتُه الأولى أثناء مسحٍ جارٍ فابتلعها `if (PRED_SCANNING) return;` بلا كلمة**، وصادفت الثالثةُ انتهاءه. ▸ **وهو من عائلة أعطال هذه الجلسة كلِّها: حارسٌ يجعل الحالةَ السليمة تبدو عطلاً** — كما فعل `typeof … !== undefined` في v637 حين أخفى إصلاحاً لم يعمل. ▸ **والصمتُ هنا أسوأُ من الرفض**: المستخدمُ لا يعرف أنّ عملاً يجري، فيكرّر النقرَ ثمّ يظنّ الزرَّ معطوباً — **وثقتُه بالتطبيق تُخدَش بزرٍّ لا يردّ، لا بحسابٍ خاطئ**. ▸ فيُقال له صراحةً «⏳ المسحُ جارٍ بالفعل»، **ويُعلَّم زرُّ القنّاص بحالته طوال المسح** (معطَّل · باهت · «جارٍ المسح…») ثمّ يعود — فهو الزرُّ الذي ضُغط، لا زرُّ الرادار الذي كان وحده يُعلن انشغاله. ▸ **ولا يُمَسّ منطقُ الحماية نفسُه**: منعُ مسحَين متوازيَين صحيحٌ ويبقى — **المطلوب أن يتكلّم لا أن يُرفع**'],
@@ -6698,7 +6699,7 @@ function renderAdminSection() {
     { k: 'monitor',   t: '👁️ المراقبة' },
     { k: 'returns',   t: '📈 العوائد' },
     { k: 'all',       t: '🔮 رادار' },
-    { k: 'sniper',    t: '🎯 قنّاص الفرص' },
+    { k: 'sniper',    t: '📐 مستويات الصفقة' },
     { k: 'analysis',  t: '⚡ تحليل السوق' },
   ];
   const row  = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);font-size:13px';
@@ -6821,7 +6822,7 @@ function renderAdminSection() {
           </label>`).join('')}
 
         <label style="${row}">
-          <span>🔁 زر «الأثبت عبر الأيام» في القنّاص<div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px;line-height:1.7">يعرض الأسهم التي ثبت تحليلها أياماً متتالية. تحكّم عام — ويمكن إخفاؤه عن مستخدم بعينه من بطاقته.</div></span>
+          <span>🔁 زر «الأثبت عبر الأيام» في مستويات الصفقة<div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px;line-height:1.7">يعرض الأسهم التي ثبت تحليلها أياماً متتالية. تحكّم عام — ويمكن إخفاؤه عن مستخدم بعينه من بطاقته.</div></span>
           <select id="admStableMode" style="background:var(--surf-alt);color:var(--txt);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;cursor:pointer">
             <option value="all"   ${(s.stableMode || 'all') === 'all' ? 'selected' : ''}>👁️ للجميع (مع الزوار)</option>
             <option value="users" ${s.stableMode === 'users' ? 'selected' : ''}>🔐 للمسجّلين فقط</option>
@@ -9072,7 +9073,7 @@ const ADMIN_TAB_DEFS = [
   { k: 'monitor',   t: '👁️ المراقبة' },
   { k: 'returns',   t: '📈 العوائد' },
   { k: 'all',       t: '🔮 رادار' },
-  { k: 'sniper',    t: '🎯 قنّاص الفرص' },
+  { k: 'sniper',    t: '📐 مستويات الصفقة' },
   { k: 'terminal',  t: '🖥️ اللوحة الموحّدة' },
   { k: 'analysis',  t: '⚡ تحليل السوق' },
 ];
@@ -11132,7 +11133,7 @@ function adminEditUser(email) {
         <input type="checkbox" id="admUDiag" ${r.see_diag ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
       </label>
       <label style="${row};cursor:pointer">
-        <span>🔁 السماح بزر «الأثبت عبر الأيام» في القنّاص<div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px">مفعّل افتراضياً — أزل العلامة لإخفائه عن هذا المستخدم وحده</div></span>
+        <span>🔁 السماح بزر «الأثبت عبر الأيام» في مستويات الصفقة<div style="font-size:10.5px;color:var(--txt-m);font-weight:400;margin-top:3px">مفعّل افتراضياً — أزل العلامة لإخفائه عن هذا المستخدم وحده</div></span>
         <input type="checkbox" id="admUStable" ${r.see_stable !== false ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer">
       </label>`}
 
@@ -16125,7 +16126,7 @@ const CHAN_FLAT = 0.50;
     try {
       const _sr = document.getElementById('sniperRescanBtn');
       if (_sr) { _sr.disabled = false; _sr.style.opacity = ''; _sr.style.cursor = 'pointer';
-                 _sr.textContent = _sr.dataset.t0 || '🔮 إعادة المسح وتحديث الفرص'; }
+                 _sr.textContent = _sr.dataset.t0 || '🔮 إعادة المسح وتحديث المستويات'; }
     } catch (e) {}
     predShowProgress(false);
     predRender();
@@ -23998,7 +23999,7 @@ const CHAN_FLAT = 0.50;
         }
       }
 
-      html += sec('🎯 خطة القنّاص',
+      html += sec('📐 مستويات الصفقة',
         _asOfStampHTML(_lg)
         + '<div style="font-size:13px;font-weight:800;color:' + _kmColor + ';margin-bottom:8px">' + _kmText + '</div>'
         + planBox
@@ -24082,7 +24083,7 @@ const CHAN_FLAT = 0.50;
          ▸ فيُقرأ من `elBlock` نفسِه الذي يقرؤه الحكم — لا نصَّ ثانٍ.
          ══════════════════════════════════════════════════════════════ */
       const _bt = (r.elBlock && r.elBlock.t) ? String(r.elBlock.t).replace(/^لا خطّة — /, '') : null;
-      html += sec('🎯 القنّاص', '<div style="font-size:12.5px;color:var(--txt-m)">'
+      html += sec('📐 مستويات الصفقة', '<div style="font-size:12.5px;color:var(--txt-m)">'
         + (_bt ? ('لا خطة دخول جاهزة — <b>' + _bt + '</b>.') : 'لا خطة دخول جاهزة — لم يكوّن إليوت إعداداً على هذا السهم بعد.')
         + '</div>' + _ODDS_CTX);
     }
@@ -24657,7 +24658,7 @@ const CHAN_FLAT = 0.50;
       btn.style.background = 'linear-gradient(135deg,#166534,#22c55e)';
       btn.textContent = '✅ اكتمل المسح — تم التحديث';
       setTimeout(() => {
-        btn.textContent = t0 || '🔮 إعادة المسح وتحديث الفرص';
+        btn.textContent = t0 || '🔮 إعادة المسح وتحديث المستويات';
         btn.style.background = bg0 || 'linear-gradient(135deg,#7c3aed,#a855f7)';
         if (prog) prog.style.display = 'none';
         if (txt) txt.style.color = '#c084fc';

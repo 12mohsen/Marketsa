@@ -2482,7 +2482,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-11-02-v683';
+window.APP_BUILD = '2026-11-02-v684';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -21368,7 +21368,9 @@ const CHAN_FLAT = 0.50;
       const stopATR = (atrPct > 0) ? (stopPct / atrPct) : null;
 
       out.push({ sym: sy, name: r.name || sy, d: r.plan_date, tgtPct: tgtPct, stopPct: stopPct,
-                 rr: rr, beWin: beWin, pHit: pHit, stopATR: stopATR, nw: nw, edge: (pHit != null) ? (pHit - beWin) : null });
+                 rr: rr, beWin: beWin, pHit: pHit, stopATR: stopATR, nw: nw,
+                 gold: (r.golden === true),                /* ⭐ وسمُ البوّابة كما سُجّل لحظتَها */
+                 edge: (pHit != null) ? (pHit - beWin) : null });
     });
 
     if (!out.length) { console.warn('📐 لا خطّةَ قابلةً للقياس — ' + JSON.stringify(skipped)); return null; }
@@ -21392,13 +21394,44 @@ const CHAN_FLAT = 0.50;
       { 'المقياس': '📏 الوقف ÷ ATR14 (يوماً عاديّاً)',    'الوسيط': F(med(out.map(function (o) { return o.stopATR; })), 2) },
     ]);
 
+    /* ══════════════════════════════════════════════════════════════
+       ⭐ القسمةُ بالوسم — **لأنّ ما يُقاس ليس ما يُباع**
+
+       كشف `planLedger` أنّ الخططَ المحسومةَ الثماني **كلَّها غيرُ ذهبيّة**
+       (⭐ ذهبية: صفر). وقياسُ الهندسة كان على **البركة كلِّها** — أي على
+       خططٍ لا يوصي بها التطبيق. **فكنّا نزن الوعاءَ لا الدواء.**
+       ▸ فتُقسَم كلُّ الأرقام بالوسم: **إن كانت الذهبيّةُ أفضلَ هندسةً
+         فالبوّابةُ تعمل** — وهو أوّلُ دليلٍ على أنّ الاختيار يضيف شيئاً.
+       ▸ **وإن تساوتا فالوسمُ زينة** — ويُقال كما جاء، لا كما نحبّ.
+       ⚠️ ووسائطُ لا متوسّطات، ونوافذُ متداخلة ⇒ **وصفٌ لا اختبارُ دلالة**.
+       ══════════════════════════════════════════════════════════════ */
+    const slice = function (label, a) {
+      if (!a.length) return { 'الشريحة': label, 'خطط': 0, 'هدف ٪': '—', 'وقف ٪': '—', 'ع/م': '—',
+                              'تعادل ٪': '—', 'pHit ٪': '—', 'الفارق': '—', 'وقف÷ATR': '—', 'الحكم': '🚫 لا بيانات' };
+      const e = med(a.map(function (o) { return o.edge; }));
+      return { 'الشريحة': label, 'خطط': a.length,
+               'هدف ٪': F(med(a.map(function (o) { return o.tgtPct; })), 2),
+               'وقف ٪': F(med(a.map(function (o) { return o.stopPct; })), 2),
+               'ع/م': F(med(a.map(function (o) { return o.rr; })), 2),
+               'تعادل ٪': F(med(a.map(function (o) { return o.beWin; })), 1),
+               'pHit ٪': F(med(a.map(function (o) { return o.pHit; })), 1),
+               'الفارق': F(e, 1),
+               'وقف÷ATR': F(med(a.map(function (o) { return o.stopATR; })), 2),
+               'الحكم': (e == null) ? '—' : (e >= 0 ? '🟢 الهدفُ داخلَ المدى' : '🔴 أبعدُ من التعادل') };
+    };
+    const G = out.filter(function (o) { return o.gold; });
+    const NG = out.filter(function (o) { return !o.gold; });
+    console.log('%c⭐ القسمةُ بالوسم — أهي البوّابةُ أفضلُ هندسةً؟', 'color:#facc15;font-weight:bold;font-size:14px');
+    console.table([ slice('⭐ ذهبية', G), slice('☆ غيرُ ذهبية', NG), slice('📦 الكلّ', out) ]);
+    const _eG = med(G.map(function (o) { return o.edge; })), _eN = med(NG.map(function (o) { return o.edge; }));
+
     if (SHOW) {
       console.log('%c🔬 عيّنةٌ من الخطط', 'color:#38bdf8;font-weight:bold');
       console.table(out.slice(0, SHOW).map(function (o) {
         return { 'الرمز': o.sym, 'الاسم': o.name, 'التاريخ': o.d,
                  'الهدف ٪': F(o.tgtPct, 2), 'الوقف ٪': F(o.stopPct, 2), 'ع/م': F(o.rr, 2),
                  'التعادل ٪': F(o.beWin, 1), 'pHit ٪': F(o.pHit, 1),
-                 'الفارق': F(o.edge, 1), 'وقف÷ATR': F(o.stopATR, 2),
+                 'الفارق': F(o.edge, 1), 'وقف÷ATR': F(o.stopATR, 2), '⭐': o.gold ? '⭐' : '—',
                  'الحكم': (o.edge == null) ? '—' : (o.edge >= 0 ? '🟢 الهدفُ في المدى' : '🔴 أبعدُ من التعادل') };
       }));
     }
@@ -21408,7 +21441,16 @@ const CHAN_FLAT = 0.50;
       + ' (' + Math.round(100 * nBad / out.length) + '٪)');
     L.push('② خططٌ **وقفُها دون 1.5 يومٍ عاديّ** (يُضرَب بالضجيج): **' + nTight + '** من ' + out.length
       + ' (' + Math.round(100 * nTight / out.length) + '٪)');
-    L.push('③ أُسقطت: بلا شموع ' + skipped.noData + ' · تاريخٌ أقصرُ من ' + MINPAST + ' جلسة ' + skipped.shortHistory
+    L.push('③ ⭐ **القسمةُ بالوسم**: ذهبيّة **' + G.length + '** · غيرُ ذهبيّة **' + NG.length + '**'
+      + (!G.length
+          ? ' — **ولا خطّةَ ذهبيّةً واحدةً في السجلّ**، فكلُّ ما قيس أعلاه **ليس ما يبيعه التطبيق**.'
+          : ((_eG != null && _eN != null)
+              ? (' · الفارقُ عن التعادل: ذهبيّة **' + F(_eG, 1) + '** مقابل **' + F(_eN, 1) + '**'
+                 + ((_eG - _eN) > 2 ? ' ⇒ **البوّابةُ تختار هندسةً أفضل**'
+                    : ((_eN - _eG) > 2 ? ' ⇒ ⚠️ **البوّابةُ تختار هندسةً أسوأ**'
+                       : ' ⇒ **لا فرقَ يُذكر — الوسمُ لا يميّز هندسةً**')))
+              : '')));
+    L.push('④ أُسقطت: بلا شموع ' + skipped.noData + ' · تاريخٌ أقصرُ من ' + MINPAST + ' جلسة ' + skipped.shortHistory
       + ' · أرقامٌ غيرُ متّسقة ' + skipped.badNums);
     L.push('');
     L.push('▸ **وهذا وصفُ هندسةٍ لا حكمُ ربح**: يقول هل الهدفُ **ممكنٌ** تاريخياً، لا هل سيقع.');

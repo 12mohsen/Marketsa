@@ -2482,7 +2482,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-11-02-v686';
+window.APP_BUILD = '2026-11-02-v687';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2493,6 +2493,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v687', '🧬 **ثالثُ كتابةٍ للأداة — وكلُّ كتابةٍ ردَّها قياسُها.** v685 رسّبت 270 من 270، وv686 رسّبت **198 من 270 (73٪)** — وثلاثةٌ وسبعون بالمئة ليست إصلاحاً. ▸ **والعلّةُ وسمٌ وضعتُه أنا**: 205 من 290 قفزةً كانت «حدثاً رأسماليّاً» (خام ← خام)، وجعلتُها تُعلِّم السهمَ مكسوراً. **وسلسلةٌ خامٌ فيها أحداثٌ رأسمالية هي الحالةُ الطبيعيةُ للبيانات الخام**: 205 حدثاً على 270 رمزاً في 5.3 سنةٍ ≈ حدثٌ لكلّ سهمٍ كلَّ خمسِ سنوات، وهو عينُ ما تنتجه التجزئاتُ والتوزيعاتُ الحقيقية. **فصار «رأسماليّ» إخباريّاً لا يُعلِّم عطلاً.** ▸ 🔎 **وما أعطاه جريانُ v686 وكان ثمنَه**: ① **117 قفزةً من 407 في 12 يوماً** — قريبُ الثلثِ أثرُ مزامنةٍ لا شذوذُ سهم · ② **و«تبديلُ الأساس» ليس حدّاً واحداً عند تاريخ بل صفوفٌ مفردةٌ تدخل وتخرج في أيّام**: 6050 في 08-25 و09-03 و09-20 و09-21 · 2360 في 09-22 و09-23 و09-24 · 6040 في 10-01 و10-02 · 1213 في 07-13 و07-15 و08-17 — **فـ53 قفزةً تعني نحو 26 حادثة، قائمةٌ قصيرةٌ تُصلَح لا قاعدةٌ تُهدَم** · ③ **والمعاملُ ثابتٌ لكلّ سهم**: 6050 ← 3.38 · 3.51 · 3.03 · 3.21 · 2360 ← 3.375 · 3.337 · 4270 ← 9.40 · 6040 ← 5.06 · 2001 ← 4.50 — **ومعاملٌ ثابتٌ للسهم الواحد بصمةُ تعديلِ تجزئةٍ لا سعرٌ عشوائيّ**. ▸ 🧬 **والمِيكانيكا وُجدت في الكود لا ظُنّت**: لا ملفَّ يكتب `adjclose` — الكتّابُ الأربعةُ كلُّهم يقرأون `indicators.quote[0].close`، لكنّ ياهو **يُعيد تعديلَ التاريخِ كلِّه إلى الخلف عند كلّ تجزئة**، و`sync-historical` تكتب **نافذةً حديثةً لا السلسلةَ كلَّها** (5398 صفّاً لـ270 رمزاً ≈ 20 صفّاً للرمز، بنصّ ملفّ حادثة 12 أكتوبر). فبعد التجزئة **تُكتب الصفوفُ الحديثةُ مقسومةً وتبقى القديمةُ غيرَ مقسومة** — كاتبان ونافذتان = أساسان في سلسلةٍ واحدة. **عائلةُ العطل نفسُها: تعريفان لشيءٍ واحد.** ▸ 🧾 **فأُضيف `updated_at` إلى الجلب ويُطبع لكلّ حادثة**: إن خالف «كُتبت يوم» عصرَ سلسلتها **فالمِيكانيكا مُثبَتة**، وإن تطابقا **فالفرضيةُ مردودةٌ ويُبحَث عن غيرها — ولا يُرقَّع قبل ذلك**. ▸ ⚖️ **وتعريفُ الحادثة مربوطٌ بانقطاعٍ مقيس**: قفزةٌ تُبدّل الأساسَ ثمّ قفزةٌ تردُّه خلال 15 جلسةً = حادثةٌ واحدة · وقفزةٌ لا تُردّ = **عصران في سلسلة**. وبهذا **لا تُعَدّ مصادفاتُ التقريب حوادثَ** لأنّها لا تُنتج قفزةً أصلاً. ▸ 🧪 **وتُسع حالاتٍ مُصطنعةٍ اختُبرت على الكود المستخرَج من `index.html` نفسِه**: ومنها علّةُ v685 (متناوبٌ 150/150 ⇒ نظيف) وعلّةُ v686 (رأسماليّ ⇒ إخباريّ) وحادثةُ تلوّثٍ بخمسة صفوفٍ كُتبت في عصرٍ مختلف ⇒ تُرصَد بتاريخها ومعاملِها ويومِ كتابتها. ▸ **وجُرّب `rawDec:3` فلم يكتشف شيئاً** — نقل 12 قفزةً من خانةٍ إلى خانةٍ بتوسيع التعريف. والقرينةُ أنّ في السلاسل نفسِها 12.298666 و13.973333، **ذيولٌ دوريّةٌ بصمتُها قسمةٌ على ٣** أي بصمةُ تعديل، فـ65.775 و10.496 معدَّلتان وقعتا على ثلاثِ خاناتٍ مصادفةً. 🔬 قراءةٌ محضةٌ كما كانت: لا تكتب صفّاً ولا تحذفه'],
     ['v686', '🧱 **أداتي الجديدةُ رسَّبت 270 من 270 — ومئةٌ بالمئة ليست نتيجةً بل إعلانُ فشلِ المقياس.** `histBreaks` التي بنيتُها في v685 حكمت على **كلّ رمزٍ في السوق** بأنّه مكسور. وثلاثةُ أعطالٍ كانت فيها، فُحِصت ولم تُظنّ: ▸ **① «صيغتان للسعر» باطلةٌ من أصلها**: كانت تُعَدّ **بعدد كسور الإغلاق**، وفحصتُ خمسةَ عشرَ رقماً من مخرجاتها فكلُّها **أعدادُ float32 مضبوطة** — فـ44 و150.3000030517578 **أساسٌ واحدٌ لا أساسان**، والفرقُ أنّ 150.3 لا يُمثَّل بدقّةٍ في الثنائيّ و44 يُمثَّل. **فكانت تقيس خاصّةَ الرقم لا خاصّةَ البيانات.** ودليلُها في مخرجاتها نفسِها: عدّت لـ7202 **587 تحوّلاً** — وأساسٌ لا يتغيّر 587 مرّة. ▸ **② و«جلساتٌ لم تقع» بلا مسطرة**: حُكِم عليها **بوجودها** لا بزيادتها، وخمسةٌ وخمسون صفّاً ساكناً **عُرفُ السوق لا شذوذُ سهم** — وعشراتُ الرموز تشترك في التاريخ الأوّل نفسِه 2021-10-11، فهو حشوٌ من المصدر. ▸ **③ والقفزاتُ رُتّبت بالرمز وكان يلزم ترتيبُها بالتاريخ**: في عمود «أعنفُها» وحده تكرّر 2021-09-01 أربعاً و2025-04-13 أربعاً و2025-04-03 أربعاً — **وأربعةُ أسهمٍ لا تقفز 16٪–60٪ في اليومِ نفسِه مصادفةً: يومُ مزامنةٍ واحدٌ مكسور، لا أربعةُ أسهم**. ▸ 🔑 **فأُعيدت كتابتُها كاملةً.** والأساسُ يُقاس الآن بـ**أصغرِ عددِ كسورٍ يُنتج الرقمَ المخزَّن**: فالسعرُ المتداولُ يُعلَن بخانتَين، فما كان صورةَ عددٍ بخانتَين أو أقلّ فهو **خام** (150.3000030517578 ← 150.3 · 7.25 · 44 · 91.75)، وما لم يكن فهو **معدَّل** (59.4517936706543 · 19.433332443237305)، وما ليس صورةَ float32 أصلاً **أصلٌ ثالثٌ يُعَدّ وحده**. ▸ 🔗 **وبوصلِ القفزةِ بحالةِ الأساس عندها انفتحت ثلاثةُ أحكامٍ لا حكم**: خام ← معدَّل = **تبديلُ أساسٍ لا حركةُ سعر** (4270: 7.25 ← 68.147 · 2360: 17.18 ← 57.98 · 6050: 19.43 ← 65.70) · وخام ← خام بقفزةٍ كبيرة = **حدثٌ رأسماليٌّ لم يُعدَّل** (7202: 150.3 ← 319.6 ×2.13) · ومعدَّل ← معدَّل = **صفٌّ مشبوهٌ فعلاً** (7040: 10.33 ← 22.82). **والنسخةُ السابقةُ خلطت الثلاثةَ في كلمةٍ واحدة.** ▸ 🧮 و«الأساسان» لا تُعَدّان بل يُفحَص لهما **حدٌّ واحدٌ نقيّ**: أساسٌ حقيقيٌّ يتبدّل **مرّةً عند تاريخ** ولا يتناوب — وما لم يبلغ نقاؤه 98٪ يُسمّى «مختلطٌ بلا حدّ» **ولا يُعَدّ عطلاً**. ▸ 📅 **والأيّامُ تُطبع قبل الرموز**: يومٌ قفز فيه خمسةُ رموزٍ أو أكثر **يُخصَم من حساب السهم** ويُحمَّل على المزامنة. ▸ 🧪 **ولم تُسلَّم قبل أن تُختبَر**: ثماني حالاتٍ مُصطنعةٍ تغطّي الفروعَ كلَّها — ومنها **علّةُ v685 نفسُها** (سلسلةٌ خامُها ومعدَّلُها متناوبان 150/150) تمرّ الآن **نظيفةً**، وستُّ سلاسلَ تقفز في اليومِ نفسِه **لا يُعَدّ أيُّها مكسوراً**. 🔬 قراءةٌ محضةٌ كما كانت: لا تكتب صفّاً ولا تحذفه'],
     ['v685', '🧱 **أداةٌ ترى عطلاً في رمزٍ واحدٍ ولا نظيرَ لها على السوق أداةٌ ناقصة.** كشف `histInspect(«4270»)` في سلسلةٍ واحدةٍ ثلاثةَ أعطالٍ معاً: **قفزةُ +840٪ في جلسة** (7.25 ← 68.15 في 2026-09-27 وحدُّ السوق اليومي ±10٪) · **صيغتان للسعر في سلسلةٍ واحدة** (59.4517936706543 المعدَّل مقابل 44 الخام) · **وجلستان حجمُهما صفرٌ وفتحُهما = أعلاها = أدناها = إغلاقُها**. ▸ **وثلاثُ فجواتٍ عامّةٍ تُفسّرها**: `histDupeScan` تشترط «الحجم > 0» **فهي عمياءُ بالتعريف** عن الصفوف الساكنة — ولذلك طمْأنت بـ0.17٪ · و`histInspect` رمزٌ واحدٌ عند الطلب لا مسحٌ للسوق · وحارسُ الأساس طبع «✅ متطابق من 249 رمز» **وهذا السهمُ يقفز 840٪**، فهو يقيس شيئاً غير الذي يُقرأ منه. ▸ فأُضيفت `histBreaks()`: تمرّ على رموز القاعدة (من `symbol_stats` لا من آخر مسح) وتعدّ لكلٍّ منها القفزاتَ المستحيلةَ والصفوفَ الساكنةَ واختلاطَ الأساسَين، **وترتّب الأسوأَ أوّلاً**، وتطبع عمود «صفوفٌ في رموزٍ مكسورة» — **لأنّ سلسلةً فيها قفزةٌ واحدةٌ مشكوكٌ فيها كلُّها**، فالقفزةُ تعني أنّ الأساسَ تغيّر فما قبلها وما بعدها لا يُقارَنان. ▸ **وقيمتُها تتجاوز هذا السهم**: الـ42 صفقةً في `gtRun` و`pHit` وهندسةُ `planGeom` **كلُّها مبنيةٌ على هذه السلاسل**. ▸ **وحدودُها مكتوبةٌ قبل أرقامها**: القفزةُ **مرشَّحٌ لا حُكم** (كسرُ مقياسٍ · أو تجزئةٌ لم تُعدَّل · أو عودةُ سهمٍ موقوف — وثلاثتُها تُفسِد القياسَ سواءً) · والصفُّ الساكنُ قد يكون إيقافاً حقيقياً **لكنّه ليس شمعةً تُقاس** · و«صيغتان» دليلٌ لا إثبات · وما لم يُجلب لم يُفحَص **ولا يُقال عنه نظيف**. 🔬 قراءةٌ محضة: لا تكتب صفّاً ولا تحذفه'],
     ['v684', '⭐ **قسمةُ `planGeom` بالوسم الذهبيّ — والنتيجةُ صفرٌ من 94.** أُضيف شقُّ الجدول إلى «⭐ ذهبيّة» و«عاديّة» ليُقارَن ما يُعلَن بما يُقاس. ▸ **وما خرج أوقفَ الإعلان**: `_snGolden` **لم يمرّ ولا مرّةً واحدة** — لا في 6293 عيّنةً في المختبَر، ولا في الـ94 خطّةً المسجَّلة. ▸ فكلُّ ما قيس — الهندسةُ و`pHit` والـ42 صفقة — **يصف الحوضَ غيرَ الذهبيّ لا المنتَجَ المُعلَن**. وهذه حقيقةٌ تُقال للمالك قبل أيّ عرضٍ للبيع'],
@@ -23765,73 +23766,71 @@ const CHAN_FLAT = 0.50;
 
 
   /* ══════════════════════════════════════════════════════════════════════
-     🧱 histBreaks() — أيُّ الأيّامِ مكسورٌ وأيُّ الرموزِ — ولا يُخلَطان
+     🧱 histBreaks() — حوادثُ تلوّثٍ معدودةٌ بتواريخها، لا رموزٌ تُوصَف بـ«مكسور»
 
-     🩹 إعادةُ كتابةٍ كاملةٍ لنسخة v685. تلك طبعت «270 من 270 مكسور» —
-     ومئةٌ بالمئة ليست نتيجةً بل **إعلانُ فشلِ المقياس**. وثلاثةُ أعطالٍ
-     كانت فيها، فُحِصت ولم تُظنّ:
+     🩹 ثالثُ كتابةٍ. وكلُّ كتابةٍ ردَّها قياسُها:
+     ▸ v685 رسَّبت **270 من 270**. والعلّةُ أنّها عدّت «صيغتَي سعر» **بعدد
+       كسور الإغلاق** — وكلُّ الأرقام أعدادُ float32 مضبوطة، فـ44
+       و150.3000030517578 أساسٌ واحد. **كانت تقيس خاصّةَ الرقم لا البيانات.**
+     ▸ v686 رسَّبت **198 من 270 (73٪)**. والعلّةُ وسمٌ وضعتُه أنا: **205 من
+       290 قفزةً كانت «حدثاً رأسماليّاً» (خام ← خام)، وجعلتُها تُعلِّم السهمَ
+       مكسوراً.** وسلسلةٌ خامٌ فيها أحداثٌ رأسمالية **هي الحالةُ الطبيعيةُ
+       للبيانات الخام**: 205 حدثاً على 270 رمزاً في 5.3 سنةٍ ≈ حدثٌ لكلّ
+       سهمٍ كلَّ خمسِ سنوات، وهو ما تنتجه التجزئاتُ والتوزيعاتُ الحقيقية.
+       **فصار «رأسماليّ» إخباريّاً لا يُعلِّم عطلاً.**
 
-     ① «صيغتان للسعر» كانت تُعَدّ **بعدد كسور الإغلاق** — وهذا باطل.
-        خمسةَ عشرَ رقماً من مخرجاتها كلُّها أعدادُ float32 مضبوطة: فـ44
-        و150.3000030517578 **أساسٌ واحدٌ لا أساسان**، والفرقُ أنّ 150.3
-        لا يُمثَّل بدقّةٍ في الثنائيّ و44 يُمثَّل. **فكانت تقيس خاصّةَ
-        الرقم لا خاصّةَ البيانات** — ودليلُها أنّها عدّت لـ7202 **587
-        تحوّلاً**، وأساسٌ لا يتغيّر 587 مرّة.
-     ② «جلساتٌ لم تقع» كانت تُحكَم **بوجودها** لا بزيادتها. وخمسةٌ
-        وخمسون صفّاً ساكناً **عُرفُ السوق لا شذوذُ سهم** — وعشراتُ
-        الرموز تشترك في التاريخ الأوّل نفسِه 2021-10-11، فهو حشوٌ من
-        المصدر لا عطلٌ في السهم.
-     ③ والقفزاتُ رُتّبت **بالرمز** وكان يلزم ترتيبُها **بالتاريخ**: في
-        عمود «أعنفُها» وحده تكرّر 2021-09-01 أربعاً و2025-04-13 أربعاً
-        و2025-04-03 أربعاً. وأربعةُ أسهمٍ لا تقفز في اليومِ نفسِه
-        مصادفةً — **يومُ مزامنةٍ واحدٌ مكسور، لا أربعةُ أسهمٍ مكسورة**.
+     🔎 وما أعطاه جريانُ v686 وكان ثمنَه — ثلاثةُ أشياءَ مقيسة:
+     ① **117 قفزةً من 407 تقع في 12 يوماً** — قريبُ الثلثِ أثرُ مزامنةٍ لا
+        شذوذُ سهم. فالأيّامُ تُطبع قبل الرموز.
+     ② **و«تبديلُ الأساس» ليس حدّاً واحداً عند تاريخ — بل صفوفٌ مفردةٌ
+        مُلوَّثةٌ تدخل وتخرج في أيّام**: 6050 في 08-25 و09-03 و09-20 و09-21 ·
+        2360 في 09-22 و09-23 و09-24 · 6040 في 10-01 و10-02 · 1213 في 07-13
+        و07-15 و08-17. **فـ53 قفزةً تعني نحو 26 حادثة** — قائمةٌ قصيرةٌ
+        تُصلَح، لا قاعدةٌ تُهدَم.
+     ③ **والمعاملُ ثابتٌ لكلّ سهم**: 6050 ← 3.38 · 3.51 · 3.03 · 3.21 ·
+        2360 ← 3.375 · 3.337 · 4270 ← 9.40 · 6040 ← 5.06 · 2001 ← 4.50.
+        **ومعاملٌ ثابتٌ للسهم الواحد بصمةُ تعديلِ تجزئةٍ لا سعرٌ عشوائيّ.**
 
-     🔑 والمقياسُ الصحيحُ للأساس: **أصغرُ عددِ كسورٍ يُنتج الرقمَ
-        المخزَّن**. فالسعرُ المتداولُ يُعلَن بخانتَين، فما كان صورةَ
-        عددٍ بخانتَين أو أقلّ فهو **خام**، وما لم يكن فهو **معدَّل**:
-            150.3000030517578 ← صورةُ 150.3   (كسرٌ واحد)  ⇒ خام
-            7.25 · 44 · 91.75                 (≤ خانتان)  ⇒ خام
-            59.4517936706543 · 19.433332443237305         ⇒ معدَّل
-        وما ليس صورةَ float32 أصلاً **أصلٌ ثالثٌ يُعَدّ وحده**.
+     🧬 والمِيكانيكا وُجدت في الكود لا ظُنّت: **لا ملفَّ يكتب `adjclose`** —
+        الكتّابُ الأربعةُ كلُّهم يقرأون `indicators.quote[0].close`. لكنّ
+        ياهو **يُعيد تعديلَ التاريخِ كلِّه إلى الخلف عند كلّ تجزئة**، و
+        `sync-historical` تكتب **نافذةً حديثةً لا السلسلةَ كلَّها** (5398
+        صفّاً لـ270 رمزاً ≈ 20 صفّاً للرمز في التشغيل الواحد، بنصّ ملفّ
+        حادثة 12 أكتوبر). فبعد التجزئة **تُكتب الصفوفُ الحديثةُ مقسومةً
+        وتبقى القديمةُ غيرَ مقسومة**. كاتبان ونافذتان = أساسان في سلسلةٍ
+        واحدة — **عائلةُ العطل نفسُها: تعريفان لشيءٍ واحد**.
 
-     🔗 وبوصلِ القفزةِ بحالةِ الأساس عندها تنفتح **ثلاثةُ أحكامٍ** لا حكم:
-        ▸ خام ← معدَّل (أو العكس) = **تبديلُ أساس** · لا حركةُ سعر
-          4270: 7.25 ← 68.147 · 2360: 17.18 ← 57.98 · 6050: 19.43 ← 65.70
-        ▸ خام ← خام بقفزةٍ كبيرة = **حدثٌ رأسماليٌّ لم يُعدَّل**
-          7202: 150.3 ← 319.6 (×2.13)
-        ▸ معدَّل ← معدَّل بقفزةٍ كبيرة = **صفٌّ مشبوهٌ فعلاً**
-          7040: 10.33 ← 22.82
-        **والنسخةُ السابقةُ خلطت الثلاثةَ في كلمةٍ واحدة: «مكسور».**
+     🧾 ولذلك يُجلب `updated_at` ويُطبع لكلّ حادثة: فإن صحّت الفرضيةُ وجب
+        أن تتجمّع صفوفُ الحادثة في **عصرِ كتابةٍ يخالف عصرَ سلسلتها**.
+        **وهذا هو الفحصُ الذي يُثبت المِيكانيكا أو يردُّها.**
 
-     🧮 و«الأساسان» لا تُعَدّان بل يُفحَص لهما **حدٌّ واحد**: أنقى موضعٍ
-        يفصل السلسلةَ إلى خامٍ ثمّ معدَّلٍ (أو العكس). فأساسٌ حقيقيٌّ
-        يتبدّل **مرّةً واحدةً عند تاريخ**، لا يتناوب. وما لم يبلغ نقاؤه
-        العتبةَ يُسمّى «مختلطٌ بلا حدّ» **ولا يُعَدّ عطلاً** — لأنّه
-        الأرجحُ مصادفاتُ تقريبٍ لا اختلاطَ أساسَين.
+     ⚖️ وتعريفُ الحادثة مربوطٌ بانقطاعٍ مقيسٍ لا بتناوبِ تقريب: **قفزةٌ
+        تُبدّل الأساسَ ثمّ قفزةٌ تردُّه خلال RUNMAX جلسةً = حادثةٌ واحدة**.
+        وقفزةٌ تُبدّله ولا تردُّه = **تبديلٌ دائم** (عصران في سلسلة).
+        وبهذا لا تُعَدّ المصادفاتُ حوادثَ — لأنّها لا تُنتج قفزةً أصلاً.
 
-     ⚠️ وحدودُها — تُقال قبل أرقامها لا بعدها:
-     ① «يومٌ عامّ» **وصفٌ لا سبب**: تواترُ القفزاتِ في يومٍ واحدٍ يقول
-        إنّ العلّةَ في اليوم لا في السهم، **ولا يقول ما جرى ذلك اليوم**.
-     ② قاعدةُ الخانتَين تفترض أنّ التداولَ بخانتَين. فإن كان في السوق ما
-        يُقتبَس بثلاث، عُدَّ **معدَّلاً وهو خام** — والمَعلَمُ rawDec
-        مفتوحٌ لتجريبه بـ3.
-     ③ والساكنُ بحجمٍ صفرٍ قد يكون إيقافاً حقيقياً سجّله السوق — لكنّه
-        بأيِّ حالٍ ليس شمعةً تُقاس.
+     ⚠️ وحدودُها:
+     ① «يومٌ عامّ» وصفٌ لا سبب — يقول إنّ العلّةَ في اليوم، لا ما جرى فيه.
+     ② خاناتُ السعر المتداوَل مفترضةٌ اثنتان. وجُرّبت ثلاثٌ فلم تكتشف شيئاً:
+        نقلت 12 قفزةً من خانةٍ إلى خانة. والقرينةُ أنّ في السلاسل نفسِها
+        12.298666 و13.973333 — **ذيولٌ دوريّةٌ بصمتُها قسمةٌ على ٣**، أي
+        بصمةُ تعديل. فـ65.775 و10.496 معدَّلتان وقعتا على ثلاثٍ مصادفةً.
+     ③ والساكنُ بحجمٍ صفرٍ قد يكون إيقافاً حقيقياً — لكنّه ليس شمعةً تُقاس.
      ④ وما لم يُجلب لم يُفحَص **ولا يُقال عنه نظيف**.
-     🔬 قراءةٌ محضة — لا تكتب صفّاً ولا تحذفه ولا تمسّ كاشاً.
-        والإيقاف وسطَ المسح:  histBreaksStop = true
+     🔬 قراءةٌ محضة — لا تكتب صفّاً ولا تحذفه. والإيقاف: histBreaksStop = true
      ══════════════════════════════════════════════════════════════════════ */
   window.histBreaksStop = false;
   window.histBreaks = _adminTool('histBreaks', async function (opts) {
     opts = opts || {};
     if (typeof sb === 'undefined' || !sb) { console.warn('🧱 لا اتصالَ بالقاعدة.'); return null; }
 
-    const JUMP   = (+opts.jump > 0) ? +opts.jump : 12;            // ٪ حركةُ إغلاقٍ فوق حدّ ±10٪
-    const RAWDEC = (opts.rawDec === undefined) ? 2 : +opts.rawDec; // خاناتُ السعر المتداوَل
-    const MINM   = (+opts.minMix > 0) ? +opts.minMix : 20;         // أقلُّ صفوفٍ لكلّ جانبٍ من الحدّ
-    const PURE   = (+opts.pure > 0) ? +opts.pure : 0.98;           // نقاءُ الحدّ الذي يُعَدّ تبديلاً
-    const DAYMIN = (+opts.dayMin > 0) ? +opts.dayMin : 5;          // رموزٌ في يومٍ واحدٍ = يومٌ عامّ
-    const SMULT  = (+opts.staleMult > 0) ? +opts.staleMult : 2.5;  // مضاعفُ وسيطِ الساكنة
+    const JUMP   = (+opts.jump > 0) ? +opts.jump : 12;
+    const RAWDEC = (opts.rawDec === undefined) ? 2 : +opts.rawDec;
+    const RUNMAX = (+opts.runMax > 0) ? +opts.runMax : 15;   // أطولُ حادثةٍ تُعَدّ تلوّثاً عابراً
+    const MINM   = (+opts.minMix > 0) ? +opts.minMix : 20;
+    const PURE   = (+opts.pure > 0) ? +opts.pure : 0.98;
+    const DAYMIN = (+opts.dayMin > 0) ? +opts.dayMin : 5;
+    const SMULT  = (+opts.staleMult > 0) ? +opts.staleMult : 2.5;
     const SHOW   = (opts.show === undefined) ? 60 : +opts.show;
     const LIM    = (+opts.limit > 0) ? +opts.limit : 0;
     const WANT   = (+opts.want > 0) ? +opts.want : 4000;
@@ -23848,8 +23847,9 @@ const CHAN_FLAT = 0.50;
       return 'A';
     };
     const AR = { R: 'خام', A: 'معدَّل', D: 'مزدوج', '': '—' };
+    const _uDay = function (r) { const u = String((r && r.updated_at) || ''); return u ? u.slice(0, 10) : ''; };
 
-    /* ① الكونُ: رموزُ القاعدة نفسِها — لا رموزُ آخر مسح */
+    /* ① الكونُ: رموزُ القاعدة نفسِها */
     let syms = [], src = '';
     if (opts.sym) { syms = [String(opts.sym)]; src = 'رمزٌ واحدٌ مُمرَّر'; }
     else if (Array.isArray(opts.syms) && opts.syms.length) { syms = opts.syms.map(String); src = 'قائمةٌ مُمرَّرة'; }
@@ -23868,24 +23868,22 @@ const CHAN_FLAT = 0.50;
     }
     syms = Array.from(new Set(syms)).sort();
     if (LIM) syms = syms.slice(0, LIM);
-    if (!syms.length) { console.warn('🧱 لا رموزَ — لا symbol_stats ولا نتائجَ مسح. شغّل المسحَ أوّلاً أو مرّر {syms:[...]}'); return null; }
+    if (!syms.length) { console.warn('🧱 لا رموزَ — لا symbol_stats ولا نتائجَ مسح.'); return null; }
 
-    console.log('%c🧱 histBreaks — الأيّامُ أوّلاً ثمّ الرموز · ' + syms.length + ' رمزاً',
-      'color:#f43f5e;font-weight:bold;font-size:14px');
+    console.log('%c🧱 histBreaks — حوادثُ التلوّث بتواريخها · ' + syms.length + ' رمزاً', 'color:#f43f5e;font-weight:bold;font-size:14px');
     console.log('   المصدر: ' + src);
-    console.log('   الحدود: قفزة > ±' + JUMP + '٪ · خامٌ ≤ ' + RAWDEC + ' خانة · نقاءُ الحدّ ≥ ' + (PURE * 100).toFixed(0) + '٪ وجانبٌ ≥ ' + MINM + ' صفّاً · يومٌ عامّ ≥ ' + DAYMIN + ' رموز');
-    console.log('   ⏳ رمزان في الثانية تقريباً. والإيقاف: histBreaksStop = true');
+    console.log('   الحدود: قفزة > ±' + JUMP + '٪ · خامٌ ≤ ' + RAWDEC + ' خانة · حادثةٌ ≤ ' + RUNMAX + ' جلسة · يومٌ عامّ ≥ ' + DAYMIN + ' رموز');
+    console.log('   ⏳ رمزان في الثانية. والإيقاف: histBreaksStop = true');
 
     const out = [], failed = [];
     let scanned = 0, totRows = 0;
 
-    /* ② مرورٌ أوّل — يجمع ولا يحكم */
     for (let k = 0; k < syms.length; k++) {
-      if (window.histBreaksStop) { console.warn('🧱 أُوقف بطلبك عند ' + k + ' من ' + syms.length + ' — فالمطبوعُ جزئيٌّ لا كامل.'); break; }
+      if (window.histBreaksStop) { console.warn('🧱 أُوقف بطلبك عند ' + k + ' من ' + syms.length + ' — فالمطبوعُ جزئيّ.'); break; }
       const sy = syms[k];
       let d = null;
       try {
-        d = await _sbPagedRows('historical_prices', 'd,o,h,l,c,v',
+        d = await _sbPagedRows('historical_prices', 'd,o,h,l,c,v,updated_at',
           function (q) { return q.eq('symbol', sy).order('d', { ascending: true }); }, WANT);
       } catch (e) { failed.push({ 'الرمز': sy, 'السبب': (e && e.message) || String(e) }); }
       if (!Array.isArray(d) || d.length < 2) {
@@ -23896,12 +23894,13 @@ const CHAN_FLAT = 0.50;
       scanned++; totRows += d.length;
 
       let nR = 0, nA = 0, nD = 0, nStale = 0, staleFirst = null;
-      const jl = [], seq = [];
+      const jl = [], seq = [], uAll = {};
       for (let i = 0; i < d.length; i++) {
         const o = +d[i].o, h = +d[i].h, l = +d[i].l, c = +d[i].c, v = +d[i].v;
         const kc = _cls(c);
         if (kc === 'R') nR++; else if (kc === 'A') nA++; else if (kc === 'D') nD++;
         if (kc === 'R' || kc === 'A') seq.push({ k: kc, d: d[i].d });
+        const ud = _uDay(d[i]); if (ud) uAll[ud] = (uAll[ud] || 0) + 1;
         if (v === 0 && o === h && h === l && l === c && c > 0) { nStale++; if (!staleFirst) staleFirst = d[i].d; }
         if (i > 0) {
           const a = +d[i - 1].c;
@@ -23910,13 +23909,27 @@ const CHAN_FLAT = 0.50;
             if (Math.abs(p) > JUMP) {
               const ka = _cls(a);
               const kind = (ka && kc && ka !== kc) ? 'basis' : ((kc === 'R') ? 'corp' : 'row');
-              jl.push({ d: d[i].d, p: p, from: a, to: c, ka: ka, kb: kc, kind: kind });
+              jl.push({ i: i, d: d[i].d, p: p, from: a, to: c, ka: ka, kb: kc, kind: kind, u: _uDay(d[i]) });
             }
           }
         }
       }
 
-      /* ③ أنقى حدٍّ واحدٍ يفصل أساساً عن أساس — لا عدُّ تناوبات */
+      /* ② الحوادث: تبديلٌ ثمّ ردٌّ خلال RUNMAX = حادثة · وتبديلٌ بلا ردٍّ = عصران */
+      const bjs = jl.filter(function (j) { return j.kind === 'basis'; });
+      const eps = [], perm = [];
+      for (let z = 0; z < bjs.length;) {
+        const a = bjs[z], b = bjs[z + 1];
+        if (b && (b.i - a.i) <= RUNMAX && b.kb === a.ka) {
+          const us = {};
+          for (let q2 = a.i; q2 < b.i; q2++) { const ud = _uDay(d[q2]); if (ud) us[ud] = (us[ud] || 0) + 1; }
+          eps.push({ from: a.d, to: d[b.i - 1].d, back: b.d, n: b.i - a.i, cls: a.kb,
+                     pin: a.p, pout: b.p, fac: (a.to / a.from), uDays: Object.keys(us).sort() });
+          z += 2;
+        } else { perm.push(a); z += 1; }
+      }
+
+      /* ③ أنقى حدٍّ واحد — عرضٌ فقط، لا حكم */
       let split = null;
       if (seq.length >= 2 * MINM) {
         let pR = 0, pA = 0, best = null;
@@ -23924,19 +23937,17 @@ const CHAN_FLAT = 0.50;
         const totA = seq.length - totR;
         for (let i = 0; i < seq.length; i++) {
           if (seq[i].k === 'R') pR++; else pA++;
-          const left = i + 1, right = seq.length - left;
-          if (left < MINM || right < MINM) continue;
-          const pur1 = (pA + (totR - pR)) / seq.length;   // معدَّلٌ ثمّ خام
-          const pur2 = (pR + (totA - pA)) / seq.length;   // خامٌ ثمّ معدَّل
-          const pur = Math.max(pur1, pur2);
-          if (!best || pur > best.pur) best = { pur: pur, at: (seq[i + 1] ? seq[i + 1].d : seq[i].d), dir: (pur1 >= pur2 ? 'معدَّل ← خام' : 'خام ← معدَّل') };
+          if (i + 1 < MINM || seq.length - i - 1 < MINM) continue;
+          const pur = Math.max((pA + (totR - pR)) / seq.length, (pR + (totA - pA)) / seq.length);
+          if (!best || pur > best.pur) best = { pur: pur, at: (seq[i + 1] ? seq[i + 1].d : seq[i].d) };
         }
-        if (best && best.pur >= PURE) split = best;
-        else if (best) split = { pur: best.pur, at: null, dir: null };
+        if (best) split = { pur: best.pur, at: (best.pur >= PURE ? best.at : null) };
       }
 
-      out.push({ sym: sy, n: d.length, nR: nR, nA: nA, nD: nD, nStale: nStale, staleFirst: staleFirst,
-                 jumps: jl, split: split, from: d[0].d, to: d[d.length - 1].d });
+      const uTop = Object.keys(uAll).sort(function (x, y) { return uAll[y] - uAll[x]; }).slice(0, 2);
+      out.push({ sym: sy, n: d.length, nR: nR, nA: nA, nD: nD, dom: (nR >= nA ? 'R' : 'A'),
+                 nStale: nStale, staleFirst: staleFirst, jumps: jl, eps: eps, perm: perm,
+                 split: split, uTop: uTop, from: d[0].d, to: d[d.length - 1].d });
 
       if ((k + 1) % 20 === 0) console.log('   … ' + (k + 1) + '/' + syms.length);
       await new Promise(function (r) { setTimeout(r, 120); });
@@ -23944,126 +23955,136 @@ const CHAN_FLAT = 0.50;
 
     if (!scanned) { console.warn('🧱 لم يُفحَص رمزٌ واحد.'); return { src: src, scanned: 0, failed: failed }; }
 
-    /* ④ الأيّامُ أوّلاً — لأنّ يوماً مكسوراً يُتلف رموزاً كثيرةً بلا ذنب */
+    /* ④ الأيّامُ أوّلاً */
     const byDay = {};
-    out.forEach(function (x) {
-      x.jumps.forEach(function (j) {
-        const b = byDay[j.d] || (byDay[j.d] = { d: j.d, n: 0, basis: 0, corp: 0, row: 0, syms: [] });
-        b.n++; b[j.kind]++; if (b.syms.length < 6) b.syms.push(x.sym);
-      });
-    });
+    out.forEach(function (x) { x.jumps.forEach(function (j) {
+      const b = byDay[j.d] || (byDay[j.d] = { d: j.d, n: 0, basis: 0, corp: 0, row: 0, syms: [] });
+      b.n++; b[j.kind]++; if (b.syms.length < 6) b.syms.push(x.sym);
+    }); });
     const days = Object.keys(byDay).map(function (k) { return byDay[k]; }).sort(function (a, b) { return b.n - a.n || (a.d < b.d ? -1 : 1); });
-    const wide = {};
-    days.forEach(function (o) { if (o.n >= DAYMIN) wide[o.d] = o.n; });
+    const wide = {}; days.forEach(function (o) { if (o.n >= DAYMIN) wide[o.d] = o.n; });
     const nWide = Object.keys(wide).length;
 
-    console.log('%c📅 أيّامٌ قفز فيها رموزٌ كثيرةٌ معاً — ' + nWide + ' يوماً بلغ ' + DAYMIN + ' رموزٍ أو أكثر',
-      'color:#f59e0b;font-weight:bold;font-size:13px');
-    const dShow = days.filter(function (o) { return o.n >= 2; });
-    if (!dShow.length) console.log('   — لا يومَ تكرّرت فيه قفزتان. فالقفزاتُ كلُّها فُرادى.');
+    console.log('%c📅 أيّامٌ قفز فيها ' + DAYMIN + ' رموزٍ أو أكثر — ' + nWide + ' يوماً', 'color:#f59e0b;font-weight:bold;font-size:13px');
+    const dShow = days.filter(function (o) { return o.n >= Math.min(2, DAYMIN); });
+    if (!dShow.length) console.log('   — لا يومَ تكرّرت فيه قفزتان.');
     else console.table(dShow.slice(0, 30).map(function (o) {
       return { 'التاريخ': o.d, 'رموز': o.n, 'تبديلُ أساس': o.basis || '—', 'رأسماليّ': o.corp || '—', 'مشبوه': o.row || '—',
                'عامّ؟': (o.n >= DAYMIN) ? '🚨 نعم' : '—', 'أمثلة': o.syms.join(' · ') };
     }));
 
-    /* ⑤ وسيطُ الساكنة — المسطرةُ التي غابت عن v685 */
+    /* ⑤ المسطرة: وسيطُ الساكنة */
     const sArr = out.map(function (x) { return x.nStale; }).sort(function (a, b) { return a - b; });
     const sMed = sArr[Math.floor(sArr.length / 2)] || 0;
     const sCut = Math.max(Math.ceil(sMed * SMULT), sMed + 20);
 
-    /* ⑥ الحكمُ على الرمز — بما يخصُّه وحده، بعد خصم الأيّام العامّة */
+    /* ⑥ الحكم — و«رأسماليّ» إخباريٌّ لا يُعلِّم عطلاً */
     out.forEach(function (x) {
-      const own = x.jumps.filter(function (j) { return !wide[j.d]; });
-      x.nDay   = x.jumps.length - own.length;
-      x.nBasis = own.filter(function (j) { return j.kind === 'basis'; }).length;
-      x.nCorp  = own.filter(function (j) { return j.kind === 'corp'; }).length;
-      x.nRow   = own.filter(function (j) { return j.kind === 'row'; }).length;
-      x.own    = own;
-      x.splitReal = !!(x.split && x.split.at);
-      x.staleHi   = x.nStale > sCut;
+      const own  = x.jumps.filter(function (j) { return !wide[j.d]; });
+      x.nDay  = x.jumps.length - own.length;
+      x.nCorp = own.filter(function (j) { return j.kind === 'corp'; }).length;
+      x.nRow  = own.filter(function (j) { return j.kind === 'row'; }).length;
+      x.epRows = x.eps.reduce(function (s, e) { return s + e.n; }, 0);
+      x.staleHi = x.nStale > sCut;
       const v = [];
-      if (x.nBasis || x.splitReal) v.push('🚨 تبديلُ أساس');
-      if (x.nRow)    v.push('🚨 صفٌّ مشبوه');
-      if (x.nCorp)   v.push('⚠️ رأسماليّ');
-      if (x.staleHi) v.push('⚠️ ساكنةٌ زائدة');
-      if (x.nD)      v.push('⚠️ أصلٌ ثالث (' + x.nD + ')');
-      x.bad  = v.length > 0;
+      if (x.eps.length)  v.push('🚨 صفوفٌ مُلوَّثة (' + x.epRows + ' في ' + x.eps.length + ')');
+      if (x.perm.length) v.push('🚨 عصران (' + x.perm.length + ')');
+      if (x.nRow)        v.push('🚨 صفٌّ مشبوه (' + x.nRow + ')');
+      if (x.staleHi)     v.push('⚠️ ساكنةٌ زائدة');
+      if (x.nD)          v.push('⚠️ أصلٌ ثالث (' + x.nD + ')');
+      x.bad = v.length > 0;
+      if (x.nCorp) v.push('ℹ️ رأسماليّ ' + x.nCorp);
       x.verd = v.length ? v.join(' · ') : (x.nDay ? '— يومٌ عامٌّ فقط' : '✅ نظيف');
     });
 
+    /* ⑦ حوادثُ التلوّث مفصّلةً — وهي قائمةُ الإصلاح */
+    const epAll = [];
+    out.forEach(function (x) { x.eps.forEach(function (e) { epAll.push({
+      'الرمز': x.sym, 'من': e.from, 'إلى': e.to, 'صفوف': e.n,
+      'أساسُ الحادثة': AR[e.cls], 'أساسُ السلسلة': AR[x.dom],
+      'المعامل': (e.fac >= 1 ? '×' + e.fac.toFixed(2) : '÷' + (1 / e.fac).toFixed(2)),
+      '٪ الدخول': (e.pin > 0 ? '+' : '') + e.pin.toFixed(0),
+      '٪ الخروج': (e.pout > 0 ? '+' : '') + e.pout.toFixed(0),
+      'كُتبت يوم': e.uDays.length ? e.uDays.join(' · ') : '—',
+      'عصرُ السلسلة': x.uTop.join(' · ') || '—'
+    }); }); });
+    epAll.sort(function (a, b) { return b['صفوف'] - a['صفوف'] || (a['من'] < b['من'] ? 1 : -1); });
+    console.log('%c🧬 حوادثُ التلوّث — ' + epAll.length + ' حادثةً في ' + out.filter(function (x) { return x.eps.length; }).length + ' رمزاً · وهذه قائمةُ الإصلاح',
+      'color:#f43f5e;font-weight:bold;font-size:13px');
+    if (!epAll.length) console.log('   — لا حادثةَ دخولٍ وخروجٍ من أساسٍ غريب. فإن كان ثمّ تبديلٌ فهو دائمٌ لا عابر.');
+    else console.table(epAll.slice(0, SHOW));
+
+    /* ⑧ تبديلٌ دائم — عصران في سلسلةٍ واحدة */
+    const pmAll = [];
+    out.forEach(function (x) { x.perm.forEach(function (j) { pmAll.push({
+      'الرمز': x.sym, 'التاريخ': j.d, 'من': j.from, 'إلى': j.to,
+      '٪': (j.p > 0 ? '+' : '') + j.p.toFixed(0), 'المعامل': ((j.to / j.from) >= 1 ? '×' + (j.to / j.from).toFixed(2) : '÷' + (j.from / j.to).toFixed(2)),
+      'الاتجاه': AR[j.ka] + ' ← ' + AR[j.kb], 'كُتب يوم': j.u || '—',
+      'عصرُ السلسلة': x.uTop.join(' · ') || '—', 'يومٌ عامّ؟': wide[j.d] ? ('🚨 ' + wide[j.d] + ' رموز') : '—'
+    }); }); });
+    pmAll.sort(function (a, b) { return Math.abs(+b['٪']) - Math.abs(+a['٪']); });
+    if (pmAll.length) {
+      console.log('%c🪞 تبديلٌ دائمٌ — عصران في سلسلةٍ واحدة (' + pmAll.length + ')', 'color:#f43f5e;font-weight:bold;font-size:13px');
+      console.table(pmAll.slice(0, 40));
+    }
+
+    /* ⑨ الرموز — بعد أن صار «رأسماليّ» إخباريّاً */
     const bad = out.filter(function (x) { return x.bad; }).sort(function (a, b) {
-      const sa = (a.nBasis + (a.splitReal ? 1 : 0)) * 1000 + a.nRow * 100 + a.nCorp * 10 + (a.staleHi ? 1 : 0);
-      const sb_ = (b.nBasis + (b.splitReal ? 1 : 0)) * 1000 + b.nRow * 100 + b.nCorp * 10 + (b.staleHi ? 1 : 0);
+      const sa = a.epRows * 10000 + a.perm.length * 1000 + a.nRow * 100 + (a.staleHi ? 10 : 0) + (a.nD ? 1 : 0);
+      const sb_ = b.epRows * 10000 + b.perm.length * 1000 + b.nRow * 100 + (b.staleHi ? 10 : 0) + (b.nD ? 1 : 0);
       return sb_ - sa;
     });
-
-    console.log('%c🧱 رموزٌ فيها عطلٌ يخصُّها — ' + bad.length + ' من ' + scanned,
-      'color:#f43f5e;font-weight:bold;font-size:13px');
-    if (!bad.length) console.log('   ✅ لا رمزَ حمل عطلاً يخصُّه وحده بعد خصم الأيّام العامّة. والعطلُ — إن كان — في الأيّام لا في الأسهم.');
+    console.log('%c🧱 رموزٌ فيها عطلٌ يخصُّها — ' + bad.length + ' من ' + scanned, 'color:#f43f5e;font-weight:bold;font-size:13px');
+    if (!bad.length) console.log('   ✅ لا رمزَ حمل عطلاً يخصُّه.');
     else console.table(bad.slice(0, SHOW).map(function (x) {
-      return {
-        'الرمز': x.sym, 'صفوف': x.n,
-        'تبديلُ أساس': x.nBasis ? ('🚨 ' + x.nBasis) : '—',
-        'حدٌّ نقيّ': x.splitReal ? ('🚨 ' + (x.split.pur * 100).toFixed(1) + '٪ · ' + x.split.at + ' · ' + x.split.dir)
-                   : (x.split ? ('⚪ مختلطٌ بلا حدّ (' + (x.split.pur * 100).toFixed(0) + '٪)') : '—'),
-        'مشبوه': x.nRow ? ('🚨 ' + x.nRow) : '—',
-        'رأسماليّ': x.nCorp ? ('⚠️ ' + x.nCorp) : '—',
-        'ساكنة': x.staleHi ? ('⚠️ ' + x.nStale + ' · ' + x.staleFirst) : (x.nStale || '—'),
-        'يومٌ عامّ': x.nDay || '—',
-        'الحكم': x.verd
-      };
+      return { 'الرمز': x.sym, 'صفوف': x.n, 'أساسُ السلسلة': AR[x.dom] + ' (' + x.nR + '/' + x.nA + ')',
+               'مُلوَّثة': x.epRows ? ('🚨 ' + x.epRows + ' في ' + x.eps.length) : '—',
+               'عصران': x.perm.length ? ('🚨 ' + x.perm.length) : '—',
+               'مشبوه': x.nRow ? ('🚨 ' + x.nRow) : '—',
+               'ساكنة': x.staleHi ? ('⚠️ ' + x.nStale) : (x.nStale || '—'),
+               'رأسماليّ': x.nCorp ? ('ℹ️ ' + x.nCorp) : '—',
+               'يومٌ عامّ': x.nDay || '—', 'الحكم': x.verd };
     }));
     if (bad.length > SHOW) console.log('   … و' + (bad.length - SHOW) + ' رمزاً آخر. للكلّ: histBreaks({show: 999})');
 
-    /* ⑦ القفزاتُ التي تبدّل أساساً — بأرقامها، فهي أخطرُ ما في الجدول */
-    const bj = [];
-    out.forEach(function (x) { x.own.forEach(function (j) { if (j.kind === 'basis' || j.kind === 'row') bj.push({ 'الرمز': x.sym, 'التاريخ': j.d, 'من': j.from, 'إلى': j.to, '٪': (j.p > 0 ? '+' : '') + j.p.toFixed(0), 'أساسُ ما قبل': AR[j.ka], 'أساسُ ما بعد': AR[j.kb], 'النوع': (j.kind === 'basis' ? '🚨 تبديلُ أساس' : '🚨 صفٌّ مشبوه') }); }); });
-    bj.sort(function (a, b) { return Math.abs(+b['٪']) - Math.abs(+a['٪']); });
-    if (bj.length) {
-      console.log('%c🔗 قفزاتٌ تخصُّ أسهمَها — تبديلُ أساسٍ أو صفٌّ مشبوه (' + bj.length + ')', 'color:#f43f5e;font-weight:bold;font-size:13px');
-      console.table(bj.slice(0, 40));
-    }
+    if (failed.length) { console.warn('🧱 ' + failed.length + ' رمزاً لم يُفحَص — ولا يُحسَب نظيفاً ولا مكسوراً:'); console.table(failed.slice(0, 20)); }
 
-    if (failed.length) {
-      console.warn('🧱 ' + failed.length + ' رمزاً لم يُفحَص — ولا يُحسَب نظيفاً ولا مكسوراً:');
-      console.table(failed.slice(0, 20));
-    }
-
-    /* ⑧ الخلاصة — ولا رقمَ فيها مكتوبٌ باليد */
-    const nBasisAll = out.reduce(function (s, x) { return s + x.nBasis; }, 0);
-    const nRowAll   = out.reduce(function (s, x) { return s + x.nRow; }, 0);
-    const nCorpAll  = out.reduce(function (s, x) { return s + x.nCorp; }, 0);
-    const nJumpAll  = out.reduce(function (s, x) { return s + x.jumps.length; }, 0);
-    const nDayJump  = nJumpAll - (nBasisAll + nRowAll + nCorpAll);
-    const rowsBad   = out.filter(function (x) { return x.bad; }).reduce(function (s, x) { return s + x.n; }, 0);
+    /* ⑩ الخلاصة */
+    const nEp    = epAll.length;
+    const nEpRow = out.reduce(function (s, x) { return s + x.epRows; }, 0);
+    const nRowAll  = out.reduce(function (s, x) { return s + x.nRow; }, 0);
+    const nCorpAll = out.reduce(function (s, x) { return s + x.nCorp; }, 0);
+    const nJumpAll = out.reduce(function (s, x) { return s + x.jumps.length; }, 0);
+    const rowsBad  = out.filter(function (x) { return x.bad; }).reduce(function (s, x) { return s + x.n; }, 0);
     console.log('%c📏 الخلاصة', 'color:#38bdf8;font-weight:bold;font-size:13px');
     console.table([{
       'رموزٌ فُحِصت': scanned,
       'صفوفٌ قُرِئت': totRows.toLocaleString('en'),
       'قفزاتٌ كلُّها': nJumpAll,
-      'منها في أيّامٍ عامّة': nDayJump + ' (' + nWide + ' يوماً)',
-      'تبديلُ أساسٍ يخصُّ سهماً': nBasisAll,
+      'أيّامٌ عامّة': nWide,
+      'حوادثُ تلوّث': nEp,
+      'صفوفٌ مُلوَّثة': nEpRow,
+      'عصران (دائم)': pmAll.length,
       'صفوفٌ مشبوهة': nRowAll,
-      'أحداثٌ رأسمالية': nCorpAll,
-      'وسيطُ الساكنة': sMed + ' (حدُّ الزيادة ' + sCut + ')',
+      'رأسماليّ (إخباريّ)': nCorpAll,
       'رموزٌ فيها عطلٌ يخصُّها': bad.length + ' (' + (100 * bad.length / scanned).toFixed(1) + '٪)',
       'صفوفُها': rowsBad.toLocaleString('en') + ' (' + (100 * rowsBad / (totRows || 1)).toFixed(1) + '٪)'
     }]);
 
-    console.log('   ▸ **الأيّامُ تُقرأ قبل الرموز.** قفزةٌ في يومٍ قفز فيه ' + DAYMIN + ' رموزٍ أو أكثر\n'
-      + '     لا تُحمَّل على السهم — فهي أثرُ مزامنةٍ واحدةٍ أصابت السوقَ كلَّه.');
-    console.log('   ▸ و«تبديلُ أساس» أخطرُ الثلاثة: السلسلةُ عنده **لا تُقارَن بما قبلها**،\n'
-      + '     فما قبلَ التاريخِ وما بعدَه رقمان من عالَمَين.');
-    console.log('   ▸ و«حدثٌ رأسماليّ» (خام ← خام) سلسلةٌ صحيحةٌ **بأساسٍ لم يُعدَّل** —\n'
-      + '     تُقاس بعد التعديل لا قبله.');
-    console.log('   ▸ و«مختلطٌ بلا حدّ» **ليس عطلاً**: لا موضعَ نقيٌّ يفصل، فالأرجحُ\n'
-      + '     مصادفاتُ تقريبٍ لا اختلاطَ أساسَين. وهذا ما أخطأت فيه v685.');
+    console.log('   ▸ **«صفوفٌ مُلوَّثة» هو الرقمُ القابلُ للإصلاح**: ' + nEpRow + ' صفّاً في ' + nEp + ' حادثة.\n'
+      + '     وكلُّ حادثةٍ لها تاريخٌ ومعاملٌ ويومُ كتابة — فهي قائمةُ عملٍ لا وصفٌ لعطل.');
+    console.log('   ▸ **وافحص عمودَي «كُتبت يوم» و«عصرُ السلسلة»**: إن اختلفا فالمِيكانيكا\n'
+      + '     مُثبَتة — نافذةُ مزامنةٍ كتبت أسعاراً معدَّلةً فوق سلسلةٍ خام (أو العكس).\n'
+      + '     وإن تطابقا فالفرضيةُ مردودةٌ ويُبحَث عن سببٍ آخر — ولا يُرقَّع قبل ذلك.');
+    console.log('   ▸ و«رأسماليّ» (' + nCorpAll + ') **ليس عطلاً** — سلسلةٌ خامٌ فيها تجزئاتٌ وتوزيعات.\n'
+      + '     وهي تُعدَّل قبل القياس، ولا تُستثنى ولا تُصلَح.');
+    console.log('   ▸ و«عصران» تبديلٌ لم يُردّ: السلسلةُ قبلَ التاريخِ وبعدَه **لا تُقارَن**.');
     console.log('   ▸ وللتفصيل على رمزٍ بعينه:  await histInspect(«الرمز»)');
     console.log('   ▸ ولا كتابةَ ولا حذف — القرارُ لك.');
 
     return { src: src, scanned: scanned, rows: totRows, days: days, wideDays: wide, bad: bad, all: out,
-             basisJumps: bj, failed: failed, staleMedian: sMed, staleCut: sCut,
-             counts: { jumps: nJumpAll, dayJumps: nDayJump, basis: nBasisAll, row: nRowAll, corp: nCorpAll } };
+             episodes: epAll, permanent: pmAll, failed: failed, staleMedian: sMed, staleCut: sCut,
+             counts: { jumps: nJumpAll, episodes: nEp, epRows: nEpRow, perm: pmAll.length, row: nRowAll, corp: nCorpAll } };
   });
 
   window.downCycleReport = _adminTool('downCycleReport', function (opts) {

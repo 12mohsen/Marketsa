@@ -2482,7 +2482,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-11-02-v687';
+window.APP_BUILD = '2026-11-02-v688';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -2493,6 +2493,7 @@ console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · ا�
    ══════════════════════════════════════════════════════════════════════ */
 window.buildLog = function () {
   const L = [
+    ['v688', '🪢 **أداةٌ تُجرّب الإصلاحَ قبل أن يُنفَّذ — و`histBreaks` صارت تُقرَض ماسحَها.** ▸ 🧩 **ما ثبت أوّلاً**: التماسُ بين الأساسَين **هو حدُّ نافذةِ الجلب لا حدثٌ في السوق**. طُرح تاريخُ التماس من تاريخ الكتابة في جدول v687 فجاء: **4270 ← 30 يوماً بالضبط · 2360 ← 30 يوماً بالضبط · 6040 و8010 و2200 (مرّتَين) ← 1826 يوماً = 5.00 سنة**، **ويومُ الشهرِ يتطابق في الستّة**. والقُرّاءُ ثلاثةٌ بثلاثِ نوافذ: `sync-historical` بـ`range=1mo` · و`index.html:16194` بـ`range=1y` · و`histFetchYahoo5y` بـ`range=5y`. **وياهو يُعيد تعديلَ الماضي بعد كلّ حدثٍ رأسماليّ**، فكلُّ مزامنةٍ تكتب نافذتَها على أساسِ اليوم وتترك ما خارجها على أساسِ الأمس. ▸ ⚠️ **ومعياري الذي سجّلتُه قبل v687 قال «مردودة» فقلتُها**: شرطتُ أن تُردَّ الفرضيةُ إن تطابق «كُتبت يوم» مع «عصرُ السلسلة» — وقد تطابقا في 25 من 35. **والمعيارُ كان خاطئاً**: «عصرُ السلسلة» أكثرُ يومَي كتابةٍ تكراراً، والسلسلةُ **رُقعةٌ من نوافذ** فأكبرُها يصنع العصر — **فالعمودُ لم يكن قادراً على الفصل أبداً**. وحسابُ الفارق هو الفحصُ الذي كان يجب أن أسجّله، **ولا يُحسَب لي أنّي وجدتُه بعد أن نجا المعيارُ الخاطئ**. ▸ 🧪 فأُضيفت `histRebase()`: لكلّ رمزٍ مصابٍ تجلب ياهو **بنافذةٍ واحدةٍ شاملة** (`max` ثمّ `10y` ثمّ `5y`) وتقرأ القاعدة، **وتمرّر الوجهَين على `histBreaks` نفسِها** عبر حاقنٍ جديد `opts.rows` — فالماسحُ **واحدٌ لا ماسحان**، وهو درسُ هذه الجلسة بعينه. ثمّ تقول: كم صفّاً سيتغيّر · وبأيّ معامل · **وهل يختفي التماس**. ▸ ✅ **تماسُ القاعدة > 0 وتماسُ ياهو = 0 ⇒ الإصلاحُ مُثبَتٌ قبل تنفيذه.** 🚨 **وتماسٌ باقٍ في حمولة ياهو ⇒ المصدرُ نفسُه غيرُ متّسق ولا تُجدي المزامنة — فلا يُرقَّع.** ▸ 📏 **وعمودُ «لن تُكتَب»** يُعلن حدَّ الإصلاح: صفوفٌ لا يردّها ياهو **تبقى كما هي**، فإن كان تماسٌ داخلها بقي. ▸ 🔌 **وثلاثُ إضافاتٍ صغيرةٍ إلى `histBreaks` ولا تغييرَ في سلوكها**: حاقنُ `opts.rows` · و`opts.quiet` لأنّها تُستدعى مرّتَين لكلّ رمز · و`window._HB_LAST` لتقرأ منه `histRebase` الرموزَ المصابةَ بلا تمريرٍ يدويّ. **وأُعيد تشغيلُ الحالات التسع على الكود المعدَّل فمرّت كلُّها بلا فرق.** ▸ 🧪 **وأربعُ حالاتٍ جديدةٍ لـ`histRebase`**: تماسٌ في القاعدة وياهو نظيف ⇒ «✅ يُزيل» · وياهو فيه التماسُ نفسُه ⇒ «🚨 باقٍ · التشخيصُ ناقص» · ونظيفٌ ⇒ «لا تماسَ أصلاً» · وياهو يردّ 200 من 300 صفّ ⇒ «✅ يُزيل — **لكن 100 صفّاً لن يُكتَب**». 🔬 **ولا أداةَ كتابةٍ بعد، بقصد**: تُبنى بعد أن يُقرأ الجدولُ ويُقرَّر'],
     ['v687', '🧬 **ثالثُ كتابةٍ للأداة — وكلُّ كتابةٍ ردَّها قياسُها.** v685 رسّبت 270 من 270، وv686 رسّبت **198 من 270 (73٪)** — وثلاثةٌ وسبعون بالمئة ليست إصلاحاً. ▸ **والعلّةُ وسمٌ وضعتُه أنا**: 205 من 290 قفزةً كانت «حدثاً رأسماليّاً» (خام ← خام)، وجعلتُها تُعلِّم السهمَ مكسوراً. **وسلسلةٌ خامٌ فيها أحداثٌ رأسمالية هي الحالةُ الطبيعيةُ للبيانات الخام**: 205 حدثاً على 270 رمزاً في 5.3 سنةٍ ≈ حدثٌ لكلّ سهمٍ كلَّ خمسِ سنوات، وهو عينُ ما تنتجه التجزئاتُ والتوزيعاتُ الحقيقية. **فصار «رأسماليّ» إخباريّاً لا يُعلِّم عطلاً.** ▸ 🔎 **وما أعطاه جريانُ v686 وكان ثمنَه**: ① **117 قفزةً من 407 في 12 يوماً** — قريبُ الثلثِ أثرُ مزامنةٍ لا شذوذُ سهم · ② **و«تبديلُ الأساس» ليس حدّاً واحداً عند تاريخ بل صفوفٌ مفردةٌ تدخل وتخرج في أيّام**: 6050 في 08-25 و09-03 و09-20 و09-21 · 2360 في 09-22 و09-23 و09-24 · 6040 في 10-01 و10-02 · 1213 في 07-13 و07-15 و08-17 — **فـ53 قفزةً تعني نحو 26 حادثة، قائمةٌ قصيرةٌ تُصلَح لا قاعدةٌ تُهدَم** · ③ **والمعاملُ ثابتٌ لكلّ سهم**: 6050 ← 3.38 · 3.51 · 3.03 · 3.21 · 2360 ← 3.375 · 3.337 · 4270 ← 9.40 · 6040 ← 5.06 · 2001 ← 4.50 — **ومعاملٌ ثابتٌ للسهم الواحد بصمةُ تعديلِ تجزئةٍ لا سعرٌ عشوائيّ**. ▸ 🧬 **والمِيكانيكا وُجدت في الكود لا ظُنّت**: لا ملفَّ يكتب `adjclose` — الكتّابُ الأربعةُ كلُّهم يقرأون `indicators.quote[0].close`، لكنّ ياهو **يُعيد تعديلَ التاريخِ كلِّه إلى الخلف عند كلّ تجزئة**، و`sync-historical` تكتب **نافذةً حديثةً لا السلسلةَ كلَّها** (5398 صفّاً لـ270 رمزاً ≈ 20 صفّاً للرمز، بنصّ ملفّ حادثة 12 أكتوبر). فبعد التجزئة **تُكتب الصفوفُ الحديثةُ مقسومةً وتبقى القديمةُ غيرَ مقسومة** — كاتبان ونافذتان = أساسان في سلسلةٍ واحدة. **عائلةُ العطل نفسُها: تعريفان لشيءٍ واحد.** ▸ 🧾 **فأُضيف `updated_at` إلى الجلب ويُطبع لكلّ حادثة**: إن خالف «كُتبت يوم» عصرَ سلسلتها **فالمِيكانيكا مُثبَتة**، وإن تطابقا **فالفرضيةُ مردودةٌ ويُبحَث عن غيرها — ولا يُرقَّع قبل ذلك**. ▸ ⚖️ **وتعريفُ الحادثة مربوطٌ بانقطاعٍ مقيس**: قفزةٌ تُبدّل الأساسَ ثمّ قفزةٌ تردُّه خلال 15 جلسةً = حادثةٌ واحدة · وقفزةٌ لا تُردّ = **عصران في سلسلة**. وبهذا **لا تُعَدّ مصادفاتُ التقريب حوادثَ** لأنّها لا تُنتج قفزةً أصلاً. ▸ 🧪 **وتُسع حالاتٍ مُصطنعةٍ اختُبرت على الكود المستخرَج من `index.html` نفسِه**: ومنها علّةُ v685 (متناوبٌ 150/150 ⇒ نظيف) وعلّةُ v686 (رأسماليّ ⇒ إخباريّ) وحادثةُ تلوّثٍ بخمسة صفوفٍ كُتبت في عصرٍ مختلف ⇒ تُرصَد بتاريخها ومعاملِها ويومِ كتابتها. ▸ **وجُرّب `rawDec:3` فلم يكتشف شيئاً** — نقل 12 قفزةً من خانةٍ إلى خانةٍ بتوسيع التعريف. والقرينةُ أنّ في السلاسل نفسِها 12.298666 و13.973333، **ذيولٌ دوريّةٌ بصمتُها قسمةٌ على ٣** أي بصمةُ تعديل، فـ65.775 و10.496 معدَّلتان وقعتا على ثلاثِ خاناتٍ مصادفةً. 🔬 قراءةٌ محضةٌ كما كانت: لا تكتب صفّاً ولا تحذفه'],
     ['v686', '🧱 **أداتي الجديدةُ رسَّبت 270 من 270 — ومئةٌ بالمئة ليست نتيجةً بل إعلانُ فشلِ المقياس.** `histBreaks` التي بنيتُها في v685 حكمت على **كلّ رمزٍ في السوق** بأنّه مكسور. وثلاثةُ أعطالٍ كانت فيها، فُحِصت ولم تُظنّ: ▸ **① «صيغتان للسعر» باطلةٌ من أصلها**: كانت تُعَدّ **بعدد كسور الإغلاق**، وفحصتُ خمسةَ عشرَ رقماً من مخرجاتها فكلُّها **أعدادُ float32 مضبوطة** — فـ44 و150.3000030517578 **أساسٌ واحدٌ لا أساسان**، والفرقُ أنّ 150.3 لا يُمثَّل بدقّةٍ في الثنائيّ و44 يُمثَّل. **فكانت تقيس خاصّةَ الرقم لا خاصّةَ البيانات.** ودليلُها في مخرجاتها نفسِها: عدّت لـ7202 **587 تحوّلاً** — وأساسٌ لا يتغيّر 587 مرّة. ▸ **② و«جلساتٌ لم تقع» بلا مسطرة**: حُكِم عليها **بوجودها** لا بزيادتها، وخمسةٌ وخمسون صفّاً ساكناً **عُرفُ السوق لا شذوذُ سهم** — وعشراتُ الرموز تشترك في التاريخ الأوّل نفسِه 2021-10-11، فهو حشوٌ من المصدر. ▸ **③ والقفزاتُ رُتّبت بالرمز وكان يلزم ترتيبُها بالتاريخ**: في عمود «أعنفُها» وحده تكرّر 2021-09-01 أربعاً و2025-04-13 أربعاً و2025-04-03 أربعاً — **وأربعةُ أسهمٍ لا تقفز 16٪–60٪ في اليومِ نفسِه مصادفةً: يومُ مزامنةٍ واحدٌ مكسور، لا أربعةُ أسهم**. ▸ 🔑 **فأُعيدت كتابتُها كاملةً.** والأساسُ يُقاس الآن بـ**أصغرِ عددِ كسورٍ يُنتج الرقمَ المخزَّن**: فالسعرُ المتداولُ يُعلَن بخانتَين، فما كان صورةَ عددٍ بخانتَين أو أقلّ فهو **خام** (150.3000030517578 ← 150.3 · 7.25 · 44 · 91.75)، وما لم يكن فهو **معدَّل** (59.4517936706543 · 19.433332443237305)، وما ليس صورةَ float32 أصلاً **أصلٌ ثالثٌ يُعَدّ وحده**. ▸ 🔗 **وبوصلِ القفزةِ بحالةِ الأساس عندها انفتحت ثلاثةُ أحكامٍ لا حكم**: خام ← معدَّل = **تبديلُ أساسٍ لا حركةُ سعر** (4270: 7.25 ← 68.147 · 2360: 17.18 ← 57.98 · 6050: 19.43 ← 65.70) · وخام ← خام بقفزةٍ كبيرة = **حدثٌ رأسماليٌّ لم يُعدَّل** (7202: 150.3 ← 319.6 ×2.13) · ومعدَّل ← معدَّل = **صفٌّ مشبوهٌ فعلاً** (7040: 10.33 ← 22.82). **والنسخةُ السابقةُ خلطت الثلاثةَ في كلمةٍ واحدة.** ▸ 🧮 و«الأساسان» لا تُعَدّان بل يُفحَص لهما **حدٌّ واحدٌ نقيّ**: أساسٌ حقيقيٌّ يتبدّل **مرّةً عند تاريخ** ولا يتناوب — وما لم يبلغ نقاؤه 98٪ يُسمّى «مختلطٌ بلا حدّ» **ولا يُعَدّ عطلاً**. ▸ 📅 **والأيّامُ تُطبع قبل الرموز**: يومٌ قفز فيه خمسةُ رموزٍ أو أكثر **يُخصَم من حساب السهم** ويُحمَّل على المزامنة. ▸ 🧪 **ولم تُسلَّم قبل أن تُختبَر**: ثماني حالاتٍ مُصطنعةٍ تغطّي الفروعَ كلَّها — ومنها **علّةُ v685 نفسُها** (سلسلةٌ خامُها ومعدَّلُها متناوبان 150/150) تمرّ الآن **نظيفةً**، وستُّ سلاسلَ تقفز في اليومِ نفسِه **لا يُعَدّ أيُّها مكسوراً**. 🔬 قراءةٌ محضةٌ كما كانت: لا تكتب صفّاً ولا تحذفه'],
     ['v685', '🧱 **أداةٌ ترى عطلاً في رمزٍ واحدٍ ولا نظيرَ لها على السوق أداةٌ ناقصة.** كشف `histInspect(«4270»)` في سلسلةٍ واحدةٍ ثلاثةَ أعطالٍ معاً: **قفزةُ +840٪ في جلسة** (7.25 ← 68.15 في 2026-09-27 وحدُّ السوق اليومي ±10٪) · **صيغتان للسعر في سلسلةٍ واحدة** (59.4517936706543 المعدَّل مقابل 44 الخام) · **وجلستان حجمُهما صفرٌ وفتحُهما = أعلاها = أدناها = إغلاقُها**. ▸ **وثلاثُ فجواتٍ عامّةٍ تُفسّرها**: `histDupeScan` تشترط «الحجم > 0» **فهي عمياءُ بالتعريف** عن الصفوف الساكنة — ولذلك طمْأنت بـ0.17٪ · و`histInspect` رمزٌ واحدٌ عند الطلب لا مسحٌ للسوق · وحارسُ الأساس طبع «✅ متطابق من 249 رمز» **وهذا السهمُ يقفز 840٪**، فهو يقيس شيئاً غير الذي يُقرأ منه. ▸ فأُضيفت `histBreaks()`: تمرّ على رموز القاعدة (من `symbol_stats` لا من آخر مسح) وتعدّ لكلٍّ منها القفزاتَ المستحيلةَ والصفوفَ الساكنةَ واختلاطَ الأساسَين، **وترتّب الأسوأَ أوّلاً**، وتطبع عمود «صفوفٌ في رموزٍ مكسورة» — **لأنّ سلسلةً فيها قفزةٌ واحدةٌ مشكوكٌ فيها كلُّها**، فالقفزةُ تعني أنّ الأساسَ تغيّر فما قبلها وما بعدها لا يُقارَنان. ▸ **وقيمتُها تتجاوز هذا السهم**: الـ42 صفقةً في `gtRun` و`pHit` وهندسةُ `planGeom` **كلُّها مبنيةٌ على هذه السلاسل**. ▸ **وحدودُها مكتوبةٌ قبل أرقامها**: القفزةُ **مرشَّحٌ لا حُكم** (كسرُ مقياسٍ · أو تجزئةٌ لم تُعدَّل · أو عودةُ سهمٍ موقوف — وثلاثتُها تُفسِد القياسَ سواءً) · والصفُّ الساكنُ قد يكون إيقافاً حقيقياً **لكنّه ليس شمعةً تُقاس** · و«صيغتان» دليلٌ لا إثبات · وما لم يُجلب لم يُفحَص **ولا يُقال عنه نظيف**. 🔬 قراءةٌ محضة: لا تكتب صفّاً ولا تحذفه'],
@@ -23835,6 +23836,9 @@ const CHAN_FLAT = 0.50;
     const LIM    = (+opts.limit > 0) ? +opts.limit : 0;
     const WANT   = (+opts.want > 0) ? +opts.want : 4000;
     window.histBreaksStop = false;
+    /* 🤫 صمتٌ اختياريّ — تستدعيها `histRebase` مرّتين لكلّ رمز، فلا تُغرِق الكونسول */
+    const SAY = opts.quiet ? function () {} : function () { console.log.apply(console, arguments); };
+    const TAB = opts.quiet ? function () {} : function (t) { console.table(t); };
 
     /* 🔑 أصلُ الرقم: خامٌ · معدَّلٌ · أو مزدوجٌ (ليس صورةَ float32) */
     const _cls = function (c) {
@@ -23870,10 +23874,10 @@ const CHAN_FLAT = 0.50;
     if (LIM) syms = syms.slice(0, LIM);
     if (!syms.length) { console.warn('🧱 لا رموزَ — لا symbol_stats ولا نتائجَ مسح.'); return null; }
 
-    console.log('%c🧱 histBreaks — حوادثُ التلوّث بتواريخها · ' + syms.length + ' رمزاً', 'color:#f43f5e;font-weight:bold;font-size:14px');
-    console.log('   المصدر: ' + src);
-    console.log('   الحدود: قفزة > ±' + JUMP + '٪ · خامٌ ≤ ' + RAWDEC + ' خانة · حادثةٌ ≤ ' + RUNMAX + ' جلسة · يومٌ عامّ ≥ ' + DAYMIN + ' رموز');
-    console.log('   ⏳ رمزان في الثانية. والإيقاف: histBreaksStop = true');
+    SAY('%c🧱 histBreaks — حوادثُ التلوّث بتواريخها · ' + syms.length + ' رمزاً', 'color:#f43f5e;font-weight:bold;font-size:14px');
+    SAY('   المصدر: ' + src);
+    SAY('   الحدود: قفزة > ±' + JUMP + '٪ · خامٌ ≤ ' + RAWDEC + ' خانة · حادثةٌ ≤ ' + RUNMAX + ' جلسة · يومٌ عامّ ≥ ' + DAYMIN + ' رموز');
+    SAY('   ⏳ رمزان في الثانية. والإيقاف: histBreaksStop = true');
 
     const out = [], failed = [];
     let scanned = 0, totRows = 0;
@@ -23883,8 +23887,13 @@ const CHAN_FLAT = 0.50;
       const sy = syms[k];
       let d = null;
       try {
-        d = await _sbPagedRows('historical_prices', 'd,o,h,l,c,v,updated_at',
-          function (q) { return q.eq('symbol', sy).order('d', { ascending: true }); }, WANT);
+        /* 🔌 حاقنُ الصفوف: لو مُرِّر `opts.rows` قُرئ منه بدل القاعدة.
+           وبه تقيس `histRebase` حمولةَ ياهو **بالماسح نفسِه** الذي وجد
+           التماس — فلا تعريفان لشيءٍ واحد، وهو درسُ هذه الجلسة كلِّها. */
+        d = (typeof opts.rows === 'function')
+          ? await opts.rows(sy)
+          : await _sbPagedRows('historical_prices', 'd,o,h,l,c,v,updated_at',
+              function (q) { return q.eq('symbol', sy).order('d', { ascending: true }); }, WANT);
       } catch (e) { failed.push({ 'الرمز': sy, 'السبب': (e && e.message) || String(e) }); }
       if (!Array.isArray(d) || d.length < 2) {
         if (!failed.length || failed[failed.length - 1]['الرمز'] !== sy) failed.push({ 'الرمز': sy, 'السبب': 'لا صفوفَ كافية (' + ((d && d.length) || 0) + ')' });
@@ -23949,7 +23958,7 @@ const CHAN_FLAT = 0.50;
                  nStale: nStale, staleFirst: staleFirst, jumps: jl, eps: eps, perm: perm,
                  split: split, uTop: uTop, from: d[0].d, to: d[d.length - 1].d });
 
-      if ((k + 1) % 20 === 0) console.log('   … ' + (k + 1) + '/' + syms.length);
+      if ((k + 1) % 20 === 0) SAY('   … ' + (k + 1) + '/' + syms.length);
       await new Promise(function (r) { setTimeout(r, 120); });
     }
 
@@ -23965,10 +23974,10 @@ const CHAN_FLAT = 0.50;
     const wide = {}; days.forEach(function (o) { if (o.n >= DAYMIN) wide[o.d] = o.n; });
     const nWide = Object.keys(wide).length;
 
-    console.log('%c📅 أيّامٌ قفز فيها ' + DAYMIN + ' رموزٍ أو أكثر — ' + nWide + ' يوماً', 'color:#f59e0b;font-weight:bold;font-size:13px');
+    SAY('%c📅 أيّامٌ قفز فيها ' + DAYMIN + ' رموزٍ أو أكثر — ' + nWide + ' يوماً', 'color:#f59e0b;font-weight:bold;font-size:13px');
     const dShow = days.filter(function (o) { return o.n >= Math.min(2, DAYMIN); });
-    if (!dShow.length) console.log('   — لا يومَ تكرّرت فيه قفزتان.');
-    else console.table(dShow.slice(0, 30).map(function (o) {
+    if (!dShow.length) SAY('   — لا يومَ تكرّرت فيه قفزتان.');
+    else TAB(dShow.slice(0, 30).map(function (o) {
       return { 'التاريخ': o.d, 'رموز': o.n, 'تبديلُ أساس': o.basis || '—', 'رأسماليّ': o.corp || '—', 'مشبوه': o.row || '—',
                'عامّ؟': (o.n >= DAYMIN) ? '🚨 نعم' : '—', 'أمثلة': o.syms.join(' · ') };
     }));
@@ -24009,10 +24018,10 @@ const CHAN_FLAT = 0.50;
       'عصرُ السلسلة': x.uTop.join(' · ') || '—'
     }); }); });
     epAll.sort(function (a, b) { return b['صفوف'] - a['صفوف'] || (a['من'] < b['من'] ? 1 : -1); });
-    console.log('%c🧬 حوادثُ التلوّث — ' + epAll.length + ' حادثةً في ' + out.filter(function (x) { return x.eps.length; }).length + ' رمزاً · وهذه قائمةُ الإصلاح',
+    SAY('%c🧬 حوادثُ التلوّث — ' + epAll.length + ' حادثةً في ' + out.filter(function (x) { return x.eps.length; }).length + ' رمزاً · وهذه قائمةُ الإصلاح',
       'color:#f43f5e;font-weight:bold;font-size:13px');
-    if (!epAll.length) console.log('   — لا حادثةَ دخولٍ وخروجٍ من أساسٍ غريب. فإن كان ثمّ تبديلٌ فهو دائمٌ لا عابر.');
-    else console.table(epAll.slice(0, SHOW));
+    if (!epAll.length) SAY('   — لا حادثةَ دخولٍ وخروجٍ من أساسٍ غريب. فإن كان ثمّ تبديلٌ فهو دائمٌ لا عابر.');
+    else TAB(epAll.slice(0, SHOW));
 
     /* ⑧ تبديلٌ دائم — عصران في سلسلةٍ واحدة */
     const pmAll = [];
@@ -24024,8 +24033,8 @@ const CHAN_FLAT = 0.50;
     }); }); });
     pmAll.sort(function (a, b) { return Math.abs(+b['٪']) - Math.abs(+a['٪']); });
     if (pmAll.length) {
-      console.log('%c🪞 تبديلٌ دائمٌ — عصران في سلسلةٍ واحدة (' + pmAll.length + ')', 'color:#f43f5e;font-weight:bold;font-size:13px');
-      console.table(pmAll.slice(0, 40));
+      SAY('%c🪞 تبديلٌ دائمٌ — عصران في سلسلةٍ واحدة (' + pmAll.length + ')', 'color:#f43f5e;font-weight:bold;font-size:13px');
+      TAB(pmAll.slice(0, 40));
     }
 
     /* ⑨ الرموز — بعد أن صار «رأسماليّ» إخباريّاً */
@@ -24034,9 +24043,9 @@ const CHAN_FLAT = 0.50;
       const sb_ = b.epRows * 10000 + b.perm.length * 1000 + b.nRow * 100 + (b.staleHi ? 10 : 0) + (b.nD ? 1 : 0);
       return sb_ - sa;
     });
-    console.log('%c🧱 رموزٌ فيها عطلٌ يخصُّها — ' + bad.length + ' من ' + scanned, 'color:#f43f5e;font-weight:bold;font-size:13px');
-    if (!bad.length) console.log('   ✅ لا رمزَ حمل عطلاً يخصُّه.');
-    else console.table(bad.slice(0, SHOW).map(function (x) {
+    SAY('%c🧱 رموزٌ فيها عطلٌ يخصُّها — ' + bad.length + ' من ' + scanned, 'color:#f43f5e;font-weight:bold;font-size:13px');
+    if (!bad.length) SAY('   ✅ لا رمزَ حمل عطلاً يخصُّه.');
+    else TAB(bad.slice(0, SHOW).map(function (x) {
       return { 'الرمز': x.sym, 'صفوف': x.n, 'أساسُ السلسلة': AR[x.dom] + ' (' + x.nR + '/' + x.nA + ')',
                'مُلوَّثة': x.epRows ? ('🚨 ' + x.epRows + ' في ' + x.eps.length) : '—',
                'عصران': x.perm.length ? ('🚨 ' + x.perm.length) : '—',
@@ -24045,9 +24054,9 @@ const CHAN_FLAT = 0.50;
                'رأسماليّ': x.nCorp ? ('ℹ️ ' + x.nCorp) : '—',
                'يومٌ عامّ': x.nDay || '—', 'الحكم': x.verd };
     }));
-    if (bad.length > SHOW) console.log('   … و' + (bad.length - SHOW) + ' رمزاً آخر. للكلّ: histBreaks({show: 999})');
+    if (bad.length > SHOW) SAY('   … و' + (bad.length - SHOW) + ' رمزاً آخر. للكلّ: histBreaks({show: 999})');
 
-    if (failed.length) { console.warn('🧱 ' + failed.length + ' رمزاً لم يُفحَص — ولا يُحسَب نظيفاً ولا مكسوراً:'); console.table(failed.slice(0, 20)); }
+    if (failed.length) { console.warn('🧱 ' + failed.length + ' رمزاً لم يُفحَص — ولا يُحسَب نظيفاً ولا مكسوراً:'); TAB(failed.slice(0, 20)); }
 
     /* ⑩ الخلاصة */
     const nEp    = epAll.length;
@@ -24056,8 +24065,8 @@ const CHAN_FLAT = 0.50;
     const nCorpAll = out.reduce(function (s, x) { return s + x.nCorp; }, 0);
     const nJumpAll = out.reduce(function (s, x) { return s + x.jumps.length; }, 0);
     const rowsBad  = out.filter(function (x) { return x.bad; }).reduce(function (s, x) { return s + x.n; }, 0);
-    console.log('%c📏 الخلاصة', 'color:#38bdf8;font-weight:bold;font-size:13px');
-    console.table([{
+    SAY('%c📏 الخلاصة', 'color:#38bdf8;font-weight:bold;font-size:13px');
+    TAB([{
       'رموزٌ فُحِصت': scanned,
       'صفوفٌ قُرِئت': totRows.toLocaleString('en'),
       'قفزاتٌ كلُّها': nJumpAll,
@@ -24071,20 +24080,212 @@ const CHAN_FLAT = 0.50;
       'صفوفُها': rowsBad.toLocaleString('en') + ' (' + (100 * rowsBad / (totRows || 1)).toFixed(1) + '٪)'
     }]);
 
-    console.log('   ▸ **«صفوفٌ مُلوَّثة» هو الرقمُ القابلُ للإصلاح**: ' + nEpRow + ' صفّاً في ' + nEp + ' حادثة.\n'
+    SAY('   ▸ **«صفوفٌ مُلوَّثة» هو الرقمُ القابلُ للإصلاح**: ' + nEpRow + ' صفّاً في ' + nEp + ' حادثة.\n'
       + '     وكلُّ حادثةٍ لها تاريخٌ ومعاملٌ ويومُ كتابة — فهي قائمةُ عملٍ لا وصفٌ لعطل.');
-    console.log('   ▸ **وافحص عمودَي «كُتبت يوم» و«عصرُ السلسلة»**: إن اختلفا فالمِيكانيكا\n'
+    SAY('   ▸ **وافحص عمودَي «كُتبت يوم» و«عصرُ السلسلة»**: إن اختلفا فالمِيكانيكا\n'
       + '     مُثبَتة — نافذةُ مزامنةٍ كتبت أسعاراً معدَّلةً فوق سلسلةٍ خام (أو العكس).\n'
       + '     وإن تطابقا فالفرضيةُ مردودةٌ ويُبحَث عن سببٍ آخر — ولا يُرقَّع قبل ذلك.');
-    console.log('   ▸ و«رأسماليّ» (' + nCorpAll + ') **ليس عطلاً** — سلسلةٌ خامٌ فيها تجزئاتٌ وتوزيعات.\n'
+    SAY('   ▸ و«رأسماليّ» (' + nCorpAll + ') **ليس عطلاً** — سلسلةٌ خامٌ فيها تجزئاتٌ وتوزيعات.\n'
       + '     وهي تُعدَّل قبل القياس، ولا تُستثنى ولا تُصلَح.');
-    console.log('   ▸ و«عصران» تبديلٌ لم يُردّ: السلسلةُ قبلَ التاريخِ وبعدَه **لا تُقارَن**.');
-    console.log('   ▸ وللتفصيل على رمزٍ بعينه:  await histInspect(«الرمز»)');
-    console.log('   ▸ ولا كتابةَ ولا حذف — القرارُ لك.');
+    SAY('   ▸ و«عصران» تبديلٌ لم يُردّ: السلسلةُ قبلَ التاريخِ وبعدَه **لا تُقارَن**.');
+    SAY('   ▸ وللتفصيل على رمزٍ بعينه:  await histInspect(«الرمز»)');
+    SAY('   ▸ ولا كتابةَ ولا حذف — القرارُ لك.');
 
-    return { src: src, scanned: scanned, rows: totRows, days: days, wideDays: wide, bad: bad, all: out,
+    const _ret = { src: src, scanned: scanned, rows: totRows, days: days, wideDays: wide, bad: bad, all: out,
              episodes: epAll, permanent: pmAll, failed: failed, staleMedian: sMed, staleCut: sCut,
              counts: { jumps: nJumpAll, episodes: nEp, epRows: nEpRow, perm: pmAll.length, row: nRowAll, corp: nCorpAll } };
+    if (!opts.quiet) { try { window._HB_LAST = _ret; } catch (_) {} }
+    return _ret;
+  });
+
+
+  /* ══════════════════════════════════════════════════════════════════════
+     🪢 histRebase() — تجربةٌ جافّةٌ تقول: هل يختفي التماسُ بالإصلاح؟
+
+     🧩 ما ثبت قبلها، وهو سببُ وجودها: **التماسُ هو حدُّ نافذةِ الجلب.**
+        طُرح تاريخُ التماسِ من تاريخِ الكتابة في جدول v687 فجاء:
+            4270 ← 30 يوماً بالضبط   ·  2360 ← 30 يوماً بالضبط
+            6040 ← 1826 يوماً (5.00 سنة)  ·  8010 ← 1826  ·  2200 ← 1826 (مرّتَين)
+        **ويومُ الشهرِ يتطابق في الستّة** — وليست مصادفة. والقُرّاءُ ثلاثةٌ
+        بثلاثِ نوافذ: `sync-historical` بـ`range=1mo` · و`index.html:16194`
+        بـ`range=1y` · و`histFetchYahoo5y` بـ`range=5y`. **وياهو يُعيد تعديلَ
+        الماضي بعد كلّ حدثٍ رأسماليّ**، فكلُّ مزامنةٍ تكتب نافذتَها على
+        أساسِ اليوم وتترك ما خارجها على أساسِ الأمس. **فالتماسُ حدُّ نافذةٍ
+        لا حدثُ سوق.**
+
+     ⚠️ **ومعياري الذي سجّلتُه قبل v687 قال «مردودة»**: قلتُ إن تطابق
+        «كُتبت يوم» مع «عصرُ السلسلة» فالفرضيةُ مردودة — وقد تطابقا في 25
+        من 35. **ومعياري كان خاطئاً**: «عصرُ السلسلة» أكثرُ يومَي كتابةٍ
+        تكراراً، والسلسلةُ رُقعةٌ من نوافذ، فأكبرُ نافذةٍ تصنع العصر —
+        **فالعمودُ لم يكن قادراً على الفصل أبداً**. وحسابُ الفارق أعلاه هو
+        الفحصُ الذي كان يجب أن أسجّله.
+
+     🧪 فهذه الأداةُ **لا تُصلح — تُجرّب**. لكلّ رمز:
+        ① تجلب ياهو بنافذةٍ **واحدةٍ شاملة** (`range=max`) — قراءةٌ محضة.
+        ② وتقرأ القاعدة.
+        ③ وتمرّر **كلتَيهما على `histBreaks` نفسِها** عبر حاقن `opts.rows`
+           — **فالماسحُ واحدٌ لا ماسحان**، وهو درسُ الجلسة.
+        ④ وتقول: كم صفّاً سيتغيّر · وبأيّ معامل · **وهل يختفي التماس**.
+
+     ✅ فإن كان تماسُ القاعدة > 0 وتماسُ ياهو = 0 ⇒ **الإصلاحُ مُثبَتٌ قبل
+        تنفيذه**: مزامنةٌ واحدةٌ بنافذةٍ شاملةٍ تُزيل التماس.
+     🚨 وإن بقي تماسٌ في حمولة ياهو ⇒ **التشخيصُ ناقص**: المصدرُ نفسُه
+        غيرُ متّسق، ولا تُجدي إعادةُ المزامنة. فلا يُرقَّع ويُبحَث عن غيره.
+
+     📏 وعمودٌ لا يُهمَل: **«لن تُكتَب»** — صفوفٌ في القاعدة لا يردّها ياهو.
+        فإن كان فيها تماسٌ **بقي بعد الإصلاح**، والإصلاحُ جزئيٌّ لا كامل.
+
+     ⚠️ وحدودُها: ① `range=max` قد يُقصَّ من المصدر، فيُطبع ما وصل لا ما
+        طُلب · ② والمقارنةُ على الإغلاق وحده · ③ ولا تقول **لماذا** تغيّر
+        الأساس، تقول **هل** تُشفى السلسلةُ بنافذةٍ واحدة.
+     🔬 **ولا تكتب صفّاً ولا تحذفه** — ولا توجد أداةُ كتابةٍ بعد، بقصد.
+     ══════════════════════════════════════════════════════════════════════ */
+  window.histRebaseStop = false;
+  window.histRebase = _adminTool('histRebase', async function (opts) {
+    opts = opts || {};
+    if (typeof sb === 'undefined' || !sb) { console.warn('🪢 لا اتصالَ بالقاعدة.'); return null; }
+
+    let _fetch = null;
+    try { if (typeof histFetchYahoo5y === 'function') _fetch = histFetchYahoo5y; } catch (e) {}
+    if (!_fetch) { try { _fetch = window.histFetchYahoo5y; } catch (e) {} }
+    if (typeof _fetch !== 'function') { console.warn('🪢 لا أجد histFetchYahoo5y — لا جلبَ ممكن.'); return null; }
+    if (typeof window.histBreaks !== 'function') { console.warn('🪢 لا أجد histBreaks — وهي الماسحُ.'); return null; }
+
+    const JUMP   = (+opts.jump > 0) ? +opts.jump : 12;
+    const RAWDEC = (opts.rawDec === undefined) ? 2 : +opts.rawDec;
+    const TOL    = (+opts.tol > 0) ? +opts.tol : 0.001;      // 0.1٪ = «الصفُّ نفسُه»
+    const RANGES = Array.isArray(opts.ranges) ? opts.ranges : ['max', '10y', '5y'];
+    const WANT   = (+opts.want > 0) ? +opts.want : 4000;
+    const SHOW   = (opts.show === undefined) ? 60 : +opts.show;
+    window.histRebaseStop = false;
+
+    /* ① الرموز: مُمرَّرةٌ أو من آخر histBreaks */
+    let syms = [], src = '';
+    if (opts.sym) { syms = [String(opts.sym)]; src = 'رمزٌ مُمرَّر'; }
+    else if (Array.isArray(opts.syms) && opts.syms.length) { syms = opts.syms.map(String); src = 'قائمةٌ مُمرَّرة'; }
+    else {
+      try {
+        const L = window._HB_LAST;
+        if (L && Array.isArray(L.bad)) { syms = L.bad.map(function (x) { return String(x.sym); }); src = 'الرموزُ المكسورةُ من آخر histBreaks'; }
+      } catch (e) {}
+    }
+    syms = Array.from(new Set(syms)).filter(function (s) { return /^\d+$/.test(s); });
+    if (!syms.length) { console.warn('🪢 لا رموز. شغّل histBreaks() أوّلاً أو مرّر {syms:[...]}'); return null; }
+
+    console.log('%c🪢 histRebase — تجربةٌ جافّة · ' + syms.length + ' رمزاً', 'color:#22d3ee;font-weight:bold;font-size:14px');
+    console.log('   المصدر: ' + src + '   ·   نوافذُ الجلب المحاوَلة: ' + RANGES.join(' ← ') + '   ·   «الصفُّ نفسُه» فرقٌ ≤ ' + (TOL * 100).toFixed(2) + '٪');
+    console.log('   🔬 قراءةٌ محضة — لا كتابةَ ولا حذف. والإيقاف: histRebaseStop = true');
+
+    const rowsOut = [], stuck = [], failed = [];
+    const _seams = function (r) { try { const x = r.all[0]; return x.eps.length + x.perm.length; } catch (e) { return -1; } };
+
+    for (let k = 0; k < syms.length; k++) {
+      if (window.histRebaseStop) { console.warn('🪢 أُوقف بطلبك عند ' + k + ' من ' + syms.length + ' — فالمطبوعُ جزئيّ.'); break; }
+      const sy = syms[k];
+
+      /* ② القاعدة */
+      let db = null;
+      try {
+        db = await _sbPagedRows('historical_prices', 'd,o,h,l,c,v,updated_at',
+          function (q) { return q.eq('symbol', sy).order('d', { ascending: true }); }, WANT);
+      } catch (e) {}
+      if (!Array.isArray(db) || db.length < 2) { failed.push({ 'الرمز': sy, 'السبب': 'لا صفوفَ في القاعدة' }); continue; }
+
+      /* ③ ياهو بنافذةٍ واحدةٍ شاملة — وتُجرَّب النوافذُ بالترتيب */
+      let ya = null, usedRange = '';
+      for (const rg of RANGES) {
+        try { ya = await _fetch(sy, rg); } catch (e) { ya = null; }
+        if (Array.isArray(ya) && ya.length >= 2) { usedRange = rg; break; }
+        await new Promise(function (r) { setTimeout(r, 300); });
+      }
+      if (!Array.isArray(ya) || ya.length < 2) { failed.push({ 'الرمز': sy, 'السبب': 'تعذّر جلبُ ياهو بكلّ النوافذ' }); continue; }
+      ya = ya.slice().sort(function (a, b) { return (a.d < b.d) ? -1 : (a.d > b.d ? 1 : 0); });
+
+      /* ④ الماسحُ نفسُه على الوجهَين — بحاقن opts.rows */
+      let A = null, B = null;
+      try {
+        A = await window.histBreaks({ syms: [sy], quiet: true, jump: JUMP, rawDec: RAWDEC, rows: async function () { return db; } });
+        B = await window.histBreaks({ syms: [sy], quiet: true, jump: JUMP, rawDec: RAWDEC, rows: async function () { return ya; } });
+      } catch (e) { failed.push({ 'الرمز': sy, 'السبب': 'تعثّر الماسح: ' + ((e && e.message) || e) }); continue; }
+      const sA = _seams(A), sB = _seams(B);
+      const xA = (A && A.all && A.all[0]) || null, xB = (B && B.all && B.all[0]) || null;
+
+      /* ⑤ المقارنةُ على الإغلاق */
+      const mdb = {}, my = {};
+      db.forEach(function (r) { if (+r.c > 0) mdb[r.d] = +r.c; });
+      ya.forEach(function (r) { if (+r.c > 0) my[r.d] = +r.c; });
+      let same = 0, diff = 0, onlyDb = 0, onlyY = 0; const facs = [];
+      Object.keys(mdb).forEach(function (kk) {
+        if (my[kk] === undefined) { onlyDb++; return; }
+        const rr = my[kk] / mdb[kk];
+        if (Math.abs(rr - 1) <= TOL) same++; else { diff++; facs.push(rr); }
+      });
+      Object.keys(my).forEach(function (kk) { if (mdb[kk] === undefined) onlyY++; });
+      facs.sort(function (a, b) { return a - b; });
+      const medF = facs.length ? facs[Math.floor(facs.length / 2)] : null;
+
+      /* ⑥ التماسُ الباقي في حمولة ياهو — إن بقي فالتشخيصُ ناقص */
+      if (xB) {
+        xB.perm.forEach(function (j) { stuck.push({ 'الرمز': sy, 'النوع': 'عصران', 'التاريخ': j.d, 'من': j.from, 'إلى': j.to,
+          '٪': (j.p > 0 ? '+' : '') + j.p.toFixed(0), 'الاتجاه': (j.ka === 'R' ? 'خام' : 'معدَّل') + ' ← ' + (j.kb === 'R' ? 'خام' : 'معدَّل') }); });
+        xB.eps.forEach(function (e) { stuck.push({ 'الرمز': sy, 'النوع': 'حادثة', 'التاريخ': e.from + ' → ' + e.to, 'من': '—', 'إلى': '—',
+          '٪': (e.pin > 0 ? '+' : '') + e.pin.toFixed(0), 'الاتجاه': 'صفوف ' + e.n }); });
+      }
+
+      const verd = (sA < 0 || sB < 0) ? '⚠️ تعذّر القياس'
+                 : (sA === 0 ? '— لا تماسَ في القاعدة أصلاً'
+                 : (sB === 0 ? (onlyDb ? '✅ يُزيل التماس — لكن ' + onlyDb + ' صفّاً لن يُكتَب' : '✅ يُزيل التماس')
+                             : '🚨 تماسٌ باقٍ في ياهو (' + sB + ') — التشخيصُ ناقص'));
+
+      rowsOut.push({
+        'الرمز': sy, 'نافذةُ ياهو': usedRange,
+        'صفوفُ القاعدة': db.length, 'صفوفُ ياهو': ya.length,
+        'متطابقة': same, 'ستتغيّر': diff ? ('🔁 ' + diff) : '—',
+        'وسيطُ المعامل': medF == null ? '—' : (medF >= 1 ? '×' + medF.toFixed(3) : '÷' + (1 / medF).toFixed(3)),
+        'لن تُكتَب': onlyDb ? ('⚠️ ' + onlyDb) : '—', 'جديدة': onlyY || '—',
+        'أساسُ القاعدة': xA ? (xA.nR + '/' + xA.nA) : '—', 'أساسُ ياهو': xB ? (xB.nR + '/' + xB.nA) : '—',
+        'تماسُ القاعدة': sA, 'تماسُ ياهو': sB, 'الحكم': verd
+      });
+      console.log('   … ' + (k + 1) + '/' + syms.length + ' — ' + sy + ' · تماس ' + sA + ' ← ' + sB + ' · ' + verd);
+      await new Promise(function (r) { setTimeout(r, 400); });
+    }
+
+    if (!rowsOut.length) { console.warn('🪢 لم يُقَس رمزٌ واحد.'); if (failed.length) console.table(failed); return { failed: failed }; }
+
+    console.log('%c🪢 التجربةُ الجافّة — رمزاً رمزاً', 'color:#22d3ee;font-weight:bold;font-size:13px');
+    console.table(rowsOut.slice(0, SHOW));
+    if (stuck.length) {
+      console.warn('🚨 تماسٌ باقٍ في حمولة ياهو نفسِها (' + stuck.length + ') — فالمصدرُ غيرُ متّسق، وإعادةُ المزامنة لا تكفي:');
+      console.table(stuck.slice(0, 40));
+    }
+    if (failed.length) { console.warn('🪢 ' + failed.length + ' رمزاً لم يُقَس:'); console.table(failed); }
+
+    const fixed  = rowsOut.filter(function (r) { return /يُزيل/.test(r['الحكم']); }).length;
+    const stuckN = rowsOut.filter(function (r) { return /باقٍ/.test(r['الحكم']); }).length;
+    const none   = rowsOut.filter(function (r) { return /لا تماسَ/.test(r['الحكم']); }).length;
+    const willChange = rowsOut.reduce(function (s, r) { const v = String(r['ستتغيّر']).replace(/[^0-9]/g, ''); return s + (+v || 0); }, 0);
+    const wont = rowsOut.reduce(function (s, r) { const v = String(r['لن تُكتَب']).replace(/[^0-9]/g, ''); return s + (+v || 0); }, 0);
+    console.log('%c📏 الخلاصة', 'color:#38bdf8;font-weight:bold;font-size:13px');
+    console.table([{
+      'رموزٌ قُيست': rowsOut.length,
+      '✅ يُزيل التماس': fixed,
+      '🚨 تماسٌ باقٍ': stuckN,
+      '— لا تماسَ أصلاً': none,
+      'صفوفٌ ستتغيّر': willChange.toLocaleString('en'),
+      'صفوفٌ لن تُكتَب': wont.toLocaleString('en'),
+      'لم تُقَس': failed.length
+    }]);
+    console.log('   ▸ **اقرأ عمودَي «تماسُ القاعدة» و«تماسُ ياهو» معاً** — وهما الحكم:\n'
+      + '     القاعدة > 0 وياهو = 0 ⇒ **مزامنةٌ واحدةٌ بنافذةٍ شاملةٍ تشفي السلسلة**.\n'
+      + '     وياهو > 0 ⇒ **المصدرُ نفسُه غيرُ متّسق** ولا تُجدي المزامنة — ولا يُرقَّع.');
+    console.log('   ▸ وعمودُ «لن تُكتَب» حدُّ الإصلاح: صفوفٌ لا يردّها ياهو **تبقى كما هي**.\n'
+      + '     فإن كان تماسٌ داخلها بقي بعد الإصلاح.');
+    console.log('   ▸ و«وسيطُ المعامل» يقول بكم ستتغيّر الأسعار — فإن كان ×1.000 فالتغيّرُ في\n'
+      + '     صفوفٍ قليلةٍ لا في السلسلة، وإن كان بعيداً عن 1 فالسلسلةُ كلُّها تُعاد.');
+    console.log('   ▸ **ولا أداةَ كتابةٍ بعد، بقصد.** تُبنى بعد أن تقرأ هذا الجدول وتقرّر.');
+
+    return { src: src, rows: rowsOut, stuck: stuck, failed: failed,
+             counts: { measured: rowsOut.length, fixed: fixed, stuck: stuckN, none: none, willChange: willChange, wont: wont } };
   });
 
   window.downCycleReport = _adminTool('downCycleReport', function (opts) {

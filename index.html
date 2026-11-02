@@ -2482,7 +2482,7 @@ function toggleDisclaimer(){
      الآليةُ التي تكشف أنّ المتصفّح يشغّل نسخةً قديمة.
    ▸ فصار النصُّ يُشتقّ من الثابت، ولا يبقى إلا موضعٌ واحدٌ يُحدَّث.
    ══════════════════════════════════════════════════════════════════════ */
-window.APP_BUILD = '2026-11-02-v682';
+window.APP_BUILD = '2026-11-02-v683';
 console.log('%c[تداول بلس] البناء: ' + window.APP_BUILD + ' · اكتب buildLog() لتفصيل التغييرات',
   'color:#7c3aed;font-weight:bold;font-size:14px');
 /* ══════════════════════════════════════════════════════════════════════
@@ -21281,6 +21281,145 @@ const CHAN_FLAT = 0.50;
      الإصدار، وبجانبها مستويات الخطّة، **فيُرى بالعين أيُّ الروايتين
      تصف ما وقع** — ولا يبقى للتأويل موضع.
      ══════════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════════════
+     📐 planGeom() — هل الهدفُ في مدى السهم، والوقفُ خارج ضجيجه؟
+
+     وُلد هذا السؤال من `planAudit('1020','2026-09-20')`: الجزيرة — دخول
+     11.74 · وقف 11.32 (‎−3.6٪‎) · هدف 12.94 (**‎+10.2٪‎**). **وأعلى ما صعد
+     السهمُ بعد الدخول ‎+0.94٪‎ فقط.** فالخطّةُ لم تقترب من النجاح ولا في
+     جلسةٍ من اثنتين وعشرين. وصفرُ أهدافٍ من 46 حسماً يطلب تفسيراً.
+
+     ▸ **والفرضيّة**: ع/م جميلٌ على الورق يُصنَع بهدفٍ بعيدٍ ووقفٍ قريب —
+       فيبدو منضبطاً **ونسبةُ إصابته تقترب من الصفر**. وهو أسوأُ تركيبٍ
+       ممكن، لأنّه **يخسر وهو يبدو محترفاً**.
+     ▸ **ويُقاس لا يُخمَّن** — لكلّ خطّةٍ سؤالان من تاريخ السهم نفسِه:
+         ① **مسافةُ الهدف**: كم مرّةً بلغ هذا السهمُ مثلَها خلال الأفق؟
+            ⇒ `pHit` = نسبةُ النوافذ التاريخيّة التي صعد فيها بقدر الهدف.
+         ② **مسافةُ الوقف**: كم يوماً عاديّاً تساوي؟ ⇒ `الوقف ÷ ATR14`.
+            ووقفٌ دون **1.5** يوماً يُضرَب بالضجيج لا بالخطأ.
+     ▸ **والمحكّ**: ع/م يفرض نقطةَ تعادلٍ `1/(1+ع/م)`. فإن كان `pHit`
+       **دونها** فالخطّةُ خاسرةٌ بالهندسة وحدَها — **قبل أيّ تحليل**.
+
+     🔒 **ولا نظرَ قبل كتابة التوقّع**: يُطبع أوّلاً، ثمّ تُحسب الأرقام.
+     ⚠️ **ولا نظرةَ إلى المستقبل**: توزيعُ الحركة يُبنى من شموعٍ **قبل**
+        تاريخ الخطّة وحدَها — فلا يُقاس السهمُ بما لم يكن معلوماً يومَها.
+     ℹ️ والنوافذُ متداخلةٌ عمداً: هذا **وصفٌ لتوزيع الحركة**، لا اختبارُ
+        دلالةٍ إحصائيّة — فلا يُقرأ منه هامشٌ ولا «مُثبَت».
+     🔬 قراءةٌ محضة: لا تكتب، ولا تمسّ عتبةً، ولا تغيّر خطّة.
+     ══════════════════════════════════════════════════════════════════════ */
+  window.planGeom = _adminTool('planGeom', async function (opts) {
+    opts = opts || {};
+    const WIN  = (+opts.bars > 0) ? +opts.bars : 30;
+    const ATRN = 14;
+    const SHOW = (+opts.show >= 0) ? +opts.show : 14;
+    const MINPAST = 120;                       /* أقلُّ تاريخٍ يُسمح بالقياس عليه */
+
+    console.log('%c🔒 الفرضيّةُ مكتوبةٌ قبل أوّل رقم', 'color:#fbbf24;font-weight:bold;font-size:14px');
+    console.log('   ▸ **أتوقّع**: الهدفَ أبعدَ ممّا يبلغه السهمُ عادةً في ' + WIN + ' جلسة،'
+      + ' والوقفَ داخلَ ضجيجه اليوميّ ⇒ **pHit أقلُّ من نقطة التعادل**.\n'
+      + '   ▸ **وإن خالف القياسُ توقّعي فالقياسُ هو الذي يُكتب** — لا التوقّع.');
+
+    let rows = null;
+    try { rows = await _ledgerRows(); } catch (e) { console.warn('📐 تعذّرت القراءة.'); return null; }
+    if (!rows || !rows.length) { console.warn('📐 السجلُّ فارغ.'); return null; }
+
+    const syms = [];
+    rows.forEach(function (r) { const s = String(r.symbol || ''); if (s && syms.indexOf(s) < 0) syms.push(s); });
+    const OH = await _ledgerOHLC(syms);
+
+    const atrAt = function (S, i0) {
+      if (i0 < ATRN + 1) return null;
+      let s = 0;
+      for (let i = i0 - ATRN; i < i0; i++) {
+        const pc = S.c[i - 1];
+        s += Math.max(S.h[i] - S.l[i], Math.abs(S.h[i] - pc), Math.abs(pc - S.l[i]));
+      }
+      return (s / ATRN);
+    };
+
+    const out = [], skipped = { noData: 0, shortHistory: 0, badNums: 0 };
+    rows.forEach(function (r) {
+      const sy = String(r.symbol || ''), S = OH[sy];
+      if (!S || !S.d || !S.d.length) { skipped.noData++; return; }
+      const en = +r.entry, st = +r.stop, tg = +r.target;
+      if (!(en > 0) || !(st > 0) || !(tg > en) || !(en > st)) { skipped.badNums++; return; }
+      let i0 = S.d.findIndex(function (d) { return String(d) >= String(r.plan_date); });
+      if (i0 < 0) i0 = S.d.length;
+      if (i0 < MINPAST) { skipped.shortHistory++; return; }
+
+      const tgtPct  = 100 * (tg - en) / en;
+      const stopPct = 100 * (en - st) / en;
+      const rr      = (tg - en) / (en - st);
+      const beWin   = 100 / (1 + rr);
+
+      /* ① توزيعُ أقصى صعودٍ خلال الأفق — من الماضي وحدَه */
+      let nw = 0, hit = 0;
+      for (let i = 0; i + WIN < i0; i++) {
+        let mx = -Infinity;
+        for (let k = i + 1; k <= i + WIN; k++) if (S.h[k] > mx) mx = S.h[k];
+        const mfe = 100 * (mx - S.c[i]) / S.c[i];
+        nw++; if (mfe >= tgtPct) hit++;
+      }
+      const pHit = nw ? (100 * hit / nw) : null;
+
+      /* ② الوقفُ بوحدة اليوم العاديّ */
+      const a = atrAt(S, i0);
+      const atrPct  = (a != null && S.c[i0 - 1] > 0) ? (100 * a / S.c[i0 - 1]) : null;
+      const stopATR = (atrPct > 0) ? (stopPct / atrPct) : null;
+
+      out.push({ sym: sy, name: r.name || sy, d: r.plan_date, tgtPct: tgtPct, stopPct: stopPct,
+                 rr: rr, beWin: beWin, pHit: pHit, stopATR: stopATR, nw: nw, edge: (pHit != null) ? (pHit - beWin) : null });
+    });
+
+    if (!out.length) { console.warn('📐 لا خطّةَ قابلةً للقياس — ' + JSON.stringify(skipped)); return null; }
+
+    const med = function (a) { const v = a.filter(function (x) { return typeof x === 'number' && isFinite(x); }).sort(function (p, q) { return p - q; });
+      return v.length ? v[Math.floor(v.length / 2)] : null; };
+    const F = function (x, k) { return (x == null) ? '—' : x.toFixed(k == null ? 1 : k); };
+
+    const nBad = out.filter(function (o) { return o.edge != null && o.edge < 0; }).length;
+    const nTight = out.filter(function (o) { return o.stopATR != null && o.stopATR < 1.5; }).length;
+
+    console.log('%c📐 هندسةُ الخطط — ' + out.length + ' خطّةً قيست · الأفق ' + WIN + ' جلسة',
+      'color:#a78bfa;font-weight:bold;font-size:14px');
+    console.table([
+      { 'المقياس': '🏁 مسافةُ الهدف ٪',                 'الوسيط': F(med(out.map(function (o) { return o.tgtPct; })), 2) },
+      { 'المقياس': '🛑 مسافةُ الوقف ٪',                  'الوسيط': F(med(out.map(function (o) { return o.stopPct; })), 2) },
+      { 'المقياس': '⚖️ ع/م',                             'الوسيط': F(med(out.map(function (o) { return o.rr; })), 2) },
+      { 'المقياس': '🎯 نقطةُ التعادل المطلوبة ٪',        'الوسيط': F(med(out.map(function (o) { return o.beWin; })), 1) },
+      { 'المقياس': '📈 pHit — بلوغُ الهدف تاريخياً ٪',   'الوسيط': F(med(out.map(function (o) { return o.pHit; })), 1) },
+      { 'المقياس': '➖ الفارق (pHit − التعادل)',          'الوسيط': F(med(out.map(function (o) { return o.edge; })), 1) },
+      { 'المقياس': '📏 الوقف ÷ ATR14 (يوماً عاديّاً)',    'الوسيط': F(med(out.map(function (o) { return o.stopATR; })), 2) },
+    ]);
+
+    if (SHOW) {
+      console.log('%c🔬 عيّنةٌ من الخطط', 'color:#38bdf8;font-weight:bold');
+      console.table(out.slice(0, SHOW).map(function (o) {
+        return { 'الرمز': o.sym, 'الاسم': o.name, 'التاريخ': o.d,
+                 'الهدف ٪': F(o.tgtPct, 2), 'الوقف ٪': F(o.stopPct, 2), 'ع/م': F(o.rr, 2),
+                 'التعادل ٪': F(o.beWin, 1), 'pHit ٪': F(o.pHit, 1),
+                 'الفارق': F(o.edge, 1), 'وقف÷ATR': F(o.stopATR, 2),
+                 'الحكم': (o.edge == null) ? '—' : (o.edge >= 0 ? '🟢 الهدفُ في المدى' : '🔴 أبعدُ من التعادل') };
+      }));
+    }
+
+    const L = [];
+    L.push('① خططٌ **هدفُها أبعدُ ممّا تفرضه نقطةُ التعادل**: **' + nBad + '** من ' + out.length
+      + ' (' + Math.round(100 * nBad / out.length) + '٪)');
+    L.push('② خططٌ **وقفُها دون 1.5 يومٍ عاديّ** (يُضرَب بالضجيج): **' + nTight + '** من ' + out.length
+      + ' (' + Math.round(100 * nTight / out.length) + '٪)');
+    L.push('③ أُسقطت: بلا شموع ' + skipped.noData + ' · تاريخٌ أقصرُ من ' + MINPAST + ' جلسة ' + skipped.shortHistory
+      + ' · أرقامٌ غيرُ متّسقة ' + skipped.badNums);
+    L.push('');
+    L.push('▸ **وهذا وصفُ هندسةٍ لا حكمُ ربح**: يقول هل الهدفُ **ممكنٌ** تاريخياً، لا هل سيقع.');
+    L.push('▸ **ولا يُقرأ منه هامشٌ ولا «مُثبَت»** — النوافذُ متداخلة، وهي توزيعٌ لا اختبار.');
+    L.push('▸ وكلُّ قياسٍ هنا من شموعٍ **قبل** تاريخ الخطّة — فلا نظرةَ إلى المستقبل.');
+    L.push('▸ ولا شيءَ كُتب: قراءةٌ محضة.');
+    console.log('%c🩺 القراءة\n' + L.join('\n'), 'color:#fbbf24;font-weight:bold;line-height:1.95');
+
+    return { plans: out.length, worseThanBreakeven: nBad, tightStops: nTight, skipped: skipped, all: out };
+  });
+
   window.planAudit = _adminTool('planAudit', async function (sym, date, opts) {
     opts = opts || {};
     const N = (+opts.bars > 0) ? +opts.bars : 22;
